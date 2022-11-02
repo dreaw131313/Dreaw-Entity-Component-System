@@ -24,5 +24,7 @@ int main()
 	decs::Entity entity = container.CreateEntity();
 	entity.AddComponent<C1>(1.f, 2.f);
 
+	entity.Destroy();
+
 	return 0;
 }

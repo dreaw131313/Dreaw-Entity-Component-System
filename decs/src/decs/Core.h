@@ -27,8 +27,6 @@ namespace decs
 	template<typename Key>
 	using ecsSet = std::unordered_set<Key>;
 
-#pragma region types ID generation
-
 #if defined _MSC_VER
 #   define FULL_FUNCTION_NAME __FUNCSIG__
 #elif defined __clang__ || (defined __GNUC__)

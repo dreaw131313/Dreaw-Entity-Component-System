@@ -29,7 +29,6 @@ namespace decs
 
 		inline operator const EntityID& () { return m_ID; }
 
-
 		inline EntityID ID() const { return m_ID; }
 		inline Container* GetContainer() const { return m_Container; }
 
@@ -85,13 +84,23 @@ namespace decs
 			m_Container->GetEntityVersion(m_ID);
 		}
 
+		inline bool Destroy()
+		{
+			if (m_Container != nullptr)
+			{
+				m_Container->DestroyEntity(m_ID);
+				m_Container = nullptr;
+				m_ID = std::numeric_limits<EntityID>::max();
+				return true;
+			}
+			return false;
+		}
+
 	private:
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
 		Container* m_Container = nullptr;
 	};
-
 }
-
 
 template<>
 struct std::hash<decs::Entity>
