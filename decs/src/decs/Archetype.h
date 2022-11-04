@@ -83,15 +83,12 @@ namespace decs
 		friend class Container;
 	public:
 		uint32_t m_ComponentsCount = 0;
-
 		uint32_t m_EntitiesCount = 0;
 
 		std::vector<ArchetypeEntityData> m_EntitiesData;
 		std::vector<ComponentRef> m_ComponentsRefs;
 
-
 		std::vector<ComponentContextBase*> m_ComponentContexts;
-
 		ecsMap<TypeID, ArchetypeEdge> m_Edges;
 
 		std::vector<TypeID> m_TypeIDs;
