@@ -2,7 +2,6 @@
 #include "decspch.h"
 
 #include "ViewCore.h"
-
 #include "../core.h"
 #include "../ComponentContainer.h"
 #include "../Entity.h"
@@ -724,10 +723,6 @@ namespace decs
 		}
 
 	};
-
-
-	/*template<typename, typename>
-	class ComplexView;*/
 
 	template<typename... Includes, typename... Excludes>
 	class View<Include<Entity, Includes...>, Exclude<Excludes...>> : public ViewBaseWithEntity<Includes...>

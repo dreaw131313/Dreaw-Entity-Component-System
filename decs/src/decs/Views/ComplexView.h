@@ -269,7 +269,6 @@ namespace decs
 			}
 		}
 
-
 		bool TryAddArchetypeWithoutNeighbours(Archetype& archetype, const uint64_t minComponentsCountInArchetype)
 		{
 			if (archetype.GetComponentsCount() < minComponentsCountInArchetype) return false;
@@ -505,7 +504,6 @@ namespace decs
 			{
 
 			}
-
 		};
 
 	public:
@@ -808,7 +806,6 @@ namespace decs
 			}
 		}
 	};
-
 
 	template<typename... ComponentsTypes>
 	class ComplexView<Entity, ComponentsTypes...>

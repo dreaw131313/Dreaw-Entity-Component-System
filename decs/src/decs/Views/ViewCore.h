@@ -19,10 +19,10 @@ namespace decs
 		uint32_t TypeIndexes[TypesCount]; // indexy kontenerów z archetypu z których ma ko¿ystaæ widok - shit
 
 	public:
-
 		inline uint64_t EntitiesCount() const { return m_EntitiesCount; }
 
 		inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntitiesCount(); }
+
 	private:
 		uint64_t m_EntitiesCount;
 	};
