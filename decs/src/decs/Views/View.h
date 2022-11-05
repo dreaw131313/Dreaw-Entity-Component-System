@@ -29,30 +29,30 @@ namespace decs
 
 		}
 
-		template<typename... Excludes>
+		template<typename... ComponentsTypes>
 		View& WithoutAnyOf()
 		{
 			m_IsDirty = true;
 			m_Excludes.clear();
-			findIds<Excludes...>(m_Excludes);
+			findIds<ComponentsTypes...>(m_Excludes);
 			return *this;
 		}
 
-		template<typename... Excludes>
+		template<typename... ComponentsTypes>
 		View& WithAnyOf()
 		{
 			m_IsDirty = true;
 			m_RequiredAny.clear();
-			findIds<Excludes...>(m_RequiredAny);
+			findIds<ComponentsTypes...>(m_RequiredAny);
 			return *this;
 		}
 
-		template<typename... Excludes>
+		template<typename... ComponentsTypes>
 		View& WithAll()
 		{
 			m_IsDirty = true;
 			m_RequiredAll.clear();
-			findIds<Excludes...>(m_RequiredAll);
+			findIds<ComponentsTypes...>(m_RequiredAll);
 			return *this;
 		}
 
