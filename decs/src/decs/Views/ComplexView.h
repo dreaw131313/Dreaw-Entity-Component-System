@@ -113,15 +113,49 @@ namespace decs
 					auto& entityData = entitiesData[iterationIndex];
 					if (entityData.IsActive)
 					{
-						PrepareTuple(
+						SetTupleElements<ComponentsTypes...>(
 							tuple,
-							iterationIndex,
+							0,
+							iterationIndex * componentsCount,
 							typeIndexes,
-							componentsCount,
-							entitiesData,
 							componentsRefs
-						);
+							);
+						std::apply(func, tuple);
+					}
+				}
+			}
+		}
 
+		template<typename Callable>
+		void ForEachWithEntity(Callable func)
+		{
+			for (ArchetypeContext& archContext : m_ArchetypesContexts)
+				archContext.ValidateEntitiesCount();
+
+			uint32_t contextCount = m_ArchetypesContexts.size();
+			std::tuple<Entity, ComponentsTypes*...> tuple = {};
+			for (uint32_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
+			{
+				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				TypeID* typeIndexes = ctx.TypeIndexes;
+				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
+
+				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
+				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
+
+				for (int64_t iterationIndex = ctx.EntitiesCount() - 1; iterationIndex > -1; iterationIndex--)
+				{
+					auto& entityData = entitiesData[iterationIndex];
+					if (entityData.IsActive)
+					{
+						std::get<Entity>(tuple) = Entity(entityData.ID, this->m_Container);
+						SetWithEntityTupleElements<ComponentsTypes...>(
+							tuple,
+							0,
+							iterationIndex * componentsCount,
+							typeIndexes,
+							componentsRefs
+							);
 						std::apply(func, tuple);
 					}
 				}
@@ -259,7 +293,7 @@ namespace decs
 				{
 					Archetype* archetype = archetypesToTest[i];
 
-					if (TryAddArchetype(*archetype))
+					if (TryAddArchetype(*archetype, true))
 					{
 						addedArchetypes++;
 					}
@@ -355,24 +389,6 @@ namespace decs
 		}
 
 	private:
-		inline void PrepareTuple(
-			std::tuple<ComponentsTypes*...>& tuple,
-			const uint64_t& iterationIndex,
-			TypeID*& typesIndexe,
-			const uint64_t& componentsCount,
-			ArchetypeEntityData*& entitiesData,
-			ComponentRef*& componentsRefs
-		)
-		{
-			SetTupleElements<ComponentsTypes...>(
-				tuple,
-				0,
-				iterationIndex * componentsCount,
-				typesIndexe,
-				componentsRefs
-				);
-		}
-
 		template<typename T = void, typename... Ts>
 		void SetTupleElements(
 			std::tuple<ComponentsTypes*...>& tuple,
@@ -409,7 +425,44 @@ namespace decs
 
 		}
 
+		template<typename T = void, typename... Ts>
+		void SetWithEntityTupleElements(
+			std::tuple<Entity, ComponentsTypes*...>& tuple,
+			const uint64_t& compIndex,
+			const uint64_t& firstEntityCompIndex,
+			TypeID*& typesIndexe,
+			ComponentRef*& componentsRefs
+		)
+		{
+			uint64_t compIndexInArchetype = typesIndexe[compIndex];
+			auto& compRef = componentsRefs[firstEntityCompIndex + compIndexInArchetype];
+			std::get<T*>(tuple) = reinterpret_cast<T*>(compRef.ComponentPointer);
+
+			if (sizeof...(Ts) == 0) return;
+
+			SetWithEntityTupleElements<Ts...>(
+				tuple,
+				compIndex + 1,
+				firstEntityCompIndex,
+				typesIndexe,
+				componentsRefs
+				);
+		}
+
+		template<>
+		void SetWithEntityTupleElements<void>(
+			std::tuple<Entity, ComponentsTypes*...>& tuple,
+			const uint64_t& compIndex,
+			const uint64_t& firstEntityCompIndex,
+			TypeID*& typesIndexe,
+			ComponentRef*& componentsRefs
+			)
+		{
+
+		}
+
 	private:
+
 		struct BaseIterator
 		{
 			using ViewType = ComplexView<ComponentsTypes...>;
@@ -806,7 +859,7 @@ namespace decs
 			}
 		}
 	};
-
+	
 	template<typename... ComponentsTypes>
 	class ComplexView<Entity, ComponentsTypes...>
 	{
