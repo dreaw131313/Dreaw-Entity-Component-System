@@ -24,16 +24,10 @@
     <ClInclude Include="src\decs\Containers\BucketVector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Views\ComplexView.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decs\Views\View.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Views\ViewCore.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\Views\ViewWithEntity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Archetype.h">

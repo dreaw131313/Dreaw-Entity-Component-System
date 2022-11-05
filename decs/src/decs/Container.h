@@ -28,7 +28,7 @@ namespace decs
 		template<typename ...Types>
 		friend class ViewBase;
 		template<typename ...Types>
-		friend class ComplexView;
+		friend class View;
 
 	public:
 		Container();

@@ -146,7 +146,7 @@ namespace decs
 		template<typename ...Types>
 		friend class View;
 		template<typename ...Types>
-		friend class ComplexView;
+		friend class View;
 
 	public:
 		ArchetypesMap()
