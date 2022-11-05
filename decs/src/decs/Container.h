@@ -1,7 +1,6 @@
 #pragma once
 #include "decspch.h"
 
-
 #include "Core.h"
 #include "Type.h"
 #include "EntityData.h"
@@ -9,8 +8,6 @@
 #include "Archetype.h"
 #include "ComponentContainer.h"
 #include "Observers.h"
-
-
 
 namespace decs
 {
@@ -34,39 +31,29 @@ namespace decs
 		friend class ComplexView;
 
 	public:
-		Container() {}
+		Container();
 
 		Container(
 			const uint64_t& initialEntitiesCapacity,
 			const ContainerBucketSizeType& componentContainerBucketSizeType,
 			const uint64_t& componentContainerBucketSize
-		) :
-			m_ComponentContainerBucketSize(componentContainerBucketSize),
-			m_ContainerSizeType(componentContainerBucketSizeType)
-		{
-			m_EntityData.reserve(initialEntitiesCapacity);
-			m_FreeEntities.reserve(initialEntitiesCapacity / 3);
-		}
+		);
 
-		~Container()
-		{
-			DestroyComponentsContexts();
-		}
+		~Container();
 
 	private:
 		uint64_t m_ComponentContainerBucketSize = decs::MemorySize::KiloByte * 16;
 		ContainerBucketSizeType m_ContainerSizeType = ContainerBucketSizeType::BytesCount;
 
 	public:
-		void SetDefaultComponentContainerBucketSize(const uint64_t& size, const ContainerBucketSizeType& sizeType)
+		inline void SetDefaultComponentContainerBucketSize(const uint64_t& size, const ContainerBucketSizeType& sizeType)
 		{
 			m_ContainerSizeType = sizeType;
 			m_ComponentContainerBucketSize = size;
 		}
 
-	private:
-
 		// Entities:
+	private:
 		std::vector<EntityData> m_EntityData;
 		EntityID m_CreatedEntitiesCount = 0;
 		uint64_t m_enitiesDataCount = 0;
@@ -217,7 +204,6 @@ namespace decs
 			return false;
 		}
 
-
 	private:
 		ecsMap<TypeID, ComponentContextBase*> m_ComponentContexts;
 
@@ -235,7 +221,6 @@ namespace decs
 			if (bucketSize == 0) return false;
 			auto& context = m_ComponentContexts[Type<ComponentType>::ID()];
 			if (context != nullptr) return false;
-
 
 			context = new ComponentContext<ComponentType>(bucketSize);
 			return true;
@@ -275,10 +260,7 @@ namespace decs
 					}
 				}
 
-
 				ComponentContext<ComponentType>* context = new ComponentContext<ComponentType>(bucektSize);
-
-
 				componentContext = context;
 				return context;
 			}
@@ -307,7 +289,6 @@ namespace decs
 		ArchetypesMap m_ArchetypesMap;
 
 	private:
-
 		void AddEntityToArchetype(
 			Archetype& newArchetype,
 			EntityData& entityData,
@@ -325,7 +306,6 @@ namespace decs
 			const uint64_t& newCompElementIndex,
 			void* componentPointer
 		);
-
 
 		void RemoveEntityFromArchetype(Archetype& archetype, EntityData& entityData);
 
@@ -358,69 +338,30 @@ namespace decs
 
 		// Archetypes - end
 
-
 		// Observers:
 	private:
-		std::vector<CreateEntityObserver*> m_CreateEntityObservers;
-		std::vector<DestroyEntityObserver*> m_DestroyEntittyObservers;
-
+		std::vector<CreateEntityObserver*> m_EntityCreationObservers;
+		std::vector<DestroyEntityObserver*> m_EntittyDestructionObservers;
 
 	public:
-		bool AddCreateEntityObserver(CreateEntityObserver* observer)
-		{
-			if (observer == nullptr) return false;
-			m_CreateEntityObservers.push_back(observer);
-			return true;
-		}
-
-		bool RemoveCreateEntityObserver(CreateEntityObserver* observer)
-		{
-			for (uint32_t i = 0; i < m_CreateEntityObservers.size(); i++)
-			{
-				if (m_CreateEntityObservers[i] == observer)
-				{
-					auto it = m_CreateEntityObservers.begin();
-					std::advance(it, i);
-					m_CreateEntityObservers.erase(it);
-					return true;
-				}
-			}
-			return false;
-		}
-
-		bool AddDestroyEntityObserver(DestroyEntityObserver* observer)
-		{
-			if (observer == nullptr) return false;
-			m_DestroyEntittyObservers.push_back(observer);
-			return true;
-		}
-
-		bool RemoveCreateEntityObserver(DestroyEntityObserver* observer)
-		{
-			for (uint32_t i = 0; i < m_DestroyEntittyObservers.size(); i++)
-			{
-				if (m_DestroyEntittyObservers[i] == observer)
-				{
-					auto it = m_DestroyEntittyObservers.begin();
-					std::advance(it, i);
-					m_DestroyEntittyObservers.erase(it);
-					return true;
-				}
-			}
-			return false;
-		}
-
-
+		bool AddEntityCreationObserver(CreateEntityObserver* observer);
+		
+		bool RemoveEntityCreationObserver(CreateEntityObserver* observer);
+		
+		bool AddEntityDestructionObserver(DestroyEntityObserver* observer);
+		
+		bool RemoveEntityDestructionObserver(DestroyEntityObserver* observer);
+		
 	private:
 		inline void InvokeCreateEntityObservers(const EntityID& entity)
 		{
-			for (auto observer : m_CreateEntityObservers)
+			for (auto observer : m_EntityCreationObservers)
 				observer->OnCreateEntity(entity, *this);
 		}
 
 		inline void InvokeDestroyEntityObservers(const EntityID& entity)
 		{
-			for (auto observer : m_DestroyEntittyObservers)
+			for (auto observer : m_EntittyDestructionObservers)
 				observer->OnDestroyEntity(entity, *this);
 		}
 
@@ -428,6 +369,5 @@ namespace decs
 
 
 	};
-
 }
 

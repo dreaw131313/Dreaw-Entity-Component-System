@@ -6,6 +6,27 @@
 
 namespace decs
 {
+	Container::Container()
+	{
+	}
+
+	Container::Container(
+		const uint64_t& initialEntitiesCapacity,
+		const ContainerBucketSizeType& componentContainerBucketSizeType,
+		const uint64_t& componentContainerBucketSize
+	) :
+		m_ComponentContainerBucketSize(componentContainerBucketSize),
+		m_ContainerSizeType(componentContainerBucketSizeType)
+	{
+		m_EntityData.reserve(initialEntitiesCapacity);
+		m_FreeEntities.reserve(initialEntitiesCapacity / 3);
+	}
+
+	Container::~Container()
+	{
+		DestroyComponentsContexts();
+	}
+
 	Entity Container::CreateEntity(bool isActive)
 	{
 		m_CreatedEntitiesCount += 1;
@@ -154,13 +175,13 @@ namespace decs
 		return true;
 	}
 
-    void Container::AddEntityToArchetype(
-		Archetype& newArchetype, 
-		EntityData& entityData, 
-		const uint64_t& newCompBucketIndex, 
-		const uint64_t& newCompElementIndex, 
-		const TypeID& compTypeID, 
-		void* newCompPtr, 
+	void Container::AddEntityToArchetype(
+		Archetype& newArchetype,
+		EntityData& entityData,
+		const uint64_t& newCompBucketIndex,
+		const uint64_t& newCompElementIndex,
+		const TypeID& compTypeID,
+		void* newCompPtr,
 		const bool& bIsNewComponentAdded
 	)
 	{
@@ -197,10 +218,10 @@ namespace decs
 	}
 
 	void Container::AddEntityToSingleComponentArchetype(
-		Archetype& newArchetype, 
-		EntityData& entityData, 
-		const uint64_t& newCompBucketIndex, 
-		const uint64_t& newCompElementIndex, 
+		Archetype& newArchetype,
+		EntityData& entityData,
+		const uint64_t& newCompBucketIndex,
+		const uint64_t& newCompElementIndex,
 		void* componentPointer
 	)
 	{
@@ -272,6 +293,50 @@ namespace decs
 		compData.BucketIndex = compBucketIndex;
 		compData.ElementIndex = compElementIndex;
 		compData.ComponentPointer = compPtr;
+	}
+
+	bool Container::AddEntityCreationObserver(CreateEntityObserver* observer)
+	{
+		if (observer == nullptr) return false;
+		m_EntityCreationObservers.push_back(observer);
+		return true;
+	}
+
+	bool Container::RemoveEntityCreationObserver(CreateEntityObserver* observer)
+	{
+		for (uint32_t i = 0; i < m_EntityCreationObservers.size(); i++)
+		{
+			if (m_EntityCreationObservers[i] == observer)
+			{
+				auto it = m_EntityCreationObservers.begin();
+				std::advance(it, i);
+				m_EntityCreationObservers.erase(it);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool Container::AddEntityDestructionObserver(DestroyEntityObserver* observer)
+	{
+		if (observer == nullptr) return false;
+		m_EntittyDestructionObservers.push_back(observer);
+		return true;
+	}
+
+	bool Container::RemoveEntityDestructionObserver(DestroyEntityObserver* observer)
+	{
+		for (uint32_t i = 0; i < m_EntittyDestructionObservers.size(); i++)
+		{
+			if (m_EntittyDestructionObservers[i] == observer)
+			{
+				auto it = m_EntittyDestructionObservers.begin();
+				std::advance(it, i);
+				m_EntittyDestructionObservers.erase(it);
+				return true;
+			}
+		}
+		return false;
 	}
 
 }
