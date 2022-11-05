@@ -462,7 +462,6 @@ namespace decs
 		}
 
 	private:
-
 		struct BaseIterator
 		{
 			using ViewType = ComplexView<ComponentsTypes...>;
