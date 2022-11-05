@@ -14,6 +14,11 @@ namespace decs
 	template<uint64_t TypesCount>
 	struct ViewArchetypeContext
 	{
+		template<typename... ComponentTypes>
+		friend 	class ViewIterator;
+		template<typename... ComponentTypes>
+		friend 	class ViewBatchIterator;
+
 	public:
 		Archetype* Arch = nullptr;
 		uint32_t TypeIndexes[TypesCount]; // indexy kontenerów z archetypu z których ma ko¿ystaæ widok - shit

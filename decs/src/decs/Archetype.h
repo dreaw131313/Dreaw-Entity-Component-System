@@ -81,6 +81,11 @@ namespace decs
 	class Archetype final
 	{
 		friend class Container;
+		template<typename... ComponentTypes>
+		friend 	class ViewIterator;
+		template<typename... ComponentTypes>
+		friend 	class ViewBatchIterator;
+
 	public:
 		uint32_t m_ComponentsCount = 0;
 		uint32_t m_EntitiesCount = 0;
