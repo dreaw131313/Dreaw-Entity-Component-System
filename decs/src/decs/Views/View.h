@@ -553,7 +553,6 @@ namespace decs
 
 			virtual void InvalidateTuple() = 0;
 		};
-
 #pragma endregion
 
 	public:
