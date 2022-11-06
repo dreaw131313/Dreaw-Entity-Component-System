@@ -7,39 +7,6 @@
 
 namespace decs
 {
-	template<typename ComponentType>
-	struct BucketRemoveSwapBackResult
-	{
-	public:
-		uint64_t Index;
-		EntityID eID;
-		ComponentType* Component;
-
-	public:
-		BucketRemoveSwapBackResult() :
-			Index(std::numeric_limits<uint64_t>::max()),
-			eID(std::numeric_limits<EntityID>::max()),
-			Component(nullptr)
-		{
-
-		}
-		BucketRemoveSwapBackResult(
-			uint64_t index,
-			EntityID entityID,
-			ComponentType* component
-		) :
-			Index(index),
-			eID(entityID),
-			Component(component)
-		{
-
-		}
-
-		inline bool IsValid() const
-		{
-			return eID != std::numeric_limits<EntityID>::max();
-		}
-	};
 
 	template<typename ComponentType>
 	struct ComponentAllocationData
@@ -56,6 +23,54 @@ namespace decs
 			BucketIndex(bucketIndex), ElementIndex(index), Component(component)
 		{
 
+		}
+	};
+	struct VoidComponentAllocationData
+	{
+	public:
+		uint64_t BucketIndex = std::numeric_limits<uint64_t>::max();
+		uint64_t ElementIndex = std::numeric_limits<uint64_t>::max();;
+		void* Component = nullptr;
+
+	public:
+		VoidComponentAllocationData() {}
+
+		VoidComponentAllocationData(uint64_t bucketIndex, uint64_t index, void* component) :
+			BucketIndex(bucketIndex), ElementIndex(index), Component(component)
+		{
+
+		}
+	};
+
+	template<typename ComponentType>
+	struct BucketRemoveSwapBackResult
+	{
+	public:
+		uint64_t Index = std::numeric_limits<uint64_t>::max();
+		EntityID eID = std::numeric_limits<EntityID>::max();
+		ComponentType* Component = nullptr;
+
+	public:
+		BucketRemoveSwapBackResult()
+		{
+
+		}
+
+		BucketRemoveSwapBackResult(
+			uint64_t index,
+			EntityID entityID,
+			ComponentType* component
+		) :
+			Index(index),
+			eID(entityID),
+			Component(component)
+		{
+
+		}
+
+		inline bool IsValid() const
+		{
+			return eID != std::numeric_limits<EntityID>::max();
 		}
 	};
 
@@ -117,6 +132,10 @@ namespace decs
 		virtual ComponentAllocatorSwapData RemoveSwapBack(const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
 
 		virtual void* GetComponentAsVoid(const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
+
+		virtual VoidComponentAllocationData CreateCopy(const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
+
+		virtual VoidComponentAllocationData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
 	};
 
 	template<typename ComponentType>
@@ -217,6 +236,41 @@ namespace decs
 			return &m_Nodes(bucketIndex, elementIndex).Node->Data();
 		}
 
+		virtual VoidComponentAllocationData CreateCopy(const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) override
+		{
+			if (!m_Nodes.IsPositionValid(bucketIndex, elementIndex))
+			{
+				return VoidComponentAllocationData();
+			}
+
+			NodeInfo& nodeToCopy = m_Nodes(bucketIndex, elementIndex);
+
+			auto newNode = m_Components.AddNode(nodeToCopy.Node->Data());
+			auto result = m_Nodes.EmplaceBack_CR(entityID, newNode);
+
+			return VoidComponentAllocationData(result.BucketIndex, result.ElementIndex, &newNode->Data());
+		}
+
+		virtual VoidComponentAllocationData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) override
+		{
+			using ContainerType = StableComponentAllocator<ComponentType>;
+			ContainerType* from = dynamic_cast<ContainerType*>(fromContainer);
+			if (from == nullptr)
+			{
+				return VoidComponentAllocationData();
+			}
+			if (!from->m_Nodes.IsPositionValid(bucketIndex, elementIndex))
+			{
+				return VoidComponentAllocationData();
+			}
+
+			NodeInfo& nodeToCopy = from->m_Nodes(bucketIndex, elementIndex);
+
+			auto newNode = m_Components.AddNode(nodeToCopy.Node->Data());
+			auto result = m_Nodes.EmplaceBack_CR(entityID, newNode);
+
+			return VoidComponentAllocationData(result.BucketIndex, result.ElementIndex, &newNode->Data());
+		}
 	private:
 		BucketAllocator<ComponentType> m_Components;
 		BucketVector<NodeInfo> m_Nodes;

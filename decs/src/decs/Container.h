@@ -62,9 +62,11 @@ namespace decs
 		uint64_t m_FreeEntitiesCount = 0;
 
 	public:
-		Entity CreateEntity(bool isActive = true);
+		Entity CreateEntity(const bool& isActive = true);
 
 		bool DestroyEntity(const EntityID& entity);
+
+		Entity Spawn(const Entity& prefab, const bool& isActive = true);
 
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
@@ -96,13 +98,22 @@ namespace decs
 			return m_EntityData[entity].IsActive;
 		}
 
+		inline uint32_t GetComponentsCount(const EntityID& entity) const
+		{
+			auto& data = m_EntityData[entity];
+			if (data.IsAlive && data.CurrentArchetype != nullptr)
+			{
+				return data.CurrentArchetype->GetComponentsCount();
+			}
+			return 0;
+		}
 		// Entities - end
 
 		// Components containers:
 	public:
 
 		template<typename ComponentType, typename ...Args>
-		ComponentType* CreateComponent(const EntityID& e, Args&&... args)
+		ComponentType* AddComponent(const EntityID& e, Args&&... args)
 		{
 			if (IsEntityAlive(e))
 			{
@@ -345,13 +356,13 @@ namespace decs
 
 	public:
 		bool AddEntityCreationObserver(CreateEntityObserver* observer);
-		
+
 		bool RemoveEntityCreationObserver(CreateEntityObserver* observer);
-		
+
 		bool AddEntityDestructionObserver(DestroyEntityObserver* observer);
-		
+
 		bool RemoveEntityDestructionObserver(DestroyEntityObserver* observer);
-		
+
 	private:
 		inline void InvokeCreateEntityObservers(const EntityID& entity)
 		{

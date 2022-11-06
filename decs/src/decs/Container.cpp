@@ -27,7 +27,7 @@ namespace decs
 		DestroyComponentsContexts();
 	}
 
-	Entity Container::CreateEntity(bool isActive)
+	Entity Container::CreateEntity(const bool& isActive)
 	{
 		m_CreatedEntitiesCount += 1;
 		if (m_FreeEntitiesCount > 0)
@@ -113,6 +113,35 @@ namespace decs
 		}
 
 		return false;
+	}
+
+	Entity Container::Spawn(const Entity& prefab, const bool& isActive)
+	{
+		if (!prefab.IsValid()) return Entity();
+
+		Container* prefabContainer = prefab.GetContainer();
+		uint64_t componentsCount = prefab.GetComponentsCount();
+
+		// create components for new entity;
+		std::vector<ComponentContextBase*> contexts;
+		contexts.reserve(componentsCount);
+
+		// fetching containers, if one container is not found then return invalid entity.
+		for (uint64_t i = 0; i < componentsCount; i++)
+		{
+
+		}
+
+		// create entity:
+		Entity entity = CreateEntity(isActive);
+		if (componentsCount > 0)
+		{
+			Archetype* archetype = nullptr;
+
+
+		}
+
+		return entity;
 	}
 
 	bool Container::RemoveComponent(const EntityID& e, const TypeID& componentTypeID)
