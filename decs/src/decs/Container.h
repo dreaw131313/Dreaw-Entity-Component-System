@@ -11,8 +11,7 @@
 namespace decs
 {
 	class Entity;
-
-
+	
 	struct PrefabSpawnComponentContextData
 	{
 	public:
@@ -92,7 +91,7 @@ namespace decs
 			m_ComponentContainerBucketSize = size;
 		}
 
-		// Entities:
+#pragma region ENTITIES:
 	private:
 		EntityManager m_EntityManager = { 1000 };
 		PrefabSpawnData m_SpawnData = {};
@@ -143,9 +142,9 @@ namespace decs
 			Archetype* prefabArchetype
 		);
 
-		// Entities - end
+#pragma endregion
 
-		// Components containers:
+#pragma region COMPONENTS:
 	public:
 
 		template<typename ComponentType, typename ...Args>
@@ -328,9 +327,9 @@ namespace decs
 			return data.CurrentArchetype->m_ComponentsRefs[dataIndex];
 		}
 
-		// Components - end
+#pragma endregion
 
-		// Archetypes:
+#pragma region ARCHETYPES:
 	private:
 		ArchetypesMap m_ArchetypesMap;
 
@@ -396,9 +395,9 @@ namespace decs
 			Container* prefabContainer
 		);
 
-		// Archetypes - end
+#pragma endregion
 
-		// Observers:
+#pragma region OBSERVERS:
 	private:
 		std::vector<CreateEntityObserver*> m_EntityCreationObservers;
 		std::vector<DestroyEntityObserver*> m_EntittyDestructionObservers;
@@ -425,9 +424,7 @@ namespace decs
 				observer->OnDestroyEntity(entity, *this);
 		}
 
-		// Observers - end
-
+#pragma endregion
 
 	};
 }
-
