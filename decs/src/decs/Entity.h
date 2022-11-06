@@ -44,7 +44,7 @@ namespace decs
 			}
 			return false;
 		}
-		// Entity methods implementation:
+
 		template<typename T>
 		inline T* GetComponent()
 		{
@@ -165,7 +165,6 @@ namespace decs
 
 			return std::numeric_limits<uint32_t>::max();
 		}
-
 
 		inline uint32_t GetComponentsCountSafe()
 		{

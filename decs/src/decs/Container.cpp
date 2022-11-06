@@ -96,8 +96,6 @@ namespace decs
 		Container* prefabContainer = prefab.GetContainer(); 
 		EntityData prefabEntityData = prefabContainer->m_EntityManager.GetEntityData(prefab.ID());
 
-		// create components for new entity;
-
 		Archetype* prefabArchetype = prefabEntityData.CurrentArchetype;
 		if (prefabArchetype == nullptr)
 		{
@@ -163,7 +161,6 @@ namespace decs
 		}
 
 		InvokeEntityCreationObservers(spawnedEntityID);
-
 		for (uint64_t i = 0; i < componentsCount; i++)
 		{
 			auto& componentContext = m_SpawnData.ComponentContexts[i];
@@ -173,6 +170,7 @@ namespace decs
 				*this
 			);
 		}
+
 		return Entity(spawnedEntityID, this);
 	}
 

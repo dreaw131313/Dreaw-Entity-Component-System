@@ -100,7 +100,7 @@ namespace decs
 
 		// Entities:
 	private:
-		EntityManager m_EntityManager;
+		EntityManager m_EntityManager = {1000};
 		PrefabSpawnData m_SpawnData = {};
 
 	public:
