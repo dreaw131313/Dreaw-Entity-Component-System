@@ -19,6 +19,10 @@ namespace decs
 
 		~EntityManager();
 
+		uint64_t GetCreatedEntitiesCount() const { return m_CreatedEntitiesCount; }
+		uint64_t GetEntitiesDataCount() const { return m_enitiesDataCount; }
+		uint64_t GetFreeEntitiesCount() const { return m_FreeEntitiesCount; }
+
 		EntityID CreateEntity(const bool& isActive = true);
 
 		bool DestroyEntity(const EntityID& entity);
