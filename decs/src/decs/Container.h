@@ -110,6 +110,10 @@ namespace decs
 
 		Entity Spawn(const Entity& prefab, const bool& isActive = true);
 
+		bool Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive = true);
+
+		bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive = true);
+
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
 			return m_EntityManager.IsEntityAlive(entity);
@@ -386,9 +390,8 @@ namespace decs
 
 		void AddSpawnedEntityToArchetype(
 			const EntityID& entityID,
-			Archetype& toArchetype,
-			Archetype& prefabArchetype,
-			const bool& spawnFromTheSameContainer
+			Archetype* toArchetype,
+			Archetype* prefabArchetype
 		);
 
 		EntityID CreateEntityFromSpawnData(
