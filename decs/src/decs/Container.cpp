@@ -39,7 +39,7 @@ namespace decs
 			entityData.IsAlive = true;
 			entityData.IsActive = isActive;
 
-			InvokeCreateEntityObservers(entityData.ID);
+			InvokeEntityCreationObservers(entityData.ID);
 
 			return Entity(entityData.ID, this);
 		}
@@ -48,7 +48,7 @@ namespace decs
 			m_enitiesDataCount += 1;
 			EntityData& entityData = m_EntityData.emplace_back(m_EntityData.size(), isActive);
 
-			InvokeCreateEntityObservers(entityData.ID);
+			InvokeEntityCreationObservers(entityData.ID);
 
 			return Entity(entityData.ID, this);
 		}
@@ -60,7 +60,7 @@ namespace decs
 		{
 			EntityData& entityData = m_EntityData[entity];
 
-			InvokeDestroyEntityObservers(entity);
+			InvokeEntityDestructionObservers(entity);
 
 			Archetype* currentArchetype = entityData.CurrentArchetype;
 			if (currentArchetype != nullptr)

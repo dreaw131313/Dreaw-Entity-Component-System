@@ -364,13 +364,13 @@ namespace decs
 		bool RemoveEntityDestructionObserver(DestroyEntityObserver* observer);
 
 	private:
-		inline void InvokeCreateEntityObservers(const EntityID& entity)
+		inline void InvokeEntityCreationObservers(const EntityID& entity)
 		{
 			for (auto observer : m_EntityCreationObservers)
 				observer->OnCreateEntity(entity, *this);
 		}
 
-		inline void InvokeDestroyEntityObservers(const EntityID& entity)
+		inline void InvokeEntityDestructionObservers(const EntityID& entity)
 		{
 			for (auto observer : m_EntittyDestructionObservers)
 				observer->OnDestroyEntity(entity, *this);
