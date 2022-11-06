@@ -1,6 +1,7 @@
 #pragma once
 #include "decspch.h"
 
+#include "Type.h"
 #include "ComponentContainer.h"
 #include "Observers.h"
 
@@ -21,6 +22,7 @@ namespace decs
 		}
 
 		virtual BaseComponentAllocator* GetAllocator() = 0;
+		virtual TypeID GetComponentTypeID() const = 0;
 
 		virtual void InvokeOnCreateComponent_S(void* component, const EntityID& entity, Container& container) = 0; // awful but i have no idea how do it better
 		virtual void InvokeOnDestroyComponent_S(void* component, const EntityID& entity, Container& container) = 0; //
@@ -46,6 +48,7 @@ namespace decs
 
 		}
 
+		virtual TypeID GetComponentTypeID() const { return Type<ComponentType>::ID(); }
 		virtual BaseComponentAllocator* GetAllocator() override { return &Allocator; }
 
 		virtual void InvokeOnCreateComponent_S(void* component, const EntityID& entity, Container& container)override

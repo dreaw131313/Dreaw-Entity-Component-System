@@ -25,7 +25,8 @@ namespace decs
 
 		}
 	};
-	struct VoidComponentAllocationData
+
+	struct ComponentCopyData
 	{
 	public:
 		uint64_t BucketIndex = std::numeric_limits<uint64_t>::max();
@@ -33,9 +34,9 @@ namespace decs
 		void* Component = nullptr;
 
 	public:
-		VoidComponentAllocationData() {}
+		ComponentCopyData() {}
 
-		VoidComponentAllocationData(uint64_t bucketIndex, uint64_t index, void* component) :
+		ComponentCopyData(uint64_t bucketIndex, uint64_t index, void* component) :
 			BucketIndex(bucketIndex), ElementIndex(index), Component(component)
 		{
 
@@ -133,9 +134,9 @@ namespace decs
 
 		virtual void* GetComponentAsVoid(const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
 
-		virtual VoidComponentAllocationData CreateCopy(const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
+		virtual ComponentCopyData CreateCopy(const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
 
-		virtual VoidComponentAllocationData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
+		virtual ComponentCopyData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
 	};
 
 	template<typename ComponentType>
@@ -236,11 +237,11 @@ namespace decs
 			return &m_Nodes(bucketIndex, elementIndex).Node->Data();
 		}
 
-		virtual VoidComponentAllocationData CreateCopy(const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) override
+		virtual ComponentCopyData CreateCopy(const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) override
 		{
 			if (!m_Nodes.IsPositionValid(bucketIndex, elementIndex))
 			{
-				return VoidComponentAllocationData();
+				return ComponentCopyData();
 			}
 
 			NodeInfo& nodeToCopy = m_Nodes(bucketIndex, elementIndex);
@@ -248,20 +249,20 @@ namespace decs
 			auto newNode = m_Components.AddNode(nodeToCopy.Node->Data());
 			auto result = m_Nodes.EmplaceBack_CR(entityID, newNode);
 
-			return VoidComponentAllocationData(result.BucketIndex, result.ElementIndex, &newNode->Data());
+			return ComponentCopyData(result.BucketIndex, result.ElementIndex, &newNode->Data());
 		}
 
-		virtual VoidComponentAllocationData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) override
+		virtual ComponentCopyData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) override
 		{
 			using ContainerType = StableComponentAllocator<ComponentType>;
 			ContainerType* from = dynamic_cast<ContainerType*>(fromContainer);
 			if (from == nullptr)
 			{
-				return VoidComponentAllocationData();
+				return ComponentCopyData();
 			}
 			if (!from->m_Nodes.IsPositionValid(bucketIndex, elementIndex))
 			{
-				return VoidComponentAllocationData();
+				return ComponentCopyData();
 			}
 
 			NodeInfo& nodeToCopy = from->m_Nodes(bucketIndex, elementIndex);
@@ -269,7 +270,7 @@ namespace decs
 			auto newNode = m_Components.AddNode(nodeToCopy.Node->Data());
 			auto result = m_Nodes.EmplaceBack_CR(entityID, newNode);
 
-			return VoidComponentAllocationData(result.BucketIndex, result.ElementIndex, &newNode->Data());
+			return ComponentCopyData(result.BucketIndex, result.ElementIndex, &newNode->Data());
 		}
 	private:
 		BucketAllocator<ComponentType> m_Components;

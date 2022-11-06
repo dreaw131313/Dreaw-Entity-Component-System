@@ -16,10 +16,9 @@ namespace decs
 		const uint64_t& componentContainerBucketSize
 	) :
 		m_ComponentContainerBucketSize(componentContainerBucketSize),
-		m_ContainerSizeType(componentContainerBucketSizeType)
+		m_ContainerSizeType(componentContainerBucketSizeType),
+		m_EntityManager(initialEntitiesCapacity)
 	{
-		m_EntityData.reserve(initialEntitiesCapacity);
-		m_FreeEntities.reserve(initialEntitiesCapacity / 3);
 	}
 
 	Container::~Container()
@@ -29,36 +28,17 @@ namespace decs
 
 	Entity Container::CreateEntity(const bool& isActive)
 	{
-		m_CreatedEntitiesCount += 1;
-		if (m_FreeEntitiesCount > 0)
-		{
-			m_FreeEntitiesCount -= 1;
-			EntityData& entityData = m_EntityData[m_FreeEntities.back()];
-			m_FreeEntities.pop_back();
+		EntityID id = m_EntityManager.CreateEntity(isActive);
+		InvokeEntityCreationObservers(id);
 
-			entityData.IsAlive = true;
-			entityData.IsActive = isActive;
-
-			InvokeEntityCreationObservers(entityData.ID);
-
-			return Entity(entityData.ID, this);
-		}
-		else
-		{
-			m_enitiesDataCount += 1;
-			EntityData& entityData = m_EntityData.emplace_back(m_EntityData.size(), isActive);
-
-			InvokeEntityCreationObservers(entityData.ID);
-
-			return Entity(entityData.ID, this);
-		}
+		return Entity(id, this);
 	}
 
 	bool Container::DestroyEntity(const EntityID& entity)
 	{
 		if (IsEntityAlive(entity))
 		{
-			EntityData& entityData = m_EntityData[entity];
+			EntityData& entityData = m_EntityManager.GetEntityData(entity);
 
 			InvokeEntityDestructionObservers(entity);
 
@@ -102,13 +82,7 @@ namespace decs
 				RemoveEntityFromArchetype(*entityData.CurrentArchetype, entityData);
 			}
 
-
-			// removing entity:
-			m_CreatedEntitiesCount -= 1;
-			m_FreeEntitiesCount += 1;
-			m_FreeEntities.push_back(entity);
-			entityData.Version += 1;
-			entityData.IsAlive = false;
+			m_EntityManager.DestroyEntity(entity);
 			return true;
 		}
 
@@ -119,36 +93,94 @@ namespace decs
 	{
 		if (!prefab.IsValid()) return Entity();
 
-		Container* prefabContainer = prefab.GetContainer();
-		uint64_t componentsCount = prefab.GetComponentsCount();
+		Container* prefabContainer = prefab.GetContainer(); 
+		EntityData prefabEntityData = prefabContainer->m_EntityManager.GetEntityData(prefab.ID());
 
 		// create components for new entity;
-		std::vector<ComponentContextBase*> contexts;
-		contexts.reserve(componentsCount);
 
-		// fetching containers, if one container is not found then return invalid entity.
+		Archetype* prefabArchetype = prefabEntityData.CurrentArchetype;
+		if (prefabArchetype == nullptr)
+		{
+			return CreateEntity(isActive);
+		}
+
+		uint64_t componentsCount = prefabArchetype->GetComponentsCount();
+		m_SpawnData.Clear();
+		m_SpawnData.Reserve(componentsCount);
+
+		auto endIt = m_ComponentContexts.end();
 		for (uint64_t i = 0; i < componentsCount; i++)
 		{
-
+			TypeID typeID = prefabArchetype->ComponentsTypes()[i];
+			auto it = m_ComponentContexts.find(typeID);
+			if (it == endIt)
+			{
+				return Entity();
+			}
+			else
+			{
+				m_SpawnData.ComponentContexts.emplace_back(
+					typeID,
+					prefabArchetype->m_ComponentContexts[i],
+					it->second
+				);
+			}
 		}
 
-		// create entity:
-		Entity entity = CreateEntity(isActive);
-		if (componentsCount > 0)
+		EntityID spawnedEntityID = m_EntityManager.CreateEntity(isActive);
+		Archetype* newEntityArchetype = nullptr;
+
+		for (uint64_t i = 0; i < componentsCount; i++)
 		{
-			Archetype* archetype = nullptr;
+			TypeID componentTypeID = prefabArchetype->ComponentsTypes()[i];
+			auto contextData = m_SpawnData.ComponentContexts[i];
+			auto prefabComponentData = prefabContainer->GetEntityComponentBucketElementIndex(prefabEntityData, i);
 
+			m_SpawnData.ComponentContexts[i].ComponentData = contextData.ComponentContext->GetAllocator()->CreateCopy(
+				contextData.PrefabComponentContext->GetAllocator(),
+				spawnedEntityID,
+				prefabComponentData.BucketIndex,
+				prefabComponentData.ElementIndex
+			);
 
+			if (i == 0)
+			{
+				newEntityArchetype = m_ArchetypesMap.GetSingleComponentArchetype(contextData.ComponentContext, componentTypeID);
+			}
+			else
+			{
+				newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent(
+					*newEntityArchetype,
+					componentTypeID,
+					contextData.ComponentContext
+				);
+			}
 		}
 
-		return entity;
+		if (newEntityArchetype != nullptr)
+		{
+			AddSpawnedEntityToArchetype(spawnedEntityID, *newEntityArchetype, *prefabArchetype);
+		}
+
+		InvokeEntityCreationObservers(spawnedEntityID);
+
+		for (uint64_t i = 0; i < componentsCount; i++)
+		{
+			auto& componentContext = m_SpawnData.ComponentContexts[i];
+			m_SpawnData.ComponentContexts[i].ComponentContext->InvokeOnCreateComponent_S(
+				componentContext.ComponentData.Component,
+				spawnedEntityID,
+				*this
+			);
+		}
+		return Entity(spawnedEntityID, this);
 	}
 
 	bool Container::RemoveComponent(const EntityID& e, const TypeID& componentTypeID)
 	{
 		if (!IsEntityAlive(e)) return false;
 
-		EntityData& entityData = m_EntityData[e];
+		EntityData& entityData = m_EntityManager.GetEntityData(e);
 		if (entityData.CurrentArchetype == nullptr) return false;
 
 		auto compIdxInArch = entityData.CurrentArchetype->m_TypeIDsIndexes.find(componentTypeID);
@@ -215,9 +247,7 @@ namespace decs
 	)
 	{
 		Archetype& oldArchetype = *entityData.CurrentArchetype;
-
 		uint64_t firstCompIndexInOldArchetype = entityData.IndexInArchetype * oldArchetype.GetComponentsCount();
-
 		newArchetype.m_EntitiesData.emplace_back(oldArchetype.m_EntitiesData[entityData.IndexInArchetype]);
 
 		for (uint64_t compIdx = 0; compIdx < newArchetype.GetComponentsCount(); compIdx++)
@@ -231,9 +261,7 @@ namespace decs
 			else
 			{
 				uint64_t typeIndexInOldArchetype = oldArchetype.m_TypeIDsIndexes[newArchetype.ComponentsTypes()[compIdx]];
-
 				uint64_t compDataIndexOldArchetype = firstCompIndexInOldArchetype + typeIndexInOldArchetype;
-
 				newArchetype.m_ComponentsRefs.emplace_back(oldArchetype.m_ComponentsRefs[compDataIndexOldArchetype]);
 			}
 		}
@@ -243,7 +271,6 @@ namespace decs
 		entityData.CurrentArchetype = &newArchetype;
 		entityData.IndexInArchetype = newArchetype.m_EntitiesCount;
 		newArchetype.m_EntitiesCount += 1;
-
 	}
 
 	void Container::AddEntityToSingleComponentArchetype(
@@ -260,7 +287,6 @@ namespace decs
 		entityData.CurrentArchetype = &newArchetype;
 		entityData.IndexInArchetype = newArchetype.EntitiesCount();
 		newArchetype.m_EntitiesCount += 1;
-
 	}
 
 
@@ -269,7 +295,6 @@ namespace decs
 		if (&archetype != entityData.CurrentArchetype) return;
 
 		uint64_t lastEntityIndex = archetype.m_EntitiesCount - 1;
-
 		const uint64_t archetypeComponentCount = archetype.GetComponentsCount();
 
 		uint64_t firstComponentPointer = entityData.IndexInArchetype * archetypeComponentCount;
@@ -284,7 +309,7 @@ namespace decs
 		else
 		{
 			auto archEntityData = archetype.m_EntitiesData.back();
-			EntityData& lastEntityInArchetypeData = m_EntityData[archEntityData.ID];
+			EntityData& lastEntityInArchetypeData = m_EntityManager.GetEntityData(archEntityData.ID);
 			uint64_t lastEntityFirstComponentIndex = lastEntityInArchetypeData.IndexInArchetype * archetypeComponentCount;
 
 			lastEntityInArchetypeData.IndexInArchetype = entityData.IndexInArchetype;
@@ -313,7 +338,7 @@ namespace decs
 		const uint64_t& typeIndex
 	)
 	{
-		EntityData& data = m_EntityData[entityID];
+		EntityData& data = m_EntityManager.GetEntityData(entityID);
 
 		uint64_t compDataIndex = data.IndexInArchetype * data.CurrentArchetype->GetComponentsCount() + typeIndex;
 
@@ -322,6 +347,33 @@ namespace decs
 		compData.BucketIndex = compBucketIndex;
 		compData.ElementIndex = compElementIndex;
 		compData.ComponentPointer = compPtr;
+	}
+
+	void Container::AddSpawnedEntityToArchetype(const EntityID& entityID, Archetype& toArchetype, Archetype& prefabArchetype)
+	{
+		EntityData& data = m_EntityManager.GetEntityData(entityID);
+		data.CurrentArchetype = &toArchetype;
+		data.IndexInArchetype = toArchetype.EntitiesCount();
+
+		toArchetype.m_EntitiesData.emplace_back(entityID, data.IsActive);
+
+		// adding component:
+		uint64_t componentsCount = m_SpawnData.ComponentContexts.size();
+		for (int compIdx = 0; compIdx < componentsCount; compIdx++)
+		{
+			TypeID componentTypeIdInArchetype = toArchetype.ComponentsTypes()[compIdx];
+			uint64_t componentIndexInPrefabArchetype = prefabArchetype.m_TypeIDsIndexes[componentTypeIdInArchetype];
+
+			auto& contextData = m_SpawnData.ComponentContexts[componentIndexInPrefabArchetype];
+
+			toArchetype.m_ComponentsRefs.emplace_back(
+				contextData.ComponentData.BucketIndex,
+				contextData.ComponentData.ElementIndex,
+				contextData.ComponentData.Component
+			);
+		}
+
+		toArchetype.m_EntitiesCount += 1;
 	}
 
 	bool Container::AddEntityCreationObserver(CreateEntityObserver* observer)

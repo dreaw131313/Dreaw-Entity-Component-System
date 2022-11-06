@@ -3,15 +3,61 @@
 
 #include "Core.h"
 #include "Type.h"
-#include "EntityData.h"
+#include "EntityManager.h"
 #include "ComponentContext.h"
-#include "Archetype.h"
 #include "ComponentContainer.h"
 #include "Observers.h"
 
 namespace decs
 {
 	class Entity;
+
+
+	struct PrefabSpawnComponentContextData
+	{
+	public:
+		TypeID ComponentType = std::numeric_limits<TypeID>::max();
+		ComponentContextBase* PrefabComponentContext = nullptr;
+		ComponentContextBase* ComponentContext = nullptr;
+		ComponentCopyData ComponentData = {};
+	public:
+		PrefabSpawnComponentContextData()
+		{
+
+		}
+
+		PrefabSpawnComponentContextData(
+			const TypeID& componentType,
+			ComponentContextBase* prefabContext,
+			ComponentContextBase* context
+		) :
+			ComponentType(componentType), PrefabComponentContext(prefabContext), ComponentContext(context)
+		{
+
+		}
+	};
+
+	struct PrefabSpawnData
+	{
+	public:
+		std::vector<PrefabSpawnComponentContextData> ComponentContexts;
+
+	public:
+		void Clear()
+		{
+			ComponentContexts.clear();
+		}
+
+		void Reserve(const uint64_t& capacity)
+		{
+			ComponentContexts.reserve(capacity);
+		}
+
+		inline bool IsValid()const
+		{
+			return ComponentContexts.size() > 0;
+		}
+	};
 
 	enum class ContainerBucketSizeType
 	{
@@ -54,12 +100,8 @@ namespace decs
 
 		// Entities:
 	private:
-		std::vector<EntityData> m_EntityData;
-		EntityID m_CreatedEntitiesCount = 0;
-		uint64_t m_enitiesDataCount = 0;
-
-		std::vector<uint64_t> m_FreeEntities;
-		uint64_t m_FreeEntitiesCount = 0;
+		EntityManager m_EntityManager;
+		PrefabSpawnData m_SpawnData = {};
 
 	public:
 		Entity CreateEntity(const bool& isActive = true);
@@ -70,42 +112,27 @@ namespace decs
 
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
-			if (entity >= m_enitiesDataCount) return false;
-			return m_EntityData[entity].IsAlive;
+			return m_EntityManager.IsEntityAlive(entity);
 		}
 
 		inline uint32_t GetEntityVersion(const EntityID& entity) const
 		{
-			if (IsEntityAlive(entity))
-				return m_EntityData[entity].Version;
-
-			return 0;
+			return m_EntityManager.GetEntityVersion(entity);
 		}
 
 		inline void SetEntityActive(const EntityID& entity, const bool& isActive)
 		{
-			auto& data = m_EntityData[entity];
-			if (data.IsActive != isActive)
-			{
-				data.IsActive = isActive;
-				auto& archEntityData = data.CurrentArchetype->m_EntitiesData[data.IndexInArchetype];
-				archEntityData.IsActive = isActive;
-			}
+			m_EntityManager.SetEntityActive(entity, isActive);
 		}
 
 		inline bool IsEntityActive(const EntityID& entity)
 		{
-			return m_EntityData[entity].IsActive;
+			return m_EntityManager.IsEntityActive(entity);
 		}
 
 		inline uint32_t GetComponentsCount(const EntityID& entity) const
 		{
-			auto& data = m_EntityData[entity];
-			if (data.IsAlive && data.CurrentArchetype != nullptr)
-			{
-				return data.CurrentArchetype->GetComponentsCount();
-			}
-			return 0;
+			return m_EntityManager.GetComponentsCount(entity);
 		}
 		// Entities - end
 
@@ -117,7 +144,7 @@ namespace decs
 		{
 			if (IsEntityAlive(e))
 			{
-				EntityData& entityData = m_EntityData[e];
+				EntityData& entityData = m_EntityManager.GetEntityData(e);
 
 				constexpr auto copmonentTypeID = Type<ComponentType>::ID();
 
@@ -182,7 +209,7 @@ namespace decs
 		{
 			if (IsEntityAlive(e))
 			{
-				EntityData& data = m_EntityData[e];
+				EntityData& data = m_EntityManager.GetEntityData(e);
 
 				if (data.CurrentArchetype == nullptr) return nullptr;
 
@@ -204,7 +231,7 @@ namespace decs
 		{
 			if (IsEntityAlive(e))
 			{
-				EntityData& data = m_EntityData[e];
+				EntityData& data = m_EntityManager.GetEntityData(e);
 
 				if (data.CurrentArchetype == nullptr) return false;
 
@@ -236,7 +263,6 @@ namespace decs
 			context = new ComponentContext<ComponentType>(bucketSize);
 			return true;
 		}
-
 
 	private:
 		template<typename ComponentType>
@@ -336,7 +362,7 @@ namespace decs
 			void* compPtr
 		)
 		{
-			EntityData& data = m_EntityData[entityID];
+			EntityData& data = m_EntityManager.GetEntityData(entityID);
 
 			uint64_t compDataIndex = data.CurrentArchetype->m_TypeIDsIndexes[Type<ComponentType>::ID()];
 
@@ -346,6 +372,8 @@ namespace decs
 			compData.ElementIndex = compElementIndex;
 			compData.ComponentPointer = compPtr;
 		}
+
+		void AddSpawnedEntityToArchetype(const EntityID& entityID, Archetype& toArchetype, Archetype& prefabArchetype);
 
 		// Archetypes - end
 

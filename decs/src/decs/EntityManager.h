@@ -5,13 +5,10 @@
 #include "EntityData.h"
 #include "Archetype.h"
 
-
-
 namespace decs
 {
 	class EntityManager
 	{
-		friend class Container;
 	public:
 		EntityManager();
 
@@ -68,6 +65,7 @@ namespace decs
 			return 0;
 		}
 
+		inline EntityData& GetEntityData(const EntityID& entity) { return m_EntityData[entity]; }
 	private:
 		std::vector<EntityData> m_EntityData;
 		EntityID m_CreatedEntitiesCount = 0;
@@ -75,8 +73,5 @@ namespace decs
 
 		std::vector<uint64_t> m_FreeEntities;
 		uint64_t m_FreeEntitiesCount = 0;
-
-	private:
-		inline EntityData& GetEntityData(const EntityID& entity) { return m_EntityData[entity]; }
 	};
 }

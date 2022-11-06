@@ -130,6 +130,7 @@ namespace decs
 		}
 
 		inline uint32_t GetComponentsCount() const { return m_ComponentsCount; }
+
 		inline const TypeID* const ComponentsTypes() const { return m_TypeIDs.data(); }
 
 		inline uint32_t EntitiesCount() const { return m_EntitiesCount; }
@@ -167,10 +168,9 @@ namespace decs
 			}
 		}
 
-		template<typename T>
-		Archetype* GetSingleComponentArchetype(ComponentContextBase* componentContext)
+		Archetype* GetSingleComponentArchetype(ComponentContextBase* componentContext, const TypeID& componentTypeID)
 		{
-			constexpr auto typeID = Type<T>::ID();
+			const TypeID typeID = componentTypeID;
 			auto& archetype = m_SingleComponentArchetypes[typeID];
 
 			if (archetype == nullptr)
@@ -183,6 +183,11 @@ namespace decs
 			return archetype;
 		}
 
+		template<typename T>
+		inline Archetype* GetSingleComponentArchetype(ComponentContextBase* componentContext)
+		{
+			return GetSingleComponentArchetype(componentContext, Type<T>::ID());
+		}
 
 		Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype, const TypeID& addedComponentTypeID, ComponentContextBase* componentContainer)
 		{
@@ -263,6 +268,12 @@ namespace decs
 			AddArchetypeToCorrectContainers(*archetype, true);
 		}
 
+		Archetype* FindArchetype(TypeID* types, const uint64_t typesCount)
+		{
+
+
+			return nullptr;
+		}
 
 	private:
 		std::vector<Archetype*> m_Archetypes;
