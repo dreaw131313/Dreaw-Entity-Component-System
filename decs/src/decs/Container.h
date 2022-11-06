@@ -69,12 +69,6 @@ namespace decs
 	{
 		template<typename ...Types>
 		friend class View;
-		template<typename ...Types>
-		friend class ViewBaseWithEntity;
-		template<typename ...Types>
-		friend class ViewBase;
-		template<typename ...Types>
-		friend class View;
 
 	public:
 		Container();

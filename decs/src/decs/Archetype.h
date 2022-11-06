@@ -32,8 +32,8 @@ namespace decs
 	struct ComponentRef
 	{
 	public:
-		uint32_t BucketIndex = std::numeric_limits< uint32_t>::max();
-		uint32_t ElementIndex = std::numeric_limits< uint32_t>::max();
+		uint64_t BucketIndex = std::numeric_limits< uint64_t>::max();
+		uint64_t ElementIndex = std::numeric_limits< uint64_t>::max();
 		void* ComponentPointer = nullptr;
 
 	public:
@@ -43,8 +43,8 @@ namespace decs
 		}
 
 		ComponentRef(
-			const uint32_t& bucketIndex,
-			const uint32_t& elementIndex,
+			const uint64_t& bucketIndex,
+			const uint64_t& elementIndex,
 			void*& componentPointer
 		) :
 			BucketIndex(bucketIndex),
@@ -53,6 +53,8 @@ namespace decs
 		{
 
 		}
+
+		~ComponentRef() {}
 	};
 
 	struct ArchetypeEntityData
@@ -97,7 +99,7 @@ namespace decs
 		ecsMap<TypeID, ArchetypeEdge> m_Edges;
 
 		std::vector<TypeID> m_TypeIDs;
-		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
+		ecsMap<TypeID, uint64_t> m_TypeIDsIndexes;
 
 	public:
 		Archetype()
