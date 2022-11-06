@@ -100,7 +100,7 @@ namespace decs
 
 		// Entities:
 	private:
-		EntityManager m_EntityManager = {1000};
+		EntityManager m_EntityManager = { 1000 };
 		PrefabSpawnData m_SpawnData = {};
 
 	public:
@@ -134,6 +134,17 @@ namespace decs
 		{
 			return m_EntityManager.GetComponentsCount(entity);
 		}
+
+	private:
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns>True if spawnd data preparation succeded else false.</returns>
+		bool PreapareSpawnData(
+			const uint64_t& componentsCount,
+			Archetype* prefabArchetype
+		);
+
 		// Entities - end
 
 		// Components containers:
@@ -373,7 +384,20 @@ namespace decs
 			compData.ComponentPointer = compPtr;
 		}
 
-		void AddSpawnedEntityToArchetype(const EntityID& entityID, Archetype& toArchetype, Archetype& prefabArchetype);
+		void AddSpawnedEntityToArchetype(
+			const EntityID& entityID,
+			Archetype& toArchetype,
+			Archetype& prefabArchetype,
+			const bool& spawnFromTheSameContainer
+		);
+
+		EntityID CreateEntityFromSpawnData(
+			const bool& isActive,
+			const uint64_t componentsCount,
+			const EntityData& prefabEntityData,
+			Archetype* prefabArchetype,
+			Container* prefabContainer
+		);
 
 		// Archetypes - end
 
