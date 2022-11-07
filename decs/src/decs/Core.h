@@ -1,7 +1,6 @@
 #pragma once 
 #include "decspch.h"
 
-
 namespace decs
 {
 	namespace MemorySize
@@ -11,7 +10,6 @@ namespace decs
 		constexpr uint64_t GigaByte = 1073741824;
 	}
 
-	// Typedefs
 	using EntityID = uint64_t;
 	namespace Null
 	{
@@ -53,8 +51,6 @@ namespace decs
 	{
 		return fnv1a_32(s, c_string_lenght(s));
 	}
-
-
 
 	// Forward declaration:
 	class EntityData;

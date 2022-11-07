@@ -12,7 +12,7 @@ namespace decs
 
 	Container::Container(
 		const uint64_t& initialEntitiesCapacity,
-		const ContainerBucketSizeType& componentContainerBucketSizeType,
+		const BucketSizeType& componentContainerBucketSizeType,
 		const uint64_t& componentContainerBucketSize
 	) :
 		m_ComponentContainerBucketSize(componentContainerBucketSize),

@@ -18,10 +18,6 @@ namespace decs
 
 		typedef Bucket<DataType> BucketType;
 	public:
-		/*BucketNode(BucketNode& other) = delete;
-		BucketNode(BucketNode&& other) = delete;
-		BucketNode operator =(BucketNode& other) = delete;*/
-
 		inline BucketNode<DataType>* Next() { return m_Next; }
 		inline BucketNode<DataType>* Previous() { return m_Previous; }
 
@@ -60,16 +56,13 @@ namespace decs
 		BucketNode<DataType>* m_Previous = nullptr;
 		BucketNode<DataType>* m_Next = nullptr;
 		BucketType* m_Bucket = nullptr;
-
 	};
-
 
 	template<typename Data>
 	class Bucket
 	{
 		template<typename T>
 		friend class BucketAllocator;
-
 
 		typedef BucketNode<Data> NodeType;
 

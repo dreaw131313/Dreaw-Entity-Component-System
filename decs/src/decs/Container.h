@@ -58,7 +58,7 @@ namespace decs
 		}
 	};
 
-	enum class ContainerBucketSizeType
+	enum class BucketSizeType
 	{
 		ElementsCount,
 		BytesCount
@@ -74,7 +74,7 @@ namespace decs
 
 		Container(
 			const uint64_t& initialEntitiesCapacity,
-			const ContainerBucketSizeType& componentContainerBucketSizeType,
+			const BucketSizeType& componentContainerBucketSizeType,
 			const uint64_t& componentContainerBucketSize
 		);
 
@@ -82,10 +82,10 @@ namespace decs
 
 	private:
 		uint64_t m_ComponentContainerBucketSize = decs::MemorySize::KiloByte * 16;
-		ContainerBucketSizeType m_ContainerSizeType = ContainerBucketSizeType::BytesCount;
+		BucketSizeType m_ContainerSizeType = BucketSizeType::BytesCount;
 
 	public:
-		inline void SetDefaultComponentContainerBucketSize(const uint64_t& size, const ContainerBucketSizeType& sizeType)
+		inline void SetDefaultComponentBucketSize(const uint64_t& size, const BucketSizeType& sizeType)
 		{
 			m_ContainerSizeType = sizeType;
 			m_ComponentContainerBucketSize = size;
@@ -284,12 +284,12 @@ namespace decs
 				uint64_t bucektSize = 0;
 				switch (m_ContainerSizeType)
 				{
-					case decs::ContainerBucketSizeType::ElementsCount:
+					case decs::BucketSizeType::ElementsCount:
 					{
 						bucektSize = m_ComponentContainerBucketSize;
 						break;
 					}
-					case decs::ContainerBucketSizeType::BytesCount:
+					case decs::BucketSizeType::BytesCount:
 					{
 						bucektSize = m_ComponentContainerBucketSize / sizeof(ComponentType);
 						if ((m_ComponentContainerBucketSize % sizeof(ComponentType)) > 0)
@@ -425,6 +425,5 @@ namespace decs
 		}
 
 #pragma endregion
-
 	};
 }
