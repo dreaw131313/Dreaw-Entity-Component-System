@@ -147,26 +147,40 @@ namespace decs
 #pragma region COMPONENTS:
 	public:
 
+		/// <summary>
+		/// Must be invoked before addaing any component of type ComponentType in this container
+		/// </summary>
+		/// <typeparam name="ComponentType"></typeparam>
+		/// <param name="bucketSize">Size of one bucket in compnent allocator.</param>
+		/// <returns>True if set bucket size is successful, else false.</returns>
+		template<typename ComponentType>
+		bool SetComponentContainerBucketSize(const uint64_t& bucketSize)
+		{
+			if (bucketSize == 0) return false;
+			auto& context = m_ComponentContexts[Type<ComponentType>::ID()];
+			if (context != nullptr) return false;
+
+			context = new ComponentContext<ComponentType>(bucketSize);
+			return true;
+		}
+
 		template<typename ComponentType, typename ...Args>
 		ComponentType* AddComponent(const EntityID& e, Args&&... args)
 		{
 			if (IsEntityAlive(e))
 			{
 				EntityData& entityData = m_EntityManager.GetEntityData(e);
-
 				constexpr auto copmonentTypeID = Type<ComponentType>::ID();
 
 				{
-					auto currentComponent = GetComponent<ComponentType>(e);
+					auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
 					if (currentComponent != nullptr) return currentComponent;
 				}
 
 				auto componentContext = GetOrCreateComponentContext<ComponentType>();
-
 				StableComponentAllocator<ComponentType>* container = &componentContext->Allocator;
 
 				auto createResult = container->EmplaceBack(e, std::forward<Args>(args)...);
-
 				if (!createResult.IsValid()) return nullptr;
 
 				Archetype* archetype;
@@ -220,19 +234,8 @@ namespace decs
 			if (IsEntityAlive(e))
 			{
 				EntityData& data = m_EntityManager.GetEntityData(e);
-
-				if (data.CurrentArchetype == nullptr) return nullptr;
-
-				auto it = data.CurrentArchetype->m_TypeIDsIndexes.find(Type<ComponentType>::ID());
-				if (it != data.CurrentArchetype->m_TypeIDsIndexes.end())
-				{
-					ComponentContext<ComponentType>* componentContext = GetOrCreateComponentContext<ComponentType>();
-
-					auto compAccesData = GetEntityComponentBucketElementIndex(data, it->second);
-					return componentContext->Allocator.GetComponent(compAccesData.BucketIndex, compAccesData.ElementIndex);
-				}
+				return GetComponentWithoutCheckingIsAlive<ComponentType>(data);
 			}
-
 			return nullptr;
 		}
 
@@ -254,25 +257,6 @@ namespace decs
 
 	private:
 		ecsMap<TypeID, ComponentContextBase*> m_ComponentContexts;
-
-	public:
-
-		/// <summary>
-		/// Must be invoked before addaing any component of type ComponentType in this container
-		/// </summary>
-		/// <typeparam name="ComponentType"></typeparam>
-		/// <param name="bucketSize">Size of one bucket in compnent allocator.</param>
-		/// <returns>True if set bucket size is successful, else false.</returns>
-		template<typename ComponentType>
-		bool SetComponentContainerBucketSize(const uint64_t& bucketSize)
-		{
-			if (bucketSize == 0) return false;
-			auto& context = m_ComponentContexts[Type<ComponentType>::ID()];
-			if (context != nullptr) return false;
-
-			context = new ComponentContext<ComponentType>(bucketSize);
-			return true;
-		}
 
 	private:
 		template<typename ComponentType>
@@ -327,6 +311,19 @@ namespace decs
 		{
 			uint64_t dataIndex = data.CurrentArchetype->GetComponentsCount() * data.IndexInArchetype + typeIndex;
 			return data.CurrentArchetype->m_ComponentsRefs[dataIndex];
+		}
+
+		template<typename ComponentType>
+		ComponentType* GetComponentWithoutCheckingIsAlive(const EntityData& data)
+		{
+			Archetype* archetype = data.CurrentArchetype;
+			if (archetype == nullptr) return nullptr;
+
+			auto it = archetype->m_TypeIDsIndexes.find(Type<ComponentType>::ID());
+			if (it == archetype->m_TypeIDsIndexes.end()) return nullptr;
+
+			uint64_t dataIndex = archetype->GetComponentsCount() * data.IndexInArchetype + it->second;
+			return reinterpret_cast<ComponentType*>(archetype->m_ComponentsRefs[dataIndex].ComponentPointer);
 		}
 
 #pragma endregion

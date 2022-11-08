@@ -94,7 +94,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\decs\ComponnetContainer_New.h" />
     <ClInclude Include="src\decs\EntityManager.h" />
     <ClInclude Include="src\decspch.h" />
     <ClInclude Include="src\decs\Archetype.h" />

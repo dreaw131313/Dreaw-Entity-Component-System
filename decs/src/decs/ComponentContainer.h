@@ -7,7 +7,6 @@
 
 namespace decs
 {
-
 	template<typename ComponentType>
 	struct ComponentAllocationData
 	{
@@ -375,8 +374,15 @@ namespace decs
 					m_FreeSpacesCount += 1;
 					m_FreeSpaces.push_back(index);
 				}
-				m_Data[index].~DataType();
 
+				if (IsEmpty())
+				{
+					m_FreeSpaces.clear();
+					m_CurrentAllocationOffset = 0;
+					m_FreeSpacesCount = 0;
+				}
+
+				m_Data[index].~DataType();
 				return true;
 			}
 
