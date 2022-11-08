@@ -3,7 +3,7 @@
 #include "Core.h"
 
 #include "Containers/BucketAllocator.h"
-#include "Containers/BucketVector.h"
+#include "Containers/ChunkedVector.h"
 
 namespace decs
 {
@@ -77,14 +77,14 @@ namespace decs
 
 
 	template<typename ComponentType>
-	struct CompoentNodeInfo
+	struct ComponentNodeInfo
 	{
 	public:
 		BucketNode<ComponentType>* Node = nullptr;
 		EntityID eID = std::numeric_limits<EntityID>::max();
 
 	public:
-		CompoentNodeInfo(
+		ComponentNodeInfo(
 			EntityID entityID,
 			BucketNode<ComponentType>* node
 		) :
@@ -94,7 +94,7 @@ namespace decs
 
 		}
 
-		CompoentNodeInfo()
+		ComponentNodeInfo()
 		{
 
 		}
@@ -130,6 +130,10 @@ namespace decs
 	class BaseComponentAllocator
 	{
 	public:
+		inline bool IsEmpty()const { m_CreatedElements == 0; }
+
+		inline uint64_t Size() const { return m_CreatedElements; }
+
 		virtual ComponentAllocatorSwapData RemoveSwapBack(const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
 
 		virtual void* GetComponentAsVoid(const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
@@ -137,21 +141,16 @@ namespace decs
 		virtual ComponentCopyData CreateCopy(const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
 
 		virtual ComponentCopyData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
+
+	protected:
+		uint64_t m_CreatedElements = 0;
 	};
 
 	template<typename ComponentType>
 	class ComponentAllocator : public BaseComponentAllocator
 	{
-		using AllocationData = ComponentAllocationData<ComponentType>;
-		using NodeInfo = CompoentNodeInfo<ComponentType>;
 	public:
 		ComponentAllocator()
-		{
-
-		}
-
-		ComponentAllocator(const uint64_t& bucketCapacity) :
-			m_BucketCapacity(bucketCapacity)
 		{
 
 		}
@@ -161,23 +160,14 @@ namespace decs
 
 		}
 
-		inline bool IsEmpty()const { m_CreatedElements == 0; }
-
-		inline uint64_t Size() const { return m_CreatedElements; }
-
 		virtual inline ComponentType* GetComponent(const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
-
-	private:
-		uint64_t m_BucketCapacity = 100;
-		uint64_t m_CreatedElements = 0;
-
 	};
 
 	template<typename ComponentType>
 	class StableComponentAllocator : public ComponentAllocator<ComponentType>
 	{
 		using AllocationData = ComponentAllocationData<ComponentType>;
-		using NodeInfo = CompoentNodeInfo<ComponentType>;
+		using NodeInfo = ComponentNodeInfo<ComponentType>;
 	public:
 		StableComponentAllocator()
 		{
@@ -185,7 +175,6 @@ namespace decs
 		}
 
 		StableComponentAllocator(const uint64_t& bucketCapacity) :
-			ComponentAllocator<ComponentType>(bucketCapacity),
 			m_Components(bucketCapacity),
 			m_Nodes(bucketCapacity)
 		{
@@ -274,6 +263,6 @@ namespace decs
 		}
 	private:
 		BucketAllocator<ComponentType> m_Components;
-		BucketVector<NodeInfo> m_Nodes;
+		ChunkedVector<NodeInfo> m_Nodes;
 	};
 }

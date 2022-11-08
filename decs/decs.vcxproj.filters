@@ -21,7 +21,7 @@
     <ClInclude Include="src\decs\Containers\BucketAllocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Containers\BucketVector.h">
+    <ClInclude Include="src\decs\Containers\ChunkedVector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Views\View.h">
@@ -76,6 +76,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\EntityManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\ComponnetContainer_New.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

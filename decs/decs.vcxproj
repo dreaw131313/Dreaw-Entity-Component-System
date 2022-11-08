@@ -94,6 +94,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\ComponnetContainer_New.h" />
     <ClInclude Include="src\decs\EntityManager.h" />
     <ClInclude Include="src\decspch.h" />
     <ClInclude Include="src\decs\Archetype.h" />
@@ -101,7 +102,7 @@
     <ClInclude Include="src\decs\ComponentContext.h" />
     <ClInclude Include="src\decs\Container.h" />
     <ClInclude Include="src\decs\Containers\BucketAllocator.h" />
-    <ClInclude Include="src\decs\Containers\BucketVector.h" />
+    <ClInclude Include="src\decs\Containers\ChunkedVector.h" />
     <ClInclude Include="src\decs\Core.h" />
     <ClInclude Include="src\decs\decs.h" />
     <ClInclude Include="src\decs\Entity.h" />

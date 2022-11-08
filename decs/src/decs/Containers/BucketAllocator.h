@@ -6,17 +6,17 @@
 namespace decs
 {
 	template<typename T>
-	class Bucket;
+	class Chunk;
 
 	template<typename DataType>
 	struct BucketNode
 	{
 		template<typename T>
-		friend class Bucket;
+		friend class Chunk;
 		template<typename T>
 		friend class BucketAllocator;
 
-		typedef Bucket<DataType> BucketType;
+		typedef Chunk<DataType> BucketType;
 	public:
 		inline BucketNode<DataType>* Next() { return m_Next; }
 		inline BucketNode<DataType>* Previous() { return m_Previous; }
@@ -59,7 +59,7 @@ namespace decs
 	};
 
 	template<typename Data>
-	class Bucket
+	class Chunk
 	{
 		template<typename T>
 		friend class BucketAllocator;
@@ -88,7 +88,7 @@ namespace decs
 		};
 
 	public:
-		Bucket(uint64_t elementsCount)
+		Chunk(uint64_t elementsCount)
 		{
 			if (elementsCount == 0)
 			{
@@ -102,7 +102,7 @@ namespace decs
 			m_NodesArray = (NodeType*) ::operator new(m_MaxSize * sizeof(NodeType));
 		}
 
-		~Bucket()
+		~Chunk()
 		{
 			NodeType* node = m_FirstNode;
 			while (node != nullptr)
@@ -250,7 +250,7 @@ namespace decs
 	template<typename DataType>
 	class BucketAllocator
 	{
-		typedef Bucket<DataType> BucketType;
+		typedef Chunk<DataType> BucketType;
 		typedef BucketNode<DataType> NodeType;
 
 	public:

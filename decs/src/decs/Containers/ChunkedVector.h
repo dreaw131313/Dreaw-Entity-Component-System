@@ -5,41 +5,41 @@
 namespace decs
 {
 	template<typename T>
-	class BucketVector
+	class ChunkedVector
 	{
 	private:
-		// Bucket class
-		class Bucket final
+#pragma region Chunk class
+		class Chunk final
 		{
 		public:
-			Bucket()
+			Chunk()
 			{
 
 			}
 
-			~Bucket()
+			~Chunk()
 			{
 
 			}
 
-			static void Create(Bucket& bucket, const uint64_t& capacity = 100)
+			static void Create(Chunk& chunk, const uint64_t& capacity = 100)
 			{
-				if (capacity == 0) bucket.m_Capacity = 1;
-				else bucket.m_Capacity = capacity;
+				if (capacity == 0) chunk.m_Capacity = 1;
+				else chunk.m_Capacity = capacity;
 
-				bucket.m_Size = 0;
+				chunk.m_Size = 0;
 
-				bucket.m_Data = (T*) ::operator new(bucket.m_Capacity * sizeof(T));
+				chunk.m_Data = (T*) ::operator new(chunk.m_Capacity * sizeof(T));
 			}
 
-			static void Destroy(Bucket& bucket)
+			static void Destroy(Chunk& chunk)
 			{
-				for (uint64_t idx = 0; idx < bucket.m_Size; idx++)
+				for (uint64_t idx = 0; idx < chunk.m_Size; idx++)
 				{
-					bucket.m_Data[idx].~T();
+					chunk.m_Data[idx].~T();
 				}
 
-				::operator delete(bucket.m_Data, bucket.m_Capacity * sizeof(T));
+				::operator delete(chunk.m_Data, chunk.m_Capacity * sizeof(T));
 			}
 
 		public:
@@ -89,7 +89,7 @@ namespace decs
 
 			inline T& operator[](const uint64_t& index)
 			{
-				if (index > m_Size) throw std::out_of_range("Index out of range in one of bucket of BucketVector!");
+				if (index > m_Size) throw std::out_of_range("Index out of range in one of bucket of ChunkedVector!");
 				return m_Data[index];
 			}
 
@@ -114,7 +114,7 @@ namespace decs
 			T* m_Data = nullptr;
 		};
 
-		// Bucket class end
+#pragma endregion
 
 	public:
 		struct OperationData final
@@ -127,7 +127,8 @@ namespace decs
 			OperationData(
 				const uint64_t& bucketIndex,
 				const uint64_t& elementIndex,
-				T* data) :
+				T* data
+			) :
 				BucketIndex(bucketIndex),
 				ElementIndex(elementIndex),
 				Data(data)
@@ -141,21 +142,21 @@ namespace decs
 		using SwapBackData = OperationData;
 
 	public:
-		BucketVector()
+		ChunkedVector()
 		{
-			AddBucket();
+			AddChunk();
 		}
 
-		BucketVector(uint64_t bucketCapacity) :
-			m_BucketCapacity(bucketCapacity)
+		ChunkedVector(uint64_t bucketCapacity) :
+			m_ChunkCapacity(bucketCapacity)
 		{
-			AddBucket();
+			AddChunk();
 		}
 
-		~BucketVector()
+		~ChunkedVector()
 		{
-			for (auto& bucket : m_Buckets)
-				Bucket::Destroy(bucket);
+			for (auto& bucket : m_Chunks)
+				Chunk::Destroy(bucket);
 		}
 
 
@@ -163,21 +164,21 @@ namespace decs
 
 		inline T& operator[](const uint64_t& index)
 		{
-			uint64_t bucketIndex = index / m_BucketCapacity;
-			uint64_t elementIndex = index % m_BucketCapacity;
-			return m_Buckets[bucketIndex][elementIndex];
+			uint64_t bucketIndex = index / m_ChunkCapacity;
+			uint64_t elementIndex = index % m_ChunkCapacity;
+			return m_Chunks[bucketIndex][elementIndex];
 		}
 
 		inline T& operator()(const uint64_t& bucketIndex, const uint64_t& elementIndex)
 		{
-			return m_Buckets[bucketIndex][elementIndex];
+			return m_Chunks[bucketIndex][elementIndex];
 		}
 
 		// Operators - end
 
-		inline uint64_t Capacity() const { return m_BucketsCount * m_BucketCapacity; }
-		inline uint64_t BucketsCount() const { return m_BucketsCount; }
-		inline uint64_t BucketCapacity() const { return m_BucketCapacity; }
+		inline uint64_t Capacity() const { return m_ChunksCount * m_ChunkCapacity; }
+		inline uint64_t ChunksCount() const { return m_ChunksCount; }
+		inline uint64_t ChuknCapacity() const { return m_ChunkCapacity; }
 
 		inline uint64_t Size() const { return m_CreatedElements; }
 		inline bool IsEmpty()const { return m_CreatedElements == 0; }
@@ -186,13 +187,13 @@ namespace decs
 		template<typename... Args>
 		T& EmplaceBack(Args&&... args)
 		{
-			Bucket& b = m_Buckets.back();
+			Chunk& b = m_Chunks.back();
 
 			m_CreatedElements += 1;
 
 			if (b.IsFull())
 			{
-				Bucket& newBucket = AddBucket();
+				Chunk& newBucket = AddChunk();
 				return newBucket.EmplaceBack(std::forward<Args>(args)...);
 			}
 
@@ -202,43 +203,43 @@ namespace decs
 		template<typename... Args>
 		EmplaceBackData EmplaceBack_CR(Args&&... args)
 		{
-			Bucket& b = m_Buckets.back();
+			Chunk& b = m_Chunks.back();
 
 			m_CreatedElements += 1;
 
 			if (b.IsFull())
 			{
-				Bucket& newBucket = AddBucket();
-				return EmplaceBackData(m_BucketsCount - 1, 0, &newBucket.EmplaceBack(std::forward<Args>(args)...));
+				Chunk& newBucket = AddChunk();
+				return EmplaceBackData(m_ChunksCount - 1, 0, &newBucket.EmplaceBack(std::forward<Args>(args)...));
 			}
 
 			uint64_t elementIndex = b.Size();
-			return EmplaceBackData(m_BucketsCount - 1, elementIndex, &b.EmplaceBack(std::forward<Args>(args)...));
+			return EmplaceBackData(m_ChunksCount - 1, elementIndex, &b.EmplaceBack(std::forward<Args>(args)...));
 		}
 
 		bool RemoveSwapBack(const uint64_t& index)
 		{
-			uint64_t bucketIndex = index / m_BucketCapacity;
-			uint64_t elementIndex = index % m_BucketCapacity;
+			uint64_t bucketIndex = index / m_ChunkCapacity;
+			uint64_t elementIndex = index % m_ChunkCapacity;
 
 			return RemoveSwapBack(bucketIndex, elementIndex);
 		}
 
 		bool RemoveSwapBack(const uint64_t& bucketIndex, const uint64_t& elementIndex)
 		{
-			auto& fromBucket = m_Buckets[bucketIndex];
-			if (bucketIndex == (m_BucketsCount - 1))
+			auto& fromBucket = m_Chunks[bucketIndex];
+			if (bucketIndex == (m_ChunksCount - 1))
 			{
 				fromBucket.RemoveSwapBack(elementIndex);
 
 				if (fromBucket.IsEmpty())
-					PopBackBucket();
+					PopBackChunk();
 
 				m_CreatedElements -= 1;
 				return true;
 			}
 			m_CreatedElements -= 1;
-			Bucket& lastBucket = m_Buckets.back();
+			Chunk& lastBucket = m_Chunks.back();
 
 			auto& oldElement = fromBucket[elementIndex];
 			auto& newElement = lastBucket.Back();
@@ -249,21 +250,21 @@ namespace decs
 
 
 			if (lastBucket.IsEmpty())
-				PopBackBucket();
+				PopBackChunk();
 			return true;
 		}
 
 		void Clear()
 		{
-			while (m_BucketsCount > 1)
+			while (m_ChunksCount > 1)
 			{
-				auto& lastBucket = m_Buckets.back();
-				m_BucketsCount -= 1;
-				Bucket::Destroy(lastBucket);
-				m_Buckets.pop_back();
+				auto& lastBucket = m_Chunks.back();
+				m_ChunksCount -= 1;
+				Chunk::Destroy(lastBucket);
+				m_Chunks.pop_back();
 			}
 
-			auto& bucket = m_Buckets.back();
+			auto& bucket = m_Chunks.back();
 			bucket.Clear();
 
 			m_CreatedElements = 0;
@@ -271,64 +272,64 @@ namespace decs
 
 		T& Back()
 		{
-			return m_Buckets.back().Back();
+			return m_Chunks.back().Back();
 		}
 
 		void PopBack()
 		{
-			auto& lastBucket = m_Buckets.back();
+			auto& lastBucket = m_Chunks.back();
 			lastBucket.PopBack();
 
 			m_CreatedElements -= 1;
 
 			if (lastBucket.IsEmpty())
-				PopBackBucket();
+				PopBackChunk();
 		}
 
 		inline bool IsPositionValid(const uint64_t& bucketIndex, const uint64_t& elementIndex)
 		{
-			return bucketIndex < m_BucketsCount&& elementIndex < m_Buckets[bucketIndex].Size();
+			return bucketIndex < m_ChunksCount&& elementIndex < m_Chunks[bucketIndex].Size();
 		}
 
-		inline T* GetBucket(const uint64_t& index) const { return m_Buckets[index].m_Data; }
-		inline uint64_t GetBucketSize(const uint64_t& index)const { return m_Buckets[index].m_Size; }
+		inline T* GetChunk(const uint64_t& index) const { return m_Chunks[index].m_Data; }
+		inline uint64_t GetChunkSize(const uint64_t& index)const { return m_Chunks[index].m_Size; }
 	private:
-		std::vector<Bucket> m_Buckets;
-		uint64_t m_BucketCapacity = 100;
-		uint64_t m_BucketsCount = 0;
+		std::vector<Chunk> m_Chunks;
+		uint64_t m_ChunkCapacity = 100;
+		uint64_t m_ChunksCount = 0;
 
 		uint64_t m_CreatedElements = 0;
 
 	private:
 
-		Bucket& AddBucket()
+		Chunk& AddChunk()
 		{
-			m_BucketsCount += 1;
-			auto& newBucket = m_Buckets.emplace_back();
-			Bucket::Create(newBucket, m_BucketCapacity);
+			m_ChunksCount += 1;
+			auto& newBucket = m_Chunks.emplace_back();
+			Chunk::Create(newBucket, m_ChunkCapacity);
 			return newBucket;
 		}
 
-		void PopBackBucket()
+		void PopBackChunk()
 		{
-			if (m_BucketsCount <= 1) return;
+			if (m_ChunksCount <= 1) return;
 
-			auto& lastBucket = m_Buckets.back();
-			Bucket::Destroy(lastBucket);
-			m_Buckets.pop_back();
-			m_BucketsCount -= 1;
+			auto& lastBucket = m_Chunks.back();
+			Chunk::Destroy(lastBucket);
+			m_Chunks.pop_back();
+			m_ChunksCount -= 1;
 
-			ShrinkBucketsVector();
+			ShrinkChunksVector();
 		}
 
-		void ShrinkBucketsVector()
+		void ShrinkChunksVector()
 		{
 			constexpr float packFactor = 0.5f;
 
-			float currentPackFactor = (float)m_Buckets.size() / (float)m_Buckets.capacity();
+			float currentPackFactor = (float)m_Chunks.size() / (float)m_Chunks.capacity();
 			if (currentPackFactor <= packFactor)
 			{
-				m_Buckets.shrink_to_fit();
+				m_Chunks.shrink_to_fit();
 			}
 		}
 	};
