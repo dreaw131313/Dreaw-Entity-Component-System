@@ -167,6 +167,8 @@ namespace decs
 
 				auto createResult = container->EmplaceBack(e, std::forward<Args>(args)...);
 
+				if (!createResult.IsValid()) return nullptr;
+
 				Archetype* archetype;
 				// making operations on archetypes:
 				if (entityData.CurrentArchetype == nullptr)

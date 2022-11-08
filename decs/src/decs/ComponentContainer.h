@@ -24,6 +24,11 @@ namespace decs
 		{
 
 		}
+
+		inline bool IsValid()const 
+		{
+			return Component != nullptr;
+		}
 	};
 
 	struct ComponentCopyData
@@ -327,15 +332,21 @@ namespace decs
 			}
 
 			inline bool IsEmpty() const { return m_CreatedElements == 0; }
-			inline bool IsFull() const { return m_Capacity == m_CreatedElements; }
+			inline bool IsFull() const
+			{
+				return m_Capacity == m_CreatedElements;
+			}
 
 			template<typename... Args>
 			ChunkAllocationResult Add(Args&&... args)
 			{
 				if (IsFull()) return ChunkAllocationResult();
 
+				m_CreatedElements += 1;
+
 				if (m_FreeSpacesCount > 0)
 				{
+					m_FreeSpacesCount -= 1;
 					uint64_t freeSpaceIndex = m_FreeSpaces.back();
 					m_FreeSpaces.pop_back();
 					DataType* data = new(&m_Data[freeSpaceIndex])DataType(std::forward<Args>(args)...);
@@ -345,7 +356,7 @@ namespace decs
 
 				uint64_t allocationIndex = m_CurrentAllocationOffset;
 				m_CurrentAllocationOffset += 1;
-				DataType* data = new(&m_Data[m_CurrentAllocationOffset])DataType(std::forward<Args>(args)...);
+				DataType* data = new(&m_Data[allocationIndex])DataType(std::forward<Args>(args)...);
 
 				return ChunkAllocationResult(allocationIndex, data);
 			}
@@ -354,16 +365,17 @@ namespace decs
 			{
 				if (index >= m_Capacity) return false;
 
+				m_CreatedElements -= 1;
 				if (index == (m_CurrentAllocationOffset - 1))
 				{
 					m_CurrentAllocationOffset -= 1;
 				}
 				else
 				{
+					m_FreeSpacesCount += 1;
 					m_FreeSpaces.push_back(index);
 				}
-
-				m_Data[m_CurrentAllocationOffset].~DataType();
+				m_Data[index].~DataType();
 
 				return true;
 			}
@@ -454,11 +466,8 @@ namespace decs
 			m_Nodes.RemoveSwapBack(bucketIndex, elementIndex);
 			if (m_Nodes.IsPositionValid(bucketIndex, elementIndex))
 			{
-				if (m_Nodes.IsPositionValid(bucketIndex, elementIndex))
-				{
-					auto& swappedNodeInfo = m_Nodes(bucketIndex, elementIndex);
-					return ComponentAllocatorSwapData(bucketIndex, elementIndex, swappedNodeInfo.eID);
-				}
+				auto& swappedNodeInfo = m_Nodes(bucketIndex, elementIndex);
+				return ComponentAllocatorSwapData(bucketIndex, elementIndex, swappedNodeInfo.eID);
 			}
 
 			return ComponentAllocatorSwapData();
@@ -477,7 +486,7 @@ namespace decs
 			}
 
 			NodeInfo& nodeToCopy = m_Nodes(bucketIndex, elementIndex);
-			AllocationData allocationData = EmplaceBack(*nodeToCopy.Data);
+			AllocationData allocationData = EmplaceBack(entityID, *nodeToCopy.Data);
 
 			return ComponentCopyData(allocationData.BucketIndex, allocationData.ElementIndex, allocationData.Component);
 		}
@@ -496,7 +505,7 @@ namespace decs
 			}
 
 			NodeInfo& nodeToCopy = from->m_Nodes(bucketIndex, elementIndex);
-			AllocationData allocationData = EmplaceBack(*nodeToCopy.Data);
+			AllocationData allocationData = EmplaceBack(entityID, *nodeToCopy.Data);
 
 			return ComponentCopyData(allocationData.BucketIndex, allocationData.ElementIndex, allocationData.Component);
 		}
@@ -529,44 +538,44 @@ namespace decs
 
 		void DestroyChunk(Chunk* chunk)
 		{
-			::operator delete(chunk->m_Data, m_ChunkCapacity * sizeof(DataType));
+			::operator delete(chunk->m_Data, chunk->m_Capacity * sizeof(DataType));
 			delete chunk;
 		}
 
 		bool RemoveEmptyChunk(Chunk* chunk)
 		{
-			if (m_Chunks.size() < 1)
+			if (m_Chunks.size() > 1)
 			{
-				return false;
-			}
+				if (!chunk->IsEmpty()) return false;
 
-			if (!chunk->IsEmpty()) return false;
-
-			{
-				Chunk* lastChunk = m_Chunks.back();
-				if (chunk != lastChunk)
 				{
-					lastChunk->m_Index = chunk->m_Index;
-					m_Chunks[lastChunk->m_Index] = lastChunk;
-				}
-				m_Chunks.pop_back();
-			}
-
-			{
-				if (chunk->bIsInChunksWithFreeSpace)
-				{
-					Chunk* lastChunk = m_ChunksWithFreeSpaces.back();
+					Chunk* lastChunk = m_Chunks.back();
 					if (chunk != lastChunk)
 					{
-						lastChunk->m_IndexInWithFreeSpaces = chunk->m_IndexInWithFreeSpaces;
-						m_ChunksWithFreeSpaces[lastChunk->m_Index] = lastChunk;
+						lastChunk->m_Index = chunk->m_Index;
+						m_Chunks[lastChunk->m_Index] = lastChunk;
 					}
-					m_ChunksWithFreeSpaces.pop_back();
+					m_Chunks.pop_back();
 				}
+
+				{
+					if (chunk->bIsInChunksWithFreeSpace)
+					{
+						Chunk* lastChunk = m_ChunksWithFreeSpaces.back();
+						if (chunk != lastChunk)
+						{
+							lastChunk->m_IndexInWithFreeSpaces = chunk->m_IndexInWithFreeSpaces;
+							m_ChunksWithFreeSpaces[lastChunk->m_Index] = lastChunk;
+						}
+						m_ChunksWithFreeSpaces.pop_back();
+					}
+				}
+
+				DestroyChunk(chunk);
+				return true;
 			}
 
-			DestroyChunk(chunk);
-			return true;
+			return false;
 		}
 
 		void DestroyChunks()
@@ -594,9 +603,9 @@ namespace decs
 			if (chunk->bIsInChunksWithFreeSpace && chunk->IsFull())
 			{
 				Chunk* lastChunk = m_ChunksWithFreeSpaces.back();
+				chunk->bIsInChunksWithFreeSpace = false;
 				if (chunk != lastChunk)
 				{
-					chunk->bIsInChunksWithFreeSpace = false;
 					lastChunk->m_IndexInWithFreeSpaces = chunk->m_IndexInWithFreeSpaces;
 					m_ChunksWithFreeSpaces[lastChunk->m_IndexInWithFreeSpaces] = lastChunk;
 				}
@@ -608,6 +617,7 @@ namespace decs
 		{
 			if (chunk->bIsInChunksWithFreeSpace || chunk->IsFull()) return;
 
+			chunk->bIsInChunksWithFreeSpace = true;
 			chunk->m_IndexInWithFreeSpaces = m_ChunksWithFreeSpaces.size();
 			m_ChunksWithFreeSpaces.push_back(chunk);
 		}
