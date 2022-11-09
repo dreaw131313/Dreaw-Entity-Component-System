@@ -152,7 +152,3 @@ is undefined behavior.
 # Performance
 # Implementation details
 ## decs::Container
-
-
-
-
