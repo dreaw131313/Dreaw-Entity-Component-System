@@ -17,18 +17,9 @@ All entites and components are stored in class decs::Container which is giving a
 	public:
 		float X = 0;
 		float Y = 0;
-
-	public:
-		Component1()
-		{
-
-		}
-
-		Component1(const float& x, const float& y) :
-			X(x), Y(y)
-		{
-
-		}
+		
+		Component1();
+		Component1(const float& x, const float& y);
 	};
 
 	class Component2
@@ -36,19 +27,9 @@ All entites and components are stored in class decs::Container which is giving a
 	public:
 		float X = 0;
 		float Y = 0;
-
-	public:
-		Component2()
-		{
-
-		}
-
-		Component2(const float& x, const float& y) :
-			X(x), Y(y)
-		{
-
-		}
-
+		
+		Component2();
+		Component2(const float& x, const float& y);
 	};
 
 	int main()
@@ -120,7 +101,49 @@ Entities can also be activated or deactivated. Deactivated entities will not be 
 		});
 	}
 ```
-There is also posibilit to query for more complex view with 
+There is also possibility to query for more complex views with member methods of view class:
+
+Entities must not have any of component from ComponentTypes parameters list
+```C++
+{
+	template<typename... ComponentsTypes>
+	View& WithoutAnyOf();
+}
+
+Entities must have one or more components from ComponentTypes parameters list
+```C++
+{
+	template<typename... ComponentsTypes>
+	View& WithAnyOf(); 
+}
+
+Entities must have all components from ComponentTypes parameters list
+```C++
+{
+	template<typename... ComponentsTypes>
+	View& WithAll();
+}
+```
+
+Creating view with this methods can look like:
+```C++
+{
+	decs::View<Component1, Component2, Component3> view = {};
+	view.WithAll<Component4,Component5>().WithAnyOf<Component6, Component7>().WithoutAnyOf<Component8, Component9>();
+	view.Fetch(containerClassObject);
+	
+	view.ForEach([&](Component1* c1, Component2* c2, Component3* c3)
+	{
+		// doing stuff with components
+	});
+	
+	view.ForEachWithEntity([&](decs::Entity& e, Component1* c1, Component2* c2, Component3* c3)
+	{
+		// doing stuff with components and entity
+	});
+}
+```
+
 
 During iteration with methods **ForEach** and **ForEachWithEntity** is possible:
 * create new entites. 
