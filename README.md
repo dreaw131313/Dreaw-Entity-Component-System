@@ -59,12 +59,16 @@ Like in most of ecs system, in **decs** entity can have only one component of gi
 decs::Entity class is represented by ID and reference to decs::Container in which was created.<br/>
 
 Entites can also be spawned which is a little faster than creating them by regular method. To spawn entity you need to use one of **Spawn()** methods from decs::Container class.
+
 ```C++
-
-	Entity Spawn(const Entity& prefab, const bool& isActive = true);
-	bool Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive = true);
-	bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive = true);
-
+Entity Spawn(const Entity& prefab, const bool& isActive = true);
+bool Spawn(
+	const Entity& prefab, 
+	std::vector<Entity>& spawnedEntities, 
+	const uint64_t& spawnCount, const bool& 
+	areActive = true
+	);
+bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive = true);
 ```
 As prefab parameter can be used entity from any decs::Container, but if it this container is not in sync* with container in which we are trying spawn, **Spawn** method will return false or invalid **decs::Entity** object.<br/>
 
@@ -73,84 +77,72 @@ As prefab parameter can be used entity from any decs::Container, but if it this 
 Entities can also be activated or deactivated. Deactivated entities will not be iterated. Activating and deactivating is performed by functions:
 
 ```C++
-{
-	decs::Container container = {};
-	decs::Entity entity = container.CreateEntity();
-	entity.SetActive(true);
-	container.SetEntityActive(false);
-}
+decs::Container container = {};
+decs::Entity entity = container.CreateEntity();
+entity.SetActive(true);
+container.SetEntityActive(false);
 ```
 
 ### Iterating over entites
 **decs::View<typename... Components>** object serves to iterating over entities
 
 ```C++
-	{
-		decs::Container container = {}; 
-		
-		// this view can iterate over all entities which contains components passed as template parameters
-		decs::View<Component1, Component2> view = {}; 
-		view.Fetch(container); // fetching data needed to iterate over entites
-		
-		view.ForEach([&](Component1* c1, Component2* c2)
-		{
-			// doing stuff with components
-		});
-		
-		 // in this function first paramter of lambda must be decs::Entity
-		view.ForEachWithEntity([&](decs::Entity& e, Component1* c1, Component2* c2)
-		{
-			// doing stuff with components and entity
-		});
-	}
+decs::Container container = {}; 
+
+// this view can iterate over all entities which contains components passed as template parameters
+decs::View<Component1, Component2> view = {}; 
+view.Fetch(container); // fetching data needed to iterate over entites
+
+view.ForEach([&](Component1* c1, Component2* c2)
+{
+	// doing stuff with components
+});
+
+ // in this function first paramter of lambda must be decs::Entity
+view.ForEachWithEntity([&](decs::Entity& e, Component1* c1, Component2* c2)
+{
+	// doing stuff with components and entity
+});
 ```
 There is also possibility to query for more complex views with member methods of view class:
 
 Entities must not have any of component from ComponentTypes parameters list
 
 ```C++
-{
-	template<typename... ComponentsTypes>
-	View& WithoutAnyOf();
-}
+template<typename... ComponentsTypes>
+View& WithoutAnyOf();
 ```
 
 Entities must have one or more components from ComponentTypes parameters list
 
 ```C++
-{
-	template<typename... ComponentsTypes>
-	View& WithAnyOf(); 
-}
+template<typename... ComponentsTypes>
+View& WithAnyOf(); 
 ```
 
 Entities must have all components from ComponentTypes parameters list
 
 ```C++
-{
-	template<typename... ComponentsTypes>
-	View& WithAll();
-}
+template<typename... ComponentsTypes>
+View& WithAll();
 ```
 
 Creating view with this methods can look like:
 
 ```C++
+decs::View<Component1, Component2, Component3> view = {};
+view.WithAll<Component4,Component5>().WithAnyOf<Component6, Component7>().WithoutAnyOf<Component8, Component9>();
+view.Fetch(containerClassObject);
+
+view.ForEach([&](Component1* c1, Component2* c2, Component3* c3)
 {
-	decs::View<Component1, Component2, Component3> view = {};
-	view.WithAll<Component4,Component5>().WithAnyOf<Component6, Component7>().WithoutAnyOf<Component8, Component9>();
-	view.Fetch(containerClassObject);
-	
-	view.ForEach([&](Component1* c1, Component2* c2, Component3* c3)
-	{
-		// doing stuff with components
-	});
-	
-	view.ForEachWithEntity([&](decs::Entity& e, Component1* c1, Component2* c2, Component3* c3)
-	{
-		// doing stuff with components and entity
-	});
-}
+	// doing stuff with components
+});
+
+view.ForEachWithEntity([&](decs::Entity& e, Component1* c1, Component2* c2, Component3* c3)
+{
+	// doing stuff with components and entity
+});
 ```
 
 
