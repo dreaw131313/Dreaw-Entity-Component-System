@@ -55,7 +55,7 @@ int main()
 
 Like in most of ecs system, in **decs** entity can have only one component of given type. If component of the same type will be added twice AddComponent function will return pointer to firstly created component.<br/>
 
-### decs::Entity class
+### Entity class
 decs::Entity class is represented by ID and reference to decs::Container in which was created.<br/>
 
 Entites can also be spawned which is a little faster than creating them by regular method. To spawn entity you need to use one of **Spawn()** methods from decs::Container class.
@@ -72,7 +72,7 @@ bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActi
 ```
 As prefab parameter can be used entity from any decs::Container, but if it this container is not in sync* with container in which we are trying spawn, **Spawn** method will return false or invalid **decs::Entity** object.<br/>
 
-*Containers are in sync when they contains internal containers for components of the same type (syncing containers will be implemented in near future)
+*Containers are in sync when they contains internal containers for components of the same type (syncing containers will be implemented in near future)*
 
 Entities can also be activated or deactivated. Deactivated entities will not be iterated. Activating and deactivating is performed by functions:
 
@@ -158,7 +158,9 @@ Things like:
 is undefined behavior.
 
 
-# How it works
+# Implementation details
+## decs::Container
+
 
 
 
