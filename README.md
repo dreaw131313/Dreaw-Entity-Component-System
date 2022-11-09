@@ -2,9 +2,9 @@
 **Dreaw-Entity-Component-System** in short **decs** it is simple ecs static library written in **C++** which I am developing for educational purposes and for use in my own game engine<br/>
 
 ## About decs
-* Requires C++ 17.
+* Requires C++ 17
 * Every class in **decs** is in "decs" namespace
-* Mainly use standard library, but also is using hash maps from https://github.com/skarupke/flat_hash_map repository. Which map is used can be changed in Core.h file by simple typdef.
+* Mainly use standard library, but also is using hash maps from https://github.com/skarupke/flat_hash_map repository. Which map is used can be changed in Core.h file by simple ``` using ecsMap = mapclass<Key, Value>; ```
 
 ## How to use **decs**
 ### Creating and storing entities and components
@@ -100,6 +100,6 @@ Entities can also be activated or deactivated. Deactivated entities will not be 
 ```
 
 ### Iterating over entites
-To iterating over entites is used object of class **decs::View**
+**decs::View** object serves to iterating over entities
 
 
