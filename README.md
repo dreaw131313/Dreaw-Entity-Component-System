@@ -71,6 +71,7 @@ As prefab parameter can be used entity from any decs::Container, but if it this 
 *Containers are in sync when they contains internal containers for components of the same type (syncing containers will be implemented in near future)
 
 Entities can also be activated or deactivated. Deactivated entities will not be iterated. Activating and deactivating is performed by functions:
+
 ```C++
 {
 	decs::Container container = {};
@@ -82,6 +83,7 @@ Entities can also be activated or deactivated. Deactivated entities will not be 
 
 ### Iterating over entites
 **decs::View<typename... Components>** object serves to iterating over entities
+
 ```C++
 	{
 		decs::Container container = {}; 
@@ -105,20 +107,25 @@ Entities can also be activated or deactivated. Deactivated entities will not be 
 There is also possibility to query for more complex views with member methods of view class:
 
 Entities must not have any of component from ComponentTypes parameters list
+
 ```C++
 {
 	template<typename... ComponentsTypes>
 	View& WithoutAnyOf();
 }
+```
 
 Entities must have one or more components from ComponentTypes parameters list
+
 ```C++
 {
 	template<typename... ComponentsTypes>
 	View& WithAnyOf(); 
 }
+```
 
 Entities must have all components from ComponentTypes parameters list
+
 ```C++
 {
 	template<typename... ComponentsTypes>
@@ -127,6 +134,7 @@ Entities must have all components from ComponentTypes parameters list
 ```
 
 Creating view with this methods can look like:
+
 ```C++
 {
 	decs::View<Component1, Component2, Component3> view = {};
