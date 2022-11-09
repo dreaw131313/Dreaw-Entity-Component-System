@@ -100,6 +100,39 @@ Entities can also be activated or deactivated. Deactivated entities will not be 
 ```
 
 ### Iterating over entites
-**decs::View** object serves to iterating over entities
+**decs::View<typename... Components>** object serves to iterating over entities
+```C++
+	{
+		decs::Container container = {}; 
+		
+		// this view can iterate over all entities which contains components passed as template parameters
+		decs::View<Component1, Component2, Component3> view = {}; 
+		view.Fetch(container); // fetching data needed to iterate over entites
+		
+		view.ForEach([&](Component1* c1, Component2* c2)
+		{
+			// doing stuff with components
+		});
+		
+		view.ForEachWithEntity([&](decs::Entity& e, Component1* c1, Component2* c2) // in this function first paramter of lambda must be decs::Entity
+		{
+			// doing stuff with components and entity
+		});
+	}
+```
+There is also posibilit to query for more complex view with 
+
+During iteration with methods **ForEach** and **ForEachWithEntity** is possible:
+* create new entites. 
+* adding and removing components from currently iterated entity
+* destroying currently iterated entity
+
+Things like:
+* destroying other entites
+* adding and removing component from entities diffrent than curently iterated entity
+
+is undefined behavior.
+
+
 
 
