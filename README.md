@@ -87,7 +87,7 @@ Entities can also be activated or deactivated. Deactivated entities will not be 
 		decs::Container container = {}; 
 		
 		// this view can iterate over all entities which contains components passed as template parameters
-		decs::View<Component1, Component2, Component3> view = {}; 
+		decs::View<Component1, Component2> view = {}; 
 		view.Fetch(container); // fetching data needed to iterate over entites
 		
 		view.ForEach([&](Component1* c1, Component2* c2)
