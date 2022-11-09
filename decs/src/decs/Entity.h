@@ -46,19 +46,19 @@ namespace decs
 		}
 
 		template<typename T>
-		inline T* GetComponent()
+		inline T* GetComponent() const
 		{
 			return m_Container->GetComponent<T>(m_ID);
 		}
 
 		template<typename T>
-		inline bool HasComponent()
+		inline bool HasComponent() const
 		{
 			return m_Container->HasComponent<T>(m_ID);
 		}
 
 		template<typename T>
-		inline bool TryGetComponent(T*& component)
+		inline bool TryGetComponent(T*& component) const
 		{
 			component = m_Container->GetComponent<T>(m_ID);
 			return component != nullptr;
@@ -102,7 +102,7 @@ namespace decs
 		}
 
 		template<typename T>
-		inline T* GetComponentSafe()
+		inline T* GetComponentSafe() const
 		{
 			if (IsValid())
 				return m_Container->GetComponent<T>(m_ID);
@@ -111,13 +111,13 @@ namespace decs
 		}
 
 		template<typename T>
-		inline bool HasComponentSafe()
+		inline bool HasComponentSafe() const
 		{
 			return IsValid() && m_Container->HasComponent<T>(m_ID);
 		}
 
 		template<typename T>
-		inline bool TryGetComponentSafe(T*& component)
+		inline bool TryGetComponentSafe(T*& component) const
 		{
 			if (IsValid())
 				component = m_Container->GetComponent<T>(m_ID);

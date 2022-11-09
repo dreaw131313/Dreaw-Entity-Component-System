@@ -351,7 +351,6 @@ namespace decs
 					}
 				}
 
-
 				// includes
 				{
 					ArchetypeContext& context = m_ArchetypesContexts.emplace_back();

@@ -41,7 +41,7 @@ namespace decs
 			}
 		}
 
-		inline bool IsEntityActive(const EntityID& entity)
+		inline bool IsEntityActive(const EntityID& entity) const
 		{
 			if (entity >= m_enitiesDataCount) return false;
 			return m_EntityData[entity].IsActive;
@@ -66,6 +66,8 @@ namespace decs
 		}
 
 		inline EntityData& GetEntityData(const EntityID& entity) { return m_EntityData[entity]; }
+
+		inline const EntityData& GetConstEntityData(const EntityID& entity) const { return m_EntityData[entity]; }
 	private:
 		std::vector<EntityData> m_EntityData;
 		EntityID m_CreatedEntitiesCount = 0;

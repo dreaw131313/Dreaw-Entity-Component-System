@@ -122,7 +122,7 @@ namespace decs
 			m_EntityManager.SetEntityActive(entity, isActive);
 		}
 
-		inline bool IsEntityActive(const EntityID& entity)
+		inline bool IsEntityActive(const EntityID& entity) const
 		{
 			return m_EntityManager.IsEntityActive(entity);
 		}
@@ -229,22 +229,22 @@ namespace decs
 		bool RemoveComponent(const EntityID& e, const TypeID& componentTypeID);
 
 		template<typename ComponentType>
-		ComponentType* GetComponent(const EntityID& e)
+		ComponentType* GetComponent(const EntityID& e) const
 		{
 			if (IsEntityAlive(e))
 			{
-				EntityData& data = m_EntityManager.GetEntityData(e);
+				const EntityData& data = m_EntityManager.GetConstEntityData(e);
 				return GetComponentWithoutCheckingIsAlive<ComponentType>(data);
 			}
 			return nullptr;
 		}
 
 		template<typename ComponentType>
-		bool HasComponent(const EntityID& e)
+		bool HasComponent(const EntityID& e) const
 		{
 			if (IsEntityAlive(e))
 			{
-				EntityData& data = m_EntityManager.GetEntityData(e);
+				const EntityData& data = m_EntityManager.GetConstEntityData(e);
 
 				if (data.CurrentArchetype == nullptr) return false;
 
@@ -314,7 +314,7 @@ namespace decs
 		}
 
 		template<typename ComponentType>
-		ComponentType* GetComponentWithoutCheckingIsAlive(const EntityData& data)
+		ComponentType* GetComponentWithoutCheckingIsAlive(const EntityData& data) const
 		{
 			Archetype* archetype = data.CurrentArchetype;
 			if (archetype == nullptr) return nullptr;
