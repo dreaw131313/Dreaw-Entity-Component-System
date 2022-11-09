@@ -4,7 +4,7 @@
 ## About decs
 * Requires C++ 17
 * Every class in **decs** is in "decs" namespace
-* Mainly use standard library, but also is using hash maps from https://github.com/skarupke/flat_hash_map repository. Which map is used can be changed in Core.h file by simple ``` using ecsMap = mapclass<Key, Value>; ```
+* Mainly use standard library, but also is using hash maps from https://github.com/skarupke/flat_hash_map repository. Which map is used can be changed in Core.h file by changing line with: ``` using ecsMap = std::unordered_map<Key, Value>; ```
 
 ## How to use **decs**
 ### Creating and storing entities and components
