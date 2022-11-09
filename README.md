@@ -95,7 +95,8 @@ Entities can also be activated or deactivated. Deactivated entities will not be 
 			// doing stuff with components
 		});
 		
-		view.ForEachWithEntity([&](decs::Entity& e, Component1* c1, Component2* c2) // in this function first paramter of lambda must be decs::Entity
+		 // in this function first paramter of lambda must be decs::Entity
+		view.ForEachWithEntity([&](decs::Entity& e, Component1* c1, Component2* c2)
 		{
 			// doing stuff with components and entity
 		});
