@@ -102,23 +102,17 @@ view.ForEachWithEntity([&](decs::Entity& e, Component1* c1, Component2* c2)
 });
 ```
 There is also possibility to query for more complex views with member methods of view class:
-
-Entities must not have any of component from ComponentTypes parameters list
 ```C++
 template<typename... ComponentsTypes>
-View& Without();
+View& Without(); // Entities in view will not have all components from ComponetsTypes parameters list
 ```
-
-Entities must have one or more components from ComponentTypes parameters list
 ```C++
 template<typename... ComponentsTypes>
-View& WithAnyFrom(); 
+View& WithAnyFrom(); // Entities in view will have at least one of component from ComponentTypes parameters list
 ```
-
-Entities must have all components from ComponentTypes parameters list
 ```C++
 template<typename... ComponentsTypes>
-View& With();
+View& With(); // Entities in view will have all components from ComponentTypes parameters list
 ```
 
 Creating view with this methods can look like:
