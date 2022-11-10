@@ -106,19 +106,19 @@ There is also possibility to query for more complex views with member methods of
 Entities must not have any of component from ComponentTypes parameters list
 ```C++
 template<typename... ComponentsTypes>
-View& WithoutAnyOf();
+View& Without();
 ```
 
 Entities must have one or more components from ComponentTypes parameters list
 ```C++
 template<typename... ComponentsTypes>
-View& WithAnyOf(); 
+View& WithAnyFrom(); 
 ```
 
 Entities must have all components from ComponentTypes parameters list
 ```C++
 template<typename... ComponentsTypes>
-View& WithAll();
+View& With();
 ```
 
 Creating view with this methods can look like:
