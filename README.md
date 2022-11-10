@@ -90,13 +90,13 @@ decs::Container container = {};
 decs::View<Component1, Component2> view = {}; 
 view.Fetch(container); // fetching data needed to iterate over entites
 
-view.ForEach([&](Component1* c1, Component2* c2)
+view.ForEach([&](Component1& c1, Component2& c2)
 {
 	// doing stuff with components
 });
 
  // in this function first paramter of lambda must be decs::Entity
-view.ForEachWithEntity([&](decs::Entity& e, Component1* c1, Component2* c2)
+view.ForEachWithEntity([&](decs::Entity& e, Component1& c1, Component2& c2)
 {
 	// doing stuff with components and entity
 });
@@ -121,12 +121,12 @@ decs::View<Component1, Component2, Component3> view = {};
 view.WithAll<Component4,Component5>().WithAnyOf<Component6, Component7>().WithoutAnyOf<Component8, Component9>();
 view.Fetch(containerClassObject);
 
-view.ForEach([&](Component1* c1, Component2* c2, Component3* c3)
+view.ForEach([&](Component1& c1, Component2& c2, Component3& c3)
 {
 	// doing stuff with components
 });
 
-view.ForEachWithEntity([&](decs::Entity& e, Component1* c1, Component2* c2, Component3* c3)
+view.ForEachWithEntity([&](decs::Entity& e, Component1& c1, Component2& c2, Component3& c3)
 {
 	// doing stuff with components and entity
 });
