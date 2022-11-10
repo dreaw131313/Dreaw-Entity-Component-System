@@ -10,6 +10,9 @@ namespace decs
 
 	class Entity final
 	{
+		template<typename... Args>
+		friend class View;
+
 	public:
 		Entity()
 		{

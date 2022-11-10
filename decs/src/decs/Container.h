@@ -97,6 +97,10 @@ namespace decs
 		PrefabSpawnData m_SpawnData = {};
 
 	public:
+		inline uint64_t GetAliveEntitesCount() const 
+		{
+			return m_EntityManager.GetCreatedEntitiesCount();
+		}
 		Entity CreateEntity(const bool& isActive = true);
 
 		bool DestroyEntity(const EntityID& entity);

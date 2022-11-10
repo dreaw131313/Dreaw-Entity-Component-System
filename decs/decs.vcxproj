@@ -94,6 +94,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\CustomApplay.h" />
     <ClInclude Include="src\decs\EntityManager.h" />
     <ClInclude Include="src\decspch.h" />
     <ClInclude Include="src\decs\Archetype.h" />

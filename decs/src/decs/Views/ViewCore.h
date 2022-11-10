@@ -4,13 +4,6 @@
 
 namespace decs
 {
-	template<typename... Args>
-	using Include = TypeGroup<Args...>;
-	template<typename... Args>
-	using Exclude = TypeGroup<Args...>;
-	template<typename... Args>
-	using Requires = TypeGroup<Args...>;
-
 	template<uint64_t TypesCount>
 	struct ViewArchetypeContext
 	{

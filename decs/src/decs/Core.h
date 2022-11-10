@@ -61,6 +61,7 @@ namespace decs
 		return fnv1a_64(s, c_string_lenght(s));
 	}
 
+
 	// Forward declaration:
 	class EntityData;
 	class Archetype;

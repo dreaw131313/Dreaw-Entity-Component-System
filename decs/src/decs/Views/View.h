@@ -9,6 +9,7 @@
 #include "../ComponentContainer.h"
 #include "../Entity.h"
 #include "../Container.h"
+#include "decs/CustomApplay.h"
 
 
 namespace decs
@@ -121,7 +122,7 @@ namespace decs
 							typeIndexes,
 							componentsRefs
 							);
-						std::apply(func, tuple);
+						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
 				}
 			}
@@ -134,7 +135,9 @@ namespace decs
 				archContext.ValidateEntitiesCount();
 
 			uint32_t contextCount = m_ArchetypesContexts.size();
-			std::tuple<Entity, ComponentsTypes*...> tuple = {};
+			Entity entityBuffor = {};
+			std::tuple<Entity*, ComponentsTypes*...> tuple = {};
+			std::get<Entity*>(tuple) = &entityBuffor;
 			for (uint32_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
@@ -147,9 +150,10 @@ namespace decs
 				for (int64_t iterationIndex = ctx.EntitiesCount() - 1; iterationIndex > -1; iterationIndex--)
 				{
 					auto& entityData = entitiesData[iterationIndex];
+					entityBuffor.m_ID = entityData.ID;
+					entityBuffor.m_Container = m_Container;
 					if (entityData.IsActive)
 					{
-						std::get<Entity>(tuple) = Entity(entityData.ID, this->m_Container);
 						SetWithEntityTupleElements<ComponentsTypes...>(
 							tuple,
 							0,
@@ -157,7 +161,7 @@ namespace decs
 							typeIndexes,
 							componentsRefs
 							);
-						std::apply(func, tuple);
+						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
 				}
 			}
@@ -427,7 +431,7 @@ namespace decs
 
 		template<typename T = void, typename... Ts>
 		void SetWithEntityTupleElements(
-			std::tuple<Entity, ComponentsTypes*...>& tuple,
+			std::tuple<Entity*, ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
 			const uint64_t& firstEntityCompIndex,
 			TypeID*& typesIndexe,
@@ -451,7 +455,7 @@ namespace decs
 
 		template<>
 		void SetWithEntityTupleElements<void>(
-			std::tuple<Entity, ComponentsTypes*...>& tuple,
+			std::tuple<Entity*, ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
 			const uint64_t& firstEntityCompIndex,
 			TypeID*& typesIndexe,

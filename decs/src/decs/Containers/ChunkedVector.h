@@ -159,7 +159,6 @@ namespace decs
 				Chunk::Destroy(bucket);
 		}
 
-
 		// Operators
 
 		inline T& operator[](const uint64_t& index)
@@ -182,7 +181,6 @@ namespace decs
 
 		inline uint64_t Size() const { return m_CreatedElements; }
 		inline bool IsEmpty()const { return m_CreatedElements == 0; }
-
 
 		template<typename... Args>
 		T& EmplaceBack(Args&&... args)

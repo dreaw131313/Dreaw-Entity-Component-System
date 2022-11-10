@@ -78,6 +78,9 @@
     <ClInclude Include="src\decs\EntityManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\decs\CustomApplay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\decspch.cpp">

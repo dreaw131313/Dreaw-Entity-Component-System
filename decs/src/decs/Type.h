@@ -26,7 +26,7 @@ namespace decs
 		public:
 			static constexpr TypeID ID()
 			{
-				constexpr auto id = c_string_hash_32(FULL_FUNCTION_NAME);
+				constexpr auto id = c_string_hash_64(FULL_FUNCTION_NAME);
 				return id;
 			}
 		};
