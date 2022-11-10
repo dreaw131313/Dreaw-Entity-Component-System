@@ -30,7 +30,7 @@ namespace decs
 		}
 
 		template<typename... ComponentsTypes>
-		View& WithoutAnyOf()
+		View& Without()
 		{
 			m_IsDirty = true;
 			m_Excludes.clear();
@@ -39,7 +39,7 @@ namespace decs
 		}
 
 		template<typename... ComponentsTypes>
-		View& WithAnyOf()
+		View& WithAnyFrom()
 		{
 			m_IsDirty = true;
 			m_RequiredAny.clear();
@@ -48,7 +48,7 @@ namespace decs
 		}
 
 		template<typename... ComponentsTypes>
-		View& WithAll()
+		View& With()
 		{
 			m_IsDirty = true;
 			m_RequiredAll.clear();
@@ -130,6 +130,10 @@ namespace decs
 		template<typename Callable>
 		void ForEachWithEntity(Callable func)
 		{
+#if DECS_DEBUG
+			static_assert(std::is_invocable<Callable, Entity, ComponentsTypes*...>(), "Wrong parameters passed to ");
+#endif
+
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
 				archContext.ValidateEntitiesCount();
 
