@@ -130,10 +130,6 @@ namespace decs
 		template<typename Callable>
 		void ForEachWithEntity(Callable func)
 		{
-#if DECS_DEBUG
-			static_assert(std::is_invocable<Callable, Entity, ComponentsTypes*...>(), "Wrong parameters passed to ");
-#endif
-
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
 				archContext.ValidateEntitiesCount();
 

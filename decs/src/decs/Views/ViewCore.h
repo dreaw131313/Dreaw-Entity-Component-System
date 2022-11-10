@@ -21,7 +21,7 @@ namespace decs
 
 	public:
 		Archetype* Arch = nullptr;
-		uint32_t TypeIndexes[TypesCount]; // indexy kontenerów z archetypu z których ma ko¿ystaæ widok - shit
+		uint64_t TypeIndexes[TypesCount]; // indexy kontenerów z archetypu z których ma ko¿ystaæ widok - shit
 
 	public:
 		inline uint64_t EntitiesCount() const { return m_EntitiesCount; }

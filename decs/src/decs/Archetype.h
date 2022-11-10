@@ -288,23 +288,23 @@ namespace decs
 		{
 			// edges with archetypes with less components:
 			{
-				const uint32_t componentCountsMinusOne = archetype.GetComponentsCount() - 1;
+				const uint64_t componentCountsMinusOne = archetype.GetComponentsCount() - 1;
 
 				if (componentCountsMinusOne > 0)
 				{
-					const uint32_t archetypeListIndex = componentCountsMinusOne - 1;
+					const uint64_t archetypeListIndex = componentCountsMinusOne - 1;
 					auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
 
-					uint32_t archCount = archetypesListToCreateEdges.size();
-					for (uint32_t archIdx = 0; archIdx < archCount; archIdx++)
+					uint64_t archCount = archetypesListToCreateEdges.size();
+					for (uint64_t archIdx = 0; archIdx < archCount; archIdx++)
 					{
 						auto& testArchetype = *archetypesListToCreateEdges[archIdx];
 
-						uint32_t incorrectTests = 0;
+						uint64_t incorrectTests = 0;
 						TypeID notFindedType;
 						bool isArchetypeValid = true;
 
-						for (uint32_t typeIdx = 0; typeIdx < archetype.GetComponentsCount(); typeIdx++)
+						for (uint64_t typeIdx = 0; typeIdx < archetype.GetComponentsCount(); typeIdx++)
 						{
 							TypeID typeID = archetype.ComponentsTypes()[typeIdx];
 
@@ -339,23 +339,23 @@ namespace decs
 
 			// edges with archetype with more components:
 			{
-				const uint32_t componentCountsPlusOne = archetype.GetComponentsCount() + 1;
+				const uint64_t componentCountsPlusOne = archetype.GetComponentsCount() + 1;
 
 				if (componentCountsPlusOne <= m_ArchetypesGroupedByComponentsCount.size())
 				{
-					const uint32_t archetypeListIndex = componentCountsPlusOne - 1;
+					const uint64_t archetypeListIndex = componentCountsPlusOne - 1;
 					auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
 
-					uint32_t archCount = archetypesListToCreateEdges.size();
-					for (uint32_t archIdx = 0; archIdx < archCount; archIdx++)
+					uint64_t archCount = archetypesListToCreateEdges.size();
+					for (uint64_t archIdx = 0; archIdx < archCount; archIdx++)
 					{
 						auto& testArchetype = *archetypesListToCreateEdges[archIdx];
 
-						uint32_t incorrectTests = 0;
+						uint64_t incorrectTests = 0;
 						TypeID lastIncorrectType;
 						bool isArchetypeValid = true;
 
-						for (uint32_t typeIdx = 0; typeIdx < testArchetype.GetComponentsCount(); typeIdx++)
+						for (uint64_t typeIdx = 0; typeIdx < testArchetype.GetComponentsCount(); typeIdx++)
 						{
 							TypeID typeID = testArchetype.ComponentsTypes()[typeIdx];
 							auto it = archetype.m_TypeIDsIndexes.find(typeID);
