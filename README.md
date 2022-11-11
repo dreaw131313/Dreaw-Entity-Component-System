@@ -69,9 +69,7 @@ bool Spawn(
 	);
 bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive = true);
 ```
-As prefab parameter can be used entity from any decs::Container, but if it this container is not in sync* with container in which we are trying spawn, **Spawn** method will return false or invalid **decs::Entity** object.<br/>
-
-*Containers are in sync when they contains internal containers for components of the same type (syncing containers will be implemented in near future)*
+As prefab parameter can be used entity from any decs::Container.
 
 Entities can also be activated or deactivated. Deactivated entities will not be iterated. Activating and deactivating is performed by functions:
 ```C++
