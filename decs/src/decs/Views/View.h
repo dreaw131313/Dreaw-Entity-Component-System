@@ -99,9 +99,9 @@ namespace decs
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
 				archContext.ValidateEntitiesCount();
 
-			uint32_t contextCount = m_ArchetypesContexts.size();
+			uint64_t contextCount = m_ArchetypesContexts.size();
 			std::tuple<ComponentsTypes*...> tuple = {};
-			for (uint32_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
+			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
 				TypeID* typeIndexes = ctx.TypeIndexes;
@@ -134,11 +134,11 @@ namespace decs
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
 				archContext.ValidateEntitiesCount();
 
-			uint32_t contextCount = m_ArchetypesContexts.size();
+			uint64_t contextCount = m_ArchetypesContexts.size();
 			Entity entityBuffor = {};
 			std::tuple<Entity*, ComponentsTypes*...> tuple = {};
 			std::get<Entity*>(tuple) = &entityBuffor;
-			for (uint32_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
+			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
 				TypeID* typeIndexes = ctx.TypeIndexes;
@@ -180,7 +180,7 @@ namespace decs
 		ecsSet<Archetype*> m_ContainedArchetypes;
 
 		// cache value to check if view should be updated:
-		uint32_t m_ArchetypesCount_Dirty = 0;
+		uint64_t m_ArchetypesCount_Dirty = 0;
 
 	private:
 
@@ -195,7 +195,7 @@ namespace decs
 		{
 			m_ArchetypesContexts.clear();
 			m_ContainedArchetypes.clear();
-			m_ArchetypesCount_Dirty = std::numeric_limits<uint32_t>::max();
+			m_ArchetypesCount_Dirty = std::numeric_limits<uint64_t>::max();
 		}
 
 		inline bool ContainArchetype(Archetype* arch) { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
@@ -250,7 +250,7 @@ namespace decs
 				{
 					ArchetypeContext& context = m_ArchetypesContexts.emplace_back();
 
-					for (uint32_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
+					for (uint64_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
 					{
 						auto typeID_It = archetype.m_TypeIDsIndexes.find(m_Includes.IDs()[typeIdx]);
 						if (typeID_It == archetype.m_TypeIDsIndexes.end())
@@ -286,15 +286,15 @@ namespace decs
 			const uint64_t& minComponentsCountInArchetype
 		)
 		{
-			uint32_t addedArchetypes = 0;
+			uint64_t addedArchetypes = 0;
 			uint64_t archetypesVectorIndex = minComponentsCountInArchetype - 1;
 
 			while (addedArchetypes == 0 && archetypesVectorIndex < maxComponentsInArchetype)
 			{
 				std::vector<Archetype*>& archetypesToTest = map.m_ArchetypesGroupedByComponentsCount[archetypesVectorIndex];
 
-				uint32_t archsCount = archetypesToTest.size();
-				for (uint32_t i = 0; i < archetypesToTest.size(); i++)
+				uint64_t archsCount = archetypesToTest.size();
+				for (uint64_t i = 0; i < archetypesToTest.size(); i++)
 				{
 					Archetype* archetype = archetypesToTest[i];
 
@@ -359,7 +359,7 @@ namespace decs
 				{
 					ArchetypeContext& context = m_ArchetypesContexts.emplace_back();
 
-					for (uint32_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
+					for (uint64_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
 					{
 						auto typeID_It = archetype.m_TypeIDsIndexes.find(m_Includes.IDs()[typeIdx]);
 						if (typeID_It == archetype.m_TypeIDsIndexes.end())

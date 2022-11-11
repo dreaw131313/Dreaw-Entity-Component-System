@@ -11,52 +11,6 @@
 namespace decs
 {
 	class Entity;
-	
-	struct PrefabSpawnComponentContextData
-	{
-	public:
-		TypeID ComponentType = std::numeric_limits<TypeID>::max();
-		ComponentContextBase* PrefabComponentContext = nullptr;
-		ComponentContextBase* ComponentContext = nullptr;
-		ComponentCopyData ComponentData = {};
-	public:
-		PrefabSpawnComponentContextData()
-		{
-
-		}
-
-		PrefabSpawnComponentContextData(
-			const TypeID& componentType,
-			ComponentContextBase* prefabContext,
-			ComponentContextBase* context
-		) :
-			ComponentType(componentType), PrefabComponentContext(prefabContext), ComponentContext(context)
-		{
-
-		}
-	};
-
-	struct PrefabSpawnData
-	{
-	public:
-		std::vector<PrefabSpawnComponentContextData> ComponentContexts;
-
-	public:
-		void Clear()
-		{
-			ComponentContexts.clear();
-		}
-
-		void Reserve(const uint64_t& capacity)
-		{
-			ComponentContexts.reserve(capacity);
-		}
-
-		inline bool IsValid()const
-		{
-			return ComponentContexts.size() > 0;
-		}
-	};
 
 	enum class BucketSizeType
 	{
@@ -94,22 +48,16 @@ namespace decs
 #pragma region ENTITIES:
 	private:
 		EntityManager m_EntityManager = { 1000 };
-		PrefabSpawnData m_SpawnData = {};
 
 	public:
-		inline uint64_t GetAliveEntitesCount() const 
+		inline uint64_t GetAliveEntitesCount() const
 		{
 			return m_EntityManager.GetCreatedEntitiesCount();
 		}
+
 		Entity CreateEntity(const bool& isActive = true);
 
 		bool DestroyEntity(const EntityID& entity);
-
-		Entity Spawn(const Entity& prefab, const bool& isActive = true);
-
-		bool Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive = true);
-
-		bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive = true);
 
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
@@ -135,6 +83,66 @@ namespace decs
 		{
 			return m_EntityManager.GetComponentsCount(entity);
 		}
+
+#pragma endregion
+
+#pragma region SPAWNING ENTIES
+	private:
+		struct PrefabSpawnComponentContext
+		{
+		public:
+			TypeID ComponentType = std::numeric_limits<TypeID>::max();
+			ComponentContextBase* PrefabComponentContext = nullptr;
+			ComponentContextBase* ComponentContext = nullptr;
+			ComponentCopyData ComponentData = {};
+		public:
+			PrefabSpawnComponentContext()
+			{
+
+			}
+
+			PrefabSpawnComponentContext(
+				const TypeID& componentType,
+				ComponentContextBase* prefabContext,
+				ComponentContextBase* context
+			) :
+				ComponentType(componentType), PrefabComponentContext(prefabContext), ComponentContext(context)
+			{
+
+			}
+		};
+
+		struct PrefabSpawnData
+		{
+		public:
+			std::vector<PrefabSpawnComponentContext> ComponentContexts;
+
+		public:
+			void Clear()
+			{
+				ComponentContexts.clear();
+			}
+
+			void Reserve(const uint64_t& capacity)
+			{
+				ComponentContexts.reserve(capacity);
+			}
+
+			inline bool IsValid()const
+			{
+				return ComponentContexts.size() > 0;
+			}
+		};
+
+	private:
+		PrefabSpawnData m_SpawnData = {};
+
+	public:
+		Entity Spawn(const Entity& prefab, const bool& isActive = true);
+
+		bool Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive = true);
+
+		bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive = true);
 
 	private:
 		/// <summary>

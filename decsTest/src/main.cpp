@@ -26,5 +26,23 @@ int main()
 
 	entity.Destroy();
 
+	decs::View<C1> view = {};
+	view.Fetch(container);
+	view.ForEach([](C1& c)
+	{
+		c.X += 1;
+	});
+
+	entity.AddComponent<float>(1.f);
+	entity.RemoveComponent<int>();
+	entity.HasComponent<int>();
+
+
+	if (entity.IsActiveSafe())
+	{
+		
+	}
+
+	std::cin.get();
 	return 0;
 }

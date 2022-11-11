@@ -11,10 +11,6 @@ namespace decs
 	}
 
 	using EntityID = uint64_t;
-	namespace Null
-	{
-		constexpr EntityID ID = std::numeric_limits<EntityID>::max();
-	}
 	using TypeID = uint64_t;
 
 	template<typename Key, typename Value>

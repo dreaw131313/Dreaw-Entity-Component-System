@@ -11,7 +11,7 @@ namespace decs
 		struct EntityCommand
 		{
 		public:
-			EntityID ID = Null::ID;
+			EntityID ID = std::numeric_limits<EntityID>::max();
 			Container* ECSContainer = nullptr;
 		public:
 			EntityCommand() {}
