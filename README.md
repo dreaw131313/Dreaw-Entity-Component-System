@@ -139,7 +139,7 @@ Things like:
 * destroying other entites
 * adding and removing component from entities diffrent than curently iterated entity
 
-is undefined behavior.
+are undefined behavior.
 
 # Performance
 # Implementation details
