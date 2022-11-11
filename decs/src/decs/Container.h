@@ -149,10 +149,7 @@ namespace decs
 		/// 
 		/// </summary>
 		/// <returns>True if spawnd data preparation succeded else false.</returns>
-		bool PreapareSpawnData(
-			const uint64_t& componentsCount,
-			Archetype* prefabArchetype
-		);
+		void PreapareSpawnData(const uint64_t& componentsCount, Archetype* prefabArchetype);
 
 #pragma endregion
 

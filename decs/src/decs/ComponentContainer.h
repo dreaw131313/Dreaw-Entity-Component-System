@@ -24,7 +24,7 @@ namespace decs
 
 		}
 
-		inline bool IsValid()const 
+		inline bool IsValid()const
 		{
 			return Component != nullptr;
 		}
@@ -146,6 +146,8 @@ namespace decs
 
 		virtual ComponentCopyData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
 
+		virtual BaseComponentAllocator* CreateEmptyCopyOfYourself() = 0;
+
 	protected:
 		uint64_t m_CreatedElements = 0;
 	};
@@ -166,110 +168,6 @@ namespace decs
 
 		virtual inline ComponentType* GetComponent(const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
 	};
-
-	template<typename ComponentType>
-	class StableComponentAllocator_Old : public ComponentAllocator<ComponentType>
-	{
-		using AllocationData = ComponentAllocationData<ComponentType>;
-		using NodeInfo = ComponentNodeInfo<ComponentType>;
-	public:
-		StableComponentAllocator_Old()
-		{
-
-		}
-
-		StableComponentAllocator_Old(const uint64_t& bucketCapacity) :
-			m_Components(bucketCapacity),
-			m_Nodes(bucketCapacity)
-		{
-
-		}
-
-		~StableComponentAllocator_Old()
-		{
-
-		}
-
-		template<typename... Args>
-		AllocationData EmplaceBack(const EntityID& entityID, Args&&... args)
-		{
-			auto node = m_Components.AddNode(std::forward<Args>(args)...);
-			auto result = m_Nodes.EmplaceBack_CR(entityID, node);
-
-			return AllocationData(result.BucketIndex, result.ElementIndex, &node->Data());
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="allocationData"></param>
-		/// <returns></returns>
-		virtual ComponentAllocatorSwapData RemoveSwapBack(const uint64_t& bucketIndex, const uint64_t& elementIndex) override
-		{
-			auto& nodeInfo = m_Nodes(bucketIndex, elementIndex);
-			m_Components.RemoveNode(nodeInfo.Node);
-
-			m_Nodes.RemoveSwapBack(bucketIndex, elementIndex);
-
-			if (m_Nodes.IsPositionValid(bucketIndex, elementIndex))
-			{
-				auto& swappedNodeInfo = m_Nodes(bucketIndex, elementIndex);
-				return ComponentAllocatorSwapData(bucketIndex, elementIndex, swappedNodeInfo.eID);
-			}
-
-			return ComponentAllocatorSwapData();
-		}
-
-		virtual void* GetComponentAsVoid(const uint64_t& bucketIndex, const uint64_t& elementIndex) override
-		{
-			return &m_Nodes(bucketIndex, elementIndex).Node->Data();
-		}
-
-		virtual inline ComponentType* GetComponent(const uint64_t& bucketIndex, const uint64_t& elementIndex) override
-		{
-			return &m_Nodes(bucketIndex, elementIndex).Node->Data();
-		}
-
-		virtual ComponentCopyData CreateCopy(const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) override
-		{
-			if (!m_Nodes.IsPositionValid(bucketIndex, elementIndex))
-			{
-				return ComponentCopyData();
-			}
-
-			NodeInfo& nodeToCopy = m_Nodes(bucketIndex, elementIndex);
-
-			auto newNode = m_Components.AddNode(nodeToCopy.Node->Data());
-			auto result = m_Nodes.EmplaceBack_CR(entityID, newNode);
-
-			return ComponentCopyData(result.BucketIndex, result.ElementIndex, &newNode->Data());
-		}
-
-		virtual ComponentCopyData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) override
-		{
-			using ContainerType = StableComponentAllocator_Old<ComponentType>;
-			ContainerType* from = dynamic_cast<ContainerType*>(fromContainer);
-			if (from == nullptr)
-			{
-				return ComponentCopyData();
-			}
-			if (!from->m_Nodes.IsPositionValid(bucketIndex, elementIndex))
-			{
-				return ComponentCopyData();
-			}
-
-			NodeInfo& nodeToCopy = from->m_Nodes(bucketIndex, elementIndex);
-
-			auto newNode = m_Components.AddNode(nodeToCopy.Node->Data());
-			auto result = m_Nodes.EmplaceBack_CR(entityID, newNode);
-
-			return ComponentCopyData(result.BucketIndex, result.ElementIndex, &newNode->Data());
-		}
-	private:
-		BucketAllocator<ComponentType> m_Components;
-		ChunkedVector<NodeInfo> m_Nodes;
-	};
-
 
 	template<typename DataType>
 	class StableComponentAllocator : public ComponentAllocator<DataType>
@@ -438,6 +336,8 @@ namespace decs
 			DestroyChunks();
 		}
 
+		inline uint64_t GetChunkCapacity() const { return m_ChunkCapacity; }
+
 		template<typename... Args>
 		AllocationData EmplaceBack(const EntityID& entityID, Args&&... args)
 		{
@@ -519,6 +419,11 @@ namespace decs
 		virtual inline DataType* GetComponent(const uint64_t& bucketIndex, const uint64_t& elementIndex) override
 		{
 			return m_Nodes(bucketIndex, elementIndex).Data;
+		}
+
+		virtual BaseComponentAllocator* CreateEmptyCopyOfYourself() override
+		{
+			return new StableComponentAllocator<DataType>(m_ChunkCapacity);
 		}
 
 	private:

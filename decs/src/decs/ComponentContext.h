@@ -15,7 +15,6 @@ namespace decs
 
 		}
 
-
 		virtual ~ComponentContextBase()
 		{
 
@@ -23,9 +22,10 @@ namespace decs
 
 		virtual BaseComponentAllocator* GetAllocator() = 0;
 		virtual TypeID GetComponentTypeID() const = 0;
-
 		virtual void InvokeOnCreateComponent_S(void* component, const EntityID& entity, Container& container) = 0; // awful but i have no idea how do it better
 		virtual void InvokeOnDestroyComponent_S(void* component, const EntityID& entity, Container& container) = 0; //
+		virtual ComponentContextBase* CreateOwnEmptyCopy() = 0;
+
 	};
 
 	template<typename ComponentType>
@@ -73,6 +73,11 @@ namespace decs
 		{
 			for (auto& observer : DestroyObservers)
 				observer->OnDestroyComponent(component, entity, container);
+		}
+
+		ComponentContextBase* CreateOwnEmptyCopy() override
+		{
+			return new ComponentContext<ComponentType>(Allocator.GetChunkCapacity());
 		}
 	};
 

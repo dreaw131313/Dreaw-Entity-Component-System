@@ -105,10 +105,7 @@ namespace decs
 
 		uint64_t componentsCount = prefabArchetype->GetComponentsCount();
 
-		if (!PreapareSpawnData(componentsCount, prefabArchetype))
-		{
-			return Entity();
-		}
+		PreapareSpawnData(componentsCount, prefabArchetype);
 
 		EntityID spawnedEntityID = CreateEntityFromSpawnData(
 			isActive,
@@ -153,10 +150,7 @@ namespace decs
 		}
 
 		uint64_t componentsCount = prefabArchetype->GetComponentsCount();
-		if (!PreapareSpawnData(componentsCount, prefabArchetype))
-		{
-			return false;
-		}
+		PreapareSpawnData(componentsCount, prefabArchetype);
 
 		for (uint64_t i = 0; i < spawnCount; i++)
 		{
@@ -204,10 +198,7 @@ namespace decs
 		}
 
 		uint64_t componentsCount = prefabArchetype->GetComponentsCount();
-		if (!PreapareSpawnData(componentsCount, prefabArchetype))
-		{
-			return false;
-		}
+		PreapareSpawnData(componentsCount, prefabArchetype);
 
 		for (uint64_t i = 0; i < spawnCount; i++)
 		{
@@ -236,34 +227,27 @@ namespace decs
 		return true;
 	}
 
-	bool Container::PreapareSpawnData(
-		const uint64_t& componentsCount,
-		Archetype* prefabArchetype
-	)
+	void Container::PreapareSpawnData(const uint64_t& componentsCount, Archetype* prefabArchetype)
 	{
 		m_SpawnData.Clear();
 		m_SpawnData.Reserve(componentsCount);
 
-		auto endIt = m_ComponentContexts.end();
 		for (uint64_t i = 0; i < componentsCount; i++)
 		{
 			TypeID typeID = prefabArchetype->ComponentsTypes()[i];
-			auto it = m_ComponentContexts.find(typeID);
-			if (it == endIt)
-			{
-				return false;
-			}
-			else
-			{
-				m_SpawnData.ComponentContexts.emplace_back(
-					typeID,
-					prefabArchetype->m_ComponentContexts[i],
-					it->second
-				);
-			}
-		}
+			auto& context = m_ComponentContexts[typeID];
 
-		return true;
+			if (context == nullptr)
+			{
+				context = prefabArchetype->m_ComponentContexts[i]->CreateOwnEmptyCopy();
+			}
+
+			m_SpawnData.ComponentContexts.emplace_back(
+				typeID,
+				prefabArchetype->m_ComponentContexts[i],
+				context
+			);
+		}
 	}
 
 	bool Container::RemoveComponent(const EntityID& e, const TypeID& componentTypeID)
