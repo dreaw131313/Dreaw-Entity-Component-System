@@ -86,6 +86,22 @@ namespace decs
 		return false;
 	}
 
+	void Container::SetEntityActive(const EntityID& entity, const bool& isActive)
+	{
+		if (m_EntityManager.SetEntityActive(entity, isActive))
+		{
+			Entity e{ entity , this };
+			if (isActive)
+			{
+				InvokeEntityActivationObservers(e);
+			}
+			else
+			{
+				InvokeEntityDeactivationObservers(e);
+			}
+		}
+	}
+
 	Entity Container::Spawn(const Entity& prefab, const bool& isActive)
 	{
 		if (!prefab.IsValid()) return Entity();

@@ -30,15 +30,24 @@ namespace decs
 			return m_EntityData[entity].IsAlive;
 		}
 
-		inline void SetEntityActive(const EntityID& entity, const bool& isActive)
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="entity"></param>
+		/// <param name="isActive"></param>
+		/// <returns>true if isActive state was changed, else false.</returns>
+		inline bool SetEntityActive(const EntityID& entity, const bool& isActive)
 		{
+			if (entity >= m_enitiesDataCount) return false;
 			auto& data = m_EntityData[entity];
 			if (data.IsActive != isActive)
 			{
 				data.IsActive = isActive;
 				auto& archEntityData = data.CurrentArchetype->m_EntitiesData[data.IndexInArchetype];
 				archEntityData.IsActive = isActive;
+				return true;
 			}
+			return false;
 		}
 
 		inline bool IsEntityActive(const EntityID& entity) const

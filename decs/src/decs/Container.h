@@ -69,12 +69,9 @@ namespace decs
 			return m_EntityManager.GetEntityVersion(entity);
 		}
 
-		inline void SetEntityActive(const EntityID& entity, const bool& isActive)
-		{
-			m_EntityManager.SetEntityActive(entity, isActive);
-		}
+		void SetEntityActive(const EntityID& entity, const bool& isActive);
 
-		inline bool IsEntityActive(const EntityID& entity) const
+		bool IsEntityActive(const EntityID& entity) const
 		{
 			return m_EntityManager.IsEntityActive(entity);
 		}
@@ -409,6 +406,9 @@ namespace decs
 		std::vector<CreateEntityObserver*> m_EntityCreationObservers;
 		std::vector<DestroyEntityObserver*> m_EntittyDestructionObservers;
 
+		std::vector<ActivateEntityObserver*> m_EntittyActivateObservers;
+		std::vector<DeactivateEntityObserver*> m_EntittyDeactivateObservers;
+
 	public:
 		bool AddEntityCreationObserver(CreateEntityObserver* observer);
 
@@ -431,6 +431,17 @@ namespace decs
 				observer->OnDestroyEntity(entity, *this);
 		}
 
+		inline void InvokeEntityActivationObservers(Entity& entity)
+		{
+			for (auto observer : m_EntittyActivateObservers)
+				observer->OnSetEntityActive(entity);
+		}
+
+		inline void InvokeEntityDeactivationObservers(Entity& entity)
+		{
+			for (auto observer : m_EntittyDeactivateObservers)
+				observer->OnSetEntityInactive(entity);
+		}
 #pragma endregion
 	};
 }

@@ -22,12 +22,14 @@ namespace decs
 
 	class ActivateEntityObserver
 	{
+	public:
 		virtual void OnSetEntityActive(Entity& entity) = 0;
 	};
 
 	class DeactivateEntityObserver
 	{
-		virtual void OnSetEntityInActive(Entity& entity) = 0;;
+	public:
+		virtual void OnSetEntityInactive(Entity& entity) = 0;;
 	};
 
 	template<typename ComponentType>
