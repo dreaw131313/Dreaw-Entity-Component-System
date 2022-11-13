@@ -155,7 +155,6 @@ namespace decs
 
 #pragma region COMPONENTS:
 	public:
-
 		/// <summary>
 		/// Must be invoked before addaing any component of type ComponentType in this container
 		/// </summary>

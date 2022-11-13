@@ -52,7 +52,6 @@ namespace decs
 				{
 					auto& compRef = currentArchetype->m_ComponentsRefs[firstComponentDataIndexInArch + i];
 					auto compContext = currentArchetype->m_ComponentContexts[i];
-
 					compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, entity, *this);
 				}
 
@@ -61,9 +60,7 @@ namespace decs
 				for (uint64_t i = 0; i < currentArchetype->GetComponentsCount(); i++)
 				{
 					auto& compRef = currentArchetype->m_ComponentsRefs[firstComponentDataIndexInArch + i];
-
 					auto allocator = currentArchetype->m_ComponentContexts[i]->GetAllocator();
-
 					auto result = allocator->RemoveSwapBack(compRef.BucketIndex, compRef.ElementIndex);
 
 					if (result.IsValid())
