@@ -11,7 +11,7 @@
 All entites and components are stored in class decs::Container which is giving access for method for creating and destroying entiteis and components.<br/>
 Component classes do not need to inherit from any class. Base types like int, float etc. can also be componenets.<br/>
 Component stored in **decs::Container** have **stable memory adress**.<br/>
-```C++
+```cpp
 class Component1
 {
 public:
@@ -59,7 +59,7 @@ Like in most of ecs system, in **decs** entity can have only one component of gi
 decs::Entity class is represented by ID and reference to decs::Container in which was created.<br/>
 
 Entites can also be spawned which is a little faster than creating them by regular method. To spawn entity you need to use one of **Spawn()** methods from decs::Container class.
-```C++
+```cpp
 Entity Spawn(const Entity& prefab, const bool& isActive = true);
 bool Spawn(
 	const Entity& prefab, 
@@ -72,7 +72,7 @@ bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActi
 As prefab parameter can be used entity from any decs::Container.
 
 Entities can also be activated or deactivated. Deactivated entities will not be iterated. Activating and deactivating is performed by functions:
-```C++
+```cpp
 decs::Container container = {};
 decs::Entity entity = container.CreateEntity();
 entity.SetActive(true);
@@ -81,7 +81,7 @@ container.SetEntityActive(false);
 
 ### Iterating over entites
 **decs::View<typename... Components>** object serves to iterating over entities
-```C++
+```cpp
 decs::Container container = {}; 
 
 // this view can iterate over all entities which contains components passed as template parameters
@@ -100,21 +100,21 @@ view.ForEachWithEntity([&](decs::Entity& e, Component1& c1, Component2& c2)
 });
 ```
 There is also possibility to query for more complex views with member methods of view class:
-```C++
+```cpp
 template<typename... ComponentsTypes>
 View& Without(); // Entities in view will not have all components from ComponetsTypes parameters list
 ```
-```C++
+```cpp
 template<typename... ComponentsTypes>
 View& WithAnyFrom(); // Entities in view will have at least one of component from ComponentTypes parameters list
 ```
-```C++
+```cpp
 template<typename... ComponentsTypes>
 View& With(); // Entities in view will have all components from ComponentTypes parameters list
 ```
 
 Creating view with this methods can look like:
-```C++
+```cpp
 decs::View<Component1, Component2, Component3> view = {};
 view.WithAll<Component4,Component5>().WithAnyOf<Component6, Component7>().WithoutAnyOf<Component8, Component9>();
 view.Fetch(containerClassObject);
