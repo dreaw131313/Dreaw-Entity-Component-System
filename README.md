@@ -116,7 +116,7 @@ View& With(); // Entities in view will have all components from ComponentTypes p
 Creating view with this methods can look like:
 ```cpp
 decs::View<Component1, Component2, Component3> view = {};
-view.WithAll<Component4,Component5>().WithAnyOf<Component6, Component7>().WithoutAnyOf<Component8, Component9>();
+view.Without<Component4,Component5>().WithAnyFrom<Component6, Component7>().With<Component8, Component9>();
 view.Fetch(containerClassObject);
 
 view.ForEach([&](Component1& c1, Component2& c2, Component3& c3)
