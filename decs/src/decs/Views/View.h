@@ -34,8 +34,8 @@ namespace decs
 		View& Without()
 		{
 			m_IsDirty = true;
-			m_Excludes.clear();
-			findIds<ComponentsTypes...>(m_Excludes);
+			m_Without.clear();
+			findIds<ComponentsTypes...>(m_Without);
 			return *this;
 		}
 
@@ -43,8 +43,8 @@ namespace decs
 		View& WithAnyFrom()
 		{
 			m_IsDirty = true;
-			m_RequiredAny.clear();
-			findIds<ComponentsTypes...>(m_RequiredAny);
+			m_WithAnyOf.clear();
+			findIds<ComponentsTypes...>(m_WithAnyOf);
 			return *this;
 		}
 
@@ -52,8 +52,8 @@ namespace decs
 		View& With()
 		{
 			m_IsDirty = true;
-			m_RequiredAll.clear();
-			findIds<ComponentsTypes...>(m_RequiredAll);
+			m_WithAll.clear();
+			findIds<ComponentsTypes...>(m_WithAll);
 			return *this;
 		}
 
@@ -72,7 +72,7 @@ namespace decs
 				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCount_Dirty;
 
 				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
-				if (m_RequiredAny.size() > 0) minComponentsCountInArchetype += 1;
+				if (m_WithAnyOf.size() > 0) minComponentsCountInArchetype += 1;
 
 				ArchetypesMap& map = m_Container->m_ArchetypesMap;
 				uint64_t maxComponentsInArchetype = map.m_ArchetypesGroupedByComponentsCount.size();
@@ -169,9 +169,9 @@ namespace decs
 
 	private:
 		TypeGroup<ComponentsTypes...> m_Includes = {};
-		std::vector<TypeID> m_Excludes;
-		std::vector<TypeID> m_RequiredAny;
-		std::vector<TypeID> m_RequiredAll;
+		std::vector<TypeID> m_Without;
+		std::vector<TypeID> m_WithAnyOf;
+		std::vector<TypeID> m_WithAll;
 
 		Container* m_Container;
 		bool m_IsDirty;
@@ -188,7 +188,7 @@ namespace decs
 		{
 			uint64_t includesCount = sizeof...(ComponentsTypes);
 
-			return sizeof...(ComponentsTypes) + m_RequiredAll.size();
+			return sizeof...(ComponentsTypes) + m_WithAll.size();
 		}
 
 		void Invalidate()
@@ -206,10 +206,10 @@ namespace decs
 			{
 				// exclude test
 				{
-					uint64_t excludeCount = m_Excludes.size();
+					uint64_t excludeCount = m_Without.size();
 					for (int i = 0; i < excludeCount; i++)
 					{
-						if (archetype.ContainType(m_Excludes[i]))
+						if (archetype.ContainType(m_Without[i]))
 						{
 							return false;
 						}
@@ -218,12 +218,12 @@ namespace decs
 
 				// required any
 				{
-					uint64_t requiredAnyCount = m_RequiredAny.size();
+					uint64_t requiredAnyCount = m_WithAnyOf.size();
 					bool containRequiredAny = requiredAnyCount == 0;
 
 					for (int i = 0; i < requiredAnyCount; i++)
 					{
-						if (archetype.ContainType(m_RequiredAny[i]))
+						if (archetype.ContainType(m_WithAnyOf[i]))
 						{
 							containRequiredAny = true;
 							break;
@@ -234,11 +234,11 @@ namespace decs
 
 				// required all
 				{
-					uint64_t requiredAllCount = m_RequiredAll.size();
+					uint64_t requiredAllCount = m_WithAll.size();
 
 					for (int i = 0; i < requiredAllCount; i++)
 					{
-						if (!archetype.ContainType(m_RequiredAll[i]))
+						if (!archetype.ContainType(m_WithAll[i]))
 						{
 							return false;
 						}
@@ -316,10 +316,10 @@ namespace decs
 			{
 				// exclude test
 				{
-					uint64_t excludeCount = m_Excludes.size();
+					uint64_t excludeCount = m_Without.size();
 					for (int i = 0; i < excludeCount; i++)
 					{
-						if (archetype.ContainType(m_Excludes[i]))
+						if (archetype.ContainType(m_Without[i]))
 						{
 							return false;
 						}
@@ -328,12 +328,12 @@ namespace decs
 
 				// required any
 				{
-					uint64_t requiredAnyCount = m_RequiredAny.size();
+					uint64_t requiredAnyCount = m_WithAnyOf.size();
 					bool containRequiredAny = requiredAnyCount == 0;
 
 					for (int i = 0; i < requiredAnyCount; i++)
 					{
-						if (archetype.ContainType(m_RequiredAny[i]))
+						if (archetype.ContainType(m_WithAnyOf[i]))
 						{
 							containRequiredAny = true;
 							break;
@@ -344,11 +344,11 @@ namespace decs
 
 				// required all
 				{
-					uint64_t requiredAllCount = m_RequiredAll.size();
+					uint64_t requiredAllCount = m_WithAll.size();
 
 					for (int i = 0; i < requiredAllCount; i++)
 					{
-						if (!archetype.ContainType(m_RequiredAll[i]))
+						if (!archetype.ContainType(m_WithAll[i]))
 						{
 							return false;
 						}

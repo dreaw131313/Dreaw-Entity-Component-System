@@ -30,7 +30,7 @@ namespace decs
 
 		}
 
-		inline operator const EntityID& () { return m_ID; }
+		inline operator const EntityID& () const { return m_ID; }
 
 		inline EntityID ID() const { return m_ID; }
 		inline Container* GetContainer() const { return m_Container; }
