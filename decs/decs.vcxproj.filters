@@ -18,7 +18,7 @@
     <ClInclude Include="src\decspch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Containers\BucketAllocator.h">
+    <ClInclude Include="src\decs\Containers\ChunkAllocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Containers\ChunkedVector.h">

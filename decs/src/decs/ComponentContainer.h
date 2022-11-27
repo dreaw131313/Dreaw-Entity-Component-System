@@ -2,7 +2,7 @@
 #include "decspch.h"
 #include "Core.h"
 
-#include "Containers/BucketAllocator.h"
+#include "Containers/ChunkAllocator.h"
 #include "Containers/ChunkedVector.h"
 
 namespace decs
@@ -84,13 +84,13 @@ namespace decs
 	struct ComponentNodeInfo
 	{
 	public:
-		BucketNode<ComponentType>* Node = nullptr;
+		ChunkNode<ComponentType>* Node = nullptr;
 		EntityID eID = std::numeric_limits<EntityID>::max();
 
 	public:
 		ComponentNodeInfo(
 			EntityID entityID,
-			BucketNode<ComponentType>* node
+			ChunkNode<ComponentType>* node
 		) :
 			Node(node),
 			eID(entityID)

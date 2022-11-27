@@ -101,7 +101,7 @@
     <ClInclude Include="src\decs\ComponentContainer.h" />
     <ClInclude Include="src\decs\ComponentContext.h" />
     <ClInclude Include="src\decs\Container.h" />
-    <ClInclude Include="src\decs\Containers\BucketAllocator.h" />
+    <ClInclude Include="src\decs\Containers\ChunkAllocator.h" />
     <ClInclude Include="src\decs\Containers\ChunkedVector.h" />
     <ClInclude Include="src\decs\Core.h" />
     <ClInclude Include="src\decs\decs.h" />

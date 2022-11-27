@@ -9,30 +9,30 @@ namespace decs
 	class Chunk;
 
 	template<typename DataType>
-	struct BucketNode
+	struct ChunkNode
 	{
 		template<typename T>
 		friend class Chunk;
 		template<typename T>
-		friend class BucketAllocator;
+		friend class ChunkAllocator;
 
 		typedef Chunk<DataType> BucketType;
 	public:
-		inline BucketNode<DataType>* Next() { return m_Next; }
-		inline BucketNode<DataType>* Previous() { return m_Previous; }
+		inline ChunkNode<DataType>* Next() { return m_Next; }
+		inline ChunkNode<DataType>* Previous() { return m_Previous; }
 
 	private:
-		BucketNode()
+		ChunkNode()
 		{
 
 		}
 
 	public:
 		template<typename... Args>
-		BucketNode(
+		ChunkNode(
 			BucketType* bucket,
-			BucketNode<DataType>* previous,
-			BucketNode<DataType>* next,
+			ChunkNode<DataType>* previous,
+			ChunkNode<DataType>* next,
 			Args&&... args
 		) :
 			m_Bucket(bucket),
@@ -43,7 +43,7 @@ namespace decs
 
 		}
 
-		~BucketNode()
+		~ChunkNode()
 		{
 
 		}
@@ -53,8 +53,8 @@ namespace decs
 
 	private:
 		DataType m_Data;
-		BucketNode<DataType>* m_Previous = nullptr;
-		BucketNode<DataType>* m_Next = nullptr;
+		ChunkNode<DataType>* m_Previous = nullptr;
+		ChunkNode<DataType>* m_Next = nullptr;
 		BucketType* m_Bucket = nullptr;
 	};
 
@@ -62,9 +62,9 @@ namespace decs
 	class Chunk
 	{
 		template<typename T>
-		friend class BucketAllocator;
+		friend class ChunkAllocator;
 
-		typedef BucketNode<Data> NodeType;
+		typedef ChunkNode<Data> NodeType;
 
 		struct FreeNode
 		{
@@ -224,7 +224,7 @@ namespace decs
 				m_ValidElements -= 1;
 			}
 
-			node->~BucketNode();
+			node->~ChunkNode();
 
 			return true;
 		}
@@ -248,15 +248,15 @@ namespace decs
 	};
 
 	template<typename DataType>
-	class BucketAllocator
+	class ChunkAllocator
 	{
 		typedef Chunk<DataType> BucketType;
-		typedef BucketNode<DataType> NodeType;
+		typedef ChunkNode<DataType> NodeType;
 
 	public:
-		BucketAllocator() {}
+		ChunkAllocator() {}
 
-		BucketAllocator(uint64_t elementsInBucket, bool bAutoRemoveEmptyBuckets = true) :
+		ChunkAllocator(uint64_t elementsInBucket, bool bAutoRemoveEmptyBuckets = true) :
 			m_bAutoRemoveEmptyBuckets(bAutoRemoveEmptyBuckets)
 		{
 			if (elementsInBucket == 0)
@@ -269,7 +269,7 @@ namespace decs
 			}
 		}
 
-		~BucketAllocator()
+		~ChunkAllocator()
 		{
 			for (uint64_t bIdx = 0; bIdx < m_Buckets.size(); bIdx++)
 			{
@@ -453,7 +453,7 @@ namespace decs
 		class iterator
 		{
 		public:
-			iterator(BucketAllocator* bucketAllocator)
+			iterator(ChunkAllocator* bucketAllocator)
 			{
 				m_BucketsCount = bucketAllocator->BucketsCount();
 				if (m_BucketsCount > 0)
