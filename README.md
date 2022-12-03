@@ -53,7 +53,7 @@ int main()
 }
 ```
 
-Like in most of ecs systems, in **decs** entity can have only one component of given type. If component of the same type will be added twice AddComponent function will return pointer to firstly created component.<br/>
+Like in most of ecs systems, in **decs** entity can have only one component of given type. If component of the same type will be added twice AddComponent function will return pointer to component created earlier.<br/>
 
 ### Entity class
 decs::Entity class is represented by ID and reference to decs::Container in which was created.<br/>
