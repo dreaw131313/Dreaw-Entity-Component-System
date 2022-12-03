@@ -38,14 +38,14 @@ int main()
 	decs::Entity entity1 = container.CreateEntity();
 	// using entity member function :
 	Component1* c1 = entity1.AddComponent<Component1>(1.f,2.f);
-	Component2* = entity1.AddComponent<Component2>(3.f,4.f);
+	Component2* c2 = entity1.AddComponent<Component2>(3.f,4.f);
 	entity1.RemoveComponent<Component2>();
 	entity1.Destroy()
 	
 	// or container functions:
 	decs::Entity entity2 = container.CreateEntity();
-	container.AddComponent<Component1>(entity2, 1.f, 2.f);
-	container.AddComponent<Component2>(entity2, 1.f, 2.f);
+	Component1* c1 = container.AddComponent<Component1>(entity2, 1.f, 2.f);
+	Component2* c2 = container.AddComponent<Component2>(entity2, 1.f, 2.f);
 	container.RemoveComponent<Component2>(entity2);
 	container.DestroyEntity(entity2);
 	
