@@ -8,7 +8,7 @@
 
 ## How to use **decs**
 ### Creating and storing entities and components
-All entites and components are stored in class decs::Container which is giving access for method for creating and destroying entiteis and components.<br/>
+All entites and components are stored in class decs::Container which is giving access for method for creating and destroying entities and components.<br/>
 Component classes do not need to inherit from any class. Base types like int, float etc. can also be componenets.<br/>
 Component stored in **decs::Container** have **stable memory adress**.<br/>
 ```cpp
