@@ -141,6 +141,3 @@ Things like:
 
 are undefined behavior.
 
-# Performance
-# Implementation details
-## decs::Container
