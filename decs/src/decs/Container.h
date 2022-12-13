@@ -18,6 +18,15 @@ namespace decs
 		BytesCount
 	};
 
+	class ContainerCreateInfo
+	{
+	public:
+		uint64_t InitialEntitiesCapacity = 10000;
+		BucketSizeType ComponentBucektSizeType = BucketSizeType::BytesCount;
+		uint64_t DefaultComponentBucketSize = 16 * MemorySize::KiloByte;
+		bool InvokeEntityActiveationStateListeners = true;
+	};
+
 	class Container final
 	{
 		template<typename ...Types>
@@ -29,8 +38,11 @@ namespace decs
 		Container(
 			const uint64_t& initialEntitiesCapacity,
 			const BucketSizeType& componentContainerBucketSizeType,
-			const uint64_t& componentContainerBucketSize
+			const uint64_t& componentContainerBucketSize,
+			const bool invokeEntityActivationStateListeners
 		);
+
+		Container(const ContainerCreateInfo& createInfo);
 
 		~Container();
 
@@ -48,7 +60,7 @@ namespace decs
 #pragma region ENTITIES:
 	private:
 		EntityManager m_EntityManager = { 1000 };
-
+		bool m_bInvokeEntityActivationStateListeners = true;
 	public:
 		inline uint64_t GetAliveEntitesCount() const
 		{
@@ -140,7 +152,7 @@ namespace decs
 		bool Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive = true);
 
 		bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive = true);
-
+		
 	private:
 		/// <summary>
 		/// 

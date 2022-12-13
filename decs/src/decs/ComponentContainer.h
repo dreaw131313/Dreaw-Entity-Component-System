@@ -47,63 +47,6 @@ namespace decs
 		}
 	};
 
-	template<typename ComponentType>
-	struct BucketRemoveSwapBackResult
-	{
-	public:
-		uint64_t Index = std::numeric_limits<uint64_t>::max();
-		EntityID eID = std::numeric_limits<EntityID>::max();
-		ComponentType* Component = nullptr;
-
-	public:
-		BucketRemoveSwapBackResult()
-		{
-
-		}
-
-		BucketRemoveSwapBackResult(
-			uint64_t index,
-			EntityID entityID,
-			ComponentType* component
-		) :
-			Index(index),
-			eID(entityID),
-			Component(component)
-		{
-
-		}
-
-		inline bool IsValid() const
-		{
-			return eID != std::numeric_limits<EntityID>::max();
-		}
-	};
-
-
-	template<typename ComponentType>
-	struct ComponentNodeInfo
-	{
-	public:
-		ChunkNode<ComponentType>* Node = nullptr;
-		EntityID eID = std::numeric_limits<EntityID>::max();
-
-	public:
-		ComponentNodeInfo(
-			EntityID entityID,
-			ChunkNode<ComponentType>* node
-		) :
-			Node(node),
-			eID(entityID)
-		{
-
-		}
-
-		ComponentNodeInfo()
-		{
-
-		}
-	};
-
 	struct ComponentAllocatorSwapData
 	{
 	public:

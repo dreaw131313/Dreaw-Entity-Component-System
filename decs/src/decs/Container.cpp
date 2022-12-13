@@ -13,11 +13,21 @@ namespace decs
 	Container::Container(
 		const uint64_t& initialEntitiesCapacity,
 		const BucketSizeType& componentContainerBucketSizeType,
-		const uint64_t& componentContainerBucketSize
+		const uint64_t& componentContainerBucketSize,
+		const bool invokeEntityActivationStateListeners
 	) :
 		m_ComponentContainerBucketSize(componentContainerBucketSize),
 		m_ContainerSizeType(componentContainerBucketSizeType),
-		m_EntityManager(initialEntitiesCapacity)
+		m_EntityManager(initialEntitiesCapacity),
+		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners)
+	{
+	}
+
+	Container::Container(const ContainerCreateInfo& createInfo) :
+		m_ComponentContainerBucketSize(createInfo.DefaultComponentBucketSize),
+		m_ContainerSizeType(createInfo.ComponentBucektSizeType),
+		m_EntityManager(createInfo.InitialEntitiesCapacity),
+		m_bInvokeEntityActivationStateListeners(createInfo.InvokeEntityActiveationStateListeners)
 	{
 	}
 
@@ -88,17 +98,13 @@ namespace decs
 
 	void Container::SetEntityActive(const EntityID& entity, const bool& isActive)
 	{
-		if (m_EntityManager.SetEntityActive(entity, isActive))
+		if (m_EntityManager.SetEntityActive(entity, isActive) && m_bInvokeEntityActivationStateListeners)
 		{
 			Entity e{ entity , this };
 			if (isActive)
-			{
 				InvokeEntityActivationObservers(e);
-			}
 			else
-			{
 				InvokeEntityDeactivationObservers(e);
-			}
 		}
 	}
 

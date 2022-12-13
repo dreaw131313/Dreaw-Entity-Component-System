@@ -39,7 +39,10 @@ namespace decs
 		inline bool SetEntityActive(const EntityID& entity, const bool& isActive)
 		{
 			if (entity >= m_enitiesDataCount) return false;
+
 			auto& data = m_EntityData[entity];
+			if (!data.IsAlive) return false;
+
 			if (data.IsActive != isActive)
 			{
 				data.IsActive = isActive;

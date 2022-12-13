@@ -146,7 +146,6 @@ namespace decs
 	class ArchetypesMap
 	{
 		friend class Container;
-
 		template<typename ...Types>
 		friend class ViewBaseWithEntity;
 		template<typename ...Types>
