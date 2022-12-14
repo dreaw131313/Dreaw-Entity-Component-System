@@ -142,7 +142,7 @@ namespace decs
 
 				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
 				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
-				std::vector<EntityData>& entiesData = m_Container->m_EntityManager.m_EntityData;
+				std::vector<EntityData>& entiesData = m_Container->m_EntityManager->m_EntityData;
 
 				for (int64_t iterationIndex = ctx.EntitiesCount() - 1; iterationIndex > -1; iterationIndex--)
 				{

@@ -21,13 +21,13 @@ namespace decs
 	class ContainerCreateInfo
 	{
 	public:
-		uint64_t InitialEntitiesCapacity = 10000;
+		EntityManager* entityManager = nullptr;
 		BucketSizeType ComponentBucektSizeType = BucketSizeType::BytesCount;
 		uint64_t DefaultComponentBucketSize = 16 * MemorySize::KiloByte;
 		bool InvokeEntityActiveationStateListeners = true;
 	};
 
-	class Container final
+	class Container
 	{
 		template<typename ...Types>
 		friend class View;
@@ -36,7 +36,7 @@ namespace decs
 		Container();
 
 		Container(
-			const uint64_t& initialEntitiesCapacity,
+			EntityManager* entityManager,
 			const BucketSizeType& componentContainerBucketSizeType,
 			const uint64_t& componentContainerBucketSize,
 			const bool invokeEntityActivationStateListeners
@@ -58,17 +58,18 @@ namespace decs
 		}
 
 #pragma region ENTITIES:
+	protected:
+		EntityManager* m_EntityManager;
 	private:
-		EntityManager m_EntityManager = { 1000 };
 		bool m_bInvokeEntityActivationStateListeners = true;
 
 	public:
 		inline uint64_t GetAliveEntitesCount() const
 		{
-			return m_EntityManager.GetCreatedEntitiesCount();
+			return m_EntityManager->GetCreatedEntitiesCount();
 		}
 
-		Entity CreateEntity(const bool& isActive = true);
+		Entity& CreateEntity(const bool& isActive = true);
 
 		bool DestroyEntity(const EntityID& entityID);
 
@@ -76,27 +77,27 @@ namespace decs
 
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
-			return m_EntityManager.IsEntityAlive(entity);
+			return m_EntityManager->IsEntityAlive(entity);
 		}
 
 		inline uint32_t GetEntityVersion(const EntityID& entity) const
 		{
-			return m_EntityManager.GetEntityVersion(entity);
+			return m_EntityManager->GetEntityVersion(entity);
 		}
 
 		void SetEntityActive(const EntityID& entity, const bool& isActive);
 
 		bool IsEntityActive(const EntityID& entity) const
 		{
-			return m_EntityManager.IsEntityActive(entity);
+			return m_EntityManager->IsEntityActive(entity);
 		}
 
 		inline uint32_t GetComponentsCount(const EntityID& entity) const
 		{
-			return m_EntityManager.GetComponentsCount(entity);
+			return m_EntityManager->GetComponentsCount(entity);
 		}
 
-		void InvalidateOwnedEntites();
+		void DestroyOwnedEntities();
 #pragma endregion
 
 #pragma region SPAWNING ENTIES
@@ -151,12 +152,12 @@ namespace decs
 		PrefabSpawnData m_SpawnData = {};
 
 	public:
-		Entity Spawn(const Entity& prefab, const bool& isActive = true);
+		Entity* Spawn(const Entity& prefab, const bool& isActive = true);
 
-		bool Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive = true);
+		bool Spawn(const Entity& prefab, std::vector<Entity*>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive = true);
 
 		bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive = true);
-		
+
 	private:
 		/// <summary>
 		/// 
@@ -190,7 +191,7 @@ namespace decs
 		{
 			if (IsEntityAlive(e))
 			{
-				EntityData& entityData = m_EntityManager.GetEntityData(e);
+				EntityData& entityData = m_EntityManager->GetEntityData(e);
 				constexpr auto copmonentTypeID = Type<ComponentType>::ID();
 
 				{
@@ -254,7 +255,7 @@ namespace decs
 		{
 			if (IsEntityAlive(e))
 			{
-				const EntityData& data = m_EntityManager.GetConstEntityData(e);
+				const EntityData& data = m_EntityManager->GetConstEntityData(e);
 				return GetComponentWithoutCheckingIsAlive<ComponentType>(data);
 			}
 			return nullptr;
@@ -265,7 +266,7 @@ namespace decs
 		{
 			if (IsEntityAlive(e))
 			{
-				const EntityData& data = m_EntityManager.GetConstEntityData(e);
+				const EntityData& data = m_EntityManager->GetConstEntityData(e);
 
 				if (data.CurrentArchetype == nullptr) return false;
 
@@ -390,7 +391,7 @@ namespace decs
 			void* compPtr
 		)
 		{
-			EntityData& data = m_EntityManager.GetEntityData(entityID);
+			EntityData& data = m_EntityManager->GetEntityData(entityID);
 
 			uint64_t compDataIndex = data.CurrentArchetype->m_TypeIDsIndexes[Type<ComponentType>::ID()];
 
@@ -407,7 +408,7 @@ namespace decs
 			Archetype* prefabArchetype
 		);
 
-		EntityID CreateEntityFromSpawnData(
+		Entity* CreateEntityFromSpawnData(
 			const bool& isActive,
 			const uint64_t componentsCount,
 			const EntityData& prefabEntityData,
@@ -459,5 +460,22 @@ namespace decs
 				observer->OnSetEntityInactive(entity);
 		}
 #pragma endregion
+
+	};
+
+	class FullContainer : public Container
+	{
+	public:
+		FullContainer();
+
+		FullContainer(
+			const uint64_t& intialEntitiesCapacity,
+			const BucketSizeType& componentContainerBucketSizeType,
+			const uint64_t& componentContainerBucketSize,
+			const bool invokeEntityActivationStateListeners
+		);
+
+	private:
+		EntityManager m_OwnEntityManager = { 1000 };
 	};
 }

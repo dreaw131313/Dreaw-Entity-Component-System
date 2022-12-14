@@ -11,44 +11,43 @@ namespace decs
 	}
 
 	Container::Container(
-		const uint64_t& initialEntitiesCapacity,
+		EntityManager* entityManager,
 		const BucketSizeType& componentContainerBucketSizeType,
 		const uint64_t& componentContainerBucketSize,
 		const bool invokeEntityActivationStateListeners
 	) :
+		m_EntityManager(entityManager),
 		m_ComponentContainerBucketSize(componentContainerBucketSize),
 		m_ContainerSizeType(componentContainerBucketSizeType),
-		m_EntityManager(initialEntitiesCapacity),
 		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners)
 	{
 	}
 
 	Container::Container(const ContainerCreateInfo& createInfo) :
+		m_EntityManager(createInfo.entityManager),
 		m_ComponentContainerBucketSize(createInfo.DefaultComponentBucketSize),
 		m_ContainerSizeType(createInfo.ComponentBucektSizeType),
-		m_EntityManager(createInfo.InitialEntitiesCapacity),
 		m_bInvokeEntityActivationStateListeners(createInfo.InvokeEntityActiveationStateListeners)
 	{
 	}
 
 	Container::~Container()
 	{
-		InvalidateOwnedEntites();
 		DestroyComponentsContexts();
 	}
 
-	Entity Container::CreateEntity(const bool& isActive)
+	Entity& Container::CreateEntity(const bool& isActive)
 	{
-		EntityID id = m_EntityManager.CreateEntity(isActive);
-		InvokeEntityCreationObservers(id);
-		return Entity(id, this);
+		Entity* entity = m_EntityManager->CreateEntity(this, isActive);
+		InvokeEntityCreationObservers(entity->ID());
+		return *entity;
 	}
 
 	bool Container::DestroyEntity(const EntityID& entityID)
 	{
 		if (IsEntityAlive(entityID))
 		{
-			EntityData& entityData = m_EntityManager.GetEntityData(entityID);
+			EntityData& entityData = m_EntityManager->GetEntityData(entityID);
 
 			InvokeEntityDestructionObservers(entityID);
 
@@ -89,7 +88,7 @@ namespace decs
 				RemoveEntityFromArchetype(*entityData.CurrentArchetype, entityData);
 			}
 
-			m_EntityManager.DestroyEntity(entityID);
+			m_EntityManager->DestroyEntity(entityID);
 			return true;
 		}
 
@@ -110,7 +109,7 @@ namespace decs
 
 	void Container::SetEntityActive(const EntityID& entity, const bool& isActive)
 	{
-		if (m_EntityManager.SetEntityActive(entity, isActive) && m_bInvokeEntityActivationStateListeners)
+		if (m_EntityManager->SetEntityActive(entity, isActive) && m_bInvokeEntityActivationStateListeners)
 		{
 			Entity e{ entity , this };
 			if (isActive)
@@ -120,30 +119,25 @@ namespace decs
 		}
 	}
 
-	void Container::InvalidateOwnedEntites()
+	Entity* Container::Spawn(const Entity& prefab, const bool& isActive)
 	{
-
-	}
-
-	Entity Container::Spawn(const Entity& prefab, const bool& isActive)
-	{
-		if (!prefab.IsValid()) return Entity();
+		if (!prefab.IsValid()) return nullptr;
 
 		Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
-		EntityData prefabEntityData = prefabContainer->m_EntityManager.GetEntityData(prefab.ID());
+		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
 
 		Archetype* prefabArchetype = prefabEntityData.CurrentArchetype;
 		if (prefabArchetype == nullptr)
 		{
-			return CreateEntity(isActive);
+			return &CreateEntity(isActive);
 		}
 
 		uint64_t componentsCount = prefabArchetype->GetComponentsCount();
 
 		PreapareSpawnData(componentsCount, prefabArchetype);
 
-		EntityID spawnedEntityID = CreateEntityFromSpawnData(
+		Entity* spawnedEntity = CreateEntityFromSpawnData(
 			isActive,
 			componentsCount,
 			prefabEntityData,
@@ -151,18 +145,18 @@ namespace decs
 			prefabContainer
 		);
 
-		InvokeEntityCreationObservers(spawnedEntityID);
+		InvokeEntityCreationObservers(spawnedEntity->ID());
 		for (uint64_t i = 0; i < componentsCount; i++)
 		{
 			auto& componentContext = m_SpawnData.ComponentContexts[i];
 			m_SpawnData.ComponentContexts[i].ComponentContext->InvokeOnCreateComponent_S(
 				componentContext.ComponentData.Component,
-				spawnedEntityID,
+				spawnedEntity->ID(),
 				*this
 			);
 		}
 
-		return Entity(spawnedEntityID, this);
+		return spawnedEntity;
 	}
 
 	bool Container::Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive)
@@ -173,7 +167,7 @@ namespace decs
 
 		Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
-		EntityData prefabEntityData = prefabContainer->m_EntityManager.GetEntityData(prefab.ID());
+		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
 
 		Archetype* prefabArchetype = prefabEntityData.CurrentArchetype;
 		if (prefabArchetype == nullptr)
@@ -190,7 +184,7 @@ namespace decs
 
 		for (uint64_t i = 0; i < spawnCount; i++)
 		{
-			EntityID spawnedEntityID = CreateEntityFromSpawnData(
+			Entity* spawnedEntity = CreateEntityFromSpawnData(
 				areActive,
 				componentsCount,
 				prefabEntityData,
@@ -198,13 +192,13 @@ namespace decs
 				prefabContainer
 			);
 
-			InvokeEntityCreationObservers(spawnedEntityID);
+			InvokeEntityCreationObservers(spawnedEntity->ID());
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
 				auto& componentContext = m_SpawnData.ComponentContexts[i];
 				m_SpawnData.ComponentContexts[i].ComponentContext->InvokeOnCreateComponent_S(
 					componentContext.ComponentData.Component,
-					spawnedEntityID,
+					spawnedEntity->ID(),
 					*this
 				);
 			}
@@ -213,7 +207,7 @@ namespace decs
 		return true;
 	}
 
-	bool Container::Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive)
+	bool Container::Spawn(const Entity& prefab, std::vector<Entity*>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive)
 	{
 		if (spawnCount == 0) return true;
 
@@ -221,14 +215,14 @@ namespace decs
 
 		Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
-		EntityData prefabEntityData = prefabContainer->m_EntityManager.GetEntityData(prefab.ID());
+		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
 
 		Archetype* prefabArchetype = prefabEntityData.CurrentArchetype;
 		if (prefabArchetype == nullptr)
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
-				spawnedEntities.emplace_back(CreateEntity(areActive));
+				spawnedEntities.emplace_back(&CreateEntity(areActive));
 			}
 			return true;
 		}
@@ -238,7 +232,7 @@ namespace decs
 
 		for (uint64_t i = 0; i < spawnCount; i++)
 		{
-			EntityID spawnedEntityID = CreateEntityFromSpawnData(
+			Entity* spawnedEntity = CreateEntityFromSpawnData(
 				areActive,
 				componentsCount,
 				prefabEntityData,
@@ -246,18 +240,18 @@ namespace decs
 				prefabContainer
 			);
 
-			InvokeEntityCreationObservers(spawnedEntityID);
+			InvokeEntityCreationObservers(spawnedEntity->ID());
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
 				auto& componentContext = m_SpawnData.ComponentContexts[i];
 				m_SpawnData.ComponentContexts[i].ComponentContext->InvokeOnCreateComponent_S(
 					componentContext.ComponentData.Component,
-					spawnedEntityID,
+					spawnedEntity->ID(),
 					*this
 				);
 			}
 
-			spawnedEntities.emplace_back(spawnedEntityID, this);
+			spawnedEntities.emplace_back(spawnedEntity);
 		}
 
 		return true;
@@ -290,7 +284,7 @@ namespace decs
 	{
 		if (!IsEntityAlive(e)) return false;
 
-		EntityData& entityData = m_EntityManager.GetEntityData(e);
+		EntityData& entityData = m_EntityManager->GetEntityData(e);
 		if (entityData.CurrentArchetype == nullptr) return false;
 
 		auto compIdxInArch = entityData.CurrentArchetype->m_TypeIDsIndexes.find(componentTypeID);
@@ -419,7 +413,7 @@ namespace decs
 		else
 		{
 			auto archEntityData = archetype.m_EntitiesData.back();
-			EntityData& lastEntityInArchetypeData = m_EntityManager.GetEntityData(archEntityData.ID);
+			EntityData& lastEntityInArchetypeData = m_EntityManager->GetEntityData(archEntityData.ID);
 			uint64_t lastEntityFirstComponentIndex = lastEntityInArchetypeData.IndexInArchetype * archetypeComponentCount;
 
 			lastEntityInArchetypeData.IndexInArchetype = entityData.IndexInArchetype;
@@ -448,7 +442,7 @@ namespace decs
 		const uint64_t& typeIndex
 	)
 	{
-		EntityData& data = m_EntityManager.GetEntityData(entityID);
+		EntityData& data = m_EntityManager->GetEntityData(entityID);
 
 		uint64_t compDataIndex = data.IndexInArchetype * data.CurrentArchetype->GetComponentsCount() + typeIndex;
 
@@ -465,7 +459,7 @@ namespace decs
 		Archetype* prefabArchetype
 	)
 	{
-		EntityData& data = m_EntityManager.GetEntityData(entityID);
+		EntityData& data = m_EntityManager->GetEntityData(entityID);
 		data.CurrentArchetype = toArchetype;
 		data.IndexInArchetype = toArchetype->EntitiesCount();
 
@@ -506,7 +500,7 @@ namespace decs
 		}
 	}
 
-	EntityID Container::CreateEntityFromSpawnData(
+	Entity* Container::CreateEntityFromSpawnData(
 		const bool& isActive,
 		const uint64_t componentsCount,
 		const EntityData& prefabEntityData,
@@ -514,7 +508,7 @@ namespace decs
 		Container* prefabContainer
 	)
 	{
-		EntityID spawnedEntityID = m_EntityManager.CreateEntity(isActive);
+		Entity* spawnedEntity = m_EntityManager->CreateEntity(this, isActive);
 		Archetype* newEntityArchetype = nullptr;
 
 		for (uint64_t i = 0; i < componentsCount; i++)
@@ -525,7 +519,7 @@ namespace decs
 
 			m_SpawnData.ComponentContexts[i].ComponentData = contextData.ComponentContext->GetAllocator()->CreateCopy(
 				contextData.PrefabComponentContext->GetAllocator(),
-				spawnedEntityID,
+				spawnedEntity->ID(),
 				prefabComponentData.BucketIndex,
 				prefabComponentData.ElementIndex
 			);
@@ -546,10 +540,10 @@ namespace decs
 
 		if (newEntityArchetype != nullptr)
 		{
-			AddSpawnedEntityToArchetype(spawnedEntityID, newEntityArchetype, prefabArchetype);
+			AddSpawnedEntityToArchetype(spawnedEntity->ID(), newEntityArchetype, prefabArchetype);
 		}
 
-		return spawnedEntityID;
+		return spawnedEntity;
 	}
 
 	bool Container::AddEntityCreationObserver(CreateEntityObserver* observer)
@@ -596,4 +590,22 @@ namespace decs
 		return false;
 	}
 
+
+	// FULL CONTAINER
+	FullContainer::FullContainer()
+	{
+		m_EntityManager = &m_OwnEntityManager;
+	}
+
+	FullContainer::FullContainer(
+		const uint64_t& intialEntitiesCapacity,
+		const BucketSizeType& componentContainerBucketSizeType,
+		const uint64_t& componentContainerBucketSize,
+		const bool invokeEntityActivationStateListeners
+	):
+		Container::Container(nullptr, componentContainerBucketSizeType, componentContainerBucketSize, invokeEntityActivationStateListeners),
+		m_OwnEntityManager(intialEntitiesCapacity)
+	{
+		m_EntityManager = &m_OwnEntityManager;
+	}
 }

@@ -13,6 +13,7 @@ namespace decs
 		template<typename... Args>
 		friend class View;
 		friend class Container;
+		friend class EntityManager;
 
 	public:
 		Entity()

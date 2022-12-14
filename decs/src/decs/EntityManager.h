@@ -26,16 +26,7 @@ namespace decs
 		uint64_t GetEntitiesDataCount() const { return m_enitiesDataCount; }
 		uint64_t GetFreeEntitiesCount() const { return m_FreeEntitiesCount; }
 
-		EntityID CreateEntity(const bool& isActive = true);
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="isActive"></param>
-		/// <returns>True if it is new entity, false if it is recycled entity</returns>
-		bool CreateEntity(EntityID& id, const bool& isActive = true);
-
-		Entity* CreateEntity(Container*& forContainer, const bool& isActive = true);
+		Entity* CreateEntity(Container* forContainer, const bool& isActive = true);
 
 		bool DestroyEntity(const EntityID& entity);
 
@@ -70,7 +61,9 @@ namespace decs
 
 		inline bool IsEntityActive(const EntityID& entity) const
 		{
+			auto& data = m_EntityData[entity];
 			if (entity >= m_enitiesDataCount) return false;
+			if (!data.IsAlive) return false;
 			return m_EntityData[entity].IsActive;
 		}
 
@@ -100,12 +93,12 @@ namespace decs
 		inline const EntityData& GetConstEntityData(const EntityID& entity) const { return m_EntityData[entity]; }
 	private:
 		std::vector<EntityData> m_EntityData;
+		ChunkedVector<Entity> m_Entities = { 1000 };
 
 		EntityID m_CreatedEntitiesCount = 0;
 		uint64_t m_enitiesDataCount = 0;
 
 		std::vector<uint64_t> m_FreeEntities;
-		ChunkedVector<Entity> m_Entities;
 		uint64_t m_FreeEntitiesCount = 0;
 	};
 }

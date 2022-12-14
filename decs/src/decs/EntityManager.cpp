@@ -10,7 +10,8 @@ namespace decs
 	{
 	}
 
-	EntityManager::EntityManager(const uint64_t& initialEntitiesCapacity)
+	EntityManager::EntityManager(const uint64_t& initialEntitiesCapacity):
+		m_Entities(initialEntitiesCapacity)
 	{
 		if (initialEntitiesCapacity > 0)
 		{
@@ -23,7 +24,7 @@ namespace decs
 	{
 	}
 
-	EntityID EntityManager::CreateEntity(const bool& isActive)
+	Entity* EntityManager::CreateEntity(Container* forContainer, const bool& isActive)
 	{
 		m_CreatedEntitiesCount += 1;
 		if (m_FreeEntitiesCount > 0)
@@ -34,45 +35,18 @@ namespace decs
 
 			entityData.IsAlive = true;
 			entityData.IsActive = isActive;
+			entityData.m_EntityPtr->m_ID = entityData.ID;
+			entityData.m_EntityPtr->m_Container = forContainer;
 
-			return entityData.ID;
+			return entityData.m_EntityPtr;
 		}
 		else
 		{
 			m_enitiesDataCount += 1;
 			EntityData& entityData = m_EntityData.emplace_back(m_EntityData.size(), isActive);
-
-			return entityData.ID;
+			entityData.m_EntityPtr = &m_Entities.EmplaceBack(entityData.ID, forContainer);
+			return entityData.m_EntityPtr;
 		}
-	}
-
-	bool EntityManager::CreateEntity(EntityID& id, const bool& isActive)
-	{
-		m_CreatedEntitiesCount += 1;
-		if (m_FreeEntitiesCount > 0)
-		{
-			m_FreeEntitiesCount -= 1;
-			EntityData& entityData = m_EntityData[m_FreeEntities.back()];
-			m_FreeEntities.pop_back();
-
-			entityData.IsAlive = true;
-			entityData.IsActive = isActive;
-			id = entityData.ID;
-
-			return false;
-		}
-		else
-		{
-			m_enitiesDataCount += 1;
-			EntityData& entityData = m_EntityData.emplace_back(m_EntityData.size(), isActive);
-			id = entityData.ID;
-			return true;
-		}
-	}
-
-	Entity* EntityManager::CreateEntity(Container*& forContainer, const bool& isActive)
-	{
-		return nullptr;
 	}
 
 	bool EntityManager::DestroyEntity(const EntityID& entity)
@@ -85,6 +59,7 @@ namespace decs
 			m_FreeEntities.push_back(entity);
 			entityData.Version += 1;
 			entityData.IsAlive = false;
+			entityData.m_EntityPtr->Invalidate();
 			return true;
 		}
 		return false;
