@@ -8,9 +8,9 @@
 
 ## How to use **decs**
 ### Creating and storing entities and components
-All entites and components are stored in class decs::Container which is giving access for method for creating and destroying entities and components.<br/>
+All entites and components are stored in class decs::FullContainer which is giving access for method for creating and destroying entities and components.<br/>
 Component classes do not need to inherit from any class. Base types like int, float etc. can also be componenets.<br/>
-Component stored in **decs::Container** have **stable memory adress**.<br/>
+Component stored in **decs::FullContainer** have **stable memory adress**.<br/>
 ```cpp
 class Component1
 {
@@ -56,9 +56,9 @@ int main()
 Like in most of ecs systems, in **decs** entity can have only one component of given type. If component of the same type will be added twice AddComponent function will return pointer to component created earlier.<br/>
 
 ### Entity class
-decs::Entity class is represented by ID and reference to decs::Container in which was created.<br/>
+decs::Entity class is represented by ID and reference to decs::FullContainer in which was created.<br/>
 
-Entites can also be spawned which is a little faster than creating them by regular method. To spawn entity you need to use one of **Spawn()** methods from decs::Container class.
+Entites can also be spawned which is a little faster than creating them by regular method. To spawn entity you need to use one of **Spawn()** methods from decs::FullContainer class.
 ```cpp
 Entity Spawn(const Entity& prefab, const bool& isActive = true);
 bool Spawn(
@@ -69,7 +69,7 @@ bool Spawn(
 	);
 bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive = true);
 ```
-As prefab parameter can be used entity from any decs::Container.
+As prefab parameter can be used entity from any decs::FullContainer.
 
 Entities can also be activated or deactivated. Deactivated entities will not be iterated. Activating and deactivating is performed by functions:
 ```cpp
@@ -82,7 +82,7 @@ container.SetEntityActive(false);
 ### Iterating over entites
 **decs::View<typename... Components>** object serves to iterating over entities
 ```cpp
-decs::Container container = {}; 
+decs::FullContainer container = {}; 
 
 // this view can iterate over all entities which contains components passed as template parameters
 decs::View<Component1, Component2> view = {}; 
