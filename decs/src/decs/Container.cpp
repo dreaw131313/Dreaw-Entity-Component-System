@@ -98,13 +98,7 @@ namespace decs
 	bool Container::DestroyEntity(Entity& e)
 	{
 		if (e.m_Container != this) return false;
-
-		if (DestroyEntity(e.m_ID))
-		{
-			e.Invalidate();
-			return true;
-		}
-		return false;
+		return DestroyEntity(e.m_ID);
 	}
 
 	void Container::SetEntityActive(const EntityID& entity, const bool& isActive)
@@ -386,7 +380,7 @@ namespace decs
 	)
 	{
 		newArchetype.m_ComponentsRefs.emplace_back(newCompBucketIndex, newCompElementIndex, componentPointer);
-		newArchetype.m_EntitiesData.emplace_back(entityData.ID, entityData.IsActive);
+		newArchetype.m_EntitiesData.emplace_back(entityData.ID, entityData.IsActive, entityData.m_EntityPtr);
 
 		entityData.CurrentArchetype = &newArchetype;
 		entityData.IndexInArchetype = newArchetype.EntitiesCount();
@@ -413,7 +407,7 @@ namespace decs
 		else
 		{
 			auto archEntityData = archetype.m_EntitiesData.back();
-			EntityData& lastEntityInArchetypeData = m_EntityManager->GetEntityData(archEntityData.ID);
+			EntityData& lastEntityInArchetypeData = m_EntityManager->GetEntityData(archEntityData.ID());
 			uint64_t lastEntityFirstComponentIndex = lastEntityInArchetypeData.IndexInArchetype * archetypeComponentCount;
 
 			lastEntityInArchetypeData.IndexInArchetype = entityData.IndexInArchetype;
@@ -463,7 +457,7 @@ namespace decs
 		data.CurrentArchetype = toArchetype;
 		data.IndexInArchetype = toArchetype->EntitiesCount();
 
-		toArchetype->m_EntitiesData.emplace_back(entityID, data.IsActive);
+		toArchetype->m_EntitiesData.emplace_back(entityID, data.IsActive, data.m_EntityPtr);
 		toArchetype->m_EntitiesCount += 1;
 
 		// adding component:
@@ -602,7 +596,7 @@ namespace decs
 		const BucketSizeType& componentContainerBucketSizeType,
 		const uint64_t& componentContainerBucketSize,
 		const bool invokeEntityActivationStateListeners
-	):
+	) :
 		Container::Container(nullptr, componentContainerBucketSizeType, componentContainerBucketSize, invokeEntityActivationStateListeners),
 		m_OwnEntityManager(intialEntitiesCapacity)
 	{

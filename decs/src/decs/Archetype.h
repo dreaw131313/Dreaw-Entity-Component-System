@@ -8,6 +8,8 @@
 
 namespace decs
 {
+	class Entity;
+
 	class ArchetypeEdge final
 	{
 	public:
@@ -60,8 +62,9 @@ namespace decs
 	struct ArchetypeEntityData
 	{
 	public:
-		EntityID ID = std::numeric_limits<EntityID>::max();
-		bool IsActive = false;
+		EntityID m_ID = std::numeric_limits<EntityID>::max();
+		bool m_IsActive = false;
+		Entity* m_Entity = nullptr;
 
 	public:
 		ArchetypeEntityData()
@@ -71,16 +74,19 @@ namespace decs
 
 		ArchetypeEntityData(
 			const EntityID& id,
-			const bool& isActive
+			const bool& isActive,
+			Entity* entity
 		) :
-			ID(id),
-			IsActive(isActive)
+			m_ID(id),
+			m_IsActive(isActive),
+			m_Entity(entity)
 		{
 
 		}
 
-		inline EntityID eID() const noexcept { return ID; }
-		inline bool IsEntityActive() const noexcept { return IsActive; }
+		inline EntityID ID() const noexcept { return m_ID; }
+		inline bool IsActive() const noexcept { return m_IsActive; }
+		inline Entity* EntityPtr() noexcept { return m_Entity; }
 	};
 
 	class Archetype final

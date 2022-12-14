@@ -53,7 +53,7 @@ namespace decs
 			{
 				data.IsActive = isActive;
 				auto& archEntityData = data.CurrentArchetype->m_EntitiesData[data.IndexInArchetype];
-				archEntityData.IsActive = isActive;
+				archEntityData.m_IsActive = isActive;
 				return true;
 			}
 			return false;
