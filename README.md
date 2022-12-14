@@ -34,7 +34,7 @@ public:
 
 int main()
 {
-	decs::Container container = {};
+	decs::FullContainer container = {};
 	decs::Entity entity1 = container.CreateEntity();
 	// using entity member function :
 	Component1* c1 = entity1.AddComponent<Component1>(1.f,2.f);
@@ -73,7 +73,7 @@ As prefab parameter can be used entity from any decs::Container.
 
 Entities can also be activated or deactivated. Deactivated entities will not be iterated. Activating and deactivating is performed by functions:
 ```cpp
-decs::Container container = {};
+decs::FullContainer container = {};
 decs::Entity entity = container.CreateEntity();
 entity.SetActive(true);
 container.SetEntityActive(false);
