@@ -6,7 +6,7 @@
 
 namespace decs
 {
-
+	class Entity;
 	// Entities
 	class EntityData
 	{
@@ -18,7 +18,8 @@ namespace decs
 
 		class Archetype* CurrentArchetype = nullptr;
 		uint32_t IndexInArchetype = std::numeric_limits<uint32_t>::max();
-
+		
+		Entity* m_EntityPtr = nullptr;
 	public:
 		EntityData()
 		{

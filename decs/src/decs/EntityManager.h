@@ -4,11 +4,17 @@
 #include "Core.h"
 #include "EntityData.h"
 #include "Archetype.h"
+#include "Containers\ChunkedVector.h"
 
 namespace decs
 {
+	class Entity;
+	class Container;
+
 	class EntityManager
 	{
+		template<typename ...Types>
+		friend class View;
 	public:
 		EntityManager();
 
@@ -21,6 +27,15 @@ namespace decs
 		uint64_t GetFreeEntitiesCount() const { return m_FreeEntitiesCount; }
 
 		EntityID CreateEntity(const bool& isActive = true);
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="isActive"></param>
+		/// <returns>True if it is new entity, false if it is recycled entity</returns>
+		bool CreateEntity(EntityID& id, const bool& isActive = true);
+
+		Entity* CreateEntity(Container*& forContainer, const bool& isActive = true);
 
 		bool DestroyEntity(const EntityID& entity);
 
@@ -77,15 +92,20 @@ namespace decs
 			return 0;
 		}
 
-		inline EntityData& GetEntityData(const EntityID& entity) { return m_EntityData[entity]; }
+		inline EntityData& GetEntityData(const EntityID& entity)
+		{
+			return m_EntityData[entity];
+		}
 
 		inline const EntityData& GetConstEntityData(const EntityID& entity) const { return m_EntityData[entity]; }
 	private:
 		std::vector<EntityData> m_EntityData;
+
 		EntityID m_CreatedEntitiesCount = 0;
 		uint64_t m_enitiesDataCount = 0;
 
 		std::vector<uint64_t> m_FreeEntities;
+		ChunkedVector<Entity> m_Entities;
 		uint64_t m_FreeEntitiesCount = 0;
 	};
 }

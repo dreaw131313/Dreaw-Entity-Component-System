@@ -2,6 +2,8 @@
 #include "decspch.h"
 #include "EntityManager.h"
 
+#include "Entity.h"
+
 namespace decs
 {
 	EntityManager::EntityManager()
@@ -42,6 +44,35 @@ namespace decs
 
 			return entityData.ID;
 		}
+	}
+
+	bool EntityManager::CreateEntity(EntityID& id, const bool& isActive)
+	{
+		m_CreatedEntitiesCount += 1;
+		if (m_FreeEntitiesCount > 0)
+		{
+			m_FreeEntitiesCount -= 1;
+			EntityData& entityData = m_EntityData[m_FreeEntities.back()];
+			m_FreeEntities.pop_back();
+
+			entityData.IsAlive = true;
+			entityData.IsActive = isActive;
+			id = entityData.ID;
+
+			return false;
+		}
+		else
+		{
+			m_enitiesDataCount += 1;
+			EntityData& entityData = m_EntityData.emplace_back(m_EntityData.size(), isActive);
+			id = entityData.ID;
+			return true;
+		}
+	}
+
+	Entity* EntityManager::CreateEntity(Container*& forContainer, const bool& isActive)
+	{
+		return nullptr;
 	}
 
 	bool EntityManager::DestroyEntity(const EntityID& entity)

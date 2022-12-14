@@ -33,6 +33,7 @@ namespace decs
 
 	Container::~Container()
 	{
+		InvalidateOwnedEntites();
 		DestroyComponentsContexts();
 	}
 
@@ -40,17 +41,16 @@ namespace decs
 	{
 		EntityID id = m_EntityManager.CreateEntity(isActive);
 		InvokeEntityCreationObservers(id);
-
 		return Entity(id, this);
 	}
 
-	bool Container::DestroyEntity(const EntityID& entity)
+	bool Container::DestroyEntity(const EntityID& entityID)
 	{
-		if (IsEntityAlive(entity))
+		if (IsEntityAlive(entityID))
 		{
-			EntityData& entityData = m_EntityManager.GetEntityData(entity);
+			EntityData& entityData = m_EntityManager.GetEntityData(entityID);
 
-			InvokeEntityDestructionObservers(entity);
+			InvokeEntityDestructionObservers(entityID);
 
 			Archetype* currentArchetype = entityData.CurrentArchetype;
 			if (currentArchetype != nullptr)
@@ -62,7 +62,7 @@ namespace decs
 				{
 					auto& compRef = currentArchetype->m_ComponentsRefs[firstComponentDataIndexInArch + i];
 					auto compContext = currentArchetype->m_ComponentContexts[i];
-					compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, entity, *this);
+					compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, entityID, *this);
 				}
 
 				// Remove entity from component bucket:
@@ -89,10 +89,22 @@ namespace decs
 				RemoveEntityFromArchetype(*entityData.CurrentArchetype, entityData);
 			}
 
-			m_EntityManager.DestroyEntity(entity);
+			m_EntityManager.DestroyEntity(entityID);
 			return true;
 		}
 
+		return false;
+	}
+
+	bool Container::DestroyEntity(Entity& e)
+	{
+		if (e.m_Container != this) return false;
+
+		if (DestroyEntity(e.m_ID))
+		{
+			e.Invalidate();
+			return true;
+		}
 		return false;
 	}
 
@@ -106,6 +118,11 @@ namespace decs
 			else
 				InvokeEntityDeactivationObservers(e);
 		}
+	}
+
+	void Container::InvalidateOwnedEntites()
+	{
+
 	}
 
 	Entity Container::Spawn(const Entity& prefab, const bool& isActive)

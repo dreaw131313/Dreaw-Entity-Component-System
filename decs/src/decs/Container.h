@@ -61,6 +61,7 @@ namespace decs
 	private:
 		EntityManager m_EntityManager = { 1000 };
 		bool m_bInvokeEntityActivationStateListeners = true;
+
 	public:
 		inline uint64_t GetAliveEntitesCount() const
 		{
@@ -69,7 +70,9 @@ namespace decs
 
 		Entity CreateEntity(const bool& isActive = true);
 
-		bool DestroyEntity(const EntityID& entity);
+		bool DestroyEntity(const EntityID& entityID);
+
+		bool DestroyEntity(Entity& entity);
 
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
@@ -93,6 +96,7 @@ namespace decs
 			return m_EntityManager.GetComponentsCount(entity);
 		}
 
+		void InvalidateOwnedEntites();
 #pragma endregion
 
 #pragma region SPAWNING ENTIES

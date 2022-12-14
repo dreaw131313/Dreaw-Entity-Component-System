@@ -12,6 +12,7 @@ namespace decs
 	{
 		template<typename... Args>
 		friend class View;
+		friend class Container;
 
 	public:
 		Entity()
@@ -178,7 +179,14 @@ namespace decs
 
 	private:
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
-		Container* m_Container = nullptr;
+		Container* m_Container = nullptr; // to investigate
+
+	private:
+		void Invalidate()
+		{
+			m_ID = std::numeric_limits<EntityID>::max();
+			m_Container = nullptr;
+		}
 	};
 }
 

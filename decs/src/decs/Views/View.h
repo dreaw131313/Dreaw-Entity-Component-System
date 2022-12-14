@@ -70,9 +70,7 @@ namespace decs
 			if (m_ArchetypesCount_Dirty != containerArchetypesCount)
 			{
 				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCount_Dirty;
-
 				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
-				if (m_WithAnyOf.size() > 0) minComponentsCountInArchetype += 1;
 
 				ArchetypesMap& map = m_Container->m_ArchetypesMap;
 				uint64_t maxComponentsInArchetype = map.m_ArchetypesGroupedByComponentsCount.size();
@@ -135,9 +133,7 @@ namespace decs
 				archContext.ValidateEntitiesCount();
 
 			uint64_t contextCount = m_ArchetypesContexts.size();
-			Entity entityBuffor = {};
 			std::tuple<Entity*, ComponentsTypes*...> tuple = {};
-			std::get<Entity*>(tuple) = &entityBuffor;
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
@@ -146,12 +142,12 @@ namespace decs
 
 				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
 				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
+				std::vector<EntityData>& entiesData = m_Container->m_EntityManager.m_EntityData;
 
 				for (int64_t iterationIndex = ctx.EntitiesCount() - 1; iterationIndex > -1; iterationIndex--)
 				{
 					auto& entityData = entitiesData[iterationIndex];
-					entityBuffor.m_ID = entityData.ID;
-					entityBuffor.m_Container = m_Container;
+					std::get<Entity*>(tuple) = entiesData[entityData.ID].m_EntityPtr;
 					if (entityData.IsActive)
 					{
 						SetWithEntityTupleElements<ComponentsTypes...>(
@@ -187,6 +183,11 @@ namespace decs
 		inline uint64_t GetMinComponentsCount() const
 		{
 			uint64_t includesCount = sizeof...(ComponentsTypes);
+
+			if (m_WithAnyOf.size() > 0)
+			{
+				includesCount += 1;
+			}
 
 			return sizeof...(ComponentsTypes) + m_WithAll.size();
 		}
