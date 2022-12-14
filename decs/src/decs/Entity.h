@@ -86,12 +86,12 @@ namespace decs
 			m_Container->SetEntityActive(m_ID, isActive);
 		}
 
-		inline bool IsActive() const
+		inline bool IsActive()const noexcept
 		{
 			return m_Container->IsEntityActive(m_ID);
 		}
 
-		inline bool IsAlive() const
+		inline bool IsAlive() const noexcept
 		{
 			return m_Container->IsEntityAlive(m_ID);
 		}

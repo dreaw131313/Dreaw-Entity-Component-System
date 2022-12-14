@@ -78,6 +78,9 @@ namespace decs
 		{
 
 		}
+
+		inline EntityID eID() const noexcept { return ID; }
+		inline bool IsEntityActive() const noexcept { return IsActive; }
 	};
 
 	class Archetype final
