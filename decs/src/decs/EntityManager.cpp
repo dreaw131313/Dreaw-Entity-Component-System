@@ -43,7 +43,7 @@ namespace decs
 		else
 		{
 			m_enitiesDataCount += 1;
-			EntityData& entityData = m_EntityData.emplace_back(m_EntityData.size(), isActive);
+			EntityData& entityData = m_EntityData.EmplaceBack(m_EntityData.Size(), isActive);
 			entityData.m_EntityPtr = &m_Entities.EmplaceBack(entityData.m_ID, forContainer);
 			return entityData.m_EntityPtr;
 		}

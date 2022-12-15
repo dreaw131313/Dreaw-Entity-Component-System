@@ -92,7 +92,7 @@ namespace decs
 
 		inline const EntityData& GetConstEntityData(const EntityID& entity) const { return m_EntityData[entity]; }
 	private:
-		std::vector<EntityData> m_EntityData;
+		ChunkedVector<EntityData> m_EntityData = { 1000 };
 		ChunkedVector<Entity> m_Entities = { 1000 };
 
 		EntityID m_CreatedEntitiesCount = 0;
