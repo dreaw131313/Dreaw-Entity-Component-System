@@ -51,11 +51,11 @@ namespace decs
 
 			InvokeEntityDestructionObservers(entityID);
 
-			Archetype* currentArchetype = entityData.CurrentArchetype;
+			Archetype* currentArchetype = entityData.m_CurrentArchetype;
 			if (currentArchetype != nullptr)
 			{
 				// Invoke On destroy metyhods
-				uint64_t firstComponentDataIndexInArch = currentArchetype->GetComponentsCount() * entityData.IndexInArchetype;
+				uint64_t firstComponentDataIndexInArch = currentArchetype->GetComponentsCount() * entityData.m_IndexInArchetype;
 
 				for (uint64_t i = 0; i < currentArchetype->GetComponentsCount(); i++)
 				{
@@ -70,22 +70,22 @@ namespace decs
 				{
 					auto& compRef = currentArchetype->m_ComponentsRefs[firstComponentDataIndexInArch + i];
 					auto allocator = currentArchetype->m_ComponentContexts[i]->GetAllocator();
-					auto result = allocator->RemoveSwapBack(compRef.BucketIndex, compRef.ElementIndex);
+					auto result = allocator->RemoveSwapBack(compRef.ChunkIndex, compRef.ElementIndex);
 
 					if (result.IsValid())
 					{
 						uint64_t lastEntityIDInContainer = result.eID;
 						UpdateEntityComponentAccesDataInArchetype(
 							lastEntityIDInContainer,
-							result.BucketIndex,
+							result.ChunkIndex,
 							result.ElementIndex,
-							allocator->GetComponentAsVoid(result.BucketIndex, result.ElementIndex),
+							allocator->GetComponentAsVoid(result.ChunkIndex, result.ElementIndex),
 							i
 						);
 					}
 				}
 
-				RemoveEntityFromArchetype(*entityData.CurrentArchetype, entityData);
+				RemoveEntityFromArchetype(*entityData.m_CurrentArchetype, entityData);
 			}
 
 			m_EntityManager->DestroyEntity(entityID);
@@ -121,7 +121,7 @@ namespace decs
 		bool isTheSameContainer = prefabContainer == this;
 		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
 
-		Archetype* prefabArchetype = prefabEntityData.CurrentArchetype;
+		Archetype* prefabArchetype = prefabEntityData.m_CurrentArchetype;
 		if (prefabArchetype == nullptr)
 		{
 			return &CreateEntity(isActive);
@@ -163,7 +163,7 @@ namespace decs
 		bool isTheSameContainer = prefabContainer == this;
 		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
 
-		Archetype* prefabArchetype = prefabEntityData.CurrentArchetype;
+		Archetype* prefabArchetype = prefabEntityData.m_CurrentArchetype;
 		if (prefabArchetype == nullptr)
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
@@ -211,7 +211,7 @@ namespace decs
 		bool isTheSameContainer = prefabContainer == this;
 		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
 
-		Archetype* prefabArchetype = prefabEntityData.CurrentArchetype;
+		Archetype* prefabArchetype = prefabEntityData.m_CurrentArchetype;
 		if (prefabArchetype == nullptr)
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
@@ -279,10 +279,10 @@ namespace decs
 		if (!IsEntityAlive(e)) return false;
 
 		EntityData& entityData = m_EntityManager->GetEntityData(e);
-		if (entityData.CurrentArchetype == nullptr) return false;
+		if (entityData.m_CurrentArchetype == nullptr) return false;
 
-		auto compIdxInArch = entityData.CurrentArchetype->m_TypeIDsIndexes.find(componentTypeID);
-		if (compIdxInArch == entityData.CurrentArchetype->m_TypeIDsIndexes.end())return false;
+		auto compIdxInArch = entityData.m_CurrentArchetype->m_TypeIDsIndexes.find(componentTypeID);
+		if (compIdxInArch == entityData.m_CurrentArchetype->m_TypeIDsIndexes.end())return false;
 
 		auto compContextIt = m_ComponentContexts.find(componentTypeID);
 		if (compContextIt == m_ComponentContexts.end()) return false;
@@ -298,25 +298,25 @@ namespace decs
 		);
 
 		auto allocator = componentContext->GetAllocator();
-		auto result = allocator->RemoveSwapBack(removedCompData.BucketIndex, removedCompData.ElementIndex);
+		auto result = allocator->RemoveSwapBack(removedCompData.ChunkIndex, removedCompData.ElementIndex);
 
 		if (result.IsValid())
 		{
 			uint64_t lastEntityIDInContainer = result.eID;
 			UpdateEntityComponentAccesDataInArchetype(
 				lastEntityIDInContainer,
-				result.BucketIndex,
+				result.ChunkIndex,
 				result.ElementIndex,
-				allocator->GetComponentAsVoid(result.BucketIndex, result.ElementIndex),
+				allocator->GetComponentAsVoid(result.ChunkIndex, result.ElementIndex),
 				compIdxInArch->second
 			);
 		}
 
-		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(*entityData.CurrentArchetype, componentTypeID);
+		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(*entityData.m_CurrentArchetype, componentTypeID);
 
 		if (newEntityArchetype == nullptr)
 		{
-			RemoveEntityFromArchetype(*entityData.CurrentArchetype, entityData);
+			RemoveEntityFromArchetype(*entityData.m_CurrentArchetype, entityData);
 		}
 		else
 		{
@@ -337,16 +337,16 @@ namespace decs
 	void Container::AddEntityToArchetype(
 		Archetype& newArchetype,
 		EntityData& entityData,
-		const uint64_t& newCompBucketIndex,
+		const uint64_t& newCompChunkIndex,
 		const uint64_t& newCompElementIndex,
 		const TypeID& compTypeID,
 		void* newCompPtr,
 		const bool& bIsNewComponentAdded
 	)
 	{
-		Archetype& oldArchetype = *entityData.CurrentArchetype;
-		uint64_t firstCompIndexInOldArchetype = entityData.IndexInArchetype * oldArchetype.GetComponentsCount();
-		newArchetype.m_EntitiesData.emplace_back(oldArchetype.m_EntitiesData[entityData.IndexInArchetype]);
+		Archetype& oldArchetype = *entityData.m_CurrentArchetype;
+		uint64_t firstCompIndexInOldArchetype = entityData.m_IndexInArchetype * oldArchetype.GetComponentsCount();
+		newArchetype.m_EntitiesData.emplace_back(oldArchetype.m_EntitiesData[entityData.m_IndexInArchetype]);
 
 		for (uint64_t compIdx = 0; compIdx < newArchetype.GetComponentsCount(); compIdx++)
 		{
@@ -354,7 +354,7 @@ namespace decs
 
 			if (bIsNewComponentAdded && currentCompID == compTypeID)
 			{
-				newArchetype.m_ComponentsRefs.emplace_back(newCompBucketIndex, newCompElementIndex, newCompPtr);
+				newArchetype.m_ComponentsRefs.emplace_back(newCompChunkIndex, newCompElementIndex, newCompPtr);
 			}
 			else
 			{
@@ -366,37 +366,37 @@ namespace decs
 
 		RemoveEntityFromArchetype(oldArchetype, entityData);
 
-		entityData.CurrentArchetype = &newArchetype;
-		entityData.IndexInArchetype = newArchetype.m_EntitiesCount;
+		entityData.m_CurrentArchetype = &newArchetype;
+		entityData.m_IndexInArchetype = newArchetype.m_EntitiesCount;
 		newArchetype.m_EntitiesCount += 1;
 	}
 
 	void Container::AddEntityToSingleComponentArchetype(
 		Archetype& newArchetype,
 		EntityData& entityData,
-		const uint64_t& newCompBucketIndex,
+		const uint64_t& newCompChunkIndex,
 		const uint64_t& newCompElementIndex,
 		void* componentPointer
 	)
 	{
-		newArchetype.m_ComponentsRefs.emplace_back(newCompBucketIndex, newCompElementIndex, componentPointer);
-		newArchetype.m_EntitiesData.emplace_back(entityData.ID, entityData.IsActive, entityData.m_EntityPtr);
+		newArchetype.m_ComponentsRefs.emplace_back(newCompChunkIndex, newCompElementIndex, componentPointer);
+		newArchetype.m_EntitiesData.emplace_back(entityData.m_ID, entityData.m_IsActive, entityData.m_EntityPtr);
 
-		entityData.CurrentArchetype = &newArchetype;
-		entityData.IndexInArchetype = newArchetype.EntitiesCount();
+		entityData.m_CurrentArchetype = &newArchetype;
+		entityData.m_IndexInArchetype = newArchetype.EntitiesCount();
 		newArchetype.m_EntitiesCount += 1;
 	}
 
 
 	void Container::RemoveEntityFromArchetype(Archetype& archetype, EntityData& entityData)
 	{
-		if (&archetype != entityData.CurrentArchetype) return;
+		if (&archetype != entityData.m_CurrentArchetype) return;
 
 		uint64_t lastEntityIndex = archetype.m_EntitiesCount - 1;
 		const uint64_t archetypeComponentCount = archetype.GetComponentsCount();
 
-		uint64_t firstComponentPointer = entityData.IndexInArchetype * archetypeComponentCount;
-		if (entityData.IndexInArchetype == lastEntityIndex)
+		uint64_t firstComponentPointer = entityData.m_IndexInArchetype * archetypeComponentCount;
+		if (entityData.m_IndexInArchetype == lastEntityIndex)
 		{
 			// pop back last entity:
 
@@ -408,9 +408,9 @@ namespace decs
 		{
 			auto archEntityData = archetype.m_EntitiesData.back();
 			EntityData& lastEntityInArchetypeData = m_EntityManager->GetEntityData(archEntityData.ID());
-			uint64_t lastEntityFirstComponentIndex = lastEntityInArchetypeData.IndexInArchetype * archetypeComponentCount;
+			uint64_t lastEntityFirstComponentIndex = lastEntityInArchetypeData.m_IndexInArchetype * archetypeComponentCount;
 
-			lastEntityInArchetypeData.IndexInArchetype = entityData.IndexInArchetype;
+			lastEntityInArchetypeData.m_IndexInArchetype = entityData.m_IndexInArchetype;
 
 
 			for (uint64_t i = 0; i < archetypeComponentCount; i++)
@@ -418,19 +418,19 @@ namespace decs
 				archetype.m_ComponentsRefs[firstComponentPointer + i] = archetype.m_ComponentsRefs[lastEntityFirstComponentIndex + i];
 			}
 
-			archetype.m_EntitiesData[entityData.IndexInArchetype] = archEntityData;
+			archetype.m_EntitiesData[entityData.m_IndexInArchetype] = archEntityData;
 			archetype.m_EntitiesData.pop_back();
 
 			archetype.m_ComponentsRefs.erase(archetype.m_ComponentsRefs.begin() + lastEntityFirstComponentIndex, archetype.m_ComponentsRefs.end());
 		}
 
-		entityData.CurrentArchetype = nullptr;
+		entityData.m_CurrentArchetype = nullptr;
 		archetype.m_EntitiesCount -= 1;
 	}
 
 	void Container::UpdateEntityComponentAccesDataInArchetype(
 		const EntityID& entityID,
-		const uint64_t& compBucketIndex,
+		const uint64_t& compChunkIndex,
 		const uint64_t& compElementIndex,
 		void* compPtr,
 		const uint64_t& typeIndex
@@ -438,11 +438,11 @@ namespace decs
 	{
 		EntityData& data = m_EntityManager->GetEntityData(entityID);
 
-		uint64_t compDataIndex = data.IndexInArchetype * data.CurrentArchetype->GetComponentsCount() + typeIndex;
+		uint64_t compDataIndex = data.m_IndexInArchetype * data.m_CurrentArchetype->GetComponentsCount() + typeIndex;
 
-		auto& compData = data.CurrentArchetype->m_ComponentsRefs[compDataIndex];
+		auto& compData = data.m_CurrentArchetype->m_ComponentsRefs[compDataIndex];
 
-		compData.BucketIndex = compBucketIndex;
+		compData.ChunkIndex = compChunkIndex;
 		compData.ElementIndex = compElementIndex;
 		compData.ComponentPointer = compPtr;
 	}
@@ -454,10 +454,10 @@ namespace decs
 	)
 	{
 		EntityData& data = m_EntityManager->GetEntityData(entityID);
-		data.CurrentArchetype = toArchetype;
-		data.IndexInArchetype = toArchetype->EntitiesCount();
+		data.m_CurrentArchetype = toArchetype;
+		data.m_IndexInArchetype = toArchetype->EntitiesCount();
 
-		toArchetype->m_EntitiesData.emplace_back(entityID, data.IsActive, data.m_EntityPtr);
+		toArchetype->m_EntitiesData.emplace_back(entityID, data.m_IsActive, data.m_EntityPtr);
 		toArchetype->m_EntitiesCount += 1;
 
 		// adding component:
@@ -470,7 +470,7 @@ namespace decs
 				auto& contextData = m_SpawnData.ComponentContexts[compIdx];
 
 				toArchetype->m_ComponentsRefs.emplace_back(
-					contextData.ComponentData.BucketIndex,
+					contextData.ComponentData.ChunkIndex,
 					contextData.ComponentData.ElementIndex,
 					contextData.ComponentData.Component
 				);
@@ -486,7 +486,7 @@ namespace decs
 				auto& contextData = m_SpawnData.ComponentContexts[componentIndexInPrefabArchetype];
 
 				toArchetype->m_ComponentsRefs.emplace_back(
-					contextData.ComponentData.BucketIndex,
+					contextData.ComponentData.ChunkIndex,
 					contextData.ComponentData.ElementIndex,
 					contextData.ComponentData.Component
 				);
@@ -514,7 +514,7 @@ namespace decs
 			m_SpawnData.ComponentContexts[i].ComponentData = contextData.ComponentContext->GetAllocator()->CreateCopy(
 				contextData.PrefabComponentContext->GetAllocator(),
 				spawnedEntity->ID(),
-				prefabComponentData.BucketIndex,
+				prefabComponentData.ChunkIndex,
 				prefabComponentData.ElementIndex
 			);
 

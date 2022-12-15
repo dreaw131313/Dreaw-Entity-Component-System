@@ -33,7 +33,7 @@ namespace decs
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
 			if (entity >= m_enitiesDataCount) return false;
-			return m_EntityData[entity].IsAlive;
+			return m_EntityData[entity].m_IsAlive;
 		}
 
 		/// <summary>
@@ -47,12 +47,12 @@ namespace decs
 			if (entity >= m_enitiesDataCount) return false;
 
 			auto& data = m_EntityData[entity];
-			if (!data.IsAlive) return false;
+			if (!data.m_IsAlive) return false;
 
-			if (data.IsActive != isActive)
+			if (data.m_IsActive != isActive)
 			{
-				data.IsActive = isActive;
-				auto& archEntityData = data.CurrentArchetype->m_EntitiesData[data.IndexInArchetype];
+				data.m_IsActive = isActive;
+				auto& archEntityData = data.m_CurrentArchetype->m_EntitiesData[data.m_IndexInArchetype];
 				archEntityData.m_IsActive = isActive;
 				return true;
 			}
@@ -63,14 +63,14 @@ namespace decs
 		{
 			auto& data = m_EntityData[entity];
 			if (entity >= m_enitiesDataCount) return false;
-			if (!data.IsAlive) return false;
-			return m_EntityData[entity].IsActive;
+			if (!data.m_IsAlive) return false;
+			return m_EntityData[entity].m_IsActive;
 		}
 
 		inline uint32_t GetEntityVersion(const EntityID& entity) const
 		{
 			if (IsEntityAlive(entity))
-				return m_EntityData[entity].Version;
+				return m_EntityData[entity].m_Version;
 
 			return std::numeric_limits<uint32_t>::max();
 		}
@@ -78,9 +78,9 @@ namespace decs
 		inline uint32_t GetComponentsCount(const EntityID& entity) const
 		{
 			auto& data = m_EntityData[entity];
-			if (data.IsAlive && data.CurrentArchetype != nullptr)
+			if (data.m_IsAlive && data.m_CurrentArchetype != nullptr)
 			{
-				return data.CurrentArchetype->GetComponentsCount();
+				return data.m_CurrentArchetype->GetComponentsCount();
 			}
 			return 0;
 		}

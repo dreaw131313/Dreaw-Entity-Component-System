@@ -38,6 +38,8 @@ namespace decs
 		inline Container* GetContainer() const { return m_Container; }
 		inline bool IsValid() const { return m_Container != nullptr; }
 
+		inline bool IsNull() const { return IsAlive(); }
+
 		inline bool Destroy()
 		{
 			if (IsValid())
@@ -53,62 +55,6 @@ namespace decs
 		template<typename T>
 		inline T* GetComponent() const
 		{
-			return m_Container->GetComponent<T>(m_ID);
-		}
-
-		template<typename T>
-		inline bool HasComponent() const
-		{
-			return m_Container->HasComponent<T>(m_ID);
-		}
-
-		template<typename T>
-		inline bool TryGetComponent(T*& component) const
-		{
-			component = m_Container->GetComponent<T>(m_ID);
-			return component != nullptr;
-		}
-
-		template<typename T, typename... Args>
-		inline T* AddComponent(Args&&... args)
-		{
-			return m_Container->AddComponent<T>(m_ID, std::forward<Args>(args)...);
-		}
-
-		template<typename T>
-		inline bool RemoveComponent()
-		{
-			return m_Container->RemoveComponent<T>(m_ID);
-		}
-
-		inline void SetActive(const bool& isActive)
-		{
-			m_Container->SetEntityActive(m_ID, isActive);
-		}
-
-		inline bool IsActive()const noexcept
-		{
-			return m_Container->IsEntityActive(m_ID);
-		}
-
-		inline bool IsAlive() const noexcept
-		{
-			return m_Container->IsEntityAlive(m_ID);
-		}
-
-		inline uint32_t GetVersion() const
-		{
-			return m_Container->GetEntityVersion(m_ID);
-		}
-
-		inline uint32_t GetComponentsCount() const
-		{
-			return m_Container->GetComponentsCount(m_ID);
-		}
-
-		template<typename T>
-		inline T* GetComponentSafe() const
-		{
 			if (IsValid())
 				return m_Container->GetComponent<T>(m_ID);
 
@@ -116,13 +62,13 @@ namespace decs
 		}
 
 		template<typename T>
-		inline bool HasComponentSafe() const
+		inline bool HasComponent() const
 		{
 			return IsValid() && m_Container->HasComponent<T>(m_ID);
 		}
 
 		template<typename T>
-		inline bool TryGetComponentSafe(T*& component) const
+		inline bool TryGetComponent(T*& component) const
 		{
 			if (IsValid())
 				component = m_Container->GetComponent<T>(m_ID);
@@ -133,7 +79,7 @@ namespace decs
 		}
 
 		template<typename T, typename... Args>
-		inline T* AddComponentSafe(Args&&... args)
+		inline T* AddComponent(Args&&... args)
 		{
 			if (IsValid())
 				return m_Container->AddComponent<T>(m_ID, std::forward<Args>(args)...);
@@ -142,28 +88,28 @@ namespace decs
 		}
 
 		template<typename T>
-		inline bool RemoveComponentSafe()
+		inline bool RemoveComponent()
 		{
 			return IsValid() && m_Container->RemoveComponent<T>(m_ID);
 		}
 
-		inline void SetActiveSafe(const bool& isActive)
+		inline void SetActive(const bool& isActive)
 		{
 			if (IsValid())
 				m_Container->SetEntityActive(m_ID, isActive);
 		}
 
-		inline bool IsActiveSafe() const
+		inline bool IsActive() const
 		{
 			return IsValid() && m_Container->IsEntityActive(m_ID);
 		}
 
-		inline bool IsAliveSafe() const
+		inline bool IsAlive() const
 		{
 			return IsValid() && m_Container->IsEntityAlive(m_ID);
 		}
 
-		inline uint32_t GetVersionSafe() const
+		inline uint32_t GetVersion() const
 		{
 			if (IsValid())
 				return m_Container->GetEntityVersion(m_ID);
@@ -171,7 +117,7 @@ namespace decs
 			return std::numeric_limits<uint32_t>::max();
 		}
 
-		inline uint32_t GetComponentsCountSafe()
+		inline uint32_t GetComponentsCount()
 		{
 			if (IsValid())
 				return m_Container->GetComponentsCount(m_ID);
@@ -180,7 +126,7 @@ namespace decs
 
 	private:
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
-		Container* m_Container = nullptr; // to investigate
+		Container* m_Container = nullptr;
 
 	private:
 		void Invalidate()

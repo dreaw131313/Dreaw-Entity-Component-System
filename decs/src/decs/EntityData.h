@@ -11,13 +11,13 @@ namespace decs
 	class EntityData
 	{
 	public:
-		EntityID ID = std::numeric_limits<EntityID>::max();
-		uint32_t Version = std::numeric_limits<uint32_t>::max();
-		bool IsAlive = false;
-		bool IsActive = false;
+		EntityID m_ID = std::numeric_limits<EntityID>::max();
+		uint32_t m_Version = std::numeric_limits<uint32_t>::max();
+		bool m_IsAlive = false;
+		bool m_IsActive = false;
 
-		class Archetype* CurrentArchetype = nullptr;
-		uint32_t IndexInArchetype = std::numeric_limits<uint32_t>::max();
+		class Archetype* m_CurrentArchetype = nullptr;
+		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 		
 		Entity* m_EntityPtr = nullptr;
 	public:
@@ -26,7 +26,7 @@ namespace decs
 
 		}
 
-		EntityData(const EntityID& id, const bool& isActive) : ID(id), Version(1), IsAlive(true), IsActive(isActive)
+		EntityData(const EntityID& id, const bool& isActive) : m_ID(id), m_Version(1), m_IsAlive(true), m_IsActive(isActive)
 		{
 
 		}

@@ -89,7 +89,7 @@ namespace decs
 
 			inline T& operator[](const uint64_t& index)
 			{
-				if (index > m_Size) throw std::out_of_range("Index out of range in one of bucket of ChunkedVector!");
+				if (index > m_Size) throw std::out_of_range("Index out of range in one of chunk of ChunkedVector!");
 				return m_Data[index];
 			}
 
@@ -120,16 +120,16 @@ namespace decs
 		struct OperationData final
 		{
 		public:
-			uint64_t BucketIndex;
+			uint64_t ChunkIndex;
 			uint64_t ElementIndex;
 			T* Data;
 		public:
 			OperationData(
-				const uint64_t& bucketIndex,
+				const uint64_t& chunkIndex,
 				const uint64_t& elementIndex,
 				T* data
 			) :
-				BucketIndex(bucketIndex),
+				ChunkIndex(chunkIndex),
 				ElementIndex(elementIndex),
 				Data(data)
 			{
@@ -147,30 +147,32 @@ namespace decs
 			AddChunk();
 		}
 
-		ChunkedVector(uint64_t bucketCapacity) :
-			m_ChunkCapacity(bucketCapacity)
+		ChunkedVector(uint64_t chunkCapacity) :
+			m_ChunkCapacity(chunkCapacity)
 		{
 			AddChunk();
 		}
 
 		~ChunkedVector()
 		{
-			for (auto& bucket : m_Chunks)
-				Chunk::Destroy(bucket);
+			for (auto& chunk : m_Chunks)
+				Chunk::Destroy(chunk);
 		}
 
 		// Operators
 
 		inline T& operator[](const uint64_t& index)
 		{
-			uint64_t bucketIndex = index / m_ChunkCapacity;
+			uint64_t chunkIndex = index / m_ChunkCapacity;
+			static_assert(chunkIndex > m_ChunksCount);
 			uint64_t elementIndex = index % m_ChunkCapacity;
-			return m_Chunks[bucketIndex][elementIndex];
+			static_assert(elementIndex > m_Chunks[chunkIndex].Size());
+			return m_Chunks[chunkIndex][elementIndex];
 		}
 
-		inline T& operator()(const uint64_t& bucketIndex, const uint64_t& elementIndex)
+		inline T& operator()(const uint64_t& chunkIndex, const uint64_t& elementIndex)
 		{
-			return m_Chunks[bucketIndex][elementIndex];
+			return m_Chunks[chunkIndex][elementIndex];
 		}
 
 		// Operators - end
@@ -191,8 +193,8 @@ namespace decs
 
 			if (b.IsFull())
 			{
-				Chunk& newBucket = AddChunk();
-				return newBucket.EmplaceBack(std::forward<Args>(args)...);
+				Chunk& newChunk = AddChunk();
+				return newChunk.EmplaceBack(std::forward<Args>(args)...);
 			}
 
 			return b.EmplaceBack(std::forward<Args>(args)...);
@@ -207,8 +209,8 @@ namespace decs
 
 			if (b.IsFull())
 			{
-				Chunk& newBucket = AddChunk();
-				return EmplaceBackData(m_ChunksCount - 1, 0, &newBucket.EmplaceBack(std::forward<Args>(args)...));
+				Chunk& newChunk = AddChunk();
+				return EmplaceBackData(m_ChunksCount - 1, 0, &newChunk.EmplaceBack(std::forward<Args>(args)...));
 			}
 
 			uint64_t elementIndex = b.Size();
@@ -217,37 +219,37 @@ namespace decs
 
 		bool RemoveSwapBack(const uint64_t& index)
 		{
-			uint64_t bucketIndex = index / m_ChunkCapacity;
+			uint64_t chunkIndex = index / m_ChunkCapacity;
 			uint64_t elementIndex = index % m_ChunkCapacity;
 
-			return RemoveSwapBack(bucketIndex, elementIndex);
+			return RemoveSwapBack(chunkIndex, elementIndex);
 		}
 
-		bool RemoveSwapBack(const uint64_t& bucketIndex, const uint64_t& elementIndex)
+		bool RemoveSwapBack(const uint64_t& chunkIndex, const uint64_t& elementIndex)
 		{
-			auto& fromBucket = m_Chunks[bucketIndex];
-			if (bucketIndex == (m_ChunksCount - 1))
+			auto& fromChunk = m_Chunks[chunkIndex];
+			if (chunkIndex == (m_ChunksCount - 1))
 			{
-				fromBucket.RemoveSwapBack(elementIndex);
+				fromChunk.RemoveSwapBack(elementIndex);
 
-				if (fromBucket.IsEmpty())
+				if (fromChunk.IsEmpty())
 					PopBackChunk();
 
 				m_CreatedElements -= 1;
 				return true;
 			}
 			m_CreatedElements -= 1;
-			Chunk& lastBucket = m_Chunks.back();
+			Chunk& lastChunk = m_Chunks.back();
 
-			auto& oldElement = fromBucket[elementIndex];
-			auto& newElement = lastBucket.Back();
+			auto& oldElement = fromChunk[elementIndex];
+			auto& newElement = lastChunk.Back();
 
 			oldElement = newElement;
 
-			lastBucket.PopBack();
+			lastChunk.PopBack();
 
 
-			if (lastBucket.IsEmpty())
+			if (lastChunk.IsEmpty())
 				PopBackChunk();
 			return true;
 		}
@@ -256,14 +258,14 @@ namespace decs
 		{
 			while (m_ChunksCount > 1)
 			{
-				auto& lastBucket = m_Chunks.back();
+				auto& lastChunk = m_Chunks.back();
 				m_ChunksCount -= 1;
-				Chunk::Destroy(lastBucket);
+				Chunk::Destroy(lastChunk);
 				m_Chunks.pop_back();
 			}
 
-			auto& bucket = m_Chunks.back();
-			bucket.Clear();
+			auto& chunk = m_Chunks.back();
+			chunk.Clear();
 
 			m_CreatedElements = 0;
 		}
@@ -275,18 +277,18 @@ namespace decs
 
 		void PopBack()
 		{
-			auto& lastBucket = m_Chunks.back();
-			lastBucket.PopBack();
+			auto& lastChunk = m_Chunks.back();
+			lastChunk.PopBack();
 
 			m_CreatedElements -= 1;
 
-			if (lastBucket.IsEmpty())
+			if (lastChunk.IsEmpty())
 				PopBackChunk();
 		}
 
-		inline bool IsPositionValid(const uint64_t& bucketIndex, const uint64_t& elementIndex)
+		inline bool IsPositionValid(const uint64_t& chunkIndex, const uint64_t& elementIndex)
 		{
-			return bucketIndex < m_ChunksCount&& elementIndex < m_Chunks[bucketIndex].Size();
+			return chunkIndex < m_ChunksCount&& elementIndex < m_Chunks[chunkIndex].Size();
 		}
 
 		inline T* GetChunk(const uint64_t& index) const { return m_Chunks[index].m_Data; }
@@ -305,17 +307,17 @@ namespace decs
 		Chunk& AddChunk()
 		{
 			m_ChunksCount += 1;
-			auto& newBucket = m_Chunks.emplace_back();
-			Chunk::Create(newBucket, m_ChunkCapacity);
-			return newBucket;
+			auto& newChunk = m_Chunks.emplace_back();
+			Chunk::Create(newChunk, m_ChunkCapacity);
+			return newChunk;
 		}
 
 		void PopBackChunk()
 		{
 			if (m_ChunksCount <= 1) return;
 
-			auto& lastBucket = m_Chunks.back();
-			Chunk::Destroy(lastBucket);
+			auto& lastChunk = m_Chunks.back();
+			Chunk::Destroy(lastChunk);
 			m_Chunks.pop_back();
 			m_ChunksCount -= 1;
 

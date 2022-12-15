@@ -34,7 +34,7 @@ namespace decs
 	struct ComponentRef
 	{
 	public:
-		uint64_t BucketIndex = std::numeric_limits< uint64_t>::max();
+		uint64_t ChunkIndex = std::numeric_limits< uint64_t>::max();
 		uint64_t ElementIndex = std::numeric_limits< uint64_t>::max();
 		void* ComponentPointer = nullptr;
 
@@ -45,11 +45,11 @@ namespace decs
 		}
 
 		ComponentRef(
-			const uint64_t& bucketIndex,
+			const uint64_t& chunkIndex,
 			const uint64_t& elementIndex,
 			void*& componentPointer
 		) :
-			BucketIndex(bucketIndex),
+			ChunkIndex(chunkIndex),
 			ElementIndex(elementIndex),
 			ComponentPointer(componentPointer)
 		{
@@ -176,6 +176,27 @@ namespace decs
 			{
 				delete m_Archetypes[i];
 			}
+		}
+
+		inline uint64_t ArchetypesCount() const noexcept
+		{
+			return m_Archetypes.size();
+		}
+
+		inline uint64_t EmptyArchetypesCount()
+		{
+			uint64_t emptyArchetypesCount = 0;
+
+			uint64_t archetypesCount = m_Archetypes.size();
+			for (uint64_t i = 0; i < archetypesCount; i++)
+			{
+				if (m_Archetypes[i]->EntitiesCount() == 0)
+				{
+					emptyArchetypesCount += 1;
+				}
+			}
+
+			return emptyArchetypesCount;
 		}
 
 		Archetype* GetSingleComponentArchetype(ComponentContextBase* componentContext, const TypeID& componentTypeID)

@@ -207,13 +207,13 @@ namespace decs
 
 				Archetype* archetype;
 				// making operations on archetypes:
-				if (entityData.CurrentArchetype == nullptr)
+				if (entityData.m_CurrentArchetype == nullptr)
 				{
 					archetype = m_ArchetypesMap.GetSingleComponentArchetype<ComponentType>(componentContext);
 					AddEntityToSingleComponentArchetype(
 						*archetype,
 						entityData,
-						createResult.BucketIndex,
+						createResult.ChunkIndex,
 						createResult.ElementIndex,
 						createResult.Component
 					);
@@ -221,13 +221,13 @@ namespace decs
 				else
 				{
 					archetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<ComponentType>(
-						*entityData.CurrentArchetype,
+						*entityData.m_CurrentArchetype,
 						componentContext
 						);
 					AddEntityToArchetype(
 						*archetype,
 						entityData,
-						createResult.BucketIndex,
+						createResult.ChunkIndex,
 						createResult.ElementIndex,
 						copmonentTypeID,
 						createResult.Component,
@@ -268,10 +268,10 @@ namespace decs
 			{
 				const EntityData& data = m_EntityManager->GetConstEntityData(e);
 
-				if (data.CurrentArchetype == nullptr) return false;
+				if (data.m_CurrentArchetype == nullptr) return false;
 
-				auto it = data.CurrentArchetype->m_TypeIDsIndexes.find(Type<ComponentType>::ID());
-				return it != data.CurrentArchetype->m_TypeIDsIndexes.end();
+				auto it = data.m_CurrentArchetype->m_TypeIDsIndexes.find(Type<ComponentType>::ID());
+				return it != data.m_CurrentArchetype->m_TypeIDsIndexes.end();
 			}
 
 			return false;
@@ -331,20 +331,20 @@ namespace decs
 
 		inline ComponentRef& GetEntityComponentBucketElementIndex(const EntityData& data, const uint64_t& typeIndex)
 		{
-			uint64_t dataIndex = data.CurrentArchetype->GetComponentsCount() * data.IndexInArchetype + typeIndex;
-			return data.CurrentArchetype->m_ComponentsRefs[dataIndex];
+			uint64_t dataIndex = data.m_CurrentArchetype->GetComponentsCount() * data.m_IndexInArchetype + typeIndex;
+			return data.m_CurrentArchetype->m_ComponentsRefs[dataIndex];
 		}
 
 		template<typename ComponentType>
 		ComponentType* GetComponentWithoutCheckingIsAlive(const EntityData& data) const
 		{
-			Archetype* archetype = data.CurrentArchetype;
+			Archetype* archetype = data.m_CurrentArchetype;
 			if (archetype == nullptr) return nullptr;
 
 			auto it = archetype->m_TypeIDsIndexes.find(Type<ComponentType>::ID());
 			if (it == archetype->m_TypeIDsIndexes.end()) return nullptr;
 
-			uint64_t dataIndex = archetype->GetComponentsCount() * data.IndexInArchetype + it->second;
+			uint64_t dataIndex = archetype->GetComponentsCount() * data.m_IndexInArchetype + it->second;
 			return reinterpret_cast<ComponentType*>(archetype->m_ComponentsRefs[dataIndex].ComponentPointer);
 		}
 
@@ -358,7 +358,7 @@ namespace decs
 		void AddEntityToArchetype(
 			Archetype& newArchetype,
 			EntityData& entityData,
-			const uint64_t& newCompBucketIndex,
+			const uint64_t& newCompChunkIndex,
 			const uint64_t& newCompElementIndex,
 			const TypeID& compTypeID,
 			void* newCompPtr = nullptr,
@@ -368,7 +368,7 @@ namespace decs
 		void AddEntityToSingleComponentArchetype(
 			Archetype& newArchetype,
 			EntityData& entityData,
-			const uint64_t& newCompBucketIndex,
+			const uint64_t& newCompChunkIndex,
 			const uint64_t& newCompElementIndex,
 			void* componentPointer
 		);
@@ -377,7 +377,7 @@ namespace decs
 
 		void UpdateEntityComponentAccesDataInArchetype(
 			const EntityID& entityID,
-			const uint64_t& compBucketIndex,
+			const uint64_t& compChunkIndex,
 			const uint64_t& compElementIndex,
 			void* compPtr,
 			const uint64_t& typeIndex
@@ -386,18 +386,18 @@ namespace decs
 		template<typename ComponentType>
 		void UpdateEntityComponentAccesDataInArchetype(
 			const EntityID& entityID,
-			const uint64_t& compBucketIndex,
+			const uint64_t& compChunkIndex,
 			const uint64_t& compElementIndex,
 			void* compPtr
 		)
 		{
 			EntityData& data = m_EntityManager->GetEntityData(entityID);
 
-			uint64_t compDataIndex = data.CurrentArchetype->m_TypeIDsIndexes[Type<ComponentType>::ID()];
+			uint64_t compDataIndex = data.m_CurrentArchetype->m_TypeIDsIndexes[Type<ComponentType>::ID()];
 
-			auto& compData = data.CurrentArchetype->m_ComponentsRefs[compDataIndex];
+			auto& compData = data.m_CurrentArchetype->m_ComponentsRefs[compDataIndex];
 
-			compData.BucketIndex = compBucketIndex;
+			compData.ChunkIndex = compChunkIndex;
 			compData.ElementIndex = compElementIndex;
 			compData.ComponentPointer = compPtr;
 		}

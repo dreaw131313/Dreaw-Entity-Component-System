@@ -11,15 +11,15 @@ namespace decs
 	struct ComponentAllocationData
 	{
 	public:
-		uint64_t BucketIndex = std::numeric_limits<uint64_t>::max();
+		uint64_t ChunkIndex = std::numeric_limits<uint64_t>::max();
 		uint64_t ElementIndex = std::numeric_limits<uint64_t>::max();;
 		ComponentType* Component = nullptr;
 
 	public:
 		ComponentAllocationData() {}
 
-		ComponentAllocationData(uint64_t bucketIndex, uint64_t index, ComponentType* component) :
-			BucketIndex(bucketIndex), ElementIndex(index), Component(component)
+		ComponentAllocationData(uint64_t chunkIndex, uint64_t index, ComponentType* component) :
+			ChunkIndex(chunkIndex), ElementIndex(index), Component(component)
 		{
 
 		}
@@ -33,15 +33,15 @@ namespace decs
 	struct ComponentCopyData
 	{
 	public:
-		uint64_t BucketIndex = std::numeric_limits<uint64_t>::max();
+		uint64_t ChunkIndex = std::numeric_limits<uint64_t>::max();
 		uint64_t ElementIndex = std::numeric_limits<uint64_t>::max();;
 		void* Component = nullptr;
 
 	public:
 		ComponentCopyData() {}
 
-		ComponentCopyData(uint64_t bucketIndex, uint64_t index, void* component) :
-			BucketIndex(bucketIndex), ElementIndex(index), Component(component)
+		ComponentCopyData(uint64_t chunkIndex, uint64_t index, void* component) :
+			ChunkIndex(chunkIndex), ElementIndex(index), Component(component)
 		{
 
 		}
@@ -50,7 +50,7 @@ namespace decs
 	struct ComponentAllocatorSwapData
 	{
 	public:
-		uint64_t BucketIndex = std::numeric_limits<EntityID>::max();
+		uint64_t ChunkIndex = std::numeric_limits<EntityID>::max();
 		uint64_t ElementIndex = std::numeric_limits<EntityID>::max();
 		EntityID eID = std::numeric_limits<EntityID>::max();
 
@@ -60,11 +60,11 @@ namespace decs
 		}
 
 		ComponentAllocatorSwapData(
-			uint64_t bucketIndex,
+			uint64_t chunkIndex,
 			uint64_t index,
 			EntityID entityID
 		) :
-			BucketIndex(bucketIndex), ElementIndex(index), eID(entityID)
+			ChunkIndex(chunkIndex), ElementIndex(index), eID(entityID)
 		{
 		}
 
@@ -81,13 +81,13 @@ namespace decs
 
 		inline uint64_t Size() const { return m_CreatedElements; }
 
-		virtual ComponentAllocatorSwapData RemoveSwapBack(const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
+		virtual ComponentAllocatorSwapData RemoveSwapBack(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
 
-		virtual void* GetComponentAsVoid(const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
+		virtual void* GetComponentAsVoid(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
 
-		virtual ComponentCopyData CreateCopy(const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
+		virtual ComponentCopyData CreateCopy(const EntityID& entityID, const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
 
-		virtual ComponentCopyData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
+		virtual ComponentCopyData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
 
 		virtual BaseComponentAllocator* CreateEmptyCopyOfYourself() = 0;
 
@@ -109,7 +109,7 @@ namespace decs
 
 		}
 
-		virtual inline ComponentType* GetComponent(const uint64_t& bucketIndex, const uint64_t& elementIndex) = 0;
+		virtual inline ComponentType* GetComponent(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
 	};
 
 	template<typename DataType>
@@ -299,12 +299,12 @@ namespace decs
 
 			RemoveChunkFromChunksWithFreeSpaces(chunk);
 
-			return AllocationData(nodeAllocationData.BucketIndex, nodeAllocationData.ElementIndex, chunkAllocationData.Data);
+			return AllocationData(nodeAllocationData.ChunkIndex, nodeAllocationData.ElementIndex, chunkAllocationData.Data);
 		}
 
-		virtual ComponentAllocatorSwapData RemoveSwapBack(const uint64_t& bucketIndex, const uint64_t& elementIndex) override
+		virtual ComponentAllocatorSwapData RemoveSwapBack(const uint64_t& chunkIndex, const uint64_t& elementIndex) override
 		{
-			NodeInfo& node = m_Nodes(bucketIndex, elementIndex);
+			NodeInfo& node = m_Nodes(chunkIndex, elementIndex);
 			node.ChunkPtr->RemoveAt(node.Index);
 
 			if (!RemoveEmptyChunk(node.ChunkPtr))
@@ -312,35 +312,35 @@ namespace decs
 				AddChunkToChunksWithFreeSpaces(node.ChunkPtr);
 			}
 
-			m_Nodes.RemoveSwapBack(bucketIndex, elementIndex);
-			if (m_Nodes.IsPositionValid(bucketIndex, elementIndex))
+			m_Nodes.RemoveSwapBack(chunkIndex, elementIndex);
+			if (m_Nodes.IsPositionValid(chunkIndex, elementIndex))
 			{
-				auto& swappedNodeInfo = m_Nodes(bucketIndex, elementIndex);
-				return ComponentAllocatorSwapData(bucketIndex, elementIndex, swappedNodeInfo.eID);
+				auto& swappedNodeInfo = m_Nodes(chunkIndex, elementIndex);
+				return ComponentAllocatorSwapData(chunkIndex, elementIndex, swappedNodeInfo.eID);
 			}
 
 			return ComponentAllocatorSwapData();
 		}
 
-		virtual void* GetComponentAsVoid(const uint64_t& bucketIndex, const uint64_t& elementIndex) override
+		virtual void* GetComponentAsVoid(const uint64_t& chunkIndex, const uint64_t& elementIndex) override
 		{
-			return m_Nodes(bucketIndex, elementIndex).Data;
+			return m_Nodes(chunkIndex, elementIndex).Data;
 		}
 
-		virtual ComponentCopyData CreateCopy(const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) override
+		virtual ComponentCopyData CreateCopy(const EntityID& entityID, const uint64_t& chunkIndex, const uint64_t& elementIndex) override
 		{
-			if (!m_Nodes.IsPositionValid(bucketIndex, elementIndex))
+			if (!m_Nodes.IsPositionValid(chunkIndex, elementIndex))
 			{
 				return ComponentCopyData();
 			}
 
-			NodeInfo& nodeToCopy = m_Nodes(bucketIndex, elementIndex);
+			NodeInfo& nodeToCopy = m_Nodes(chunkIndex, elementIndex);
 			AllocationData allocationData = EmplaceBack(entityID, *nodeToCopy.Data);
 
-			return ComponentCopyData(allocationData.BucketIndex, allocationData.ElementIndex, allocationData.Component);
+			return ComponentCopyData(allocationData.ChunkIndex, allocationData.ElementIndex, allocationData.Component);
 		}
 
-		virtual ComponentCopyData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& bucketIndex, const uint64_t& elementIndex) override
+		virtual ComponentCopyData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& chunkIndex, const uint64_t& elementIndex) override
 		{
 			using ContainerType = StableComponentAllocator<DataType>;
 			ContainerType* from = dynamic_cast<ContainerType*>(fromContainer);
@@ -348,20 +348,20 @@ namespace decs
 			{
 				return ComponentCopyData();
 			}
-			if (!from->m_Nodes.IsPositionValid(bucketIndex, elementIndex))
+			if (!from->m_Nodes.IsPositionValid(chunkIndex, elementIndex))
 			{
 				return ComponentCopyData();
 			}
 
-			NodeInfo& nodeToCopy = from->m_Nodes(bucketIndex, elementIndex);
+			NodeInfo& nodeToCopy = from->m_Nodes(chunkIndex, elementIndex);
 			AllocationData allocationData = EmplaceBack(entityID, *nodeToCopy.Data);
 
-			return ComponentCopyData(allocationData.BucketIndex, allocationData.ElementIndex, allocationData.Component);
+			return ComponentCopyData(allocationData.ChunkIndex, allocationData.ElementIndex, allocationData.Component);
 		}
 
-		virtual inline DataType* GetComponent(const uint64_t& bucketIndex, const uint64_t& elementIndex) override
+		virtual inline DataType* GetComponent(const uint64_t& chunkIndex, const uint64_t& elementIndex) override
 		{
-			return m_Nodes(bucketIndex, elementIndex).Data;
+			return m_Nodes(chunkIndex, elementIndex).Data;
 		}
 
 		virtual BaseComponentAllocator* CreateEmptyCopyOfYourself() override
