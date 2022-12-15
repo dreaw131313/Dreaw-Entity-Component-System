@@ -11,11 +11,11 @@ namespace decs
 	}
 
 	EntityManager::EntityManager(const uint64_t& initialEntitiesCapacity):
-		m_Entities(initialEntitiesCapacity)
+		m_Entities(initialEntitiesCapacity),
+		m_EntityData(initialEntitiesCapacity)
 	{
 		if (initialEntitiesCapacity > 0)
 		{
-			m_EntityData.reserve(initialEntitiesCapacity);
 			m_FreeEntities.reserve(initialEntitiesCapacity / 3);
 		}
 	}
@@ -35,6 +35,8 @@ namespace decs
 
 			entityData.m_IsAlive = true;
 			entityData.m_IsActive = isActive;
+
+			entityData.m_EntityPtr->m_Container = forContainer;
 
 			return entityData.m_EntityPtr;
 		}

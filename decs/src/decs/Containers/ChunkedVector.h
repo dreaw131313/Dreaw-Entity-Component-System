@@ -97,7 +97,11 @@ namespace decs
 
 			inline T& operator[](const uint64_t& index)
 			{
-				if (index > m_Size) throw std::out_of_range("Index out of range in one of chunk of ChunkedVector!");
+				return m_Data[index];
+			}
+
+			inline T& operator[](const uint64_t& index) const
+			{
 				return m_Data[index];
 			}
 
@@ -229,7 +233,14 @@ namespace decs
 			return *this;
 		}
 
-		inline T& operator[](const uint64_t& index)
+		inline T& operator[](const uint64_t& index) noexcept
+		{
+			uint64_t chunkIndex = index / m_ChunkCapacity;
+			uint64_t elementIndex = index - chunkIndex * m_ChunkCapacity;
+			return m_Chunks[chunkIndex][elementIndex];
+		}
+
+		inline T& operator[](const uint64_t& index) const noexcept
 		{
 			uint64_t chunkIndex = index / m_ChunkCapacity;
 			uint64_t elementIndex = index - chunkIndex * m_ChunkCapacity;
