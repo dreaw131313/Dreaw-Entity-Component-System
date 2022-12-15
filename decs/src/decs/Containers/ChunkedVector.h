@@ -42,11 +42,19 @@ namespace decs
 				::operator delete(chunk.m_Data, chunk.m_Capacity * sizeof(T));
 			}
 
+			static void Copy(const Chunk& from, Chunk& to)
+			{
+				uint64_t sourceChunkSize = from.Size();
+				for (uint64_t eIdx = 0; eIdx < sourceChunkSize; eIdx++)
+				{
+					to.EmplaceBack(from.m_Data[eIdx]);
+				}
+			}
 		public:
-			inline bool IsFull() { return m_Size == m_Capacity; }
-			inline bool IsEmpty() { return m_Size == 0; }
-			inline uint64_t Size() { return m_Size; }
-			inline uint64_t Capacity() { return m_Capacity; }
+			inline bool IsFull() const noexcept { return m_Size == m_Capacity; }
+			inline bool IsEmpty() const noexcept { return m_Size == 0; }
+			inline uint64_t Size() const noexcept { return m_Size; }
+			inline uint64_t Capacity() const noexcept { return m_Capacity; }
 			inline T* Data() { return m_Data; }
 
 			template<typename... Args>
@@ -147,26 +155,84 @@ namespace decs
 			AddChunk();
 		}
 
-		ChunkedVector(uint64_t chunkCapacity) :
-			m_ChunkCapacity(chunkCapacity)
-		{
-			AddChunk();
-		}
-
 		~ChunkedVector()
 		{
 			for (auto& chunk : m_Chunks)
 				Chunk::Destroy(chunk);
 		}
 
-		// Operators
+		ChunkedVector(uint64_t chunkCapacity) :
+			m_ChunkCapacity(chunkCapacity)
+		{
+			AddChunk();
+		}
+
+		ChunkedVector(const ChunkedVector& other)
+		{
+			m_ChunkCapacity = other.m_ChunkCapacity;
+			m_ChunksCount = other.m_ChunksCount;
+			m_CreatedElements = other.m_CreatedElements;
+			m_Chunks.reserve(m_ChunksCount);
+
+			for (uint64_t i = 0; i < m_ChunksCount; i++)
+			{
+				const Chunk& sourceChunk = other.m_Chunks[i];
+				Chunk newChunk = m_Chunks.emplace_back();
+				Chunk::Create(newChunk, m_ChunkCapacity);
+				Chunk::Copy(sourceChunk, newChunk);
+			}
+		}
+
+		ChunkedVector(ChunkedVector&& other) noexcept
+		{
+			m_ChunkCapacity = other.m_ChunkCapacity;
+			m_ChunksCount = other.m_ChunksCount;
+			m_CreatedElements = other.m_CreatedElements;
+			m_Chunks.reserve(m_ChunksCount);
+
+			for (uint64_t i = 0; i < m_ChunksCount; i++)
+			{
+				m_Chunks.push_back(other.m_Chunks[i]);
+			}
+
+			other.m_Chunks.clear();
+			other.m_ChunkCapacity = 0;
+			other.m_ChunksCount = 0;
+			other.m_CreatedElements = 0;
+		}
+
+		ChunkedVector& operator=(const ChunkedVector& other)
+		{
+			return *this = ChunkedVector(other);
+		}
+
+		ChunkedVector& operator=(ChunkedVector&& other)
+		{
+			m_ChunkCapacity = other.m_ChunkCapacity;
+			m_ChunksCount = other.m_ChunksCount;
+			m_CreatedElements = other.m_CreatedElements;
+			m_Chunks.reserve(m_ChunksCount);
+
+			for (auto& chunk : m_Chunks)
+				Chunk::Destroy(chunk);
+
+			m_Chunks.clear();
+			for (uint64_t i = 0; i < m_ChunksCount; i++)
+			{
+				m_Chunks.push_back(other.m_Chunks[i]);
+			}
+
+			other.m_Chunks.clear();
+			other.m_ChunkCapacity = 0;
+			other.m_ChunksCount = 0;
+			other.m_CreatedElements = 0;
+			return *this;
+		}
 
 		inline T& operator[](const uint64_t& index)
 		{
 			uint64_t chunkIndex = index / m_ChunkCapacity;
-			static_assert(chunkIndex > m_ChunksCount);
-			uint64_t elementIndex = index % m_ChunkCapacity;
-			static_assert(elementIndex > m_Chunks[chunkIndex].Size());
+			uint64_t elementIndex = index - chunkIndex * m_ChunkCapacity;
 			return m_Chunks[chunkIndex][elementIndex];
 		}
 
@@ -175,12 +241,9 @@ namespace decs
 			return m_Chunks[chunkIndex][elementIndex];
 		}
 
-		// Operators - end
-
 		inline uint64_t Capacity() const { return m_ChunksCount * m_ChunkCapacity; }
 		inline uint64_t ChunksCount() const { return m_ChunksCount; }
 		inline uint64_t ChuknCapacity() const { return m_ChunkCapacity; }
-
 		inline uint64_t Size() const { return m_CreatedElements; }
 		inline bool IsEmpty()const { return m_CreatedElements == 0; }
 

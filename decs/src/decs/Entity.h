@@ -45,8 +45,6 @@ namespace decs
 			if (IsValid())
 			{
 				m_Container->DestroyEntity(m_ID);
-				m_Container = nullptr;
-				m_ID = std::numeric_limits<EntityID>::max();
 				return true;
 			}
 			return false;
