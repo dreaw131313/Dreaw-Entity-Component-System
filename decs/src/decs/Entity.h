@@ -38,7 +38,7 @@ namespace decs
 		inline Container* GetContainer() const { return m_Container; }
 		inline bool IsValid() const { return m_Container != nullptr; }
 
-		inline bool IsNull() const { return IsAlive(); }
+		bool IsNull() const { return IsAlive(); }
 
 		inline bool Destroy()
 		{

@@ -37,6 +37,7 @@ namespace decs
 			entityData.m_IsActive = isActive;
 
 			entityData.m_EntityPtr->m_Container = forContainer;
+			entityData.m_EntityPtr->m_ID = entityData.m_ID;
 
 			return entityData.m_EntityPtr;
 		}
@@ -59,6 +60,7 @@ namespace decs
 			m_FreeEntities.push_back(entity);
 			entityData.m_Version += 1;
 			entityData.m_IsAlive = false;
+			entityData.m_EntityPtr->Invalidate();
 			return true;
 		}
 		return false;
