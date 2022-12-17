@@ -18,15 +18,6 @@ namespace decs
 		BytesCount
 	};
 
-	class ContainerCreateInfo
-	{
-	public:
-		EntityManager* entityManager = nullptr;
-		BucketSizeType ComponentBucektSizeType = BucketSizeType::BytesCount;
-		uint64_t DefaultComponentBucketSize = 16 * MemorySize::KiloByte;
-		bool InvokeEntityActiveationStateListeners = true;
-	};
-
 	class Container
 	{
 		template<typename ...Types>
@@ -36,15 +27,20 @@ namespace decs
 		Container();
 
 		Container(
+			const uint64_t& enititesBucketSize,
+			const BucketSizeType& componentContainerBucketSizeType,
+			const uint64_t& componentContainerBucketSize,
+			const bool invokeEntityActivationStateListeners
+		);
+
+		Container(
 			EntityManager* entityManager,
 			const BucketSizeType& componentContainerBucketSizeType,
 			const uint64_t& componentContainerBucketSize,
 			const bool invokeEntityActivationStateListeners
 		);
 
-		Container(const ContainerCreateInfo& createInfo);
-
-		~Container();
+		virtual ~Container();
 
 	private:
 		uint64_t m_ComponentContainerBucketSize = decs::MemorySize::KiloByte * 16;
@@ -59,7 +55,8 @@ namespace decs
 
 #pragma region ENTITIES:
 	protected:
-		EntityManager* m_EntityManager;
+		bool m_HaveOwnEntityManager = false;
+		EntityManager* m_EntityManager = nullptr;
 
 	private:
 		bool m_bInvokeEntityActivationStateListeners = true;
@@ -77,7 +74,7 @@ namespace decs
 		bool DestroyEntity(Entity& entity);
 
 		void DestroyOwnedEntities();
-		 
+
 		// Entity utiliti methods:
 
 		inline bool IsEntityAlive(const EntityID& entity) const
@@ -469,21 +466,5 @@ namespace decs
 		}
 #pragma endregion
 
-	};
-
-	class FullContainer : public Container
-	{
-	public:
-		FullContainer();
-
-		FullContainer(
-			const uint64_t& intialEntitiesCapacity,
-			const BucketSizeType& componentContainerBucketSizeType,
-			const uint64_t& componentContainerBucketSize,
-			const bool invokeEntityActivationStateListeners
-		);
-
-	private:
-		EntityManager m_OwnEntityManager = { 1000 };
 	};
 }

@@ -6,7 +6,24 @@
 
 namespace decs
 {
-	Container::Container()
+	Container::Container() :
+		m_HaveOwnEntityManager(true),
+		m_EntityManager(new EntityManager(1000))
+	{
+
+	}
+
+	Container::Container(
+		const uint64_t& enititesBucketSize,
+		const BucketSizeType& componentContainerBucketSizeType,
+		const uint64_t& componentContainerBucketSize,
+		const bool invokeEntityActivationStateListeners
+	) :
+		m_HaveOwnEntityManager(true),
+		m_EntityManager(new EntityManager(enititesBucketSize)),
+		m_ComponentContainerBucketSize(componentContainerBucketSize),
+		m_ContainerSizeType(componentContainerBucketSizeType),
+		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners)
 	{
 	}
 
@@ -16,6 +33,7 @@ namespace decs
 		const uint64_t& componentContainerBucketSize,
 		const bool invokeEntityActivationStateListeners
 	) :
+		m_HaveOwnEntityManager(false),
 		m_EntityManager(entityManager),
 		m_ComponentContainerBucketSize(componentContainerBucketSize),
 		m_ContainerSizeType(componentContainerBucketSizeType),
@@ -23,17 +41,13 @@ namespace decs
 	{
 	}
 
-	Container::Container(const ContainerCreateInfo& createInfo) :
-		m_EntityManager(createInfo.entityManager),
-		m_ComponentContainerBucketSize(createInfo.DefaultComponentBucketSize),
-		m_ContainerSizeType(createInfo.ComponentBucektSizeType),
-		m_bInvokeEntityActivationStateListeners(createInfo.InvokeEntityActiveationStateListeners)
-	{
-	}
-
 	Container::~Container()
 	{
 		DestroyComponentsContexts();
+		if (m_HaveOwnEntityManager)
+		{
+			delete m_EntityManager;
+		}
 	}
 
 	Entity& Container::CreateEntity(const bool& isActive)
@@ -628,22 +642,4 @@ namespace decs
 		return false;
 	}
 
-
-	// FULL CONTAINER
-	FullContainer::FullContainer()
-	{
-		m_EntityManager = &m_OwnEntityManager;
-	}
-
-	FullContainer::FullContainer(
-		const uint64_t& intialEntitiesCapacity,
-		const BucketSizeType& componentContainerBucketSizeType,
-		const uint64_t& componentContainerBucketSize,
-		const bool invokeEntityActivationStateListeners
-	) :
-		Container::Container(nullptr, componentContainerBucketSizeType, componentContainerBucketSize, invokeEntityActivationStateListeners),
-		m_OwnEntityManager(intialEntitiesCapacity)
-	{
-		m_EntityManager = &m_OwnEntityManager;
-	}
 }
