@@ -36,9 +36,24 @@ namespace decs
 
 		inline EntityID ID() const { return m_ID; }
 		inline Container* GetContainer() const { return m_Container; }
-		inline bool IsValid() const { return m_Container != nullptr; }
 
-		bool IsNull() const { return IsAlive(); }
+		bool IsNull() const { return !IsAlive(); }
+
+		inline bool IsActive() const
+		{
+			return IsValid() && m_Container->IsEntityActive(m_ID);
+		}
+
+		inline bool IsAlive() const
+		{
+			return IsValid() && m_Container->IsEntityAlive(m_ID);
+		}
+
+		inline void SetActive(const bool& isActive)
+		{
+			if (IsValid())
+				m_Container->SetEntityActive(m_ID, isActive);
+		}
 
 		inline bool Destroy()
 		{
@@ -91,21 +106,6 @@ namespace decs
 			return IsValid() && m_Container->RemoveComponent<T>(m_ID);
 		}
 
-		inline void SetActive(const bool& isActive)
-		{
-			if (IsValid())
-				m_Container->SetEntityActive(m_ID, isActive);
-		}
-
-		inline bool IsActive() const
-		{
-			return IsValid() && m_Container->IsEntityActive(m_ID);
-		}
-
-		inline bool IsAlive() const
-		{
-			return IsValid() && m_Container->IsEntityAlive(m_ID);
-		}
 
 		inline uint32_t GetVersion() const
 		{
@@ -132,6 +132,8 @@ namespace decs
 			m_ID = std::numeric_limits<EntityID>::max();
 			m_Container = nullptr;
 		}
+
+		inline bool IsValid() const { return m_Container != nullptr; }
 	};
 }
 

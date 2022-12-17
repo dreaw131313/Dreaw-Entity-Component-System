@@ -77,10 +77,6 @@ namespace decs
 	class BaseComponentAllocator
 	{
 	public:
-		inline bool IsEmpty()const { return m_CreatedElements == 0; }
-
-		inline uint64_t Size() const { return m_CreatedElements; }
-
 		virtual ComponentAllocatorSwapData RemoveSwapBack(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
 
 		virtual void* GetComponentAsVoid(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
@@ -91,8 +87,8 @@ namespace decs
 
 		virtual BaseComponentAllocator* CreateEmptyCopyOfYourself() = 0;
 
-	protected:
-		uint64_t m_CreatedElements = 0;
+		virtual void Clear() = 0;
+
 	};
 
 	template<typename ComponentType>
@@ -271,12 +267,20 @@ namespace decs
 			m_ChunkCapacity(chunkCapacity),
 			m_Nodes(chunkCapacity)
 		{
-			CreateChunk();
+			//CreateChunk();
 		}
 
 		~StableComponentAllocator()
 		{
 			DestroyChunks();
+		}
+
+		virtual void Clear() override
+		{
+			DestroyChunks();
+			m_Nodes.Clear();
+			m_Chunks.clear();
+			m_ChunksWithFreeSpaces.clear();
 		}
 
 		inline uint64_t GetChunkCapacity() const { return m_ChunkCapacity; }

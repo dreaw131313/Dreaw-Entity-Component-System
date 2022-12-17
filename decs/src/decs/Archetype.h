@@ -98,7 +98,7 @@ namespace decs
 		friend 	class ViewBatchIterator;
 
 	public:
-		uint32_t m_ComponentsCount = 0;
+		uint32_t m_ComponentsCount = 0; // number of components for each entity
 		uint32_t m_EntitiesCount = 0;
 
 		std::vector<ArchetypeEntityData> m_EntitiesData;
@@ -149,6 +149,15 @@ namespace decs
 		inline bool ContainType(const TypeID& typeID) const
 		{
 			return m_TypeIDsIndexes.find(typeID) != m_TypeIDsIndexes.end();
+		}
+
+	private:
+
+		void Reset()
+		{
+			m_EntitiesCount = 0;
+			m_EntitiesData.clear();
+			m_ComponentsRefs.clear();
 		}
 	};
 

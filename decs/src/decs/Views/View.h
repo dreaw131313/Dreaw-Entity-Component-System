@@ -25,10 +25,24 @@ namespace decs
 
 		}
 
+		View(Container& container) :
+			m_Container(&container)
+		{
+
+		}
+
 		~View()
 		{
 
 		}
+
+		inline void SetContainer(Container& container)
+		{
+			m_IsDirty = &container != m_Container;
+			m_Container = &container;
+		}
+
+		inline Container* GetContainer() const { return m_Container; }
 
 		template<typename... ComponentsTypes>
 		View& Without()
@@ -57,43 +71,14 @@ namespace decs
 			return *this;
 		}
 
-		void Fetch(Container& container)
-		{
-			if (m_IsDirty || &container != m_Container)
-			{
-				m_IsDirty = false;
-				m_Container = &container;
-				Invalidate();
-			}
-
-			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.m_Archetypes.size();
-			if (m_ArchetypesCount_Dirty != containerArchetypesCount)
-			{
-				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCount_Dirty;
-				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
-
-				ArchetypesMap& map = m_Container->m_ArchetypesMap;
-				uint64_t maxComponentsInArchetype = map.m_ArchetypesGroupedByComponentsCount.size();
-				if (maxComponentsInArchetype < minComponentsCountInArchetype) return;
-
-				if (newArchetypesCount > m_ArchetypesContexts.size())
-				{
-					// performing normal finding of archetypes
-					NormalArchetypesFetching(map, maxComponentsInArchetype, minComponentsCountInArchetype);
-				}
-				else
-				{
-					// checking only new archetypes:
-					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCount_Dirty, minComponentsCountInArchetype);
-				}
-
-				m_ArchetypesCount_Dirty = containerArchetypesCount;
-			}
-		}
-
 		template<typename Callable>
 		void ForEach(Callable func)
 		{
+			if (m_Container != nullptr)
+			{
+				Fetch(*m_Container);
+			}
+
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
 				archContext.ValidateEntitiesCount();
 
@@ -129,6 +114,11 @@ namespace decs
 		template<typename Callable>
 		void ForEachWithEntity(Callable func)
 		{
+			if (m_Container != nullptr)
+			{
+				Fetch(*m_Container);
+			}
+
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
 				archContext.ValidateEntitiesCount();
 
@@ -168,8 +158,8 @@ namespace decs
 		std::vector<TypeID> m_WithAnyOf;
 		std::vector<TypeID> m_WithAll;
 
-		Container* m_Container;
-		bool m_IsDirty;
+		Container* m_Container = nullptr;
+		bool m_IsDirty = true;
 
 		std::vector<ArchetypeContext> m_ArchetypesContexts;
 		ecsSet<Archetype*> m_ContainedArchetypes;
@@ -178,6 +168,40 @@ namespace decs
 		uint64_t m_ArchetypesCount_Dirty = 0;
 
 	private:
+
+		void Fetch(Container& container)
+		{
+			if (m_IsDirty || &container != m_Container)
+			{
+				m_IsDirty = false;
+				m_Container = &container;
+				Invalidate();
+			}
+
+			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.m_Archetypes.size();
+			if (m_ArchetypesCount_Dirty != containerArchetypesCount)
+			{
+				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCount_Dirty;
+				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
+
+				ArchetypesMap& map = m_Container->m_ArchetypesMap;
+				uint64_t maxComponentsInArchetype = map.m_ArchetypesGroupedByComponentsCount.size();
+				if (maxComponentsInArchetype < minComponentsCountInArchetype) return;
+
+				if (newArchetypesCount > m_ArchetypesContexts.size())
+				{
+					// performing normal finding of archetypes
+					NormalArchetypesFetching(map, maxComponentsInArchetype, minComponentsCountInArchetype);
+				}
+				else
+				{
+					// checking only new archetypes:
+					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCount_Dirty, minComponentsCountInArchetype);
+				}
+
+				m_ArchetypesCount_Dirty = containerArchetypesCount;
+			}
+		}
 
 		inline uint64_t GetMinComponentsCount() const
 		{

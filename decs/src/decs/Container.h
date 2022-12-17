@@ -60,6 +60,7 @@ namespace decs
 #pragma region ENTITIES:
 	protected:
 		EntityManager* m_EntityManager;
+
 	private:
 		bool m_bInvokeEntityActivationStateListeners = true;
 
@@ -74,6 +75,10 @@ namespace decs
 		bool DestroyEntity(const EntityID& entityID);
 
 		bool DestroyEntity(Entity& entity);
+
+		void DestroyOwnedEntities();
+		 
+		// Entity utiliti methods:
 
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
@@ -97,7 +102,9 @@ namespace decs
 			return m_EntityManager->GetComponentsCount(entity);
 		}
 
-		void DestroyOwnedEntities();
+	private:
+		void DestroyEntitesInArchetypes(Archetype& archetype);
+
 #pragma endregion
 
 #pragma region SPAWNING ENTIES
@@ -348,6 +355,7 @@ namespace decs
 			return reinterpret_cast<ComponentType*>(archetype->m_ComponentsRefs[dataIndex].ComponentPointer);
 		}
 
+		void ClearComponentsContainers();
 #pragma endregion
 
 #pragma region ARCHETYPES:

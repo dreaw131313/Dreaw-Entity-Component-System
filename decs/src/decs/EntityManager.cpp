@@ -58,6 +58,8 @@ namespace decs
 			m_CreatedEntitiesCount -= 1;
 			m_FreeEntitiesCount += 1;
 			m_FreeEntities.push_back(entity);
+
+			entityData.m_CurrentArchetype = nullptr;
 			entityData.m_Version += 1;
 			entityData.m_IsAlive = false;
 			entityData.m_EntityPtr->Invalidate();

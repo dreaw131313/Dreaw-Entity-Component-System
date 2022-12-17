@@ -101,6 +101,44 @@ namespace decs
 		return DestroyEntity(e.m_ID);
 	}
 
+	void Container::DestroyOwnedEntities()
+	{
+		auto& archetypes = m_ArchetypesMap.m_Archetypes;
+
+		uint64_t archetypesCount = archetypes.size();
+		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
+		{
+			Archetype& archetype = *archetypes[archetypeIdx];
+			DestroyEntitesInArchetypes(archetype);
+			archetype.Reset();
+		}
+
+		ClearComponentsContainers();
+	}
+
+	void Container::DestroyEntitesInArchetypes(Archetype& archetype)
+	{
+		auto& entitesData = archetype.m_EntitiesData;
+		uint64_t archetypeComponentsCount = archetype.GetComponentsCount();
+		uint64_t entityDataCount = entitesData.size();
+		uint64_t componentDataIndex = 0;
+		for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
+		{
+			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
+			InvokeEntityDestructionObservers(archetypeEntityData.ID());
+
+			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
+			{
+				auto& compRef = archetype.m_ComponentsRefs[componentDataIndex];
+				auto compContext = archetype.m_ComponentContexts[i];
+				compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, archetypeEntityData.ID(), *this);
+				componentDataIndex += 1;
+			}
+
+			m_EntityManager->DestroyEntity(archetypeEntityData.ID());
+		}
+	}
+
 	void Container::SetEntityActive(const EntityID& entity, const bool& isActive)
 	{
 		if (m_EntityManager->SetEntityActive(entity, isActive) && m_bInvokeEntityActivationStateListeners)
@@ -115,7 +153,7 @@ namespace decs
 
 	Entity* Container::Spawn(const Entity& prefab, const bool& isActive)
 	{
-		if (!prefab.IsValid()) return nullptr;
+		if (prefab.IsNull()) return nullptr;
 
 		Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
@@ -156,8 +194,7 @@ namespace decs
 	bool Container::Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive)
 	{
 		if (spawnCount == 0) return true;
-
-		if (!prefab.IsValid()) return Entity();
+		if (prefab.IsNull()) return false;
 
 		Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
@@ -203,9 +240,8 @@ namespace decs
 
 	bool Container::Spawn(const Entity& prefab, std::vector<Entity*>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive)
 	{
+		if (prefab.IsNull()) return false;
 		if (spawnCount == 0) return true;
-
-		if (!prefab.IsValid()) return Entity();
 
 		Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
@@ -369,6 +405,14 @@ namespace decs
 		entityData.m_CurrentArchetype = &newArchetype;
 		entityData.m_IndexInArchetype = newArchetype.m_EntitiesCount;
 		newArchetype.m_EntitiesCount += 1;
+	}
+
+	void Container::ClearComponentsContainers()
+	{
+		for (auto& [key, context] : m_ComponentContexts)
+		{
+			context->GetAllocator()->Clear();
+		}
 	}
 
 	void Container::AddEntityToSingleComponentArchetype(
