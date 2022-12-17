@@ -7,6 +7,8 @@
 
 namespace decs
 {
+	class Entity;
+
 	class ComponentContextBase
 	{
 	public:
@@ -22,8 +24,8 @@ namespace decs
 
 		virtual BaseComponentAllocator* GetAllocator() = 0;
 		virtual TypeID GetComponentTypeID() const = 0;
-		virtual void InvokeOnCreateComponent_S(void* component, const EntityID& entity, Container& container) = 0; // awful but i have no idea how do it better
-		virtual void InvokeOnDestroyComponent_S(void* component, const EntityID& entity, Container& container) = 0; //
+		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity) = 0;
+		virtual void InvokeOnDestroyComponent_S(void* component, Entity& entity) = 0;
 		virtual ComponentContextBase* CreateOwnEmptyCopy() = 0;
 
 	};
@@ -51,28 +53,28 @@ namespace decs
 		virtual TypeID GetComponentTypeID() const { return Type<ComponentType>::ID(); }
 		virtual BaseComponentAllocator* GetAllocator() override { return &Allocator; }
 
-		virtual void InvokeOnCreateComponent_S(void* component, const EntityID& entity, Container& container)override
+		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity)override
 		{
 			for (auto& observer : CreateObservers)
-				observer->OnCreateComponent(*reinterpret_cast<ComponentType*>(component), entity, container);
+				observer->OnCreateComponent(*reinterpret_cast<ComponentType*>(component), entity);
 		}
 
-		virtual void InvokeOnDestroyComponent_S(void* component, const EntityID& entity, Container& container)override
+		virtual void InvokeOnDestroyComponent_S(void* component, Entity& entity)override
 		{
 			for (auto& observer : DestroyObservers)
-				observer->OnDestroyComponent(*reinterpret_cast<ComponentType*>(component), entity, container);
+				observer->OnDestroyComponent(*reinterpret_cast<ComponentType*>(component), entity);
 		}
 
-		void InvokeOnCreateComponent(ComponentType& component, const EntityID& entity, Container& container)
+		void InvokeOnCreateComponent(ComponentType& component, Entity& entity)
 		{
 			for (auto& observer : CreateObservers)
-				observer->OnCreateComponent(component, entity, container);
+				observer->OnCreateComponent(component, entity);
 		}
 
-		void InvokeOnDestroyComponent(ComponentType& component, const EntityID& entity, Container& container)
+		void InvokeOnDestroyComponent(ComponentType& component, Entity& entity)
 		{
 			for (auto& observer : DestroyObservers)
-				observer->OnDestroyComponent(component, entity, container);
+				observer->OnDestroyComponent(component, entity);
 		}
 
 		ComponentContextBase* CreateOwnEmptyCopy() override

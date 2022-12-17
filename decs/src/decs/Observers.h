@@ -11,13 +11,13 @@ namespace decs
 	class CreateEntityObserver
 	{
 	public:
-		virtual void OnCreateEntity(const EntityID& entity, Container& container) = 0;
+		virtual void OnCreateEntity(Entity& entity) = 0;
 	};
 
 	class DestroyEntityObserver
 	{
 	public:
-		virtual void OnDestroyEntity(const EntityID& entity, Container& container) = 0;
+		virtual void OnDestroyEntity(Entity& entity) = 0;
 	};
 
 	class ActivateEntityObserver
@@ -36,14 +36,14 @@ namespace decs
 	class CreateComponentObserver
 	{
 	public:
-		virtual void OnCreateComponent(ComponentType& component, const EntityID& entity, Container& container) = 0;
+		virtual void OnCreateComponent(ComponentType& component, Entity& entity) = 0;
 	};
 
 	template<typename ComponentType>
 	class DestroyComponentObserver
 	{
 	public:
-		virtual void OnDestroyComponent(ComponentType& component, const EntityID& entity, Container& container) = 0;
+		virtual void OnDestroyComponent(ComponentType& component, Entity& entity) = 0;
 	};
 
 

@@ -14,29 +14,29 @@ namespace decs
 	}
 
 	Container::Container(
-		const uint64_t& enititesBucketSize,
-		const BucketSizeType& componentContainerBucketSizeType,
-		const uint64_t& componentContainerBucketSize,
-		const bool invokeEntityActivationStateListeners
+		const uint64_t& enititesChunkSize,
+		const ChunkSizeType& componentContainerChunkSizeType,
+		const uint64_t& componentContainerChunkSize,
+		const bool& invokeEntityActivationStateListeners
 	) :
 		m_HaveOwnEntityManager(true),
-		m_EntityManager(new EntityManager(enititesBucketSize)),
-		m_ComponentContainerBucketSize(componentContainerBucketSize),
-		m_ContainerSizeType(componentContainerBucketSizeType),
+		m_EntityManager(new EntityManager(enititesChunkSize)),
+		m_ComponentContainerChunkSize(componentContainerChunkSize),
+		m_ContainerSizeType(componentContainerChunkSizeType),
 		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners)
 	{
 	}
 
 	Container::Container(
 		EntityManager* entityManager,
-		const BucketSizeType& componentContainerBucketSizeType,
-		const uint64_t& componentContainerBucketSize,
-		const bool invokeEntityActivationStateListeners
+		const ChunkSizeType& componentContainerChunkSizeType,
+		const uint64_t& componentContainerChunkSize,
+		const bool& invokeEntityActivationStateListeners
 	) :
 		m_HaveOwnEntityManager(false),
 		m_EntityManager(entityManager),
-		m_ComponentContainerBucketSize(componentContainerBucketSize),
-		m_ContainerSizeType(componentContainerBucketSizeType),
+		m_ComponentContainerChunkSize(componentContainerChunkSize),
+		m_ContainerSizeType(componentContainerChunkSizeType),
 		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners)
 	{
 	}
@@ -53,7 +53,7 @@ namespace decs
 	Entity& Container::CreateEntity(const bool& isActive)
 	{
 		Entity* entity = m_EntityManager->CreateEntity(this, isActive);
-		InvokeEntityCreationObservers(entity->ID());
+		InvokeEntityCreationObservers(*entity);
 		return *entity;
 	}
 
@@ -62,8 +62,7 @@ namespace decs
 		if (IsEntityAlive(entityID))
 		{
 			EntityData& entityData = m_EntityManager->GetEntityData(entityID);
-
-			InvokeEntityDestructionObservers(entityID);
+			InvokeEntityDestructionObservers(*entityData.m_EntityPtr);
 
 			Archetype* currentArchetype = entityData.m_CurrentArchetype;
 			if (currentArchetype != nullptr)
@@ -75,11 +74,10 @@ namespace decs
 				{
 					auto& compRef = currentArchetype->m_ComponentsRefs[firstComponentDataIndexInArch + i];
 					auto compContext = currentArchetype->m_ComponentContexts[i];
-					compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, entityID, *this);
+					compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, *entityData.m_EntityPtr);
 				}
 
 				// Remove entity from component bucket:
-
 				for (uint64_t i = 0; i < currentArchetype->GetComponentsCount(); i++)
 				{
 					auto& compRef = currentArchetype->m_ComponentsRefs[firstComponentDataIndexInArch + i];
@@ -139,13 +137,13 @@ namespace decs
 		for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
 		{
 			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-			InvokeEntityDestructionObservers(archetypeEntityData.ID());
+			InvokeEntityDestructionObservers(*archetypeEntityData.EntityPtr());
 
 			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 			{
 				auto& compRef = archetype.m_ComponentsRefs[componentDataIndex];
 				auto compContext = archetype.m_ComponentContexts[i];
-				compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, archetypeEntityData.ID(), *this);
+				compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, *archetypeEntityData.EntityPtr());
 				componentDataIndex += 1;
 			}
 
@@ -191,14 +189,13 @@ namespace decs
 			prefabContainer
 		);
 
-		InvokeEntityCreationObservers(spawnedEntity->ID());
+		InvokeEntityCreationObservers(*spawnedEntity);
 		for (uint64_t i = 0; i < componentsCount; i++)
 		{
 			auto& componentContext = m_SpawnData.ComponentContexts[i];
 			m_SpawnData.ComponentContexts[i].ComponentContext->InvokeOnCreateComponent_S(
 				componentContext.ComponentData.Component,
-				spawnedEntity->ID(),
-				*this
+				*spawnedEntity
 			);
 		}
 
@@ -237,14 +234,13 @@ namespace decs
 				prefabContainer
 			);
 
-			InvokeEntityCreationObservers(spawnedEntity->ID());
+			InvokeEntityCreationObservers(*spawnedEntity);
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
 				auto& componentContext = m_SpawnData.ComponentContexts[i];
 				m_SpawnData.ComponentContexts[i].ComponentContext->InvokeOnCreateComponent_S(
 					componentContext.ComponentData.Component,
-					spawnedEntity->ID(),
-					*this
+					*spawnedEntity
 				);
 			}
 		}
@@ -284,14 +280,13 @@ namespace decs
 				prefabContainer
 			);
 
-			InvokeEntityCreationObservers(spawnedEntity->ID());
+			InvokeEntityCreationObservers(*spawnedEntity);
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
 				auto& componentContext = m_SpawnData.ComponentContexts[i];
 				m_SpawnData.ComponentContexts[i].ComponentContext->InvokeOnCreateComponent_S(
 					componentContext.ComponentData.Component,
-					spawnedEntity->ID(),
-					*this
+					*spawnedEntity
 				);
 			}
 
@@ -339,12 +334,11 @@ namespace decs
 		ComponentContextBase* componentContext = compContextIt->second;
 
 
-		auto& removedCompData = GetEntityComponentBucketElementIndex(entityData, compIdxInArch->second);
+		auto& removedCompData = GetEntityComponentChunkElementIndex(entityData, compIdxInArch->second);
 
 		componentContext->InvokeOnDestroyComponent_S(
 			removedCompData.ComponentPointer,
-			e,
-			*this
+			*entityData.m_EntityPtr
 		);
 
 		auto allocator = componentContext->GetAllocator();
@@ -567,7 +561,7 @@ namespace decs
 		{
 			TypeID componentTypeID = prefabArchetype->ComponentsTypes()[i];
 			auto contextData = m_SpawnData.ComponentContexts[i];
-			auto prefabComponentData = prefabContainer->GetEntityComponentBucketElementIndex(prefabEntityData, i);
+			auto prefabComponentData = prefabContainer->GetEntityComponentChunkElementIndex(prefabEntityData, i);
 
 			m_SpawnData.ComponentContexts[i].ComponentData = contextData.ComponentContext->GetAllocator()->CreateCopy(
 				contextData.PrefabComponentContext->GetAllocator(),

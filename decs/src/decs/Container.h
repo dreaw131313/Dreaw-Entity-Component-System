@@ -12,7 +12,7 @@ namespace decs
 {
 	class Entity;
 
-	enum class BucketSizeType
+	enum class ChunkSizeType
 	{
 		ElementsCount,
 		BytesCount
@@ -27,30 +27,30 @@ namespace decs
 		Container();
 
 		Container(
-			const uint64_t& enititesBucketSize,
-			const BucketSizeType& componentContainerBucketSizeType,
-			const uint64_t& componentContainerBucketSize,
-			const bool invokeEntityActivationStateListeners
+			const uint64_t& enititesChunkSize,
+			const ChunkSizeType& componentContainerChunkSizeType,
+			const uint64_t& componentContainerChunkSize,
+			const bool& invokeEntityActivationStateListeners
 		);
 
 		Container(
 			EntityManager* entityManager,
-			const BucketSizeType& componentContainerBucketSizeType,
-			const uint64_t& componentContainerBucketSize,
-			const bool invokeEntityActivationStateListeners
+			const ChunkSizeType& componentContainerChunkSizeType,
+			const uint64_t& componentContainerChunkSize,
+			const bool& invokeEntityActivationStateListeners
 		);
 
 		virtual ~Container();
 
 	private:
-		uint64_t m_ComponentContainerBucketSize = decs::MemorySize::KiloByte * 16;
-		BucketSizeType m_ContainerSizeType = BucketSizeType::BytesCount;
+		uint64_t m_ComponentContainerChunkSize = decs::MemorySize::KiloByte * 16;
+		ChunkSizeType m_ContainerSizeType = ChunkSizeType::BytesCount;
 
 	public:
-		inline void SetDefaultComponentBucketSize(const uint64_t& size, const BucketSizeType& sizeType)
+		inline void SetDefaultComponentChunkSize(const uint64_t& size, const ChunkSizeType& sizeType)
 		{
 			m_ContainerSizeType = sizeType;
-			m_ComponentContainerBucketSize = size;
+			m_ComponentContainerChunkSize = size;
 		}
 
 #pragma region ENTITIES:
@@ -156,11 +156,23 @@ namespace decs
 		PrefabSpawnData m_SpawnData = {};
 
 	public:
-		Entity* Spawn(const Entity& prefab, const bool& isActive = true);
+		Entity* Spawn(
+			const Entity& prefab,
+			const bool& isActive = true
+		);
 
-		bool Spawn(const Entity& prefab, std::vector<Entity*>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive = true);
+		bool Spawn(
+			const Entity& prefab,
+			std::vector<Entity*>& spawnedEntities,
+			const uint64_t& spawnCount,
+			const bool& areActive = true
+		);
 
-		bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive = true);
+		bool Spawn(
+			const Entity& prefab,
+			const uint64_t& spawnCount,
+			const bool& areActive = true
+		);
 
 	private:
 		/// <summary>
@@ -180,13 +192,37 @@ namespace decs
 		/// <param name="bucketSize">Size of one bucket in compnent allocator.</param>
 		/// <returns>True if set bucket size is successful, else false.</returns>
 		template<typename ComponentType>
-		bool SetComponentContainerBucketSize(const uint64_t& bucketSize)
+		bool SetComponentChunkSize(const uint64_t& chunkSize, const decs::ChunkSizeType& chunkSizeType)
 		{
-			if (bucketSize == 0) return false;
+			if (chunkSize == 0) return false;
 			auto& context = m_ComponentContexts[Type<ComponentType>::ID()];
 			if (context != nullptr) return false;
 
-			context = new ComponentContext<ComponentType>(bucketSize);
+			uint64_t newChunkSize = 0;
+			switch (chunkSizeType)
+			{
+				case decs::ChunkSizeType::ElementsCount:
+				{
+					newChunkSize = chunkSize;
+					break;
+				}
+				case decs::ChunkSizeType::BytesCount:
+				{
+					newChunkSize = chunkSize / sizeof(ComponentType);
+					if ((chunkSize % sizeof(ComponentType)) > 0)
+					{
+						newChunkSize += 1;
+					}
+					break;
+				}
+				default:
+				{
+					newChunkSize = m_ComponentContainerChunkSize;
+					break;
+				}
+			}
+
+			context = new ComponentContext<ComponentType>(newChunkSize);
 			return true;
 		}
 
@@ -239,7 +275,7 @@ namespace decs
 					);
 				}
 
-				componentContext->InvokeOnCreateComponent(*createResult.Component, e, *this);
+				componentContext->InvokeOnCreateComponent(*createResult.Component, *entityData.m_EntityPtr);
 
 				return createResult.Component;
 			}
@@ -296,15 +332,15 @@ namespace decs
 				uint64_t bucektSize = 0;
 				switch (m_ContainerSizeType)
 				{
-					case decs::BucketSizeType::ElementsCount:
+					case decs::ChunkSizeType::ElementsCount:
 					{
-						bucektSize = m_ComponentContainerBucketSize;
+						bucektSize = m_ComponentContainerChunkSize;
 						break;
 					}
-					case decs::BucketSizeType::BytesCount:
+					case decs::ChunkSizeType::BytesCount:
 					{
-						bucektSize = m_ComponentContainerBucketSize / sizeof(ComponentType);
-						if ((m_ComponentContainerBucketSize % sizeof(ComponentType)) > 0)
+						bucektSize = m_ComponentContainerChunkSize / sizeof(ComponentType);
+						if ((m_ComponentContainerChunkSize % sizeof(ComponentType)) > 0)
 						{
 							bucektSize += 1;
 						}
@@ -312,7 +348,7 @@ namespace decs
 					}
 					default:
 					{
-						bucektSize = m_ComponentContainerBucketSize;
+						bucektSize = m_ComponentContainerChunkSize;
 						break;
 					}
 				}
@@ -333,7 +369,7 @@ namespace decs
 				delete value;
 		}
 
-		inline ComponentRef& GetEntityComponentBucketElementIndex(const EntityData& data, const uint64_t& typeIndex)
+		inline ComponentRef& GetEntityComponentChunkElementIndex(const EntityData& data, const uint64_t& typeIndex)
 		{
 			uint64_t dataIndex = data.m_CurrentArchetype->GetComponentsCount() * data.m_IndexInArchetype + typeIndex;
 			return data.m_CurrentArchetype->m_ComponentsRefs[dataIndex];
@@ -356,6 +392,9 @@ namespace decs
 #pragma endregion
 
 #pragma region ARCHETYPES:
+	public:
+		inline const ArchetypesMap& ArchetypesData() const { return m_ArchetypesMap; }
+
 	private:
 		ArchetypesMap m_ArchetypesMap;
 
@@ -423,7 +462,7 @@ namespace decs
 
 #pragma endregion
 
-#pragma region OBSERVERS:
+#pragma region ENTITY OBSERVERS:
 	private:
 		std::vector<CreateEntityObserver*> m_EntityCreationObservers;
 		std::vector<DestroyEntityObserver*> m_EntittyDestructionObservers;
@@ -441,16 +480,16 @@ namespace decs
 		bool RemoveEntityDestructionObserver(DestroyEntityObserver* observer);
 
 	private:
-		inline void InvokeEntityCreationObservers(const EntityID& entity)
+		inline void InvokeEntityCreationObservers(Entity& entity)
 		{
 			for (auto observer : m_EntityCreationObservers)
-				observer->OnCreateEntity(entity, *this);
+				observer->OnCreateEntity(entity);
 		}
 
-		inline void InvokeEntityDestructionObservers(const EntityID& entity)
+		inline void InvokeEntityDestructionObservers(Entity& entity)
 		{
 			for (auto observer : m_EntittyDestructionObservers)
-				observer->OnDestroyEntity(entity, *this);
+				observer->OnDestroyEntity(entity);
 		}
 
 		inline void InvokeEntityActivationObservers(Entity& entity)
@@ -466,5 +505,50 @@ namespace decs
 		}
 #pragma endregion
 
+#pragma region COMPONENTS OBSERVERS
+	public:
+		template<typename ComponentType>
+		bool AddComponentCreationObserver(CreateComponentObserver<ComponentType>* observer)
+		{
+			if (observer == nullptr) return false;
+			ComponentContext<ComponentType>* context = GetOrCreateComponentContext<ComponentType>();
+
+			return false;
+		}
+
+		template<typename ComponentType>
+		bool RemoveComponentCreationObserver(CreateComponentObserver<ComponentType>* observer)
+		{
+			if (observer == nullptr) return false;
+			auto& it = m_ComponentContexts.find(Type<ComponentType>::ID());
+			if (it == m_ComponentContexts.end()) return false;
+
+			ComponentContext<ComponentType>* context = dynamic_cast<ComponentContext<ComponentType>*>(it->second);
+
+			return true;
+		}
+
+		template<typename ComponentType>
+		bool AddComponentDestructionObserver(DestroyComponentObserver<ComponentType>* observer)
+		{
+			if (observer == nullptr) return false;
+			ComponentContext<ComponentType>* context = GetOrCreateComponentContext<ComponentType>();
+
+			return false;
+		}
+
+		template<typename ComponentType>
+		bool RemoveComponentDestructionObserver(DestroyComponentObserver<ComponentType>* observer)
+		{
+			if (observer == nullptr) return false;
+			auto& it = m_ComponentContexts.find(Type<ComponentType>::ID());
+			if (it == m_ComponentContexts.end()) return false;
+
+			ComponentContext<ComponentType>* context = dynamic_cast<ComponentContext<ComponentType>*>(it->second);
+
+			return true;
+		}
+
+#pragma endregion
 	};
 }
