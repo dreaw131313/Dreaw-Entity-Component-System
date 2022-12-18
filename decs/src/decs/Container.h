@@ -28,9 +28,9 @@ namespace decs
 	public:
 		Container();
 
-		Container(const Container& other);
+		Container(const Container& other) = delete;
 
-		Container(Container&& other) noexcept;
+		Container(Container&& other) = delete;
 
 		Container(
 			const uint64_t& enititesChunkSize,
@@ -41,6 +41,7 @@ namespace decs
 
 		Container(
 			EntityManager* entityManager,
+			ObserversManager* m_ObserversManager,
 			const ChunkSizeType& componentContainerChunkSizeType,
 			const uint64_t& componentContainerChunkSize,
 			const bool& invokeEntityActivationStateListeners
@@ -48,7 +49,7 @@ namespace decs
 
 		virtual ~Container();
 
-		Container& operator = (const Container& other)
+		/*Container& operator = (const Container& other)
 		{
 			return *this = Container(other);
 		}
@@ -57,7 +58,7 @@ namespace decs
 		{
 			throw std::runtime_error("Container move assignment not implemented");
 			return *this;
-		}
+		}*/
 
 	private:
 		uint64_t m_ComponentContainerChunkSize = decs::MemorySize::KiloByte * 16;

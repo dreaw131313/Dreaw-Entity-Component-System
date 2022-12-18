@@ -15,7 +15,7 @@ namespace decs
 
 	}
 
-	Container::Container(const Container& other)
+	/*Container::Container(const Container& other)
 	{
 		throw std::runtime_error("Container copy constructor not implemented");
 	}
@@ -23,7 +23,7 @@ namespace decs
 	Container::Container(Container&& other) noexcept
 	{
 		throw std::runtime_error("Container move constructor not implemented");
-	}
+	}*/
 
 	Container::Container(
 		const uint64_t& enititesChunkSize,
@@ -43,14 +43,15 @@ namespace decs
 
 	Container::Container(
 		EntityManager* entityManager,
+		ObserversManager* m_ObserversManager,
 		const ChunkSizeType& componentContainerChunkSizeType,
 		const uint64_t& componentContainerChunkSize,
 		const bool& invokeEntityActivationStateListeners
 	) :
 		m_HaveOwnEntityManager(false),
 		m_EntityManager(entityManager),
-		m_bHaveOwnObserverManager(true),
-		m_ObserversManager(new ObserversManager()),
+		m_bHaveOwnObserverManager(false),
+		m_ObserversManager(m_ObserversManager),
 		m_ComponentContainerChunkSize(componentContainerChunkSize),
 		m_ContainerSizeType(componentContainerChunkSizeType),
 		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners)
