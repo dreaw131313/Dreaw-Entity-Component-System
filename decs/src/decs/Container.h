@@ -8,6 +8,8 @@
 #include "ComponentContainer.h"
 #include "Observers.h"
 
+#include "ObserversManager.h"
+
 namespace decs
 {
 	class Entity;
@@ -26,6 +28,10 @@ namespace decs
 	public:
 		Container();
 
+		Container(const Container& other);
+
+		Container(Container&& other) noexcept;
+
 		Container(
 			const uint64_t& enititesChunkSize,
 			const ChunkSizeType& componentContainerChunkSizeType,
@@ -41,6 +47,17 @@ namespace decs
 		);
 
 		virtual ~Container();
+
+		Container& operator = (const Container& other)
+		{
+			return *this = Container(other);
+		}
+
+		Container& operator = (Container&& other) noexcept
+		{
+			throw std::runtime_error("Container move assignment not implemented");
+			return *this;
+		}
 
 	private:
 		uint64_t m_ComponentContainerChunkSize = decs::MemorySize::KiloByte * 16;
@@ -222,7 +239,7 @@ namespace decs
 				}
 			}
 
-			context = new ComponentContext<ComponentType>(newChunkSize);
+			context = new ComponentContext<ComponentType>(newChunkSize, m_ObserversManager->GetComponentObserver<ComponentType>());
 			return true;
 		}
 
@@ -353,7 +370,7 @@ namespace decs
 					}
 				}
 
-				ComponentContext<ComponentType>* context = new ComponentContext<ComponentType>(bucektSize);
+				ComponentContext<ComponentType>* context = new ComponentContext<ComponentType>(bucektSize, m_ObserversManager->GetComponentObserver<ComponentType>());
 				componentContext = context;
 				return context;
 			}
@@ -462,93 +479,83 @@ namespace decs
 
 #pragma endregion
 
-#pragma region ENTITY OBSERVERS:
+#pragma region COMPONENTS OBSERVERS
 	private:
-		std::vector<CreateEntityObserver*> m_EntityCreationObservers;
-		std::vector<DestroyEntityObserver*> m_EntittyDestructionObservers;
-
-		std::vector<ActivateEntityObserver*> m_EntittyActivateObservers;
-		std::vector<DeactivateEntityObserver*> m_EntittyDeactivateObservers;
+		bool m_bHaveOwnObserverManager = false;
+		ObserversManager* m_ObserversManager = nullptr;
 
 	public:
-		bool AddEntityCreationObserver(CreateEntityObserver* observer);
+		template<typename ComponentType>
+		bool SetComponentCreationObserver(CreateComponentObserver<ComponentType>* observer)
+		{
+			if (!m_bHaveOwnObserverManager) return false;
 
-		bool RemoveEntityCreationObserver(CreateEntityObserver* observer);
+			m_ObserversManager->SetComponentCreateObserver(observer);
+			return true;
+		}
 
-		bool AddEntityDestructionObserver(DestroyEntityObserver* observer);
+		template<typename ComponentType>
+		bool SetComponentDestructionObserver(DestroyComponentObserver<ComponentType>* observer)
+		{
+			if (!m_bHaveOwnObserverManager) return false;
 
-		bool RemoveEntityDestructionObserver(DestroyEntityObserver* observer);
+			m_ObserversManager->SetComponentDestroyObserver(observer);
+			return true;
+		}
+#pragma endregion
+
+#pragma region ENTITY OBSERVERS:
+	public:
+		bool SetEntityCreationObserver(CreateEntityObserver* observer)
+		{
+			if (!m_bHaveOwnObserverManager) return false;
+
+			return m_ObserversManager->SetEntityCreationObserver(observer);
+		}
+
+		bool SetEntityDestructionObserver(DestroyEntityObserver* observer)
+		{
+			if (!m_bHaveOwnObserverManager) return false;
+
+			return m_ObserversManager->SetEntityDestructionObserver(observer);
+		}
+
+		bool SetEntityActivationObserver(ActivateEntityObserver* observer)
+		{
+			if (!m_bHaveOwnObserverManager) return false;
+
+			return m_ObserversManager->SetEntityActivationObserver(observer);
+		}
+
+		bool SetEntityDeactivationObserver(DeactivateEntityObserver* observer)
+		{
+			if (!m_bHaveOwnObserverManager) return false;
+
+			return m_ObserversManager->SetEntityDeactivationObserver(observer);
+		}
 
 	private:
 		inline void InvokeEntityCreationObservers(Entity& entity)
 		{
-			for (auto observer : m_EntityCreationObservers)
-				observer->OnCreateEntity(entity);
+			m_ObserversManager->InvokeEntityCreationObservers(entity);
 		}
 
 		inline void InvokeEntityDestructionObservers(Entity& entity)
 		{
-			for (auto observer : m_EntittyDestructionObservers)
-				observer->OnDestroyEntity(entity);
+			m_ObserversManager->InvokeEntityDestructionObservers(entity);
 		}
 
 		inline void InvokeEntityActivationObservers(Entity& entity)
 		{
-			for (auto observer : m_EntittyActivateObservers)
-				observer->OnSetEntityActive(entity);
+			m_ObserversManager->InvokeEntityActivationObservers(entity);
 		}
 
 		inline void InvokeEntityDeactivationObservers(Entity& entity)
 		{
-			for (auto observer : m_EntittyDeactivateObservers)
-				observer->OnSetEntityInactive(entity);
-		}
-#pragma endregion
-
-#pragma region COMPONENTS OBSERVERS
-	public:
-		template<typename ComponentType>
-		bool AddComponentCreationObserver(CreateComponentObserver<ComponentType>* observer)
-		{
-			if (observer == nullptr) return false;
-			ComponentContext<ComponentType>* context = GetOrCreateComponentContext<ComponentType>();
-
-			return false;
-		}
-
-		template<typename ComponentType>
-		bool RemoveComponentCreationObserver(CreateComponentObserver<ComponentType>* observer)
-		{
-			if (observer == nullptr) return false;
-			auto& it = m_ComponentContexts.find(Type<ComponentType>::ID());
-			if (it == m_ComponentContexts.end()) return false;
-
-			ComponentContext<ComponentType>* context = dynamic_cast<ComponentContext<ComponentType>*>(it->second);
-
-			return true;
-		}
-
-		template<typename ComponentType>
-		bool AddComponentDestructionObserver(DestroyComponentObserver<ComponentType>* observer)
-		{
-			if (observer == nullptr) return false;
-			ComponentContext<ComponentType>* context = GetOrCreateComponentContext<ComponentType>();
-
-			return false;
-		}
-
-		template<typename ComponentType>
-		bool RemoveComponentDestructionObserver(DestroyComponentObserver<ComponentType>* observer)
-		{
-			if (observer == nullptr) return false;
-			auto& it = m_ComponentContexts.find(Type<ComponentType>::ID());
-			if (it == m_ComponentContexts.end()) return false;
-
-			ComponentContext<ComponentType>* context = dynamic_cast<ComponentContext<ComponentType>*>(it->second);
-
-			return true;
+			m_ObserversManager->InvokeEntityDeactivationObservers(entity);
 		}
 
 #pragma endregion
+
 	};
 }

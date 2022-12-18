@@ -8,9 +8,21 @@ namespace decs
 {
 	Container::Container() :
 		m_HaveOwnEntityManager(true),
-		m_EntityManager(new EntityManager(1000))
+		m_EntityManager(new EntityManager(1000)),
+		m_bHaveOwnObserverManager(true),
+		m_ObserversManager(new ObserversManager())
 	{
 
+	}
+
+	Container::Container(const Container& other)
+	{
+		throw std::runtime_error("Container copy constructor not implemented");
+	}
+
+	Container::Container(Container&& other) noexcept
+	{
+		throw std::runtime_error("Container move constructor not implemented");
 	}
 
 	Container::Container(
@@ -21,6 +33,8 @@ namespace decs
 	) :
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(enititesChunkSize)),
+		m_bHaveOwnObserverManager(true),
+		m_ObserversManager(new ObserversManager()),
 		m_ComponentContainerChunkSize(componentContainerChunkSize),
 		m_ContainerSizeType(componentContainerChunkSizeType),
 		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners)
@@ -35,6 +49,8 @@ namespace decs
 	) :
 		m_HaveOwnEntityManager(false),
 		m_EntityManager(entityManager),
+		m_bHaveOwnObserverManager(true),
+		m_ObserversManager(new ObserversManager()),
 		m_ComponentContainerChunkSize(componentContainerChunkSize),
 		m_ContainerSizeType(componentContainerChunkSizeType),
 		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners)
@@ -44,11 +60,10 @@ namespace decs
 	Container::~Container()
 	{
 		DestroyComponentsContexts();
-		if (m_HaveOwnEntityManager)
-		{
-			delete m_EntityManager;
-		}
+		if (m_bHaveOwnObserverManager) delete m_ObserversManager;
+		if (m_HaveOwnEntityManager) delete m_EntityManager;
 	}
+
 
 	Entity& Container::CreateEntity(const bool& isActive)
 	{
@@ -308,7 +323,7 @@ namespace decs
 
 			if (context == nullptr)
 			{
-				context = prefabArchetype->m_ComponentContexts[i]->CreateOwnEmptyCopy();
+				context = prefabArchetype->m_ComponentContexts[i]->CreateOwnEmptyCopy(m_ObserversManager);
 			}
 
 			m_SpawnData.ComponentContexts.emplace_back(
@@ -591,49 +606,4 @@ namespace decs
 
 		return spawnedEntity;
 	}
-
-	bool Container::AddEntityCreationObserver(CreateEntityObserver* observer)
-	{
-		if (observer == nullptr) return false;
-		m_EntityCreationObservers.push_back(observer);
-		return true;
-	}
-
-	bool Container::RemoveEntityCreationObserver(CreateEntityObserver* observer)
-	{
-		for (uint32_t i = 0; i < m_EntityCreationObservers.size(); i++)
-		{
-			if (m_EntityCreationObservers[i] == observer)
-			{
-				auto it = m_EntityCreationObservers.begin();
-				std::advance(it, i);
-				m_EntityCreationObservers.erase(it);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	bool Container::AddEntityDestructionObserver(DestroyEntityObserver* observer)
-	{
-		if (observer == nullptr) return false;
-		m_EntittyDestructionObservers.push_back(observer);
-		return true;
-	}
-
-	bool Container::RemoveEntityDestructionObserver(DestroyEntityObserver* observer)
-	{
-		for (uint32_t i = 0; i < m_EntittyDestructionObservers.size(); i++)
-		{
-			if (m_EntittyDestructionObservers[i] == observer)
-			{
-				auto it = m_EntittyDestructionObservers.begin();
-				std::advance(it, i);
-				m_EntittyDestructionObservers.erase(it);
-				return true;
-			}
-		}
-		return false;
-	}
-
 }

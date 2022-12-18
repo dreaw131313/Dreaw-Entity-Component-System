@@ -109,6 +109,7 @@
     <ClInclude Include="src\decs\EntityCommandBuffer.h" />
     <ClInclude Include="src\decs\EntityData.h" />
     <ClInclude Include="src\decs\Observers.h" />
+    <ClInclude Include="src\decs\ObserversManager.h" />
     <ClInclude Include="src\decs\Type.h" />
     <ClInclude Include="src\decs\TypeGroup.h" />
     <ClInclude Include="src\decs\Views\View.h" />
