@@ -8,9 +8,7 @@ namespace decs
 {
 	Container::Container() :
 		m_HaveOwnEntityManager(true),
-		m_EntityManager(new EntityManager(1000)),
-		m_bHaveOwnObserverManager(true),
-		m_ObserversManager(new ObserversManager())
+		m_EntityManager(new EntityManager(1000))
 	{
 
 	}
@@ -33,8 +31,6 @@ namespace decs
 	) :
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(enititesChunkSize)),
-		m_bHaveOwnObserverManager(true),
-		m_ObserversManager(new ObserversManager()),
 		m_ComponentContainerChunkSize(componentContainerChunkSize),
 		m_ContainerSizeType(componentContainerChunkSizeType),
 		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners)
@@ -50,7 +46,6 @@ namespace decs
 	) :
 		m_HaveOwnEntityManager(false),
 		m_EntityManager(entityManager),
-		m_bHaveOwnObserverManager(false),
 		m_ObserversManager(m_ObserversManager),
 		m_ComponentContainerChunkSize(componentContainerChunkSize),
 		m_ContainerSizeType(componentContainerChunkSizeType),
@@ -61,7 +56,6 @@ namespace decs
 	Container::~Container()
 	{
 		DestroyComponentsContexts();
-		if (m_bHaveOwnObserverManager) delete m_ObserversManager;
 		if (m_HaveOwnEntityManager) delete m_EntityManager;
 	}
 
@@ -622,7 +616,7 @@ namespace decs
 
 	bool Container::SetObserversManager(ObserversManager* observersManager)
 	{
-		if (m_HaveOwnEntityManager || observersManager == nullptr) return false;
+		if (observersManager == m_ObserversManager) return false;
 
 		m_ObserversManager = observersManager;
 		for (auto& [typeID, context] : m_ComponentContexts)

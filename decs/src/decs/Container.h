@@ -208,8 +208,8 @@ namespace decs
 		/// Must be invoked before addaing any component of type ComponentType in this container
 		/// </summary>
 		/// <typeparam name="ComponentType"></typeparam>
-		/// <param name="bucketSize">Size of one bucket in compnent allocator.</param>
-		/// <returns>True if set bucket size is successful, else false.</returns>
+		/// <param name="chunkSizeSize">Size of one chunkSize in compnent allocator.</param>
+		/// <returns>True if set chunkSize size is successful, else false.</returns>
 		template<typename ComponentType>
 		bool SetComponentChunkSize(const uint64_t& chunkSize, const decs::ChunkSizeType& chunkSizeType)
 		{
@@ -241,7 +241,14 @@ namespace decs
 				}
 			}
 
-			context = new ComponentContext<ComponentType>(newChunkSize, m_ObserversManager->GetComponentObserver<ComponentType>());
+			if (m_ObserversManager != nullptr)
+			{
+				context = new ComponentContext<ComponentType>(newChunkSize, m_ObserversManager->GetComponentObserver<ComponentType>());
+			}
+			else
+			{
+				context = new ComponentContext<ComponentType>(newChunkSize, nullptr);
+			}
 			return true;
 		}
 
@@ -348,37 +355,37 @@ namespace decs
 			auto& componentContext = m_ComponentContexts[id];
 			if (componentContext == nullptr)
 			{
-				uint64_t bucektSize = 0;
+				uint64_t chunkSize = 0;
 				switch (m_ContainerSizeType)
 				{
 					case decs::ChunkSizeType::ElementsCount:
 					{
-						bucektSize = m_ComponentContainerChunkSize;
+						chunkSize = m_ComponentContainerChunkSize;
 						break;
 					}
 					case decs::ChunkSizeType::BytesCount:
 					{
-						bucektSize = m_ComponentContainerChunkSize / sizeof(ComponentType);
+						chunkSize = m_ComponentContainerChunkSize / sizeof(ComponentType);
 						if ((m_ComponentContainerChunkSize % sizeof(ComponentType)) > 0)
 						{
-							bucektSize += 1;
+							chunkSize += 1;
 						}
 						break;
 					}
 					default:
 					{
-						bucektSize = m_ComponentContainerChunkSize;
+						chunkSize = m_ComponentContainerChunkSize;
 						break;
 					}
 				}
 				ComponentContext<ComponentType>* context;
 				if (m_ObserversManager != nullptr)
 				{
-					context = new ComponentContext<ComponentType>(bucektSize, m_ObserversManager->GetComponentObserver<ComponentType>());
+					context = new ComponentContext<ComponentType>(chunkSize, m_ObserversManager->GetComponentObserver<ComponentType>());
 				}
 				else
 				{
-					context = new ComponentContext<ComponentType>(bucektSize, nullptr);
+					context = new ComponentContext<ComponentType>(chunkSize, nullptr);
 				}
 				componentContext = context;
 				return context;
@@ -488,18 +495,20 @@ namespace decs
 
 #pragma endregion
 
-#pragma region COMPONENTS OBSERVERS
+#pragma region OBSERVERS
 	private:
-		bool m_bHaveOwnObserverManager = false;
 		ObserversManager* m_ObserversManager = nullptr;
-
 	public:
 		bool SetObserversManager(ObserversManager* observersManager);
 
-		template<typename ComponentType>
+
+#pragma endregion
+
+#pragma region COMPONENTS OBSERVERS
+		/*template<typename ComponentType>
 		bool SetComponentCreationObserver(CreateComponentObserver<ComponentType>* observer)
 		{
-			if (!m_bHaveOwnObserverManager) return false;
+			if (m_ObserversManager == nullptr) return false;
 
 			m_ObserversManager->SetComponentCreateObserver(observer);
 			return true;
@@ -508,42 +517,42 @@ namespace decs
 		template<typename ComponentType>
 		bool SetComponentDestructionObserver(DestroyComponentObserver<ComponentType>* observer)
 		{
-			if (!m_bHaveOwnObserverManager) return false;
+			if (m_ObserversManager == nullptr) return false;
 
 			m_ObserversManager->SetComponentDestroyObserver(observer);
 			return true;
-		}
+		}*/
 #pragma endregion
 
 #pragma region ENTITY OBSERVERS:
 	public:
-		bool SetEntityCreationObserver(CreateEntityObserver* observer)
+		/*bool SetEntityCreationObserver(CreateEntityObserver* observer)
 		{
-			if (!m_bHaveOwnObserverManager) return false;
+			if (m_ObserversManager == nullptr) return false;
 
 			return m_ObserversManager->SetEntityCreationObserver(observer);
 		}
 
 		bool SetEntityDestructionObserver(DestroyEntityObserver* observer)
 		{
-			if (!m_bHaveOwnObserverManager) return false;
+			if (m_ObserversManager == nullptr) return false;
 
 			return m_ObserversManager->SetEntityDestructionObserver(observer);
 		}
 
 		bool SetEntityActivationObserver(ActivateEntityObserver* observer)
 		{
-			if (!m_bHaveOwnObserverManager) return false;
+			if (m_ObserversManager == nullptr) return false;
 
 			return m_ObserversManager->SetEntityActivationObserver(observer);
 		}
 
 		bool SetEntityDeactivationObserver(DeactivateEntityObserver* observer)
 		{
-			if (!m_bHaveOwnObserverManager) return false;
+			if (m_ObserversManager == nullptr) return false;
 
 			return m_ObserversManager->SetEntityDeactivationObserver(observer);
-		}
+		}*/
 
 		void InvokeOnCreateListeners();
 

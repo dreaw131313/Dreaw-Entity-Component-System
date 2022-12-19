@@ -49,11 +49,11 @@ namespace decs
 #pragma region ENTITY OBSERVERS:
 
 	private:
-		CreateEntityObserver* m_EntityCreationObserver;
-		DestroyEntityObserver* m_EntityDestructionObserver;
+		CreateEntityObserver* m_EntityCreationObserver = nullptr;
+		DestroyEntityObserver* m_EntityDestructionObserver = nullptr;
 
-		ActivateEntityObserver* m_EntityActivateObserver;
-		DeactivateEntityObserver* m_EntityDeactivateObserver;
+		ActivateEntityObserver* m_EntityActivateObserver = nullptr;
+		DeactivateEntityObserver* m_EntityDeactivateObserver = nullptr;
 	public:
 
 		bool SetEntityCreationObserver(CreateEntityObserver* observer)
