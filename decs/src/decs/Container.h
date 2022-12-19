@@ -91,7 +91,7 @@ namespace decs
 
 		bool DestroyEntity(Entity& entity);
 
-		void DestroyOwnedEntities();
+		void DestroyOwnedEntities(const bool& invokeOnDestroyListeners = true);
 
 		// Entity utiliti methods:
 
@@ -118,7 +118,8 @@ namespace decs
 		}
 
 	private:
-		void DestroyEntitesInArchetypes(Archetype& archetype);
+		void DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners = true);
+
 
 #pragma endregion
 
@@ -535,6 +536,10 @@ namespace decs
 			return m_ObserversManager->SetEntityDeactivationObserver(observer);
 		}
 
+		void InvokeOnCreateListeners();
+
+		void InvokeOnDestroyListeners();
+
 	private:
 		inline void InvokeEntityCreationObservers(Entity& entity)
 		{
@@ -556,6 +561,9 @@ namespace decs
 			m_ObserversManager->InvokeEntityDeactivationObservers(entity);
 		}
 
+		void InvokeArchetypeOnCreateListeners(Archetype& archetype);
+
+		void InvokeArchetypeOnDestroyListeners(Archetype& archetype);
 #pragma endregion
 
 	};

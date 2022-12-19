@@ -129,7 +129,7 @@ namespace decs
 		return DestroyEntity(e.m_ID);
 	}
 
-	void Container::DestroyOwnedEntities()
+	void Container::DestroyOwnedEntities(const bool& invokeOnDestroyListeners)
 	{
 		auto& archetypes = m_ArchetypesMap.m_Archetypes;
 
@@ -144,26 +144,38 @@ namespace decs
 		ClearComponentsContainers();
 	}
 
-	void Container::DestroyEntitesInArchetypes(Archetype& archetype)
+	void Container::DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners)
 	{
 		auto& entitesData = archetype.m_EntitiesData;
 		uint64_t archetypeComponentsCount = archetype.GetComponentsCount();
 		uint64_t entityDataCount = entitesData.size();
 		uint64_t componentDataIndex = 0;
-		for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
+
+		if (invokeOnDestroyListeners)
 		{
-			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-			InvokeEntityDestructionObservers(*archetypeEntityData.EntityPtr());
-
-			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
+			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
 			{
-				auto& compRef = archetype.m_ComponentsRefs[componentDataIndex];
-				auto compContext = archetype.m_ComponentContexts[i];
-				compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, *archetypeEntityData.EntityPtr());
-				componentDataIndex += 1;
+				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
+				m_EntityManager->DestroyEntity(archetypeEntityData.ID());
 			}
+		}
+		else
+		{
+			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
+			{
+				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
+				InvokeEntityDestructionObservers(*archetypeEntityData.EntityPtr());
 
-			m_EntityManager->DestroyEntity(archetypeEntityData.ID());
+				for (uint64_t i = 0; i < archetypeComponentsCount; i++)
+				{
+					auto& compRef = archetype.m_ComponentsRefs[componentDataIndex];
+					auto compContext = archetype.m_ComponentContexts[i];
+					compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, *archetypeEntityData.EntityPtr());
+					componentDataIndex += 1;
+				}
+
+				m_EntityManager->DestroyEntity(archetypeEntityData.ID());
+			}
 		}
 	}
 
@@ -607,4 +619,71 @@ namespace decs
 
 		return spawnedEntity;
 	}
+
+	void Container::InvokeOnCreateListeners()
+	{
+		auto& archetypes = m_ArchetypesMap.m_Archetypes;
+		uint64_t archetypesCount = archetypes.size();
+		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
+		{
+			Archetype& archetype = *archetypes[archetypeIdx];
+			InvokeArchetypeOnCreateListeners(archetype);
+		}
+	}
+
+	void Container::InvokeOnDestroyListeners()
+	{
+		auto& archetypes = m_ArchetypesMap.m_Archetypes;
+		uint64_t archetypesCount = archetypes.size();
+		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
+		{
+			Archetype& archetype = *archetypes[archetypeIdx];
+			InvokeArchetypeOnDestroyListeners(archetype);
+		}
+	}
+
+	void Container::InvokeArchetypeOnCreateListeners(Archetype& archetype)
+	{
+		auto& entitesData = archetype.m_EntitiesData;
+		uint64_t archetypeComponentsCount = archetype.GetComponentsCount();
+		uint64_t entityDataCount = entitesData.size();
+		uint64_t componentDataIndex = 0;
+
+		for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
+		{
+			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
+			InvokeEntityCreationObservers(*archetypeEntityData.EntityPtr());
+
+			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
+			{
+				auto& compRef = archetype.m_ComponentsRefs[componentDataIndex];
+				auto compContext = archetype.m_ComponentContexts[i];
+				compContext->InvokeOnCreateComponent_S(compRef.ComponentPointer, *archetypeEntityData.EntityPtr());
+				componentDataIndex += 1;
+			}
+		}
+	}
+
+	void Container::InvokeArchetypeOnDestroyListeners(Archetype& archetype)
+	{
+		auto& entitesData = archetype.m_EntitiesData;
+		uint64_t archetypeComponentsCount = archetype.GetComponentsCount();
+		uint64_t entityDataCount = entitesData.size();
+		uint64_t componentDataIndex = 0;
+
+		for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
+		{
+			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
+			InvokeEntityDestructionObservers(*archetypeEntityData.EntityPtr());
+
+			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
+			{
+				auto& compRef = archetype.m_ComponentsRefs[componentDataIndex];
+				auto compContext = archetype.m_ComponentContexts[i];
+				compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, *archetypeEntityData.EntityPtr());
+				componentDataIndex += 1;
+			}
+		}
+	}
+
 }
