@@ -24,10 +24,10 @@ int main()
 	decs::Entity entity = container.CreateEntity();
 	entity.AddComponent<C1>(1.f, 2.f);
 
+
 	entity.Destroy();
 
 	decs::View<C1> view = {};
-	view.Fetch(container);
 	view.ForEach([](C1& c)
 	{
 		c.X += 1;
@@ -37,11 +37,6 @@ int main()
 	entity.RemoveComponent<int>();
 	entity.HasComponent<int>();
 
-
-	if (entity.IsActiveSafe())
-	{
-		
-	}
 
 	std::cin.get();
 	return 0;
