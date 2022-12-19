@@ -371,8 +371,15 @@ namespace decs
 						break;
 					}
 				}
-
-				ComponentContext<ComponentType>* context = new ComponentContext<ComponentType>(bucektSize, m_ObserversManager->GetComponentObserver<ComponentType>());
+				ComponentContext<ComponentType>* context;
+				if (m_ObserversManager != nullptr)
+				{
+					context = new ComponentContext<ComponentType>(bucektSize, m_ObserversManager->GetComponentObserver<ComponentType>());
+				}
+				else
+				{
+					context = new ComponentContext<ComponentType>(bucektSize, nullptr);
+				}
 				componentContext = context;
 				return context;
 			}
