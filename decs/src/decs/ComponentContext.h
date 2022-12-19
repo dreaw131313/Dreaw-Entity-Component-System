@@ -89,7 +89,14 @@ namespace decs
 
 		virtual void SetObserverManager(ObserversManager* observerManager) override
 		{
-			m_Observer = observerManager->GetComponentObserver<ComponentType>();
+			if (observerManager == nullptr)
+			{
+				m_Observer = nullptr;
+			}
+			else
+			{
+				m_Observer = observerManager->GetComponentObserver<ComponentType>();
+			}
 		}
 
 		ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) override
