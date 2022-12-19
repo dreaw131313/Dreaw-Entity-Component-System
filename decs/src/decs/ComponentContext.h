@@ -27,6 +27,7 @@ namespace decs
 		virtual TypeID GetComponentTypeID() const = 0;
 		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity) = 0;
 		virtual void InvokeOnDestroyComponent_S(void* component, Entity& entity) = 0;
+		virtual void SetObserverManager(ObserversManager* observerManager) = 0;
 		virtual ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) = 0;
 
 	};
@@ -84,6 +85,11 @@ namespace decs
 			{
 				m_Observer->m_DestroyObserver->OnDestroyComponent(component, entity);
 			}
+		}
+
+		virtual void SetObserverManager(ObserversManager* observerManager) override
+		{
+			m_Observer = observerManager->GetComponentObserver<ComponentType>();
 		}
 
 		ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) override

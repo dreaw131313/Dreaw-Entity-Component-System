@@ -487,6 +487,8 @@ namespace decs
 		ObserversManager* m_ObserversManager = nullptr;
 
 	public:
+		bool SetObserversManager(ObserversManager* observersManager);
+
 		template<typename ComponentType>
 		bool SetComponentCreationObserver(CreateComponentObserver<ComponentType>* observer)
 		{
@@ -543,22 +545,34 @@ namespace decs
 	private:
 		inline void InvokeEntityCreationObservers(Entity& entity)
 		{
-			m_ObserversManager->InvokeEntityCreationObservers(entity);
+			if (m_ObserversManager != nullptr)
+			{
+				m_ObserversManager->InvokeEntityCreationObservers(entity);
+			}
 		}
 
 		inline void InvokeEntityDestructionObservers(Entity& entity)
 		{
-			m_ObserversManager->InvokeEntityDestructionObservers(entity);
+			if (m_ObserversManager != nullptr)
+			{
+				m_ObserversManager->InvokeEntityDestructionObservers(entity);
+			}
 		}
 
 		inline void InvokeEntityActivationObservers(Entity& entity)
 		{
-			m_ObserversManager->InvokeEntityActivationObservers(entity);
+			if (m_ObserversManager != nullptr)
+			{
+				m_ObserversManager->InvokeEntityActivationObservers(entity);
+			}
 		}
 
 		inline void InvokeEntityDeactivationObservers(Entity& entity)
 		{
-			m_ObserversManager->InvokeEntityDeactivationObservers(entity);
+			if (m_ObserversManager != nullptr)
+			{
+				m_ObserversManager->InvokeEntityDeactivationObservers(entity);
+			}
 		}
 
 		void InvokeArchetypeOnCreateListeners(Archetype& archetype);

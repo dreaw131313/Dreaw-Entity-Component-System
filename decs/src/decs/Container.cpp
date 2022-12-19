@@ -620,6 +620,19 @@ namespace decs
 		return spawnedEntity;
 	}
 
+	bool Container::SetObserversManager(ObserversManager* observersManager)
+	{
+		if (m_HaveOwnEntityManager || observersManager == nullptr) return false;
+
+		m_ObserversManager = observersManager;
+		for (auto& [typeID, context] : m_ComponentContexts)
+		{
+			context->SetObserverManager(m_ObserversManager);
+		}
+
+		return true;
+	}
+
 	void Container::InvokeOnCreateListeners()
 	{
 		auto& archetypes = m_ArchetypesMap.m_Archetypes;
