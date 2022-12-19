@@ -99,7 +99,7 @@ view.ForEachWithEntity([&](decs::Entity& e, Component1& c1, Component2& c2)
 	// doing stuff with components and entity
 });
 ```
-There is also possibility to query for more complex views with member methods of view class:
+It is also possible to query more complex views using the member methods of the view class:
 ```cpp
 template<typename... ComponentsTypes>
 View& Without(); // Entities in view will not have all components from ComponetsTypes parameters list
