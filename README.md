@@ -85,8 +85,7 @@ container.SetEntityActive(false);
 decs::FullContainer container = {}; 
 
 // this view can iterate over all entities which contains components passed as template parameters
-decs::View<Component1, Component2> view = {}; 
-view.Fetch(container); // fetching data needed to iterate over entites
+decs::View<Component1, Component2> view = { container }; 
 
 view.ForEach([&](Component1& c1, Component2& c2)
 {
@@ -115,9 +114,8 @@ View& With(); // Entities in view will have all components from ComponentTypes p
 
 Creating view with this methods can look like:
 ```cpp
-decs::View<Component1, Component2, Component3> view = {};
+decs::View<Component1, Component2, Component3> view = { container };
 view.Without<Component4,Component5>().WithAnyFrom<Component6, Component7>().With<Component8, Component9>();
-view.Fetch(containerClassObject);
 
 view.ForEach([&](Component1& c1, Component2& c2, Component3& c3)
 {
