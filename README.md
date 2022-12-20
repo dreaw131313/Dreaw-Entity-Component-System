@@ -58,7 +58,7 @@ Like in most of ecs systems, in **decs** entity can have only one component of g
 ### Entity class
 decs::Entity class is represented by ID and reference to decs::FullContainer in which was created.<br/>
 
-Entites can also be spawned which is a little faster than creating them by regular method. To spawn entity you need to use one of **Spawn()** methods from decs::FullContainer class.
+Entites can also be spawned which is a little faster than creating them by regular method. To spawn entity you need to use one of **Spawn()** methods from decs::Container class.
 ```cpp
 Entity* Spawn(const Entity& prefab, const bool& isActive = true);
 bool Spawn(
@@ -73,7 +73,7 @@ As prefab parameter can be used entity from any decs::FullContainer.
 
 Entities can also be activated or deactivated. Deactivated entities will not be iterated. Activating and deactivating is performed by functions:
 ```cpp
-decs::FullContainer container = {};
+decs::Container container = {};
 decs::Entity entity = container.CreateEntity();
 entity.SetActive(true);
 container.SetEntityActive(false);
