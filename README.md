@@ -8,9 +8,9 @@
 
 ## How to use **decs**
 ### Creating and storing entities and components
-All entites and components are stored in class decs::FullContainer which is giving access for method for creating and destroying entities and components.<br/>
+All entites and components are stored in class decs::Container which is giving access for method for creating and destroying entities and components.<br/>
 Component classes do not need to inherit from any class. Base types like int, float etc. can also be componenets.<br/>
-Component stored in **decs::FullContainer** have **stable memory adress**.<br/>
+Component stored in **decs::Container** have **stable memory adress**.<br/>
 ```cpp
 class Component1
 {
@@ -34,7 +34,7 @@ public:
 
 int main()
 {
-	decs::FullContainer container = {};
+	decs::Container container = {};
 	decs::Entity entity1 = container.CreateEntity();
 	// using entity member function :
 	Component1* c1 = entity1.AddComponent<Component1>(1.f,2.f);
