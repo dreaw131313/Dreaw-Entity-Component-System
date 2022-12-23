@@ -69,7 +69,7 @@ bool Spawn(
 	);
 bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive = true);
 ```
-As prefab parameter can be used entity from any decs::FullContainer.
+As prefab parameter can be used entity from any decs::Container.
 
 Entities can also be activated or deactivated. Deactivated entities will not be iterated. Activating and deactivating is performed by functions:
 ```cpp
@@ -82,7 +82,7 @@ container.SetEntityActive(false);
 ### Iterating over entites
 **decs::View<typename... Components>** object serves to iterating over entities
 ```cpp
-decs::FullContainer container = {}; 
+decs::Container container = {}; 
 
 // this view can iterate over all entities which contains components passed as template parameters
 decs::View<Component1, Component2> view = { container }; 
