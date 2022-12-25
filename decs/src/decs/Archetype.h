@@ -110,6 +110,8 @@ namespace decs
 		std::vector<TypeID> m_TypeIDs;
 		ecsMap<TypeID, uint64_t> m_TypeIDsIndexes;
 
+		//std::vector<ComponentContextBase*> m_OrderedComponentContextsToInvokeObservers;
+
 	public:
 		Archetype()
 		{
@@ -152,7 +154,6 @@ namespace decs
 		}
 
 	private:
-
 		void Reset()
 		{
 			m_EntitiesCount = 0;

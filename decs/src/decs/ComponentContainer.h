@@ -1,8 +1,6 @@
 #pragma once
 #include "decspch.h"
 #include "Core.h"
-
-#include "Containers/ChunkAllocator.h"
 #include "Containers/ChunkedVector.h"
 
 namespace decs
@@ -30,22 +28,7 @@ namespace decs
 		}
 	};
 
-	struct ComponentCopyData
-	{
-	public:
-		uint64_t ChunkIndex = std::numeric_limits<uint64_t>::max();
-		uint64_t ElementIndex = std::numeric_limits<uint64_t>::max();;
-		void* Component = nullptr;
-
-	public:
-		ComponentCopyData() {}
-
-		ComponentCopyData(uint64_t chunkIndex, uint64_t index, void* component) :
-			ChunkIndex(chunkIndex), ElementIndex(index), Component(component)
-		{
-
-		}
-	};
+	using ComponentCopyData = ComponentAllocationData<void>;
 
 	struct ComponentAllocatorSwapData
 	{

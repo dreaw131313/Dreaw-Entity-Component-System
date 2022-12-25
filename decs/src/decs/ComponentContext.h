@@ -30,6 +30,11 @@ namespace decs
 		virtual void SetObserverManager(ObserversManager* observerManager) = 0;
 		virtual ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) = 0;
 
+		inline int GetObservatorOrder() const { return m_ObservatorOrder; }
+
+	private:
+		int m_ObservatorOrder = 0;
+
 	};
 
 	template<typename ComponentType>

@@ -1145,7 +1145,6 @@ namespace decs
 				for (; currentArchetypeIndex < archsCount;)
 				{
 					ArchetypeContext& ctx = m_ArchetypesContexts[currentArchetypeIndex];
-
 					uint64_t archAvailableEntities = ctx.EntitiesCount() - currentArchEntitiesStartIndex;
 
 					if (itNeededEntitiesCount < archAvailableEntities)
@@ -1159,8 +1158,6 @@ namespace decs
 						itNeededEntitiesCount -= archAvailableEntities;
 						currentArchEntitiesStartIndex += archAvailableEntities;
 						itLastArchetypeIndex = currentArchetypeIndex;
-
-
 						currentArchetypeIndex += 1;
 					}
 
