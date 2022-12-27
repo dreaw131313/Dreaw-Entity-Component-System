@@ -12,31 +12,21 @@
 
 namespace decs
 {
-	template<uint64_t TypesCount>
-	struct ViewArchetypeContext
-	{
-		template<typename... ComponentTypes>
-		friend 	class ViewIterator;
-		template<typename... ComponentTypes>
-		friend 	class ViewBatchIterator;
-
-	public:
-		Archetype* Arch = nullptr;
-		uint64_t TypeIndexes[TypesCount]; // indexy kontenerów z archetypu z których ma ko¿ystaæ widok - shit
-
-	public:
-		inline uint64_t EntitiesCount() const { return m_EntitiesCount; }
-
-		inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntitiesCount(); }
-
-	private:
-		uint64_t m_EntitiesCount = 0;
-	};
-
 	template<typename... ComponentsTypes>
 	class View
 	{
-		using ArchetypeContext = ViewArchetypeContext<sizeof...(ComponentsTypes)>;
+	private:
+		struct ArchetypeContext
+		{
+		public:
+			Archetype* Arch = nullptr;
+			uint64_t TypeIndexes[sizeof...(ComponentsTypes)]; // indexy kontenerów z archetypu z których ma ko¿ystaæ widok - shit
+			uint64_t m_EntitiesCount = 0;
+
+		public:
+			inline uint64_t EntitiesCount() const { return m_EntitiesCount; }
+			inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntitiesCount(); }
+		};
 
 	public:
 		View()
@@ -512,7 +502,6 @@ namespace decs
 		class BatchIterator
 		{
 			using ViewType = View<ComponentsTypes...>;
-			using ArchetypeContext = ViewArchetypeContext<sizeof...(ComponentsTypes)>;
 
 			template<typename... Types>
 			friend class View;
