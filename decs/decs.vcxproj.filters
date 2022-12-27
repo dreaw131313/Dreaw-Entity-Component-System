@@ -21,10 +21,7 @@
     <ClInclude Include="src\decs\Containers\ChunkedVector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Views\View.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\Views\ViewCore.h">
+    <ClInclude Include="src\decs\View.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Archetype.h">

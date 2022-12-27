@@ -44,12 +44,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IntDir>$(SolutionDir)bin-int\$(ProjectName)\\$(Configuration)_$(Platform)\</IntDir>
+    <IntDir>$(SolutionDir)bin-int\$(ProjectName)\$(Configuration)_$(Platform)\</IntDir>
     <OutDir>$(SolutionDir)bin\$(ProjectName)\$(Configuration)_$(Platform)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)bin\$(ProjectName)\$(Configuration)_$(Platform)\</OutDir>
-    <IntDir>$(SolutionDir)bin-int\$(ProjectName)\\$(Configuration)_$(Platform)\</IntDir>
+    <IntDir>$(SolutionDir)bin-int\$(ProjectName)\$(Configuration)_$(Platform)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -111,8 +111,7 @@
     <ClInclude Include="src\decs\ObserversManager.h" />
     <ClInclude Include="src\decs\Type.h" />
     <ClInclude Include="src\decs\TypeGroup.h" />
-    <ClInclude Include="src\decs\Views\View.h" />
-    <ClInclude Include="src\decs\Views\ViewCore.h" />
+    <ClInclude Include="src\decs\View.h" />
     <ClInclude Include="src\decs\ThirdParty\skarupke\bytell_hash_map.hpp" />
     <ClInclude Include="src\decs\ThirdParty\skarupke\flat_hash_map.hpp" />
     <ClInclude Include="src\decs\ThirdParty\skarupke\unordered_map.hpp" />
