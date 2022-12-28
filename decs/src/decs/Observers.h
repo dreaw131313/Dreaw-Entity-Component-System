@@ -45,6 +45,4 @@ namespace decs
 	public:
 		virtual void OnDestroyComponent(ComponentType& component, Entity& entity) = 0;
 	};
-
-
 }
