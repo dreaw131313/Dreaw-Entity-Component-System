@@ -41,7 +41,6 @@ namespace decs
 
 		Container(
 			EntityManager* entityManager,
-			ObserversManager* m_ObserversManager,
 			const ChunkSizeType& componentContainerChunkSizeType,
 			const uint64_t& componentContainerChunkSize,
 			const bool& invokeEntityActivationStateListeners

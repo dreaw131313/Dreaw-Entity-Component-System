@@ -39,14 +39,12 @@ namespace decs
 
 	Container::Container(
 		EntityManager* entityManager,
-		ObserversManager* m_ObserversManager,
 		const ChunkSizeType& componentContainerChunkSizeType,
 		const uint64_t& componentContainerChunkSize,
 		const bool& invokeEntityActivationStateListeners
 	) :
 		m_HaveOwnEntityManager(false),
 		m_EntityManager(entityManager),
-		m_ObserversManager(m_ObserversManager),
 		m_ComponentContainerChunkSize(componentContainerChunkSize),
 		m_ContainerSizeType(componentContainerChunkSizeType),
 		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners)
