@@ -9,9 +9,9 @@
 #include <string>
 #include <typeinfo>
 
-#include "decs/ThirdParty/skarupke/flat_hash_map.hpp"
-#include "decs/ThirdParty/skarupke/bytell_hash_map.hpp"
-#include "decs/ThirdParty/skarupke/unordered_map.hpp"
+#include "ThirdParty/skarupke/flat_hash_map.hpp"
+#include "ThirdParty/skarupke/bytell_hash_map.hpp"
+#include "ThirdParty/skarupke/unordered_map.hpp"
 
 namespace decs
 {
