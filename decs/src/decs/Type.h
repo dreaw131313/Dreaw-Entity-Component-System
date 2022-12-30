@@ -1,5 +1,4 @@
 #pragma once
-#include "decspch.h"
 #include "Core.h"
 
 namespace decs

@@ -1,10 +1,8 @@
 #pragma once
-#include "decspch.h"
 #include "Core.h"
 #include "Type.h"
 
 #include "Observers.h"
-
 
 namespace decs
 {

@@ -1,5 +1,4 @@
-#pragma once	
-#include "decspch.h"
+#pragma once
 #include "EntityManager.h"
 
 #include "Entity.h"

@@ -1,6 +1,4 @@
 #pragma once
-#include "decspch.h"
-
 #include "Container.h"
 #include "Entity.h"
 

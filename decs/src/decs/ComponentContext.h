@@ -1,6 +1,4 @@
 #pragma once
-#include "decspch.h"
-
 #include "Type.h"
 #include "ComponentContainer.h"
 #include "ObserversManager.h"

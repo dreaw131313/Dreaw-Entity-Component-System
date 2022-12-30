@@ -1,6 +1,4 @@
 #pragma once
-#include "decspch.h"
-
 #include "Type.h"
 #include "TypeGroup.h"
 #include "core.h"
@@ -8,7 +6,6 @@
 #include "Entity.h"
 #include "Container.h"
 #include "decs/CustomApplay.h"
-
 
 namespace decs
 {

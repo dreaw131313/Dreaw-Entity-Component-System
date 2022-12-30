@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\decspch.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decs\Containers\ChunkedVector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -80,9 +77,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\decspch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\decs\Container.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

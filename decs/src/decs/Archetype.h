@@ -1,6 +1,4 @@
 #pragma once
-#include "decspch.h"
-
 #include "Core.h"
 #include "ComponentContext.h"
 #include "Type.h"
