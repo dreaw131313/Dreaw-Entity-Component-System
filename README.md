@@ -1,9 +1,8 @@
 # Dreaw-Entity-Component-System
 **Dreaw-Entity-Component-System** in short **decs** it is simple ecs library written in **C++** which I am developing for use in my own game engine<br/>
 
-## About decs
+## decs requirements
 * Requires C++ 17
-* Every class in **decs** is in "decs" namespace
 * Mainly use standard library, but also is using hash maps from https://github.com/skarupke/flat_hash_map repository. Which map is used can be changed in Core.h file by changing line with: ``` using ecsMap = std::unordered_map<Key, Value>; ```
 
 ## How to use **decs**
