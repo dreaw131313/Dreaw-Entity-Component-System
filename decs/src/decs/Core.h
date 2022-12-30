@@ -45,6 +45,7 @@ namespace decs
 	{
 		return ((count ? fnv1a_32(s, count - 1) : 2166136261u) ^ s[count]) * 16777619u;
 	}
+
 	constexpr TypeID fnv1a_64(char const* s, uint64_t count)
 	{
 		return ((count ? fnv1a_64(s, count - 1) : 14695981039346656037u) ^ s[count]) * 1099511628211u;
