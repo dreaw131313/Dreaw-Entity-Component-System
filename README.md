@@ -1,5 +1,5 @@
 # Dreaw-Entity-Component-System
-**Dreaw-Entity-Component-System** in short **decs** it is simple ecs static library written in **C++** which I am developing for educational purposes and for use in my own game engine<br/>
+**Dreaw-Entity-Component-System** in short **decs** it is simple ecs library written in **C++** which I am developing for educational purposes and for use in my own game engine<br/>
 
 ## About decs
 * Requires C++ 17
