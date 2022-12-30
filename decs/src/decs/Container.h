@@ -507,6 +507,9 @@ namespace decs
 		ObserversManager* m_ObserversManager = nullptr;
 	public:
 		bool SetObserversManager(ObserversManager* observersManager);
+
+		void ReassignObservers();
+
 #pragma endregion
 
 #pragma region ENTITY OBSERVERS:

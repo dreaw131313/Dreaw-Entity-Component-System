@@ -57,7 +57,6 @@ namespace decs
 		if (m_HaveOwnEntityManager) delete m_EntityManager;
 	}
 
-
 	Entity& Container::CreateEntity(const bool& isActive)
 	{
 		Entity* entity = m_EntityManager->CreateEntity(this, isActive);
@@ -623,6 +622,16 @@ namespace decs
 		}
 
 		return true;
+	}
+
+	void Container::ReassignObservers()
+	{
+		if (m_ObserversManager == nullptr) return;
+
+		for (auto& [typeID, context] : m_ComponentContexts)
+		{
+			context->SetObserverManager(m_ObserversManager);
+		}
 	}
 
 	void Container::InvokeEntitesOnCreateListeners()

@@ -38,7 +38,7 @@ namespace decs
 		return ((count ? fnv1a_64(s, count - 1) : 14695981039346656037u) ^ s[count]) * 1099511628211u;
 	}
 
-	constexpr uint64_t c_string_lenght(char const* s)
+	constexpr uint64_t c_string_length(char const* s)
 	{
 		uint64_t i = 0;
 		if (s != nullptr)
@@ -49,11 +49,11 @@ namespace decs
 
 	constexpr TypeID c_string_hash_32(char const* s)
 	{
-		return fnv1a_32(s, c_string_lenght(s));
+		return fnv1a_32(s, c_string_length(s));
 	}
 
 	constexpr TypeID c_string_hash_64(char const* s)
 	{
-		return fnv1a_64(s, c_string_lenght(s));
+		return fnv1a_64(s, c_string_length(s));
 	}
 }
