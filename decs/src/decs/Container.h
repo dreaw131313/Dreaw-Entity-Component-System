@@ -258,7 +258,7 @@ namespace decs
 			if (IsEntityAlive(e))
 			{
 				EntityData& entityData = m_EntityManager->GetEntityData(e);
-				constexpr auto copmonentTypeID = Type<ComponentType>::ID();
+				TypeID copmonentTypeID = Type<ComponentType>::ID();
 
 				{
 					auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
@@ -350,7 +350,7 @@ namespace decs
 		template<typename ComponentType>
 		ComponentContext<ComponentType>* GetOrCreateComponentContext()
 		{
-			constexpr TypeID id = Type<ComponentType>::ID();
+			TypeID id = Type<ComponentType>::ID();
 
 			auto& componentContext = m_ComponentContexts[id];
 			if (componentContext == nullptr)
@@ -508,28 +508,6 @@ namespace decs
 		ObserversManager* m_ObserversManager = nullptr;
 	public:
 		bool SetObserversManager(ObserversManager* observersManager);
-
-
-#pragma endregion
-
-#pragma region COMPONENTS OBSERVERS
-		/*template<typename ComponentType>
-		bool SetComponentCreationObserver(CreateComponentObserver<ComponentType>* observer)
-		{
-			if (m_ObserversManager == nullptr) return false;
-
-			m_ObserversManager->SetComponentCreateObserver(observer);
-			return true;
-		}
-
-		template<typename ComponentType>
-		bool SetComponentDestructionObserver(DestroyComponentObserver<ComponentType>* observer)
-		{
-			if (m_ObserversManager == nullptr) return false;
-
-			m_ObserversManager->SetComponentDestroyObserver(observer);
-			return true;
-		}*/
 #pragma endregion
 
 #pragma region ENTITY OBSERVERS:

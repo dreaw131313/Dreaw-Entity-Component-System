@@ -39,6 +39,17 @@ namespace decs
 			{
 				return Type_Base<T, TypeID>::ID();
 			}
+
+			/*static TypeID ID()
+			{
+				return reinterpret_cast<TypeID>(m_TypeInfo);
+			}
+
+		private:
+			static const std::type_info* m_TypeInfo;*/
 		};
+
+		//template<typename T>
+		//const std::type_info* Type<T>::m_TypeInfo = &typeid(T);
 	}
 }
