@@ -27,8 +27,6 @@ namespace decs
 		{
 
 		}
-
-		~ArchetypeEdge() {}
 	};
 
 	struct ComponentRef
@@ -55,8 +53,6 @@ namespace decs
 		{
 
 		}
-
-		~ComponentRef() {}
 	};
 
 	struct ArchetypeEntityData
@@ -190,8 +186,8 @@ namespace decs
 		inline uint64_t EmptyArchetypesCount() const
 		{
 			uint64_t emptyArchetypesCount = 0;
-
 			uint64_t archetypesCount = m_Archetypes.size();
+
 			for (uint64_t i = 0; i < archetypesCount; i++)
 			{
 				if (m_Archetypes[i]->EntitiesCount() == 0)
@@ -209,7 +205,6 @@ namespace decs
 		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount;
 
 	private:
-
 		void MakeArchetypeEdges(Archetype& archetype)
 		{
 			// edges with archetypes with less components:
@@ -331,7 +326,7 @@ namespace decs
 
 			m_ArchetypesGroupedByComponentsCount[archetype.GetComponentsCount() - 1].push_back(&archetype);
 		}
-	private:
+
 		Archetype* GetSingleComponentArchetype(ComponentContextBase* componentContext, const TypeID& componentTypeID)
 		{
 			const TypeID typeID = componentTypeID;
@@ -440,5 +435,4 @@ namespace decs
 		}
 
 	};
-
 }

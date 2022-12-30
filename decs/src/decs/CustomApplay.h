@@ -17,5 +17,4 @@ namespace decs
 			std::forward<F>(f), std::forward<Tuple>(t),
 			std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
 	}
-
 }

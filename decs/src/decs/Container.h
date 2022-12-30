@@ -398,7 +398,7 @@ namespace decs
 
 		inline void DestroyComponentsContexts()
 		{
-			for (auto [key, value] : m_ComponentContexts)
+			for (auto& [key, value] : m_ComponentContexts)
 				delete value;
 		}
 
@@ -526,37 +526,9 @@ namespace decs
 
 #pragma region ENTITY OBSERVERS:
 	public:
-		/*bool SetEntityCreationObserver(CreateEntityObserver* observer)
-		{
-			if (m_ObserversManager == nullptr) return false;
+		void InvokeEntitesOnCreateListeners();
 
-			return m_ObserversManager->SetEntityCreationObserver(observer);
-		}
-
-		bool SetEntityDestructionObserver(DestroyEntityObserver* observer)
-		{
-			if (m_ObserversManager == nullptr) return false;
-
-			return m_ObserversManager->SetEntityDestructionObserver(observer);
-		}
-
-		bool SetEntityActivationObserver(ActivateEntityObserver* observer)
-		{
-			if (m_ObserversManager == nullptr) return false;
-
-			return m_ObserversManager->SetEntityActivationObserver(observer);
-		}
-
-		bool SetEntityDeactivationObserver(DeactivateEntityObserver* observer)
-		{
-			if (m_ObserversManager == nullptr) return false;
-
-			return m_ObserversManager->SetEntityDeactivationObserver(observer);
-		}*/
-
-		void InvokeOnCreateListeners();
-
-		void InvokeOnDestroyListeners();
+		void InvokeEntitesOnDestroyListeners();
 
 	private:
 		inline void InvokeEntityCreationObservers(Entity& entity)

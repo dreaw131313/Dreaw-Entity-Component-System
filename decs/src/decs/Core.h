@@ -56,13 +56,4 @@ namespace decs
 	{
 		return fnv1a_64(s, c_string_lenght(s));
 	}
-
-	// Forward declaration:
-	class EntityData;
-	class Archetype;
-	class ArchetypeEdge;
-	class ComponentContainer;
-	class ContainerSettings;
-	class Container;
-	class Entity;
 }

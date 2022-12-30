@@ -24,7 +24,6 @@ namespace decs
 			uint64_t m_EntitiesCount = 0;
 
 		public:
-			inline uint64_t EntitiesCount() const { return m_EntitiesCount; }
 			inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntitiesCount(); }
 		};
 
@@ -102,7 +101,7 @@ namespace decs
 				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
 				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
 
-				for (int64_t iterationIndex = ctx.EntitiesCount() - 1; iterationIndex > -1; iterationIndex--)
+				for (int64_t iterationIndex = ctx.m_EntitiesCount - 1; iterationIndex > -1; iterationIndex--)
 				{
 					auto& entityData = entitiesData[iterationIndex];
 					if (entityData.IsActive())
@@ -142,7 +141,7 @@ namespace decs
 				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
 				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
 
-				for (int64_t iterationIndex = ctx.EntitiesCount() - 1; iterationIndex > -1; iterationIndex--)
+				for (int64_t iterationIndex = ctx.m_EntitiesCount - 1; iterationIndex > -1; iterationIndex--)
 				{
 					auto& entityData = entitiesData[iterationIndex];
 					std::get<Entity*>(tuple) = entityData.EntityPtr();
@@ -177,7 +176,6 @@ namespace decs
 		uint64_t m_ArchetypesCount_Dirty = 0;
 
 	private:
-
 		void Fetch(Container& container)
 		{
 			if (m_IsDirty || &container != m_Container)
@@ -233,7 +231,7 @@ namespace decs
 
 		inline bool ContainArchetype(Archetype* arch) { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
 
-		virtual bool TryAddArchetype(Archetype& archetype, const bool& tryAddNeighbours)
+		bool TryAddArchetype(Archetype& archetype, const bool& tryAddNeighbours)
 		{
 			if (!ContainArchetype(&archetype) && archetype.GetComponentsCount())
 			{
@@ -498,6 +496,7 @@ namespace decs
 
 		}
 
+#pragma region BATCH ITERATOR
 	public:
 		class BatchIterator
 		{
@@ -557,7 +556,7 @@ namespace decs
 					if (contextIndex == m_LastArchetypeIndex)
 						iterationsCount = m_LastIterationIndex;
 					else
-						iterationsCount = ctx.EntitiesCount();
+						iterationsCount = ctx.m_EntitiesCount;
 
 					for (; iterationIndex < iterationsCount; iterationIndex++)
 					{
@@ -606,7 +605,7 @@ namespace decs
 					if (contextIndex == m_LastArchetypeIndex)
 						iterationsCount = m_LastIterationIndex;
 					else
-						iterationsCount = ctx.EntitiesCount();
+						iterationsCount = ctx.m_EntitiesCount;
 
 					for (; iterationIndex < iterationsCount; iterationIndex++)
 					{
@@ -710,7 +709,9 @@ namespace decs
 			}
 		};
 
-	public:
+#pragma endregion
+	
+public:
 		void CreateBatchIterators(
 			std::vector<BatchIterator>& iterators,
 			const uint64_t& desiredBatchesCount,
@@ -726,7 +727,7 @@ namespace decs
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
 			{
 				archContext.ValidateEntitiesCount();
-				entitiesCount += archContext.EntitiesCount();
+				entitiesCount += archContext.m_EntitiesCount;
 			}
 
 			uint64_t realDesiredBatchSize = std::ceil((float)entitiesCount / (float)desiredBatchesCount);
@@ -760,7 +761,7 @@ namespace decs
 				for (; currentArchetypeIndex < archsCount;)
 				{
 					ArchetypeContext& ctx = m_ArchetypesContexts[currentArchetypeIndex];
-					uint64_t archAvailableEntities = ctx.EntitiesCount() - currentArchEntitiesStartIndex;
+					uint64_t archAvailableEntities = ctx.m_EntitiesCount - currentArchEntitiesStartIndex;
 
 					if (itNeededEntitiesCount < archAvailableEntities)
 					{

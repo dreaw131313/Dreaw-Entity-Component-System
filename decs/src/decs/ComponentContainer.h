@@ -71,28 +71,10 @@ namespace decs
 		virtual BaseComponentAllocator* CreateEmptyCopyOfYourself() = 0;
 
 		virtual void Clear() = 0;
-
-	};
-
-	template<typename ComponentType>
-	class ComponentAllocator : public BaseComponentAllocator
-	{
-	public:
-		ComponentAllocator()
-		{
-
-		}
-
-		~ComponentAllocator()
-		{
-
-		}
-
-		virtual inline ComponentType* GetComponent(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
 	};
 
 	template<typename DataType>
-	class StableComponentAllocator : public ComponentAllocator<DataType>
+	class StableComponentAllocator : public BaseComponentAllocator
 	{
 		using AllocationData = ComponentAllocationData<DataType>;
 	private:
@@ -344,11 +326,6 @@ namespace decs
 			AllocationData allocationData = EmplaceBack(entityID, *nodeToCopy.Data);
 
 			return ComponentCopyData(allocationData.ChunkIndex, allocationData.ElementIndex, allocationData.Component);
-		}
-
-		virtual inline DataType* GetComponent(const uint64_t& chunkIndex, const uint64_t& elementIndex) override
-		{
-			return m_Nodes(chunkIndex, elementIndex).Data;
 		}
 
 		virtual BaseComponentAllocator* CreateEmptyCopyOfYourself() override

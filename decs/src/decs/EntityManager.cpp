@@ -20,10 +20,6 @@ namespace decs
 		}
 	}
 
-	EntityManager::~EntityManager()
-	{
-	}
-
 	Entity* EntityManager::CreateEntity(Container* forContainer, const bool& isActive)
 	{
 		m_CreatedEntitiesCount += 1;

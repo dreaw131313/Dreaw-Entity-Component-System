@@ -34,7 +34,6 @@ namespace decs
 
 	private:
 		int m_ObservatorOrder = 0;
-
 	};
 
 	template<typename ComponentType>
@@ -113,5 +112,4 @@ namespace decs
 		}
 
 	};
-
 }

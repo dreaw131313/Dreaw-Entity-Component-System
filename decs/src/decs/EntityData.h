@@ -30,10 +30,5 @@ namespace decs
 		{
 
 		}
-
-		~EntityData()
-		{
-
-		}
 	};
 }

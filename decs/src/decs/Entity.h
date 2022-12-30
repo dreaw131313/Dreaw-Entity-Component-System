@@ -27,11 +27,6 @@ namespace decs
 
 		}
 
-		~Entity()
-		{
-
-		}
-
 		inline operator const EntityID& () const { return m_ID; }
 
 		inline EntityID ID() const { return m_ID; }

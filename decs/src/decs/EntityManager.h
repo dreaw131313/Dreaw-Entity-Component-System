@@ -20,8 +20,6 @@ namespace decs
 
 		EntityManager(const uint64_t& initialEntitiesCapacity);
 
-		~EntityManager();
-
 		uint64_t GetCreatedEntitiesCount() const { return m_CreatedEntitiesCount; }
 		uint64_t GetEntitiesDataCount() const { return m_enitiesDataCount; }
 		uint64_t GetFreeEntitiesCount() const { return m_FreeEntitiesCount; }

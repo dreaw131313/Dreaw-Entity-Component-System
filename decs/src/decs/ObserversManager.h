@@ -47,7 +47,6 @@ namespace decs
 		}
 
 #pragma region ENTITY OBSERVERS:
-
 	private:
 		CreateEntityObserver* m_EntityCreationObserver = nullptr;
 		DestroyEntityObserver* m_EntityDestructionObserver = nullptr;

@@ -480,7 +480,7 @@ namespace decs
 		}
 		else
 		{
-			auto archEntityData = archetype.m_EntitiesData.back();
+			auto& archEntityData = archetype.m_EntitiesData.back();
 			EntityData& lastEntityInArchetypeData = m_EntityManager->GetEntityData(archEntityData.ID());
 			uint64_t lastEntityFirstComponentIndex = lastEntityInArchetypeData.m_IndexInArchetype * archetypeComponentCount;
 
@@ -582,8 +582,8 @@ namespace decs
 		for (uint64_t i = 0; i < componentsCount; i++)
 		{
 			TypeID componentTypeID = prefabArchetype->ComponentsTypes()[i];
-			auto contextData = m_SpawnData.ComponentContexts[i];
-			auto prefabComponentData = prefabContainer->GetEntityComponentChunkElementIndex(prefabEntityData, i);
+			auto& contextData = m_SpawnData.ComponentContexts[i];
+			auto& prefabComponentData = prefabContainer->GetEntityComponentChunkElementIndex(prefabEntityData, i);
 
 			m_SpawnData.ComponentContexts[i].ComponentData = contextData.ComponentContext->GetAllocator()->CreateCopy(
 				contextData.PrefabComponentContext->GetAllocator(),
@@ -627,7 +627,7 @@ namespace decs
 		return true;
 	}
 
-	void Container::InvokeOnCreateListeners()
+	void Container::InvokeEntitesOnCreateListeners()
 	{
 		auto& archetypes = m_ArchetypesMap.m_Archetypes;
 		uint64_t archetypesCount = archetypes.size();
@@ -638,7 +638,7 @@ namespace decs
 		}
 	}
 
-	void Container::InvokeOnDestroyListeners()
+	void Container::InvokeEntitesOnDestroyListeners()
 	{
 		auto& archetypes = m_ArchetypesMap.m_Archetypes;
 		uint64_t archetypesCount = archetypes.size();
