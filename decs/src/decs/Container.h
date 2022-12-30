@@ -392,7 +392,15 @@ namespace decs
 			}
 			else
 			{
-				return static_cast<ComponentContext<ComponentType>*>(componentContext);
+				ComponentContext<ComponentType>* containedContext = dynamic_cast<ComponentContext<ComponentType>*>(componentContext);
+
+				if (containedContext == nullptr)
+				{
+					std::string errorMessage = "decs::Container contains component context with id " + std::to_string(id) + " to type other than " + typeid(ComponentType).name();
+					throw new std::runtime_error(errorMessage.c_str());
+				}
+				
+				return containedContext;
 			}
 		}
 
