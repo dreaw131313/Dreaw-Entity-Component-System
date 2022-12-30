@@ -6,6 +6,8 @@
 * Mainly use standard library, but also is using hash maps from https://github.com/skarupke/flat_hash_map repository. Which map is used can be changed in Core.h file by changing line with: ``` using ecsMap = std::unordered_map<Key, Value>; ```
 
 ## How to use **decs**
+To start use decs you need include **decs.h** header
+
 ### Creating and storing entities and components
 All entites and components are stored in class decs::Container which is giving access for method for creating and destroying entities and components.<br/>
 Component classes do not need to inherit from any class. Base types like int, float etc. can also be componenets.<br/>
