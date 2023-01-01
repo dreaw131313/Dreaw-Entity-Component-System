@@ -27,7 +27,6 @@ namespace decs
 		Container();
 
 		Container(const Container& other) = delete;
-
 		Container(Container&& other) = delete;
 
 		Container(
@@ -44,18 +43,10 @@ namespace decs
 			const bool& invokeEntityActivationStateListeners
 		);
 
-		virtual ~Container();
+		~Container();
 
-		/*Container& operator = (const Container& other)
-		{
-			return *this = Container(other);
-		}
-
-		Container& operator = (Container&& other) noexcept
-		{
-			throw std::runtime_error("Container move assignment not implemented");
-			return *this;
-		}*/
+		Container& operator = (const Container& other) = delete;
+		Container& operator = (Container&& other) = delete;
 
 	private:
 		uint64_t m_ComponentContainerChunkSize = decs::MemorySize::KiloByte * 16;
@@ -69,11 +60,10 @@ namespace decs
 		}
 
 #pragma region ENTITIES:
-	protected:
+	private:
 		bool m_HaveOwnEntityManager = false;
 		EntityManager* m_EntityManager = nullptr;
 
-	private:
 		bool m_bInvokeEntityActivationStateListeners = true;
 
 	public:
@@ -89,8 +79,6 @@ namespace decs
 		bool DestroyEntity(Entity& entity);
 
 		void DestroyOwnedEntities(const bool& invokeOnDestroyListeners = true);
-
-		// Entity utiliti methods:
 
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
@@ -116,7 +104,6 @@ namespace decs
 
 	private:
 		void DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners = true);
-
 
 #pragma endregion
 
@@ -396,7 +383,7 @@ namespace decs
 					std::string errorMessage = "decs::Container contains component context with id " + std::to_string(id) + " to type other than " + typeid(ComponentType).name();
 					throw new std::runtime_error(errorMessage.c_str());
 				}
-				
+
 				return containedContext;
 			}
 		}
@@ -508,10 +495,6 @@ namespace decs
 
 		void ReassignObservers();
 
-#pragma endregion
-
-#pragma region ENTITY OBSERVERS:
-	public:
 		void InvokeEntitesOnCreateListeners();
 
 		void InvokeEntitesOnDestroyListeners();
