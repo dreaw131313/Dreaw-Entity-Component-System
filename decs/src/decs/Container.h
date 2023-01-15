@@ -22,6 +22,7 @@ namespace decs
 	{
 		template<typename ...Types>
 		friend class View;
+		friend Entity;
 
 	public:
 		Container();

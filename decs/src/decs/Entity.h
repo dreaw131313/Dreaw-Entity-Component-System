@@ -1,6 +1,7 @@
 #pragma once
 #include "Core.h"
 #include "Container.h"
+#include "EntityManager.h"
 
 namespace decs
 {
@@ -11,7 +12,7 @@ namespace decs
 		template<typename... Args>
 		friend class View;
 		friend class Container;
-		friend class EntityManager;
+		friend EntityManager;
 
 	public:
 		Entity()
@@ -20,7 +21,10 @@ namespace decs
 		}
 
 		Entity(const EntityID& id, Container* container) :
-			m_ID(id), m_Container(container)
+			m_ID(id),
+			m_Container(container),
+			m_EntityData(&container->m_EntityManager->GetEntityData(id)),
+			m_Version(m_EntityData->m_Version)
 		{
 
 		}
@@ -53,6 +57,7 @@ namespace decs
 			if (IsValid())
 			{
 				m_Container->DestroyEntity(m_ID);
+				Invalidate();
 				return true;
 			}
 			return false;
@@ -117,15 +122,35 @@ namespace decs
 	private:
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
 		Container* m_Container = nullptr;
+		EntityData* m_EntityData = nullptr;
+		uint32_t m_Version = std::numeric_limits<uint32_t>::max();
 
 	private:
+		void Set(
+			const EntityID& id,
+			Container* container,
+			EntityData* entityData,
+			const uint32_t& version
+		)
+		{
+			m_ID = id;
+			m_Container = container;
+			m_EntityData = entityData;
+			m_Version = version;
+		}
+
 		void Invalidate()
 		{
 			m_ID = std::numeric_limits<EntityID>::max();
 			m_Container = nullptr;
+			m_EntityData = nullptr;
+			m_Version = std::numeric_limits<uint32_t>::max();
 		}
 
-		inline bool IsValid() const { return m_Container != nullptr; }
+		inline bool IsValid() const
+		{
+			return m_EntityData != nullptr /*&& m_Version == m_EntityData->m_Version*/ && m_Container != nullptr;
+		}
 	};
 }
 

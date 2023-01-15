@@ -57,7 +57,6 @@ namespace decs
 			entityData.m_CurrentArchetype = nullptr;
 			entityData.m_Version += 1;
 			entityData.m_IsAlive = false;
-			entityData.m_EntityPtr->Invalidate();
 			return true;
 		}
 		return false;
