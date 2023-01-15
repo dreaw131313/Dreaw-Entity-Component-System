@@ -99,7 +99,6 @@ namespace decs
 			return IsValid() && m_Container->RemoveComponent<T>(m_ID);
 		}
 
-
 		inline uint32_t GetVersion() const
 		{
 			if (IsValid())

@@ -59,6 +59,39 @@ namespace decs
 			m_ComponentContainerChunkSize = size;
 		}
 
+#pragma region FLAGS
+	private:
+		struct BoolSwitch final
+		{
+		public:
+			BoolSwitch(bool& boolToSwitch) :
+				m_Bool(boolToSwitch)
+			{
+			}
+
+			BoolSwitch(bool& boolToSwitch, const bool& startValue) :
+				m_Bool(boolToSwitch)
+			{
+				m_Bool = startValue;
+			}
+
+			BoolSwitch(const BoolSwitch&) = delete;
+			BoolSwitch(BoolSwitch&&) = delete;
+
+			BoolSwitch& operator=(const BoolSwitch&) = delete;
+			BoolSwitch& operator=(BoolSwitch&&) = delete;
+
+			~BoolSwitch()
+			{
+				m_Bool = !m_Bool;
+			}
+
+		private:
+			bool& m_Bool;
+		};
+
+#pragma endregion
+
 #pragma region ENTITIES:
 	private:
 		bool m_HaveOwnEntityManager = false;
@@ -182,7 +215,17 @@ namespace decs
 		/// 
 		/// </summary>
 		/// <returns>True if spawnd data preparation succeded else false.</returns>
-		void PreapareSpawnData(const uint64_t& componentsCount, Archetype* prefabArchetype);
+		void PreapareSpawnData(Archetype* prefabArchetype);
+
+		Entity* CreateEntityFromSpawnData(
+			const bool& isActive,
+			const uint64_t componentsCount,
+			const EntityData& prefabEntityData,
+			Archetype* prefabArchetype,
+			Container* prefabContainer
+		);
+
+		Archetype* FindSpawnArchetype(Archetype* prefabArchetype, Container* prefabContainer);
 
 #pragma endregion
 
@@ -242,6 +285,7 @@ namespace decs
 			if (IsEntityAlive(e))
 			{
 				EntityData& entityData = m_EntityManager->GetEntityData(e);
+				if (entityData.m_IsEntityInDestruction) return false;
 				TypeID copmonentTypeID = Type<ComponentType>::ID();
 
 				{
@@ -394,9 +438,9 @@ namespace decs
 				delete value;
 		}
 
-		inline ComponentRef& GetEntityComponentChunkElementIndex(const EntityData& data, const uint64_t& typeIndex)
+		inline ComponentRef& GetComponentRefFromArchetype(const EntityData& data, const uint64_t& componentTypeIndex)
 		{
-			uint64_t dataIndex = data.m_CurrentArchetype->GetComponentsCount() * data.m_IndexInArchetype + typeIndex;
+			uint64_t dataIndex = data.m_CurrentArchetype->GetComponentsCount() * data.m_IndexInArchetype + componentTypeIndex;
 			return data.m_CurrentArchetype->m_ComponentsRefs[dataIndex];
 		}
 
@@ -477,13 +521,6 @@ namespace decs
 			Archetype* prefabArchetype
 		);
 
-		Entity* CreateEntityFromSpawnData(
-			const bool& isActive,
-			const uint64_t componentsCount,
-			const EntityData& prefabEntityData,
-			Archetype* prefabArchetype,
-			Container* prefabContainer
-		);
 
 #pragma endregion
 

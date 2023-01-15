@@ -49,6 +49,8 @@ namespace decs
 
 		inline Container* GetContainer() const { return m_Container; }
 
+		inline bool IsValid()const { return m_Container != nullptr; }
+
 		template<typename... ComponentsTypes>
 		View& Without()
 		{
@@ -77,11 +79,12 @@ namespace decs
 		}
 
 		template<typename Callable>
-		void ForEach(Callable&& func)
+		void ForEach(Callable&& func, const bool& fetchEntities = true)
 		{
-			if (m_Container != nullptr)
+			if (!IsValid()) return;
+			if (fetchEntities)
 			{
-				Fetch(*m_Container);
+				Fetch();
 			}
 
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
@@ -117,11 +120,12 @@ namespace decs
 		}
 
 		template<typename Callable>
-		void ForEachWithEntity(Callable&& func)
+		void ForEachWithEntity(Callable&& func, const bool& fetchEntities = true)
 		{
-			if (m_Container != nullptr)
+			if (!IsValid()) return;
+			if (fetchEntities)
 			{
-				Fetch(*m_Container);
+				Fetch();
 			}
 
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
@@ -173,12 +177,11 @@ namespace decs
 		uint64_t m_ArchetypesCount_Dirty = 0;
 
 	private:
-		void Fetch(Container& container)
+		void Fetch()
 		{
-			if (m_IsDirty || &container != m_Container)
+			if (m_IsDirty)
 			{
 				m_IsDirty = false;
-				m_Container = &container;
 				Invalidate();
 			}
 
@@ -707,18 +710,17 @@ namespace decs
 		};
 
 #pragma endregion
-	
-public:
+
+	public:
 		void CreateBatchIterators(
 			std::vector<BatchIterator>& iterators,
 			const uint64_t& desiredBatchesCount,
 			const uint64_t& minBatchSize
 		)
 		{
-			if (m_Container != nullptr)
-			{
-				Fetch(*m_Container);
-			}
+			if (!IsValid()) return;
+
+				Fetch();
 
 			uint64_t entitiesCount = 0;
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
