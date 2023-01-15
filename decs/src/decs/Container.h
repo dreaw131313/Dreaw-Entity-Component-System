@@ -169,11 +169,13 @@ namespace decs
 		struct PrefabSpawnData
 		{
 		public:
+			Archetype* m_SpawnArchetype = nullptr;
 			std::vector<PrefabSpawnComponentContext> ComponentContexts;
 
 		public:
 			void Clear()
 			{
+				m_SpawnArchetype = nullptr;
 				ComponentContexts.clear();
 			}
 
@@ -221,11 +223,8 @@ namespace decs
 			const bool& isActive,
 			const uint64_t componentsCount,
 			const EntityData& prefabEntityData,
-			Archetype* prefabArchetype,
 			Container* prefabContainer
 		);
-
-		Archetype* FindSpawnArchetype(Archetype* prefabArchetype, Container* prefabContainer);
 
 #pragma endregion
 
@@ -517,8 +516,7 @@ namespace decs
 
 		void AddSpawnedEntityToArchetype(
 			const EntityID& entityID,
-			Archetype* toArchetype,
-			Archetype* prefabArchetype
+			Archetype* spawnArchetype
 		);
 
 

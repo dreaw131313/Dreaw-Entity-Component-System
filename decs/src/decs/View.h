@@ -718,11 +718,15 @@ namespace decs
 			const uint64_t& minBatchSize
 		)
 		{
-			if (!IsValid()) return;
+			if (!IsValid())
+			{
+				return;
+			}
 
-				Fetch();
+			Fetch();
 
 			uint64_t entitiesCount = 0;
+
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
 			{
 				archContext.ValidateEntitiesCount();
@@ -760,6 +764,11 @@ namespace decs
 				for (; currentArchetypeIndex < archsCount;)
 				{
 					ArchetypeContext& ctx = m_ArchetypesContexts[currentArchetypeIndex];
+					if (ctx.m_EntitiesCount == 0)
+					{
+						currentArchetypeIndex += 1;
+						continue;
+					}
 					uint64_t archAvailableEntities = ctx.m_EntitiesCount - currentArchEntitiesStartIndex;
 
 					if (itNeededEntitiesCount < archAvailableEntities)
