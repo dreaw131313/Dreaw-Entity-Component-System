@@ -147,6 +147,8 @@ namespace decs
 			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
 			{
 				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
+				EntityData& data = m_EntityManager->GetEntityData(archetypeEntityData.m_ID);
+				data.m_IsEntityInDestruction = true;
 				InvokeEntityDestructionObservers(*archetypeEntityData.EntityPtr());
 
 				for (uint64_t i = 0; i < archetypeComponentsCount; i++)
@@ -157,6 +159,7 @@ namespace decs
 					componentDataIndex += 1;
 				}
 
+				data.m_IsEntityInDestruction = false;
 				m_EntityManager->DestroyEntity(archetypeEntityData.ID());
 			}
 		}
