@@ -22,7 +22,7 @@ namespace decs
 		uint64_t GetEntitiesDataCount() const { return m_enitiesDataCount; }
 		uint64_t GetFreeEntitiesCount() const { return m_FreeEntitiesCount; }
 
-		Entity* CreateEntity(Container* forContainer, const bool& isActive = true);
+		EntityID CreateEntity(const bool& isActive = true);
 
 		bool DestroyEntity(const EntityID& entity);
 
@@ -89,7 +89,6 @@ namespace decs
 		inline const EntityData& GetConstEntityData(const EntityID& entity) const { return m_EntityData[entity]; }
 	private:
 		ChunkedVector<EntityData> m_EntityData = { 1000 };
-		ChunkedVector<Entity> m_Entities = { 1000 };
 
 		EntityID m_CreatedEntitiesCount = 0;
 		uint64_t m_enitiesDataCount = 0;

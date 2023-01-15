@@ -132,7 +132,10 @@ namespace decs
 				archContext.ValidateEntitiesCount();
 
 			uint64_t contextCount = m_ArchetypesContexts.size();
+			Entity iteratedEntity = {};
 			std::tuple<Entity*, ComponentsTypes*...> tuple = {};
+			std::get<Entity*>(tuple) = &iteratedEntity;
+
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
@@ -145,9 +148,12 @@ namespace decs
 				for (int64_t iterationIndex = ctx.m_EntitiesCount - 1; iterationIndex > -1; iterationIndex--)
 				{
 					auto& entityData = entitiesData[iterationIndex];
-					std::get<Entity*>(tuple) = entityData.EntityPtr();
 					if (entityData.IsActive())
 					{
+						iteratedEntity.Set(
+							entityData.ID(),
+							m_Container
+						);
 						SetWithEntityTupleElements<ComponentsTypes...>(
 							tuple,
 							0,
@@ -581,9 +587,12 @@ namespace decs
 			{
 				if (!m_IsValid) return;
 
+				Entity iteratedEntity = {};
 				std::tuple<Entity*, ComponentsTypes*...> tuple = {};
+				std::get<Entity*>(tuple) = &iteratedEntity;
 				uint64_t contextIndex = m_FirstArchetypeIndex;
 				uint64_t contextCount = m_LastArchetypeIndex + 1;
+				Container* container = m_View->m_Container;
 
 				for (; contextIndex < contextCount; contextIndex++)
 				{
@@ -612,7 +621,10 @@ namespace decs
 						auto& entityData = entitiesData[iterationIndex];
 						if (entityData.IsActive())
 						{
-							std::get<Entity*>(tuple) = entityData.EntityPtr();
+							iteratedEntity.Set(
+								entityData.ID(),
+								container
+							);
 							SetWithEntityTupleElements<ComponentsTypes...>(
 								tuple,
 								0,

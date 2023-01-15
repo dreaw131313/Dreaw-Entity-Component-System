@@ -1,7 +1,7 @@
 #pragma once
 #include "Core.h"
 #include "Container.h"
-#include "EntityManager.h"
+#include "Type.h"
 
 namespace decs
 {
@@ -9,10 +9,9 @@ namespace decs
 
 	class Entity final
 	{
-		template<typename... Args>
+		template<typename ...Types>
 		friend class View;
 		friend class Container;
-		friend EntityManager;
 
 	public:
 		Entity()
@@ -56,7 +55,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				m_Container->DestroyEntity(m_ID);
+				m_Container->DestroyEntity(*this);
 				Invalidate();
 				return true;
 			}
@@ -101,15 +100,12 @@ namespace decs
 		template<typename T>
 		inline bool RemoveComponent()
 		{
-			return IsValid() && m_Container->RemoveComponent<T>(m_ID);
+			return IsValid() && m_Container->RemoveComponent(*this, Type<T>::ID());
 		}
 
 		inline uint32_t GetVersion() const
 		{
-			if (IsValid())
-				return m_Container->GetEntityVersion(m_ID);
-
-			return std::numeric_limits<uint32_t>::max();
+			return m_Version;
 		}
 
 		inline uint32_t GetComponentsCount()
@@ -126,20 +122,15 @@ namespace decs
 		uint32_t m_Version = std::numeric_limits<uint32_t>::max();
 
 	private:
-		void Set(
-			const EntityID& id,
-			Container* container,
-			EntityData* entityData,
-			const uint32_t& version
-		)
+		void Set(const EntityID& id, Container* container)
 		{
 			m_ID = id;
 			m_Container = container;
-			m_EntityData = entityData;
-			m_Version = version;
+			m_EntityData = &container->m_EntityManager->GetEntityData(id);
+			m_Version = m_EntityData->m_Version;
 		}
 
-		void Invalidate()
+		inline void Invalidate()
 		{
 			m_ID = std::numeric_limits<EntityID>::max();
 			m_Container = nullptr;
@@ -149,7 +140,7 @@ namespace decs
 
 		inline bool IsValid() const
 		{
-			return m_EntityData != nullptr /*&& m_Version == m_EntityData->m_Version*/ && m_Container != nullptr;
+			return m_EntityData != nullptr && m_Version == m_EntityData->m_Version && m_Container != nullptr;
 		}
 	};
 }

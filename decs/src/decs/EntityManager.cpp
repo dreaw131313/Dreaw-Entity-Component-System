@@ -10,7 +10,6 @@ namespace decs
 	}
 
 	EntityManager::EntityManager(const uint64_t& initialEntitiesCapacity):
-		m_Entities(initialEntitiesCapacity),
 		m_EntityData(initialEntitiesCapacity)
 	{
 		if (initialEntitiesCapacity > 0)
@@ -19,7 +18,7 @@ namespace decs
 		}
 	}
 
-	Entity* EntityManager::CreateEntity(Container* forContainer, const bool& isActive)
+	EntityID EntityManager::CreateEntity(const bool& isActive)
 	{
 		m_CreatedEntitiesCount += 1;
 		if (m_FreeEntitiesCount > 0)
@@ -31,17 +30,13 @@ namespace decs
 			entityData.m_IsAlive = true;
 			entityData.m_IsActive = isActive;
 
-			entityData.m_EntityPtr->m_Container = forContainer;
-			entityData.m_EntityPtr->m_ID = entityData.m_ID;
-
-			return entityData.m_EntityPtr;
+			return entityData.m_ID;
 		}
 		else
 		{
 			m_enitiesDataCount += 1;
 			EntityData& entityData = m_EntityData.EmplaceBack(m_EntityData.Size(), isActive);
-			entityData.m_EntityPtr = &m_Entities.EmplaceBack(entityData.m_ID, forContainer);
-			return entityData.m_EntityPtr;
+			return entityData.m_ID;
 		}
 	}
 

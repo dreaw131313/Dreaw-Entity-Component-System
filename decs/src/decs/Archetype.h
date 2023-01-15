@@ -58,7 +58,6 @@ namespace decs
 	public:
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
 		bool m_IsActive = false;
-		Entity* m_Entity = nullptr;
 
 	public:
 		ArchetypeEntityData()
@@ -68,19 +67,16 @@ namespace decs
 
 		ArchetypeEntityData(
 			const EntityID& id,
-			const bool& isActive,
-			Entity* entity
+			const bool& isActive
 		) :
 			m_ID(id),
-			m_IsActive(isActive),
-			m_Entity(entity)
+			m_IsActive(isActive)
 		{
 
 		}
 
 		inline EntityID ID() const noexcept { return m_ID; }
 		inline bool IsActive() const noexcept { return m_IsActive; }
-		inline Entity* EntityPtr() noexcept { return m_Entity; }
 	};
 
 	class Archetype final

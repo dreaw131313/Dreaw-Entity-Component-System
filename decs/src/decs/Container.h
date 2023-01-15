@@ -22,7 +22,7 @@ namespace decs
 	{
 		template<typename ...Types>
 		friend class View;
-		friend Entity;
+		friend class Entity;
 
 	public:
 		Container();
@@ -106,10 +106,9 @@ namespace decs
 			return m_EntityManager->GetCreatedEntitiesCount();
 		}
 
-		Entity& CreateEntity(const bool& isActive = true);
+		Entity CreateEntity(const bool& isActive = true);
 
-		bool DestroyEntity(const EntityID& entityID);
-
+	public:
 		bool DestroyEntity(Entity& entity);
 
 		void DestroyOwnedEntities(const bool& invokeOnDestroyListeners = true);
@@ -195,14 +194,14 @@ namespace decs
 		PrefabSpawnData m_SpawnData = {};
 
 	public:
-		Entity* Spawn(
+		Entity Spawn(
 			const Entity& prefab,
 			const bool& isActive = true
 		);
 
 		bool Spawn(
 			const Entity& prefab,
-			std::vector<Entity*>& spawnedEntities,
+			std::vector<Entity>& spawnedEntities,
 			const uint64_t& spawnCount,
 			const bool& areActive = true
 		);
@@ -220,8 +219,8 @@ namespace decs
 		/// <returns>True if spawnd data preparation succeded else false.</returns>
 		void PreapareSpawnData(Archetype* prefabArchetype);
 
-		Entity* CreateEntityFromSpawnData(
-			const bool& isActive,
+		void CreateEntityFromSpawnData(
+			Entity& entity,
 			const uint64_t componentsCount,
 			const EntityData& prefabEntityData,
 			Container* prefabContainer
@@ -328,21 +327,20 @@ namespace decs
 						true
 					);
 				}
-
-				componentContext->InvokeOnCreateComponent(*createResult.Component, *entityData.m_EntityPtr);
+				InvokeOnCreateComponentFromEntityID(componentContext, createResult.Component, e);
 
 				return createResult.Component;
 			}
 			return nullptr;
 		}
 
-		template<typename ComponentType>
-		inline bool RemoveComponent(const EntityID& e)
+		bool RemoveComponent(Entity& e, const TypeID& componentTypeID);
+
+		/*template<typename ComponentType>
+		inline bool RemoveComponent(const Entity& e)
 		{
 			return RemoveComponent(e, Type<ComponentType>::ID());
-		}
-
-		bool RemoveComponent(const EntityID& e, const TypeID& componentTypeID);
+		}*/
 
 		template<typename ComponentType>
 		ComponentType* GetComponent(const EntityID& e) const
@@ -458,6 +456,8 @@ namespace decs
 		}
 
 		void ClearComponentsContainers();
+
+		void InvokeOnCreateComponentFromEntityID(ComponentContextBase* componentContext, void* componentPtr, const EntityID& id);
 #pragma endregion
 
 #pragma region ARCHETYPES:
@@ -572,6 +572,7 @@ namespace decs
 
 		void InvokeArchetypeOnDestroyListeners(Archetype& archetype);
 #pragma endregion
+
 
 	};
 }

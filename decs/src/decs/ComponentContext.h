@@ -7,6 +7,7 @@
 namespace decs
 {
 	class Entity;
+	class Container;
 
 	class ComponentContextBase
 	{
@@ -88,6 +89,22 @@ namespace decs
 				m_Observer->m_DestroyObserver->OnDestroyComponent(component, entity);
 			}
 		}
+
+		/*void InvokeOnCreateComponent(ComponentType& component, const EntityID& entityID, Container* container)
+		{
+			if (m_Observer != nullptr && m_Observer->m_CreateObserver != nullptr)
+			{
+				m_Observer->m_CreateObserver->OnCreateComponent(component, Entity(entityID, container));
+			}
+		}
+
+		void InvokeOnDestroyComponent(ComponentType& component, const EntityID& entityID, Container* container)
+		{
+			if (m_Observer != nullptr && m_Observer->m_DestroyObserver != nullptr)
+			{
+				m_Observer->m_DestroyObserver->OnDestroyComponent(component, Entity(entityID, container));
+			}
+		}*/
 
 		virtual void SetObserverManager(ObserversManager* observerManager) override
 		{

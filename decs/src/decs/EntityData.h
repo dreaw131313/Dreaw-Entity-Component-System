@@ -19,8 +19,6 @@ namespace decs
 		class Archetype* m_CurrentArchetype = nullptr;
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 
-		Entity* m_EntityPtr = nullptr;
-
 	public:
 		EntityData()
 		{
