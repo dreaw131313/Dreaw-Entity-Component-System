@@ -74,7 +74,7 @@ namespace decs
 		if (entity.IsAlive() && entity.m_Container == this)
 		{
 			EntityID entityID = entity.ID();
-			EntityData& entityData = m_EntityManager->GetEntityData(entityID);
+			EntityData& entityData = *entity.m_EntityData;
 			if (entityData.m_IsEntityInDestruction) return false;
 			entityData.m_IsEntityInDestruction = true;
 
@@ -102,9 +102,19 @@ namespace decs
 
 					if (result.IsValid())
 					{
-						EntityData& lastEntityDataInContainer = m_EntityManager->GetEntityData(result.eID);
+						EntityData& fixedEntityData = m_EntityManager->GetEntityData(result.eID);
+						uint64_t compTypeIndexInFixedEntityArchetype;
+						if (entityData.m_CurrentArchetype == fixedEntityData.m_CurrentArchetype)
+						{
+							compTypeIndexInFixedEntityArchetype = i;
+						}
+						else
+						{
+							compTypeIndexInFixedEntityArchetype = fixedEntityData.m_CurrentArchetype->m_TypeIDsIndexes[currentArchetype->m_TypeIDs[i]];
+						}
+
 						UpdateEntityComponentAccesDataInArchetype(
-							lastEntityDataInContainer,
+							fixedEntityData,
 							result.ChunkIndex,
 							result.ElementIndex,
 							allocator->GetComponentAsVoid(result.ChunkIndex, result.ElementIndex),
