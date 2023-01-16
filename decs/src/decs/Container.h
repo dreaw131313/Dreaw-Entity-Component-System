@@ -50,8 +50,8 @@ namespace decs
 		Container& operator = (Container&& other) = delete;
 
 	private:
-		uint64_t m_ComponentContainerChunkSize = decs::MemorySize::KiloByte * 16;
-		ChunkSizeType m_ContainerSizeType = ChunkSizeType::BytesCount;
+		uint64_t m_ComponentContainerChunkSize = 1000;
+		ChunkSizeType m_ContainerSizeType = ChunkSizeType::ElementsCount;
 
 	public:
 		inline void SetDefaultComponentChunkSize(const uint64_t& size, const ChunkSizeType& sizeType)
@@ -109,9 +109,10 @@ namespace decs
 		Entity CreateEntity(const bool& isActive = true);
 
 	public:
-		bool DestroyEntity(Entity& entity);
-
 		void DestroyOwnedEntities(const bool& invokeOnDestroyListeners = true);
+
+	private:
+		bool DestroyEntity(Entity& entity);
 
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
@@ -135,7 +136,6 @@ namespace decs
 			return m_EntityManager->GetComponentsCount(entity);
 		}
 
-	private:
 		void DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners = true);
 
 #pragma endregion
@@ -278,6 +278,10 @@ namespace decs
 			return true;
 		}
 
+	private:
+		ecsMap<TypeID, ComponentContextBase*> m_ComponentContexts;
+
+	private:
 		template<typename ComponentType, typename ...Args>
 		ComponentType* AddComponent(const EntityID& e, Args&&... args)
 		{
@@ -369,10 +373,6 @@ namespace decs
 			return false;
 		}
 
-	private:
-		ecsMap<TypeID, ComponentContextBase*> m_ComponentContexts;
-
-	private:
 		template<typename ComponentType>
 		ComponentContext<ComponentType>* GetOrCreateComponentContext()
 		{
@@ -489,7 +489,7 @@ namespace decs
 		void RemoveEntityFromArchetype(Archetype& archetype, EntityData& entityData);
 
 		void UpdateEntityComponentAccesDataInArchetype(
-			const EntityID& entityID,
+			EntityData& data,
 			const uint64_t& compChunkIndex,
 			const uint64_t& compElementIndex,
 			void* compPtr,

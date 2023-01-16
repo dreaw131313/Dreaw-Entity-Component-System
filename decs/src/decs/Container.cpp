@@ -53,6 +53,22 @@ namespace decs
 		return e;
 	}
 
+
+	void Container::DestroyOwnedEntities(const bool& invokeOnDestroyListeners)
+	{
+		auto& archetypes = m_ArchetypesMap.m_Archetypes;
+
+		uint64_t archetypesCount = archetypes.size();
+		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
+		{
+			Archetype& archetype = *archetypes[archetypeIdx];
+			DestroyEntitesInArchetypes(archetype);
+			archetype.Reset();
+		}
+
+		ClearComponentsContainers();
+	}
+
 	bool Container::DestroyEntity(Entity& entity)
 	{
 		if (entity.IsAlive() && entity.m_Container == this)
@@ -86,9 +102,9 @@ namespace decs
 
 					if (result.IsValid())
 					{
-						uint64_t lastEntityIDInContainer = result.eID;
+						EntityData& lastEntityDataInContainer = m_EntityManager->GetEntityData(result.eID);
 						UpdateEntityComponentAccesDataInArchetype(
-							lastEntityIDInContainer,
+							lastEntityDataInContainer,
 							result.ChunkIndex,
 							result.ElementIndex,
 							allocator->GetComponentAsVoid(result.ChunkIndex, result.ElementIndex),
@@ -106,21 +122,6 @@ namespace decs
 		}
 
 		return false;
-	}
-
-	void Container::DestroyOwnedEntities(const bool& invokeOnDestroyListeners)
-	{
-		auto& archetypes = m_ArchetypesMap.m_Archetypes;
-
-		uint64_t archetypesCount = archetypes.size();
-		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
-		{
-			Archetype& archetype = *archetypes[archetypeIdx];
-			DestroyEntitesInArchetypes(archetype);
-			archetype.Reset();
-		}
-
-		ClearComponentsContainers();
 	}
 
 	void Container::DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners)
@@ -395,9 +396,7 @@ namespace decs
 
 		EntityID entityID = entity.ID();
 		EntityData& entityData = m_EntityManager->GetEntityData(entityID);
-		if (entityData.m_IsEntityInDestruction) return false;
-
-		if (entityData.m_CurrentArchetype == nullptr) return false;
+		if (entityData.m_IsEntityInDestruction || entityData.m_CurrentArchetype == nullptr) return false;
 
 		auto compIdxInArch = entityData.m_CurrentArchetype->m_TypeIDsIndexes.find(componentTypeID);
 		if (compIdxInArch == entityData.m_CurrentArchetype->m_TypeIDsIndexes.end())return false;
@@ -420,12 +419,23 @@ namespace decs
 
 		if (result.IsValid())
 		{
+			uint64_t compTypeIndexInFixedEntityArchetype;
+			EntityData& fixedEntity = m_EntityManager->GetEntityData(result.eID);
+			if (entityData.m_CurrentArchetype == fixedEntity.m_CurrentArchetype)
+			{
+				compTypeIndexInFixedEntityArchetype = compIdxInArch->second;
+			}
+			else
+			{
+				compTypeIndexInFixedEntityArchetype = fixedEntity.m_CurrentArchetype->m_TypeIDsIndexes[componentTypeID];
+			}
+
 			UpdateEntityComponentAccesDataInArchetype(
-				result.eID,
+				fixedEntity,
 				result.ChunkIndex,
 				result.ElementIndex,
 				allocator->GetComponentAsVoid(result.ChunkIndex, result.ElementIndex),
-				compIdxInArch->second
+				compTypeIndexInFixedEntityArchetype
 			);
 		}
 
@@ -559,15 +569,13 @@ namespace decs
 	}
 
 	void Container::UpdateEntityComponentAccesDataInArchetype(
-		const EntityID& entityID,
+		EntityData& data,
 		const uint64_t& compChunkIndex,
 		const uint64_t& compElementIndex,
 		void* compPtr,
 		const uint64_t& typeIndex
 	)
 	{
-		EntityData& data = m_EntityManager->GetEntityData(entityID);
-
 		uint64_t compDataIndex = data.m_IndexInArchetype * data.m_CurrentArchetype->GetComponentsCount() + typeIndex;
 
 		auto& compData = data.m_CurrentArchetype->m_ComponentsRefs[compDataIndex];

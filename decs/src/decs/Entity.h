@@ -140,7 +140,7 @@ namespace decs
 
 		inline bool IsValid() const
 		{
-			return m_EntityData != nullptr && m_Version == m_EntityData->m_Version && m_Container != nullptr;
+			return m_EntityData != nullptr && m_Version == m_EntityData->m_Version;
 		}
 	};
 }
