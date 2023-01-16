@@ -110,7 +110,7 @@ namespace decs
 						}
 						else
 						{
-							compTypeIndexInFixedEntityArchetype = fixedEntityData.m_CurrentArchetype->m_TypeIDsIndexes[currentArchetype->m_TypeIDs[i]];
+							compTypeIndexInFixedEntityArchetype = fixedEntityData.m_CurrentArchetype->FindTypeIndex(currentArchetype->m_TypeIDs[i]);
 						}
 
 						UpdateEntityComponentAccesDataInArchetype(
@@ -437,7 +437,8 @@ namespace decs
 			}
 			else
 			{
-				compTypeIndexInFixedEntityArchetype = fixedEntity.m_CurrentArchetype->m_TypeIDsIndexes[componentTypeID];
+				//compTypeIndexInFixedEntityArchetype = fixedEntity.m_CurrentArchetype->m_TypeIDsIndexes[componentTypeID];
+				compTypeIndexInFixedEntityArchetype = fixedEntity.m_CurrentArchetype->FindTypeIndex(componentTypeID);
 			}
 
 			UpdateEntityComponentAccesDataInArchetype(
@@ -494,7 +495,8 @@ namespace decs
 			}
 			else
 			{
-				uint64_t typeIndexInOldArchetype = oldArchetype.m_TypeIDsIndexes[newArchetype.ComponentsTypes()[compIdx]];
+				//uint64_t typeIndexInOldArchetype = oldArchetype.m_TypeIDsIndexes[currentCompID];
+				uint64_t typeIndexInOldArchetype = oldArchetype.FindTypeIndex(currentCompID);
 				uint64_t compDataIndexOldArchetype = firstCompIndexInOldArchetype + typeIndexInOldArchetype;
 				newArchetype.m_ComponentsRefs.emplace_back(oldArchetype.m_ComponentsRefs[compDataIndexOldArchetype]);
 			}
@@ -561,7 +563,6 @@ namespace decs
 			uint64_t lastEntityFirstComponentIndex = lastEntityInArchetypeData.m_IndexInArchetype * archetypeComponentCount;
 
 			lastEntityInArchetypeData.m_IndexInArchetype = entityData.m_IndexInArchetype;
-
 
 			for (uint64_t i = 0; i < archetypeComponentCount; i++)
 			{

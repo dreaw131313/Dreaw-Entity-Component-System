@@ -143,6 +143,19 @@ namespace decs
 			return m_TypeIDsIndexes.find(typeID) != m_TypeIDsIndexes.end();
 		}
 
+		inline uint64_t FindTypeIndex(TypeID typeID) const
+		{
+			if (m_ComponentsCount < 40)
+			{
+				for (uint64_t i = 0; i < m_ComponentsCount; i++)
+					if (m_TypeIDs[i] == typeID) return i;
+
+				return std::numeric_limits<uint64_t>::max();
+			}
+
+			return m_TypeIDsIndexes.find(typeID)->second;
+		}
+
 	private:
 		void Reset()
 		{

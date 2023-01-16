@@ -289,7 +289,7 @@ namespace decs
 			{
 				EntityData& entityData = m_EntityManager->GetEntityData(e);
 				if (entityData.m_IsEntityInDestruction) return false;
-				TypeID copmonentTypeID = Type<ComponentType>::ID();
+				constexpr TypeID copmonentTypeID = Type<ComponentType>::ID();
 
 				{
 					auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
@@ -506,7 +506,7 @@ namespace decs
 		{
 			EntityData& data = m_EntityManager->GetEntityData(entityID);
 
-			uint64_t compDataIndex = data.m_CurrentArchetype->m_TypeIDsIndexes[Type<ComponentType>::ID()];
+			uint64_t compDataIndex = data.m_CurrentArchetype->FindTypeIndex(Type<ComponentType>::ID());
 
 			auto& compData = data.m_CurrentArchetype->m_ComponentsRefs[compDataIndex];
 
