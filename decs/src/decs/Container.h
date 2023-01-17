@@ -285,12 +285,12 @@ namespace decs
 		template<typename ComponentType, typename ...Args>
 		ComponentType* AddComponent(const EntityID& e, Args&&... args)
 		{
-			if (IsEntityAlive(e))
-			{
-				EntityData& entityData = m_EntityManager->GetEntityData(e);
-				if (entityData.m_IsEntityInDestruction) return false;
-				constexpr TypeID copmonentTypeID = Type<ComponentType>::ID();
+			constexpr TypeID copmonentTypeID = Type<ComponentType>::ID();
+			if (e >= m_EntityManager->GetEntitiesDataCount()) return nullptr;
+			EntityData& entityData = m_EntityManager->GetEntityData(e);
 
+			if (entityData.m_IsAlive && !entityData.m_IsEntityInDestruction)
+			{
 				{
 					auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
 					if (currentComponent != nullptr) return currentComponent;
@@ -328,7 +328,8 @@ namespace decs
 						createResult.ElementIndex,
 						copmonentTypeID,
 						createResult.Component,
-						true
+						true,
+						std::numeric_limits<uint64_t>::max()
 					);
 				}
 				InvokeOnCreateComponentFromEntityID(componentContext, createResult.Component, e);
@@ -339,12 +340,6 @@ namespace decs
 		}
 
 		bool RemoveComponent(Entity& e, const TypeID& componentTypeID);
-
-		/*template<typename ComponentType>
-		inline bool RemoveComponent(const Entity& e)
-		{
-			return RemoveComponent(e, Type<ComponentType>::ID());
-		}*/
 
 		template<typename ComponentType>
 		ComponentType* GetComponent(const EntityID& e) const
@@ -443,15 +438,15 @@ namespace decs
 		}
 
 		template<typename ComponentType>
-		ComponentType* GetComponentWithoutCheckingIsAlive(const EntityData& data) const
+		inline ComponentType* GetComponentWithoutCheckingIsAlive(const EntityData& data) const
 		{
 			Archetype* archetype = data.m_CurrentArchetype;
 			if (archetype == nullptr) return nullptr;
 
-			auto it = archetype->m_TypeIDsIndexes.find(Type<ComponentType>::ID());
-			if (it == archetype->m_TypeIDsIndexes.end()) return nullptr;
+			uint64_t compIndex = archetype->FindTypeIndex<ComponentType>();
+			if (compIndex == std::numeric_limits<uint64_t>::max()) return nullptr;
 
-			uint64_t dataIndex = archetype->GetComponentsCount() * data.m_IndexInArchetype + it->second;
+			uint64_t dataIndex = archetype->GetComponentsCount() * data.m_IndexInArchetype + compIndex;
 			return reinterpret_cast<ComponentType*>(archetype->m_ComponentsRefs[dataIndex].ComponentPointer);
 		}
 
@@ -474,8 +469,9 @@ namespace decs
 			const uint64_t& newCompChunkIndex,
 			const uint64_t& newCompElementIndex,
 			const TypeID& compTypeID,
-			void* newCompPtr = nullptr,
-			const bool& bIsNewComponentAdded = true
+			void* newCompPtr,
+			const bool& bIsNewComponentAdded,
+			const uint64_t& removedComponentIndex
 		);
 
 		void AddEntityToSingleComponentArchetype(

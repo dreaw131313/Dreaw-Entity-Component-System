@@ -153,7 +153,29 @@ namespace decs
 				return std::numeric_limits<uint64_t>::max();
 			}
 
-			return m_TypeIDsIndexes.find(typeID)->second;
+			auto it = m_TypeIDsIndexes.find(typeID);
+			if (it == m_TypeIDsIndexes.end())
+				return std::numeric_limits<uint64_t>::max();
+
+			return it->second;
+		}
+		template<typename T>
+		inline uint64_t FindTypeIndex() const
+		{
+			constexpr TypeID typeID = Type<T>::ID();
+			if (m_ComponentsCount < 40)
+			{
+				for (uint64_t i = 0; i < m_ComponentsCount; i++)
+					if (m_TypeIDs[i] == typeID) return i;
+
+				return std::numeric_limits<uint64_t>::max();
+			}
+
+			auto it = m_TypeIDsIndexes.find(typeID);
+			if (it == m_TypeIDsIndexes.end())
+				return std::numeric_limits<uint64_t>::max();
+
+			return it->second;
 		}
 
 	private:
@@ -365,11 +387,18 @@ namespace decs
 			}
 
 			Archetype* newArchetype = new Archetype();
+			bool isNewComponentTypeAdded = false;
+
 			for (uint32_t i = 0; i < toArchetype.GetComponentsCount(); i++)
 			{
+				TypeID currentTypeID = toArchetype.m_TypeIDs[i];
+				if (!isNewComponentTypeAdded && currentTypeID > addedComponentTypeID)
+				{
+					isNewComponentTypeAdded = true;
+					newArchetype->AddTypeID(addedComponentTypeID, componentContainer);
+				}
 				newArchetype->AddTypeID(toArchetype.m_TypeIDs[i], toArchetype.m_ComponentContexts[i]);
 			}
-			newArchetype->AddTypeID(addedComponentTypeID, componentContainer);
 
 			MakeArchetypeEdges(*newArchetype);
 			AddArchetypeToCorrectContainers(*newArchetype);

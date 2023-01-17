@@ -464,7 +464,8 @@ namespace decs
 				std::numeric_limits<uint64_t>::max(),
 				componentTypeID,
 				nullptr,
-				false
+				false,
+				compIdxInArch->second
 			);
 		}
 
@@ -478,27 +479,54 @@ namespace decs
 		const uint64_t& newCompElementIndex,
 		const TypeID& compTypeID,
 		void* newCompPtr,
-		const bool& bIsNewComponentAdded
+		const bool& bIsNewComponentAdded,
+		const uint64_t& removedComponentIndex
 	)
 	{
 		Archetype& oldArchetype = *entityData.m_CurrentArchetype;
+
 		uint64_t firstCompIndexInOldArchetype = entityData.m_IndexInArchetype * oldArchetype.GetComponentsCount();
 		newArchetype.m_EntitiesData.emplace_back(oldArchetype.m_EntitiesData[entityData.m_IndexInArchetype]);
 
-		for (uint64_t compIdx = 0; compIdx < newArchetype.GetComponentsCount(); compIdx++)
-		{
-			TypeID currentCompID = newArchetype.ComponentsTypes()[compIdx];
+		const TypeID* componentTypes = newArchetype.ComponentsTypes();
+		uint64_t componentsCount = newArchetype.GetComponentsCount();
 
-			if (bIsNewComponentAdded && currentCompID == compTypeID)
+		uint64_t oldArchetypeComponentIndex = 0;
+		auto& oldComponentRefs = oldArchetype.m_ComponentsRefs;
+		auto& newComponentRefs = newArchetype.m_ComponentsRefs;
+
+		if (bIsNewComponentAdded)
+		{
+			for (uint64_t compIdx = 0; compIdx < componentsCount; compIdx++)
 			{
-				newArchetype.m_ComponentsRefs.emplace_back(newCompChunkIndex, newCompElementIndex, newCompPtr);
+				TypeID currentCompID = componentTypes[compIdx];
+
+				if (currentCompID == compTypeID)
+				{
+					newArchetype.m_ComponentsRefs.emplace_back(newCompChunkIndex, newCompElementIndex, newCompPtr);
+				}
+				else
+				{
+					uint64_t compDataIndexOldArchetype = firstCompIndexInOldArchetype + oldArchetypeComponentIndex;
+					newComponentRefs.emplace_back(oldComponentRefs[compDataIndexOldArchetype]);
+					oldArchetypeComponentIndex += 1;
+				}
 			}
-			else
+		}
+		else
+		{
+			for (uint64_t compIdx = 0; compIdx < removedComponentIndex; compIdx++)
 			{
-				//uint64_t typeIndexInOldArchetype = oldArchetype.m_TypeIDsIndexes[currentCompID];
-				uint64_t typeIndexInOldArchetype = oldArchetype.FindTypeIndex(currentCompID);
-				uint64_t compDataIndexOldArchetype = firstCompIndexInOldArchetype + typeIndexInOldArchetype;
-				newArchetype.m_ComponentsRefs.emplace_back(oldArchetype.m_ComponentsRefs[compDataIndexOldArchetype]);
+				uint64_t compDataIndexOldArchetype = firstCompIndexInOldArchetype + oldArchetypeComponentIndex;
+				newComponentRefs.emplace_back(oldComponentRefs[compDataIndexOldArchetype]);
+				oldArchetypeComponentIndex += 1;
+			}
+			oldArchetypeComponentIndex += 1;
+			for (uint64_t compIdx = 0; compIdx < componentsCount; compIdx++)
+			{
+				uint64_t compDataIndexOldArchetype = firstCompIndexInOldArchetype + oldArchetypeComponentIndex;
+				newComponentRefs.emplace_back(oldComponentRefs[compDataIndexOldArchetype]);
+				oldArchetypeComponentIndex += 1;
 			}
 		}
 
