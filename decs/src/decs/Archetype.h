@@ -88,7 +88,7 @@ namespace decs
 		friend 	class ViewBatchIterator;
 
 	private:
-		static constexpr uint64_t m_MinComponentsInArchetypeToPerformMapLookup = 30;
+		static constexpr uint64_t m_MinComponentsInArchetypeToPerformMapLookup = 20;
 
 	public:
 		uint32_t m_ComponentsCount = 0; // number of components for each entity
