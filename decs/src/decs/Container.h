@@ -517,7 +517,7 @@ namespace decs
 		}
 
 		void AddSpawnedEntityToArchetype(
-			const EntityID& entityID,
+			EntityData& data,
 			Archetype* spawnArchetype
 		);
 

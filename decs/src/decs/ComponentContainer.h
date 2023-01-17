@@ -329,12 +329,26 @@ namespace decs
 			return ComponentCopyData(allocationData.ChunkIndex, allocationData.ElementIndex, allocationData.Component);
 		}
 
-
 		virtual ComponentCopyData CreateCopy(const EntityID& entityID, void* voidCompPtr) override
 		{
 			DataType* component = reinterpret_cast<DataType*>(voidCompPtr);
-			AllocationData allocationData = EmplaceBack(entityID, *component);
-			return ComponentCopyData(allocationData.ChunkIndex, allocationData.ElementIndex, allocationData.Component);
+
+			Chunk* chunk = nullptr;
+			if (m_ChunksWithFreeSpaces.size() > 0)
+			{
+				chunk = m_ChunksWithFreeSpaces[0];
+			}
+			else
+			{
+				chunk = CreateChunk();
+			}
+
+			auto chunkAllocationData = chunk->Add(*component);
+			auto nodeAllocationData = m_Nodes.EmplaceBack_CR(entityID, chunk, chunkAllocationData.Data, chunkAllocationData.Index);
+
+			RemoveChunkFromChunksWithFreeSpaces(chunk);
+
+			return ComponentCopyData(nodeAllocationData.ChunkIndex, nodeAllocationData.ElementIndex, chunkAllocationData.Data);
 		}
 
 		virtual BaseComponentAllocator* CreateEmptyCopyOfYourself() override

@@ -278,7 +278,7 @@ namespace decs
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
 				auto& componentContext = m_SpawnData.ComponentContexts[i];
-				m_SpawnData.ComponentContexts[i].ComponentContext->InvokeOnCreateComponent_S(
+				componentContext.ComponentContext->InvokeOnCreateComponent_S(
 					componentContext.ComponentData.Component,
 					spawnedEntity
 				);
@@ -394,16 +394,13 @@ namespace decs
 		for (uint64_t i = 0; i < componentsCount; i++)
 		{
 			auto& contextData = m_SpawnData.ComponentContexts[i];
-			auto& componentContext = m_SpawnData.ComponentContexts[i];
-
-			componentContext.ComponentData = contextData.ComponentContext->GetAllocator()->CreateCopy(
+			contextData.ComponentData = contextData.ComponentContext->GetAllocator()->CreateCopy(
 				entity.ID(),
-				componentContext.CopiedComponentPointer
+				contextData.CopiedComponentPointer
 			);
 		}
 
-		AddSpawnedEntityToArchetype(entity.ID(), m_SpawnData.m_SpawnArchetype);
-
+		AddSpawnedEntityToArchetype(*entity.m_EntityData, m_SpawnData.m_SpawnArchetype);
 	}
 
 	bool Container::RemoveComponent(Entity& entity, const TypeID& componentTypeID)
@@ -631,15 +628,14 @@ namespace decs
 	}
 
 	void Container::AddSpawnedEntityToArchetype(
-		const EntityID& entityID,
+		EntityData& data,
 		Archetype* spawnArchetype
 	)
 	{
-		EntityData& data = m_EntityManager->GetEntityData(entityID);
 		data.m_CurrentArchetype = spawnArchetype;
 		data.m_IndexInArchetype = spawnArchetype->EntitiesCount();
 
-		spawnArchetype->m_EntitiesData.emplace_back(entityID, data.m_IsActive);
+		spawnArchetype->m_EntitiesData.emplace_back(data.m_ID, data.m_IsActive);
 		spawnArchetype->m_EntitiesCount += 1;
 
 		// adding component:
