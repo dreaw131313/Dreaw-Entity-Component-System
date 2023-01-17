@@ -521,7 +521,6 @@ namespace decs
 			Archetype* spawnArchetype
 		);
 
-
 #pragma endregion
 
 #pragma region OBSERVERS
@@ -573,7 +572,6 @@ namespace decs
 
 		void InvokeArchetypeOnDestroyListeners(Archetype& archetype);
 #pragma endregion
-
 
 	};
 }

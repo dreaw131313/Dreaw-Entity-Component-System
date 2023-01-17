@@ -578,14 +578,18 @@ namespace decs
 		uint64_t lastEntityIndex = archetype.m_EntitiesCount - 1;
 		const uint64_t archetypeComponentCount = archetype.GetComponentsCount();
 
-		uint64_t firstComponentPointer = entityData.m_IndexInArchetype * archetypeComponentCount;
+		uint64_t firstComponentIndex = entityData.m_IndexInArchetype * archetypeComponentCount;
 		if (entityData.m_IndexInArchetype == lastEntityIndex)
 		{
 			// pop back last entity:
-
 			archetype.m_EntitiesData.pop_back();
 
-			archetype.m_ComponentsRefs.erase(archetype.m_ComponentsRefs.begin() + firstComponentPointer, archetype.m_ComponentsRefs.end());
+			/*for (int i = 0; i < archetypeComponentCount; i++)
+			{
+				archetype.m_ComponentsRefs.pop_back();
+			}*/
+
+			archetype.m_ComponentsRefs.erase(archetype.m_ComponentsRefs.begin() + firstComponentIndex, archetype.m_ComponentsRefs.end());
 		}
 		else
 		{
@@ -595,15 +599,20 @@ namespace decs
 
 			lastEntityInArchetypeData.m_IndexInArchetype = entityData.m_IndexInArchetype;
 
+			/*for (int i = archetypeComponentCount - 1; i > -1; i--)
+			{
+				archetype.m_ComponentsRefs[firstComponentIndex + i] = archetype.m_ComponentsRefs[lastEntityFirstComponentIndex + i];
+				archetype.m_ComponentsRefs.pop_back();
+			}*/
+
 			for (uint64_t i = 0; i < archetypeComponentCount; i++)
 			{
-				archetype.m_ComponentsRefs[firstComponentPointer + i] = archetype.m_ComponentsRefs[lastEntityFirstComponentIndex + i];
+				archetype.m_ComponentsRefs[firstComponentIndex + i] = archetype.m_ComponentsRefs[lastEntityFirstComponentIndex + i];
 			}
+			archetype.m_ComponentsRefs.erase(archetype.m_ComponentsRefs.begin() + lastEntityFirstComponentIndex, archetype.m_ComponentsRefs.end());
 
 			archetype.m_EntitiesData[entityData.m_IndexInArchetype] = archEntityData;
 			archetype.m_EntitiesData.pop_back();
-
-			archetype.m_ComponentsRefs.erase(archetype.m_ComponentsRefs.begin() + lastEntityFirstComponentIndex, archetype.m_ComponentsRefs.end());
 		}
 
 		entityData.m_CurrentArchetype = nullptr;
