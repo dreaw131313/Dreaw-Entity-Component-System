@@ -67,6 +67,8 @@ namespace decs
 
 		virtual ComponentCopyData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
 
+		virtual ComponentCopyData CreateCopy(const EntityID& entityID, void* voidCompPtr) = 0;
+
 		virtual BaseComponentAllocator* CreateEmptyCopyOfYourself() = 0;
 
 		virtual void Clear() = 0;
@@ -324,6 +326,14 @@ namespace decs
 			NodeInfo& nodeToCopy = from->m_Nodes(chunkIndex, elementIndex);
 			AllocationData allocationData = EmplaceBack(entityID, *nodeToCopy.Data);
 
+			return ComponentCopyData(allocationData.ChunkIndex, allocationData.ElementIndex, allocationData.Component);
+		}
+
+
+		virtual ComponentCopyData CreateCopy(const EntityID& entityID, void* voidCompPtr) override
+		{
+			DataType* component = reinterpret_cast<DataType*>(voidCompPtr);
+			AllocationData allocationData = EmplaceBack(entityID, *component);
 			return ComponentCopyData(allocationData.ChunkIndex, allocationData.ElementIndex, allocationData.Component);
 		}
 

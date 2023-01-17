@@ -148,6 +148,8 @@ namespace decs
 			TypeID ComponentType = std::numeric_limits<TypeID>::max();
 			ComponentContextBase* PrefabComponentContext = nullptr;
 			ComponentContextBase* ComponentContext = nullptr;
+			
+			void* CopiedComponentPointer = nullptr;
 			ComponentCopyData ComponentData = {};
 		public:
 			PrefabSpawnComponentContext()
@@ -217,7 +219,10 @@ namespace decs
 		/// 
 		/// </summary>
 		/// <returns>True if spawnd data preparation succeded else false.</returns>
-		void PreapareSpawnData(Archetype* prefabArchetype);
+		void PreapareSpawnData(
+			EntityData& prefabEntityData,
+			Container* prefabContainer
+		);
 
 		void CreateEntityFromSpawnData(
 			Entity& entity,

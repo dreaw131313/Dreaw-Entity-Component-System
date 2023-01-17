@@ -162,6 +162,7 @@ namespace decs
 
 			return it->second;
 		}
+
 		template<typename T>
 		inline uint64_t FindTypeIndex() const
 		{
