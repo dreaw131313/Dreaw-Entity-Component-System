@@ -293,7 +293,7 @@ namespace decs
 
 			// edges with archetype with more components:
 			{
-				const uint64_t componentCountsPlusOne = archetype.GetComponentsCount() + 1;
+				const uint64_t componentCountsPlusOne = (uint64_t)archetype.GetComponentsCount() + 1;
 
 				if (componentCountsPlusOne <= m_ArchetypesGroupedByComponentsCount.size())
 				{

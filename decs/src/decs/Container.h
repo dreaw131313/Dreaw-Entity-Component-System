@@ -376,7 +376,7 @@ namespace decs
 		template<typename ComponentType>
 		ComponentContext<ComponentType>* GetOrCreateComponentContext()
 		{
-			TypeID id = Type<ComponentType>::ID();
+			constexpr TypeID id = Type<ComponentType>::ID();
 
 			auto& componentContext = m_ComponentContexts[id];
 			if (componentContext == nullptr)
@@ -438,7 +438,7 @@ namespace decs
 
 		inline ComponentRef& GetComponentRefFromArchetype(const EntityData& data, const uint64_t& componentTypeIndex)
 		{
-			uint64_t dataIndex = data.m_CurrentArchetype->GetComponentsCount() * data.m_IndexInArchetype + componentTypeIndex;
+			uint64_t dataIndex = (uint64_t)data.m_CurrentArchetype->GetComponentsCount() * (uint64_t)data.m_IndexInArchetype + componentTypeIndex;
 			return data.m_CurrentArchetype->m_ComponentsRefs[dataIndex];
 		}
 

@@ -3,10 +3,6 @@
 
 namespace decs
 {
-	class Entity;
-
-
-	// Entities
 	class EntityData
 	{
 	public:

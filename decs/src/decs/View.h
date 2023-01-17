@@ -745,7 +745,7 @@ namespace decs
 				entitiesCount += archContext.m_EntitiesCount;
 			}
 
-			uint64_t realDesiredBatchSize = std::ceil((float)entitiesCount / (float)desiredBatchesCount);
+			uint64_t realDesiredBatchSize = std::llround(std::ceil((float)entitiesCount / (float)desiredBatchesCount));
 			uint64_t finalBatchSize;
 
 			if (realDesiredBatchSize < minBatchSize)
