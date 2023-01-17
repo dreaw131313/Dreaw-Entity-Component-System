@@ -408,21 +408,21 @@ namespace decs
 		EntityData& entityData = m_EntityManager->GetEntityData(entityID);
 		if (entityData.m_IsEntityInDestruction || entityData.m_CurrentArchetype == nullptr) return false;
 
-		auto compIdxInArch = entityData.m_CurrentArchetype->m_TypeIDsIndexes.find(componentTypeID);
-		if (compIdxInArch == entityData.m_CurrentArchetype->m_TypeIDsIndexes.end())return false;
+		uint64_t compIdxInArch = entityData.m_CurrentArchetype->FindTypeIndex(componentTypeID);
+		if (compIdxInArch == std::numeric_limits<uint64_t>::max())return false;
 
 		auto compContextIt = m_ComponentContexts.find(componentTypeID);
 		if (compContextIt == m_ComponentContexts.end()) return false;
 		ComponentContextBase* componentContext = compContextIt->second;
 
-		auto removedCompData = GetComponentRefFromArchetype(entityData, compIdxInArch->second);
+		auto removedCompData = GetComponentRefFromArchetype(entityData, compIdxInArch);
 		{
 			componentContext->InvokeOnDestroyComponent_S(
 				removedCompData.ComponentPointer,
 				entity
 			);
 		}
-		removedCompData = GetComponentRefFromArchetype(entityData, compIdxInArch->second);
+		removedCompData = GetComponentRefFromArchetype(entityData, compIdxInArch);
 
 		auto allocator = componentContext->GetAllocator();
 		auto result = allocator->RemoveSwapBack(removedCompData.ChunkIndex, removedCompData.ElementIndex);
@@ -433,11 +433,10 @@ namespace decs
 			EntityData& fixedEntity = m_EntityManager->GetEntityData(result.eID);
 			if (entityData.m_CurrentArchetype == fixedEntity.m_CurrentArchetype)
 			{
-				compTypeIndexInFixedEntityArchetype = compIdxInArch->second;
+				compTypeIndexInFixedEntityArchetype = compIdxInArch;
 			}
 			else
 			{
-				//compTypeIndexInFixedEntityArchetype = fixedEntity.m_CurrentArchetype->m_TypeIDsIndexes[componentTypeID];
 				compTypeIndexInFixedEntityArchetype = fixedEntity.m_CurrentArchetype->FindTypeIndex(componentTypeID);
 			}
 
@@ -465,7 +464,7 @@ namespace decs
 				componentTypeID,
 				nullptr,
 				false,
-				compIdxInArch->second
+				compIdxInArch
 			);
 		}
 

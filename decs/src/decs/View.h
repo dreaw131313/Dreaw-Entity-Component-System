@@ -289,13 +289,13 @@ namespace decs
 
 					for (uint64_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
 					{
-						auto typeID_It = archetype.m_TypeIDsIndexes.find(m_Includes.IDs()[typeIdx]);
-						if (typeID_It == archetype.m_TypeIDsIndexes.end())
+						auto typeIDIndex = archetype.FindTypeIndex(m_Includes.IDs()[typeIdx]);
+						if (typeIDIndex == std::numeric_limits<uint64_t>::max())
 						{
 							m_ArchetypesContexts.pop_back();
 							return false;
 						}
-						context.TypeIndexes[typeIdx] = typeID_It->second;
+						context.TypeIndexes[typeIdx] = typeIDIndex;
 					}
 
 					m_ContainedArchetypes.insert(&archetype);
@@ -398,13 +398,13 @@ namespace decs
 
 					for (uint64_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
 					{
-						auto typeID_It = archetype.m_TypeIDsIndexes.find(m_Includes.IDs()[typeIdx]);
-						if (typeID_It == archetype.m_TypeIDsIndexes.end())
+						auto typeIDIndex = archetype.FindTypeIndex(m_Includes.IDs()[typeIdx]);
+						if (typeIDIndex == std::numeric_limits<uint64_t>::max())
 						{
 							m_ArchetypesContexts.pop_back();
 							return false;
 						}
-						context.TypeIndexes[typeIdx] = typeID_It->second;
+						context.TypeIndexes[typeIdx] = typeIDIndex;
 					}
 
 					m_ContainedArchetypes.insert(&archetype);

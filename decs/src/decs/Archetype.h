@@ -87,6 +87,9 @@ namespace decs
 		template<typename... ComponentTypes>
 		friend 	class ViewBatchIterator;
 
+	private:
+		static constexpr uint64_t m_MinComponentsInArchetypeToPerformMapLookup = 30;
+
 	public:
 		uint32_t m_ComponentsCount = 0; // number of components for each entity
 		uint32_t m_EntitiesCount = 0;
@@ -143,9 +146,9 @@ namespace decs
 			return m_TypeIDsIndexes.find(typeID) != m_TypeIDsIndexes.end();
 		}
 
-		inline uint64_t FindTypeIndex(TypeID typeID) const
+		inline uint64_t FindTypeIndex(const TypeID& typeID) const
 		{
-			if (m_ComponentsCount < 40)
+			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint64_t i = 0; i < m_ComponentsCount; i++)
 					if (m_TypeIDs[i] == typeID) return i;
@@ -163,7 +166,7 @@ namespace decs
 		inline uint64_t FindTypeIndex() const
 		{
 			constexpr TypeID typeID = Type<T>::ID();
-			if (m_ComponentsCount < 40)
+			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint64_t i = 0; i < m_ComponentsCount; i++)
 					if (m_TypeIDs[i] == typeID) return i;
@@ -398,6 +401,10 @@ namespace decs
 					newArchetype->AddTypeID(addedComponentTypeID, componentContainer);
 				}
 				newArchetype->AddTypeID(toArchetype.m_TypeIDs[i], toArchetype.m_ComponentContexts[i]);
+			}
+			if (!isNewComponentTypeAdded)
+			{
+				newArchetype->AddTypeID(addedComponentTypeID, componentContainer);
 			}
 
 			MakeArchetypeEdges(*newArchetype);

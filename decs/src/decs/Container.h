@@ -361,8 +361,8 @@ namespace decs
 
 				if (data.m_CurrentArchetype == nullptr) return false;
 
-				auto it = data.m_CurrentArchetype->m_TypeIDsIndexes.find(Type<ComponentType>::ID());
-				return it != data.m_CurrentArchetype->m_TypeIDsIndexes.end();
+				uint64_t index = data.m_CurrentArchetype->FindTypeIndex(Type<ComponentType>::ID());
+				return index != std::numeric_limits<uint64_t>::max();
 			}
 
 			return false;
