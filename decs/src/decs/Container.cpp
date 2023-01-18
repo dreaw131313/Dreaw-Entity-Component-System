@@ -49,24 +49,9 @@ namespace decs
 	{
 		EntityID entityID = m_EntityManager->CreateEntity(isActive);
 		Entity e(entityID, this);
+		AddToEmptyEntities(*e.m_EntityData);
 		InvokeEntityCreationObservers(e);
 		return e;
-	}
-
-
-	void Container::DestroyOwnedEntities(const bool& invokeOnDestroyListeners)
-	{
-		auto& archetypes = m_ArchetypesMap.m_Archetypes;
-
-		uint64_t archetypesCount = archetypes.size();
-		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
-		{
-			Archetype& archetype = *archetypes[archetypeIdx];
-			DestroyEntitesInArchetypes(archetype);
-			archetype.Reset();
-		}
-
-		ClearComponentsContainers();
 	}
 
 	bool Container::DestroyEntity(Entity& entity)
@@ -127,11 +112,40 @@ namespace decs
 			}
 
 			entityData.m_IsEntityInDestruction = false;
+			if (entityData.m_CurrentArchetype == nullptr)
+			{
+				RemoveFromEmptyEntities(entityData);
+			}
 			m_EntityManager->DestroyEntity(entityID);
 			return true;
 		}
 
 		return false;
+	}
+
+	void Container::DestroyOwnedEntities(const bool& invokeOnDestroyListeners)
+	{
+		auto& archetypes = m_ArchetypesMap.m_Archetypes;
+
+		uint64_t archetypesCount = archetypes.size();
+		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
+		{
+			Archetype& archetype = *archetypes[archetypeIdx];
+			DestroyEntitesInArchetypes(archetype);
+			archetype.Reset();
+		}
+
+		Entity entity = {};
+		for (uint64_t i = 0; i < m_EmptyEntities.Size(); i++)
+		{
+			EntityData& data = *m_EmptyEntities[i];
+			entity.Set(data, this);
+			InvokeEntityDestructionObservers(entity);
+			m_EntityManager->DestroyEntity(data);
+		}
+
+		ClearComponentsContainers();
+		m_EmptyEntities.Clear();
 	}
 
 	void Container::DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners)
@@ -203,6 +217,8 @@ namespace decs
 
 		if (prefabArchetype == nullptr)
 		{
+			AddToEmptyEntities(*spawnedEntity.m_EntityData);
+			InvokeEntityCreationObservers(spawnedEntity);
 			return spawnedEntity;
 		}
 
@@ -250,6 +266,7 @@ namespace decs
 					entityId,
 					this
 				);
+				AddToEmptyEntities(*spawnedEntity.m_EntityData);
 				InvokeEntityCreationObservers(spawnedEntity);
 			}
 			return true;
@@ -303,10 +320,10 @@ namespace decs
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
 				Entity spawnedEntity = spawnedEntities.emplace_back(CreateEntity(areActive), this);
-				InvokeEntityCreationObservers(spawnedEntity);
 			}
 			return true;
 		}
+
 
 		uint64_t componentsCount = prefabArchetype->GetComponentsCount();
 		PreapareSpawnData(prefabEntityData, prefabContainer);
@@ -351,7 +368,6 @@ namespace decs
 		{
 			TypeID typeID = prefabArchetype->ComponentsTypes()[i];
 			auto& context = m_ComponentContexts[typeID];
-
 			auto prefabComponentContext = prefabArchetype->m_ComponentContexts[i];
 
 			if (context == nullptr)
@@ -359,14 +375,13 @@ namespace decs
 				context = prefabComponentContext->CreateOwnEmptyCopy(m_ObserversManager);
 			}
 
-
 			auto& spawnData = m_SpawnData.ComponentContexts.emplace_back(
 				typeID,
 				prefabComponentContext,
 				context
 			);
 
-			auto& prefabComponentData = prefabContainer->GetComponentRefFromArchetype(prefabEntityData, i);
+			auto& prefabComponentData = prefabEntityData.GetComponentRef(i);
 			spawnData.CopiedComponentPointer = prefabComponentData.ComponentPointer;
 
 			if (i == 0)
@@ -418,14 +433,14 @@ namespace decs
 		if (compContextIt == m_ComponentContexts.end()) return false;
 		ComponentContextBase* componentContext = compContextIt->second;
 
-		auto removedCompData = GetComponentRefFromArchetype(entityData, compIdxInArch);
+		auto removedCompData = entityData.GetComponentRef(compIdxInArch);
 		{
 			componentContext->InvokeOnDestroyComponent_S(
 				removedCompData.ComponentPointer,
 				entity
 			);
 		}
-		removedCompData = GetComponentRefFromArchetype(entityData, compIdxInArch);
+		removedCompData = entityData.GetComponentRef(compIdxInArch);
 
 		auto allocator = componentContext->GetAllocator();
 		auto result = allocator->RemoveSwapBack(removedCompData.ChunkIndex, removedCompData.ElementIndex);
@@ -456,6 +471,7 @@ namespace decs
 		if (newEntityArchetype == nullptr)
 		{
 			RemoveEntityFromArchetype(*entityData.m_CurrentArchetype, entityData);
+			AddToEmptyEntities(entityData);
 		}
 		else
 		{
@@ -694,6 +710,14 @@ namespace decs
 			Archetype& archetype = *archetypes[archetypeIdx];
 			InvokeArchetypeOnCreateListeners(archetype);
 		}
+
+		Entity entity = {};
+		for (uint64_t i = 0; i < m_EmptyEntities.Size(); i++)
+		{
+			EntityData& data = *m_EmptyEntities[i];
+			entity.Set(data, this);
+			InvokeEntityCreationObservers(entity);
+		}
 	}
 
 	void Container::InvokeEntitesOnDestroyListeners()
@@ -704,6 +728,14 @@ namespace decs
 		{
 			Archetype& archetype = *archetypes[archetypeIdx];
 			InvokeArchetypeOnDestroyListeners(archetype);
+		}
+
+		Entity entity = {};
+		for (uint64_t i = 0; i < m_EmptyEntities.Size(); i++)
+		{
+			EntityData& data = *m_EmptyEntities[i];
+			entity.Set(data, this);
+			InvokeEntityDestructionObservers(entity);
 		}
 	}
 

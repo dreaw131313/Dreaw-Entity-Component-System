@@ -130,6 +130,14 @@ namespace decs
 			m_Version = m_EntityData->m_Version;
 		}
 
+		void Set(EntityData& data, Container* container)
+		{
+			m_ID = data.m_ID;
+			m_Container = container;
+			m_EntityData = &data;
+			m_Version = data.m_Version;
+		}
+
 		inline void Invalidate()
 		{
 			m_ID = std::numeric_limits<EntityID>::max();

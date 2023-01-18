@@ -7,6 +7,7 @@
 namespace decs
 {
 	class Entity;
+	class Archetype;
 
 	class ArchetypeEdge final
 	{

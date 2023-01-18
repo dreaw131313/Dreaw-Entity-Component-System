@@ -1,5 +1,6 @@
 #pragma once
 #include "Core.h"
+#include "Archetype.h"
 
 namespace decs
 {
@@ -12,7 +13,7 @@ namespace decs
 		bool m_IsActive = false;
 		bool m_IsEntityInDestruction = false;
 
-		class Archetype* m_CurrentArchetype = nullptr;
+		Archetype* m_CurrentArchetype = nullptr;
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 
 	public:
@@ -26,5 +27,10 @@ namespace decs
 
 		}
 
+		inline ComponentRef& GetComponentRef(const uint64_t& componentTypeIndex)
+		{
+			uint64_t dataIndex = (uint64_t)m_CurrentArchetype->GetComponentsCount() * (uint64_t)m_IndexInArchetype + componentTypeIndex;
+			return m_CurrentArchetype->m_ComponentsRefs[dataIndex];
+		}
 	};
 }

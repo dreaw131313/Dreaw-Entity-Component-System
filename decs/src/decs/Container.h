@@ -60,38 +60,6 @@ namespace decs
 			m_ComponentContainerChunkSize = size;
 		}
 
-#pragma region FLAGS
-	private:
-		struct BoolSwitch final
-		{
-		public:
-			BoolSwitch(bool& boolToSwitch) :
-				m_Bool(boolToSwitch)
-			{
-			}
-
-			BoolSwitch(bool& boolToSwitch, const bool& startValue) :
-				m_Bool(boolToSwitch)
-			{
-				m_Bool = startValue;
-			}
-
-			BoolSwitch(const BoolSwitch&) = delete;
-			BoolSwitch(BoolSwitch&&) = delete;
-
-			BoolSwitch& operator=(const BoolSwitch&) = delete;
-			BoolSwitch& operator=(BoolSwitch&&) = delete;
-
-			~BoolSwitch()
-			{
-				m_Bool = !m_Bool;
-			}
-
-		private:
-			bool& m_Bool;
-		};
-
-#pragma endregion
 
 #pragma region ENTITIES:
 	private:
@@ -99,6 +67,8 @@ namespace decs
 		EntityManager* m_EntityManager = nullptr;
 
 		bool m_bInvokeEntityActivationStateListeners = true;
+
+		ChunkedVector<EntityData*> m_EmptyEntities = { 100 };
 
 	public:
 		inline uint64_t GetAliveEntitesCount() const
@@ -108,11 +78,16 @@ namespace decs
 
 		Entity CreateEntity(const bool& isActive = true);
 
-	public:
+		bool DestroyEntity(Entity& entity);
+
 		void DestroyOwnedEntities(const bool& invokeOnDestroyListeners = true);
 
+		inline uint64_t GetEmptyEntitiesCount() const
+		{
+			return m_EmptyEntities.Size();
+		}
+
 	private:
-		bool DestroyEntity(Entity& entity);
 
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
@@ -138,6 +113,20 @@ namespace decs
 
 		void DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners = true);
 
+		inline void AddToEmptyEntities(EntityData& data)
+		{
+			data.m_IndexInArchetype = m_EmptyEntities.Size();
+			m_EmptyEntities.EmplaceBack(&data);
+		}
+
+		inline void RemoveFromEmptyEntities(EntityData& data)
+		{
+			if (data.m_IndexInArchetype < m_EmptyEntities.Size())
+			{
+				m_EmptyEntities[data.m_IndexInArchetype] = m_EmptyEntities.Back();
+			}
+			m_EmptyEntities.PopBack();
+		}
 #pragma endregion
 
 #pragma region SPAWNING ENTIES
@@ -148,7 +137,7 @@ namespace decs
 			TypeID ComponentType = std::numeric_limits<TypeID>::max();
 			ComponentContextBase* PrefabComponentContext = nullptr;
 			ComponentContextBase* ComponentContext = nullptr;
-			
+
 			void* CopiedComponentPointer = nullptr;
 			ComponentCopyData ComponentData = {};
 		public:
@@ -311,6 +300,7 @@ namespace decs
 				// making operations on archetypes:
 				if (entityData.m_CurrentArchetype == nullptr)
 				{
+					RemoveFromEmptyEntities(entityData);
 					archetype = m_ArchetypesMap.GetSingleComponentArchetype<ComponentType>(componentContext);
 					AddEntityToSingleComponentArchetype(
 						*archetype,
@@ -434,12 +424,6 @@ namespace decs
 		{
 			for (auto& [key, value] : m_ComponentContexts)
 				delete value;
-		}
-
-		inline ComponentRef& GetComponentRefFromArchetype(const EntityData& data, const uint64_t& componentTypeIndex)
-		{
-			uint64_t dataIndex = (uint64_t)data.m_CurrentArchetype->GetComponentsCount() * (uint64_t)data.m_IndexInArchetype + componentTypeIndex;
-			return data.m_CurrentArchetype->m_ComponentsRefs[dataIndex];
 		}
 
 		template<typename ComponentType>

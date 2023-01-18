@@ -26,6 +26,8 @@ namespace decs
 
 		bool DestroyEntity(const EntityID& entity);
 
+		bool DestroyEntity(EntityData& entityData);
+
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
 			if (entity >= m_enitiesDataCount) return false;

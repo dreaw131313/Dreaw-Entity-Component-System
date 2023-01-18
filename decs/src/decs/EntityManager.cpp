@@ -9,7 +9,7 @@ namespace decs
 	{
 	}
 
-	EntityManager::EntityManager(const uint64_t& initialEntitiesCapacity):
+	EntityManager::EntityManager(const uint64_t& initialEntitiesCapacity) :
 		m_EntityData(initialEntitiesCapacity)
 	{
 		if (initialEntitiesCapacity > 0)
@@ -42,18 +42,40 @@ namespace decs
 
 	bool EntityManager::DestroyEntity(const EntityID& entity)
 	{
-		if (IsEntityAlive(entity))
+		if (entity < m_EntityData.Size())
 		{
 			EntityData& entityData = m_EntityData[entity];
+
+			if (entityData.m_IsAlive)
+			{
+				m_CreatedEntitiesCount -= 1;
+				m_FreeEntitiesCount += 1;
+				m_FreeEntities.push_back(entity);
+
+				entityData.m_CurrentArchetype = nullptr;
+				entityData.m_Version += 1;
+				entityData.m_IsAlive = false;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	bool EntityManager::DestroyEntity(EntityData& entityData)
+	{
+		if (entityData.m_IsAlive)
+		{
 			m_CreatedEntitiesCount -= 1;
 			m_FreeEntitiesCount += 1;
-			m_FreeEntities.push_back(entity);
+			m_FreeEntities.push_back(entityData.m_ID);
 
 			entityData.m_CurrentArchetype = nullptr;
 			entityData.m_Version += 1;
 			entityData.m_IsAlive = false;
 			return true;
 		}
+
 		return false;
 	}
 }
