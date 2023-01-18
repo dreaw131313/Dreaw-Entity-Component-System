@@ -15,13 +15,15 @@ namespace decs
 		const uint64_t& enititesChunkSize,
 		const ChunkSizeType& componentContainerChunkSizeType,
 		const uint64_t& componentContainerChunkSize,
-		const bool& invokeEntityActivationStateListeners
+		const bool& invokeEntityActivationStateListeners,
+		const uint64_t m_EmptyEntitiesChunkSize
 	) :
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(enititesChunkSize)),
 		m_ComponentContainerChunkSize(componentContainerChunkSize),
 		m_ContainerSizeType(componentContainerChunkSizeType),
-		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners)
+		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners),
+		m_EmptyEntities(m_EmptyEntitiesChunkSize)
 	{
 	}
 
@@ -29,13 +31,15 @@ namespace decs
 		EntityManager* entityManager,
 		const ChunkSizeType& componentContainerChunkSizeType,
 		const uint64_t& componentContainerChunkSize,
-		const bool& invokeEntityActivationStateListeners
+		const bool& invokeEntityActivationStateListeners,
+		const uint64_t m_EmptyEntitiesChunkSize
 	) :
 		m_HaveOwnEntityManager(false),
 		m_EntityManager(entityManager),
 		m_ComponentContainerChunkSize(componentContainerChunkSize),
 		m_ContainerSizeType(componentContainerChunkSizeType),
-		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners)
+		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners),
+		m_EmptyEntities(m_EmptyEntitiesChunkSize)
 	{
 	}
 

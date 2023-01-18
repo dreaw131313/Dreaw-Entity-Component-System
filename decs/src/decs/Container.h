@@ -34,14 +34,16 @@ namespace decs
 			const uint64_t& enititesChunkSize,
 			const ChunkSizeType& componentContainerChunkSizeType,
 			const uint64_t& componentContainerChunkSize,
-			const bool& invokeEntityActivationStateListeners
+			const bool& invokeEntityActivationStateListeners,
+			const uint64_t m_EmptyEntitiesChunkSize = 100
 		);
 
 		Container(
 			EntityManager* entityManager,
 			const ChunkSizeType& componentContainerChunkSizeType,
 			const uint64_t& componentContainerChunkSize,
-			const bool& invokeEntityActivationStateListeners
+			const bool& invokeEntityActivationStateListeners,
+			const uint64_t m_EmptyEntitiesChunkSize = 100
 		);
 
 		~Container();
