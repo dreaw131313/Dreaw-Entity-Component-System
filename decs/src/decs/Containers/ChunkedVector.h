@@ -290,7 +290,7 @@ namespace decs
 			return EmplaceBackData(m_ChunksCount - 1, elementIndex, &b.EmplaceBack(std::forward<Args>(args)...));
 		}
 
-		bool RemoveSwapBack(const uint64_t& index)
+		inline bool RemoveSwapBack(const uint64_t& index)
 		{
 			uint64_t chunkIndex = index / m_ChunkCapacity;
 			uint64_t elementIndex = index % m_ChunkCapacity;

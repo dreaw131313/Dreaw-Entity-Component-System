@@ -184,7 +184,7 @@ namespace decs
 		};
 
 	private:
-		PrefabSpawnData m_SpawnData = {};
+		ChunkedVector<PrefabSpawnData> m_SpawnDataPerSpawn = { 20 };
 
 	public:
 		Entity Spawn(
@@ -211,12 +211,14 @@ namespace decs
 		/// </summary>
 		/// <returns>True if spawnd data preparation succeded else false.</returns>
 		void PreapareSpawnData(
+			PrefabSpawnData& spawnData,
 			EntityData& prefabEntityData,
 			Container* prefabContainer
 		);
 
 		void CreateEntityFromSpawnData(
 			Entity& entity,
+			PrefabSpawnData& spawnData,
 			const uint64_t componentsCount,
 			const EntityData& prefabEntityData,
 			Container* prefabContainer
@@ -503,6 +505,7 @@ namespace decs
 		}
 
 		void AddSpawnedEntityToArchetype(
+			PrefabSpawnData& spawnData,
 			EntityData& data,
 			Archetype* spawnArchetype
 		);
