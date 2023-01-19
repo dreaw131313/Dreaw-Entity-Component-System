@@ -31,6 +31,7 @@ namespace decs
 	struct ComponentRef
 	{
 	public:
+		//bool m_DelayedToDestroy = false;
 		uint64_t ChunkIndex = std::numeric_limits< uint64_t>::max();
 		uint64_t ElementIndex = std::numeric_limits< uint64_t>::max();
 		void* ComponentPointer = nullptr;
@@ -52,6 +53,11 @@ namespace decs
 		{
 
 		}
+
+		/*inline void* GetComponentPointer() const
+		{
+			return m_DelayedToDestroy ? nullptr : ComponentPointer;
+		}*/
 	};
 
 	struct ArchetypeEntityData
@@ -106,6 +112,8 @@ namespace decs
 
 		//std::vector<ComponentContextBase*> m_OrderedComponentContextsToInvokeObservers;
 
+		uint64_t m_EntitesCountToInitialize = 0;
+
 	public:
 		Archetype()
 		{
@@ -141,6 +149,7 @@ namespace decs
 		inline const TypeID* const ComponentsTypes() const { return m_TypeIDs.data(); }
 
 		inline uint32_t EntitiesCount() const { return m_EntitiesCount; }
+		inline uint64_t EntitesCountToInvokeCallbacks() const { return m_EntitesCountToInitialize; }
 
 		inline bool ContainType(const TypeID& typeID) const
 		{
@@ -149,13 +158,13 @@ namespace decs
 
 		inline uint64_t FindTypeIndex(const TypeID& typeID) const
 		{
-			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
+			/*if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint64_t i = 0; i < m_ComponentsCount; i++)
 					if (m_TypeIDs[i] == typeID) return i;
 
 				return std::numeric_limits<uint64_t>::max();
-			}
+			}*/
 
 			auto it = m_TypeIDsIndexes.find(typeID);
 			if (it == m_TypeIDsIndexes.end())
@@ -168,13 +177,13 @@ namespace decs
 		inline uint64_t FindTypeIndex() const
 		{
 			constexpr TypeID typeID = Type<T>::ID();
-			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
+			/*if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint64_t i = 0; i < m_ComponentsCount; i++)
 					if (m_TypeIDs[i] == typeID) return i;
 
 				return std::numeric_limits<uint64_t>::max();
-			}
+			}*/
 
 			auto it = m_TypeIDsIndexes.find(typeID);
 			if (it == m_TypeIDsIndexes.end())
@@ -189,6 +198,11 @@ namespace decs
 			m_EntitiesCount = 0;
 			m_EntitiesData.clear();
 			m_ComponentsRefs.clear();
+		}
+
+		inline void ValidateEntitiesCountToInitialize()
+		{
+			m_EntitesCountToInitialize = m_EntitiesCount;
 		}
 	};
 

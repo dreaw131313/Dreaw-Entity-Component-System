@@ -3,7 +3,6 @@
 #include "ComponentContainer.h"
 #include "ObserversManager.h"
 
-
 namespace decs
 {
 	class Entity;
@@ -11,6 +10,7 @@ namespace decs
 
 	class ComponentContextBase
 	{
+		friend class Container;
 	public:
 		ComponentContextBase()
 		{
@@ -33,6 +33,7 @@ namespace decs
 
 	private:
 		int m_ObservatorOrder = 0;
+		uint64_t m_ComponentsCountToIterate = 0;
 	};
 
 	template<typename ComponentType>
@@ -90,22 +91,6 @@ namespace decs
 			}
 		}
 
-		/*void InvokeOnCreateComponent(ComponentType& component, const EntityID& entityID, Container* container)
-		{
-			if (m_Observer != nullptr && m_Observer->m_CreateObserver != nullptr)
-			{
-				m_Observer->m_CreateObserver->OnCreateComponent(component, Entity(entityID, container));
-			}
-		}
-
-		void InvokeOnDestroyComponent(ComponentType& component, const EntityID& entityID, Container* container)
-		{
-			if (m_Observer != nullptr && m_Observer->m_DestroyObserver != nullptr)
-			{
-				m_Observer->m_DestroyObserver->OnDestroyComponent(component, Entity(entityID, container));
-			}
-		}*/
-
 		virtual void SetObserverManager(ObserversManager* observerManager) override
 		{
 			if (observerManager == nullptr)
@@ -125,6 +110,5 @@ namespace decs
 				observerManager->GetComponentObserver<ComponentType>()
 				);
 		}
-
 	};
 }

@@ -4,6 +4,14 @@
 
 namespace decs
 {
+	enum class EntityDestructionState : uint8_t
+	{
+		Alive = 1,
+		InDestruction = 2,
+		DelayedToDestruction = 3,
+		Destructed = 4
+	};
+
 	class EntityData
 	{
 	public:
@@ -12,6 +20,7 @@ namespace decs
 		bool m_IsAlive = false;
 		bool m_IsActive = false;
 		bool m_IsEntityInDestruction = false;
+		bool m_IsEntityDelayedToDestroy = false;
 
 		Archetype* m_CurrentArchetype = nullptr;
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();

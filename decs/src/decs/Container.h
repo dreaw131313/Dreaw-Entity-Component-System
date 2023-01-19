@@ -62,6 +62,43 @@ namespace decs
 			m_ComponentContainerChunkSize = size;
 		}
 
+#pragma region FLAGS:
+	private:
+		struct BoolSwitch final
+		{
+		public:
+			BoolSwitch(bool& boolToSwitch) :
+				m_Bool(boolToSwitch)
+			{
+			}
+
+			BoolSwitch(bool& boolToSwitch, const bool& startValue) :
+				m_Bool(boolToSwitch)
+			{
+				m_Bool = startValue;
+			}
+
+			BoolSwitch(const BoolSwitch&) = delete;
+			BoolSwitch(BoolSwitch&&) = delete;
+
+			BoolSwitch& operator=(const BoolSwitch&) = delete;
+			BoolSwitch& operator=(BoolSwitch&&) = delete;
+
+			~BoolSwitch()
+			{
+				m_Bool = !m_Bool;
+			}
+
+		private:
+			bool& m_Bool;
+		};
+	private:
+		bool m_CanCreateEntities = true;
+		bool m_CanDestroyEntities = true;
+		bool m_CanSpawn = true;
+		bool m_CanAddComponents = true;
+		bool m_CanRemoveComponents = true;
+#pragma endregion
 
 #pragma region ENTITIES:
 	private:
@@ -283,6 +320,7 @@ namespace decs
 		template<typename ComponentType, typename ...Args>
 		ComponentType* AddComponent(const EntityID& e, Args&&... args)
 		{
+			if (!m_CanAddComponents) return nullptr;
 			constexpr TypeID copmonentTypeID = Type<ComponentType>::ID();
 			if (e >= m_EntityManager->GetEntitiesDataCount()) return nullptr;
 			EntityData& entityData = m_EntityManager->GetEntityData(e);
@@ -339,6 +377,8 @@ namespace decs
 		}
 
 		bool RemoveComponent(Entity& e, const TypeID& componentTypeID);
+
+		bool RemoveComponent(EntityID& e, const TypeID& componentTypeID);
 
 		template<typename ComponentType>
 		ComponentType* GetComponent(const EntityID& e) const
@@ -446,6 +486,20 @@ namespace decs
 		void ClearComponentsContainers();
 
 		void InvokeOnCreateComponentFromEntityID(ComponentContextBase* componentContext, void* componentPtr, const EntityID& id);
+
+#pragma endregion
+
+#pragma region REMOVING COMPONENTS:
+	private:
+
+
+#pragma endregion
+
+#pragma region ADDING COMPONENTS:
+	private:
+
+
+
 #pragma endregion
 
 #pragma region ARCHETYPES:
@@ -525,6 +579,11 @@ namespace decs
 		void InvokeEntitesOnDestroyListeners();
 
 	private:
+		void InvokeEntitesOnCreateListeners_2();
+
+		void InvokeEntitesOnDestroyListeners_2();
+
+	private:
 		inline void InvokeEntityCreationObservers(Entity& entity)
 		{
 			if (m_ObserversManager != nullptr)
@@ -560,7 +619,30 @@ namespace decs
 		void InvokeArchetypeOnCreateListeners(Archetype& archetype);
 
 		void InvokeArchetypeOnDestroyListeners(Archetype& archetype);
+
+		void InvokeComponentOnCreateListeners(ComponentContextBase* coponentContext);
+
+		void InvokeComponentOnDestroyListeners(ComponentContextBase* coponentContext);
+
 #pragma endregion
 
+#pragma region DELAYED DESTROY:
+	private:
+		std::vector<std::pair<EntityID, TypeID>> m_DelayedComponentsToDestroy;
+		std::vector<EntityID> m_DelayedEntitiesToDestroy;
+
+		bool m_PerformDelayedDestruction = false;
+
+	private:
+		void DestroyDelayedEntities();
+
+		void DestroyDelayedComponents();
+
+		void AddEntityToDelayedDestroy(const Entity& entity);
+
+		void AddEntityToDelayedDestroy(const EntityID& entityID);
+
+		void AddComponentToDelayedDestroy(const EntityID& entityID, const TypeID typeID);
+#pragma endregion
 	};
 }

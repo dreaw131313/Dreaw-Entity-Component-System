@@ -72,6 +72,13 @@ namespace decs
 		virtual BaseComponentAllocator* CreateEmptyCopyOfYourself() = 0;
 
 		virtual void Clear() = 0;
+
+
+		virtual uint64_t ChunksCount() = 0;
+		virtual uint64_t ChunkSize(const uint64_t& chunkIndex) = 0;
+		virtual uint64_t ElementsCount() = 0;
+		virtual std::pair<EntityID, void*> GetEntityAndComponentData(const uint64_t& index) = 0;
+		virtual std::pair<EntityID, void*> GetEntityAndComponentData(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
 	};
 
 	template<typename DataType>
@@ -241,6 +248,8 @@ namespace decs
 			DestroyChunks();
 		}
 
+		ChunkedVector<NodeInfo>& Nodes() { return m_Nodes; }
+
 		virtual void Clear() override
 		{
 			DestroyChunks();
@@ -355,6 +364,35 @@ namespace decs
 		{
 			return new StableComponentAllocator<DataType>(m_ChunkCapacity);
 		}
+
+
+		virtual uint64_t ChunksCount() override
+		{
+			return m_Nodes.ChunksCount();
+		}
+
+		virtual uint64_t ChunkSize(const uint64_t& chunkIndex) override
+		{
+			return m_Nodes.GetChunkSize(chunkIndex);
+		}
+
+		virtual uint64_t ElementsCount() override
+		{
+			return m_Nodes.Size();
+		}
+
+		virtual std::pair<EntityID, void*> GetEntityAndComponentData(const uint64_t& index) override
+		{
+			NodeInfo& node = m_Nodes[index];
+			return { node.eID, node.Data };
+		}
+
+		virtual std::pair<EntityID, void*> GetEntityAndComponentData(const uint64_t& chunkIndex, const uint64_t& elementIndex) override
+		{
+			NodeInfo& node = m_Nodes(chunkIndex, elementIndex);
+			return { node.eID, node.Data };
+		}
+
 
 	private:
 		uint64_t m_ChunkCapacity = 128;

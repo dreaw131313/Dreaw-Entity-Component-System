@@ -51,16 +51,20 @@ namespace decs
 
 	Entity Container::CreateEntity(const bool& isActive)
 	{
-		EntityID entityID = m_EntityManager->CreateEntity(isActive);
-		Entity e(entityID, this);
-		AddToEmptyEntities(*e.m_EntityData);
-		InvokeEntityCreationObservers(e);
-		return e;
+		if (m_CanCreateEntities)
+		{
+			EntityID entityID = m_EntityManager->CreateEntity(isActive);
+			Entity e(entityID, this);
+			AddToEmptyEntities(*e.m_EntityData);
+			InvokeEntityCreationObservers(e);
+			return e;
+		}
+		return Entity();
 	}
 
 	bool Container::DestroyEntity(Entity& entity)
 	{
-		if (entity.IsAlive() && entity.m_Container == this)
+		if (m_CanDestroyEntities && entity.IsAlive() && entity.m_Container == this)
 		{
 			EntityID entityID = entity.ID();
 			EntityData& entityData = *entity.m_EntityData;
@@ -129,6 +133,12 @@ namespace decs
 
 	void Container::DestroyOwnedEntities(const bool& invokeOnDestroyListeners)
 	{
+		BoolSwitch canCreateSwitch(m_CanCreateEntities, false);
+		BoolSwitch canDestroySwitch(m_CanDestroyEntities, false);
+		BoolSwitch canSpawnSwitch(m_CanSpawn, false);
+		BoolSwitch canAddComponentSwitch(m_CanAddComponents, false);
+		BoolSwitch canRemoveComponentSwitch(m_CanRemoveComponents, false);
+
 		auto& archetypes = m_ArchetypesMap.m_Archetypes;
 
 		uint64_t archetypesCount = archetypes.size();
@@ -144,7 +154,9 @@ namespace decs
 		{
 			EntityData& data = *m_EmptyEntities[i];
 			entity.Set(data, this);
+			entity.m_EntityData->m_IsEntityInDestruction = true;
 			InvokeEntityDestructionObservers(entity);
+			entity.m_EntityData->m_IsEntityInDestruction = false;
 			m_EntityManager->DestroyEntity(data);
 		}
 
@@ -208,7 +220,7 @@ namespace decs
 
 	Entity Container::Spawn(const Entity& prefab, const bool& isActive)
 	{
-		if (prefab.IsNull()) return Entity();
+		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
 		Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
@@ -230,7 +242,7 @@ namespace decs
 		PrefabSpawnData& spawnData = m_SpawnDataPerSpawn.EmplaceBack();
 		spawnData.Reserve(componentsCount);
 
-		PreapareSpawnData(spawnData,prefabEntityData, prefabContainer);
+		PreapareSpawnData(spawnData, prefabEntityData, prefabContainer);
 
 		CreateEntityFromSpawnData(
 			spawnedEntity,
@@ -256,8 +268,7 @@ namespace decs
 
 	bool Container::Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive)
 	{
-		if (spawnCount == 0) return true;
-		if (prefab.IsNull()) return false;
+		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
 		Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
@@ -284,7 +295,7 @@ namespace decs
 		PrefabSpawnData& spawnData = m_SpawnDataPerSpawn.EmplaceBack();
 		spawnData.Reserve(componentsCount);
 
-		PreapareSpawnData(spawnData,prefabEntityData, prefabContainer);
+		PreapareSpawnData(spawnData, prefabEntityData, prefabContainer);
 
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
@@ -321,8 +332,7 @@ namespace decs
 
 	bool Container::Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive)
 	{
-		if (prefab.IsNull()) return false;
-		if (spawnCount == 0) return true;
+		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return true;
 
 		Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
@@ -342,7 +352,7 @@ namespace decs
 		PrefabSpawnData& spawnData = m_SpawnDataPerSpawn.EmplaceBack();
 		spawnData.Reserve(componentsCount);
 
-		PreapareSpawnData(spawnData,prefabEntityData, prefabContainer);
+		PreapareSpawnData(spawnData, prefabEntityData, prefabContainer);
 
 		for (uint64_t i = 0; i < spawnCount; i++)
 		{
@@ -438,7 +448,7 @@ namespace decs
 
 	bool Container::RemoveComponent(Entity& entity, const TypeID& componentTypeID)
 	{
-		if (!entity.IsAlive() && entity.m_Container != this) return false;
+		if (!m_CanRemoveComponents || !entity.IsAlive() || entity.m_Container != this) return false;
 
 		EntityData& entityData = *entity.m_EntityData;
 		if (entityData.m_IsEntityInDestruction || entityData.m_CurrentArchetype == nullptr) return false;
@@ -503,6 +513,12 @@ namespace decs
 		}
 
 		return true;
+	}
+
+	bool Container::RemoveComponent(EntityID& e, const TypeID& componentTypeID)
+	{
+		Entity entity(e, this);
+		return RemoveComponent(e, componentTypeID);
 	}
 
 	void Container::AddEntityToArchetype(
@@ -719,12 +735,21 @@ namespace decs
 
 	void Container::InvokeEntitesOnCreateListeners()
 	{
-		auto& archetypes = m_ArchetypesMap.m_Archetypes;
-		uint64_t archetypesCount = archetypes.size();
-		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
 		{
-			Archetype& archetype = *archetypes[archetypeIdx];
-			InvokeArchetypeOnCreateListeners(archetype);
+			BoolSwitch delayedDestroySwitch(m_PerformDelayedDestruction, true);
+
+			auto& archetypes = m_ArchetypesMap.m_Archetypes;
+			for (uint64_t i = 0; i < archetypes.size(); i++)
+			{
+				archetypes[i]->ValidateEntitiesCountToInitialize();
+			}
+
+			uint64_t archetypesCount = archetypes.size();
+			for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
+			{
+				Archetype& archetype = *archetypes[archetypeIdx];
+				InvokeArchetypeOnCreateListeners(archetype);
+			}
 		}
 
 		Entity entity = {};
@@ -734,10 +759,19 @@ namespace decs
 			entity.Set(data, this);
 			InvokeEntityCreationObservers(entity);
 		}
+
+		DestroyDelayedEntities();
+		DestroyDelayedComponents();
 	}
 
 	void Container::InvokeEntitesOnDestroyListeners()
 	{
+		BoolSwitch canCreateSwitch(m_CanCreateEntities, false);
+		BoolSwitch canDestroySwitch(m_CanDestroyEntities, false);
+		BoolSwitch canSpawnSwitch(m_CanSpawn, false);
+		BoolSwitch canAddComponentSwitch(m_CanAddComponents, false);
+		BoolSwitch canRemoveComponentSwitch(m_CanRemoveComponents, false);
+
 		auto& archetypes = m_ArchetypesMap.m_Archetypes;
 		uint64_t archetypesCount = archetypes.size();
 		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
@@ -755,24 +789,52 @@ namespace decs
 		}
 	}
 
+	void Container::InvokeEntitesOnCreateListeners_2()
+	{
+		BoolSwitch canDestroySwitch(m_CanDestroyEntities, false);
+		BoolSwitch canRemoveComponentSwitch(m_CanRemoveComponents, false);
+
+		for (auto& [key, value] : m_ComponentContexts)
+		{
+			value->m_ComponentsCountToIterate = value->GetAllocator()->ElementsCount();
+		}
+
+		Entity entity = {};
+		for (uint64_t i = 0; i < m_EmptyEntities.Size(); i++)
+		{
+			EntityData& data = *m_EmptyEntities[i];
+			entity.Set(data, this);
+			InvokeEntityCreationObservers(entity);
+		}
+
+		for (auto& [key, value] : m_ComponentContexts)
+		{
+			InvokeComponentOnCreateListeners(value);
+		}
+	}
+
+	void Container::InvokeEntitesOnDestroyListeners_2()
+	{
+	}
+
 	void Container::InvokeArchetypeOnCreateListeners(Archetype& archetype)
 	{
 		auto& entitesData = archetype.m_EntitiesData;
+		auto& componentRefs = archetype.m_ComponentsRefs;
 		uint64_t archetypeComponentsCount = archetype.GetComponentsCount();
-		uint64_t entityDataCount = entitesData.size();
-		uint64_t componentDataIndex = 0;
-
+		uint64_t entityDataCount = archetype.m_EntitesCountToInitialize;
 		Entity entity;
 
-		for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
+		for (int64_t entityDataIdx = entityDataCount - 1; entityDataIdx > 0; entityDataIdx--)
 		{
 			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
 			entity.Set(archetypeEntityData.ID(), this);
 			InvokeEntityCreationObservers(entity);
 
+			uint64_t componentDataIndex = entityDataIdx * archetypeComponentsCount;
 			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 			{
-				auto& compRef = archetype.m_ComponentsRefs[componentDataIndex];
+				auto& compRef = componentRefs[componentDataIndex];
 				auto compContext = archetype.m_ComponentContexts[i];
 				compContext->InvokeOnCreateComponent_S(compRef.ComponentPointer, entity);
 				componentDataIndex += 1;
@@ -783,26 +845,87 @@ namespace decs
 	void Container::InvokeArchetypeOnDestroyListeners(Archetype& archetype)
 	{
 		auto& entitesData = archetype.m_EntitiesData;
-		uint64_t archetypeComponentsCount = archetype.GetComponentsCount();
+		auto& componentRefs = archetype.m_ComponentsRefs;
+		uint64_t archetypeComponentsCount = archetype.EntitiesCount();
 		uint64_t entityDataCount = entitesData.size();
-		uint64_t componentDataIndex = 0;
-
 		Entity entity;
 
 		for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
 		{
 			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
 			entity.Set(archetypeEntityData.ID(), this);
-			InvokeEntityDestructionObservers(entity);
+			InvokeEntityDeactivationObservers(entity);
 
+			uint64_t componentDataIndex = entityDataIdx * archetypeComponentsCount;
 			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 			{
-				auto& compRef = archetype.m_ComponentsRefs[componentDataIndex];
+				auto& compRef = componentRefs[componentDataIndex];
 				auto compContext = archetype.m_ComponentContexts[i];
 				compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, entity);
 				componentDataIndex += 1;
 			}
 		}
+	}
+
+	void Container::InvokeComponentOnCreateListeners(ComponentContextBase* coponentContext)
+	{
+		BaseComponentAllocator* container = coponentContext->GetAllocator();
+		int64_t containerSize = std::min(coponentContext->m_ComponentsCountToIterate, container->ElementsCount());
+
+		Entity entity = {};
+		for (int64_t elementIndex = containerSize - 1; elementIndex > -1; elementIndex--)
+		{
+			std::pair<EntityID, void*> element = container->GetEntityAndComponentData(elementIndex);
+			entity.Set(element.first, this);
+			coponentContext->InvokeOnCreateComponent_S(element.second, entity);
+		}
+	}
+
+	void Container::InvokeComponentOnDestroyListeners(ComponentContextBase* coponentContext)
+	{
+		BaseComponentAllocator* container = coponentContext->GetAllocator();
+		int64_t containerSize = container->ElementsCount();
+
+		Entity entity = {};
+		for (int64_t elementIndex = containerSize - 1; elementIndex > -1; elementIndex--)
+		{
+			std::pair<EntityID, void*> element = container->GetEntityAndComponentData(elementIndex);
+			entity.Set(element.first, this);
+			coponentContext->InvokeOnDestroyComponent_S(element.second, entity);
+		}
+	}
+
+	void Container::DestroyDelayedEntities()
+	{
+		Entity e = {};
+		for (auto& entityID : m_DelayedEntitiesToDestroy)
+		{
+			e.Set(entityID, this);
+			e.Destroy();
+		}
+	}
+
+	void Container::DestroyDelayedComponents()
+	{
+		for (auto& data : m_DelayedComponentsToDestroy)
+		{
+			RemoveComponent(data.first, data.second);
+		}
+	}
+
+	void Container::AddEntityToDelayedDestroy(const Entity& entity)
+	{
+		m_DelayedEntitiesToDestroy.push_back(entity.ID());
+	}
+
+	void Container::AddEntityToDelayedDestroy(const EntityID& entityID)
+	{
+		m_DelayedEntitiesToDestroy.push_back(entityID);
+	}
+
+	void Container::AddComponentToDelayedDestroy(const EntityID& entityID, const TypeID typeID)
+	{
+		m_DelayedComponentsToDestroy.emplace_back(entityID, typeID);
 	}
 
 }
