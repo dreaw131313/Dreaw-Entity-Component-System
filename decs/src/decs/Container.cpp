@@ -924,6 +924,7 @@ namespace decs
 			e.Set(entityID, this);
 			e.Destroy();
 		}
+		m_DelayedEntitiesToDestroy.clear();
 	}
 
 	void Container::DestroyDelayedComponents()
@@ -932,6 +933,7 @@ namespace decs
 		{
 			RemoveComponent(data.m_EntityID, data.m_TypeID);
 		}
+		m_DelayedComponentsToDestroy.clear();
 	}
 
 	void Container::AddEntityToDelayedDestroy(const Entity& entity)
