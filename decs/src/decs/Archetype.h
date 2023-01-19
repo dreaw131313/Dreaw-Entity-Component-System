@@ -31,7 +31,7 @@ namespace decs
 	struct ComponentRef
 	{
 	public:
-		//bool m_DelayedToDestroy = false;
+		bool m_DelayedToDestroy = false;
 		uint64_t ChunkIndex = std::numeric_limits< uint64_t>::max();
 		uint64_t ElementIndex = std::numeric_limits< uint64_t>::max();
 		void* ComponentPointer = nullptr;
@@ -54,10 +54,10 @@ namespace decs
 
 		}
 
-		/*inline void* GetComponentPointer() const
+		inline void* GetComponentPointer()
 		{
 			return m_DelayedToDestroy ? nullptr : ComponentPointer;
-		}*/
+		}
 	};
 
 	struct ArchetypeEntityData

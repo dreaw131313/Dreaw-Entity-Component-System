@@ -38,7 +38,8 @@ namespace decs
 					chunk.m_Data[idx].~T();
 				}
 
-				::operator delete(chunk.m_Data, chunk.m_Capacity * sizeof(T));
+				uint64_t size = chunk.m_Capacity * sizeof(T);
+				::operator delete(chunk.m_Data, size);
 			}
 
 			static void Copy(const Chunk& from, Chunk& to)
@@ -350,13 +351,16 @@ namespace decs
 
 		void PopBack()
 		{
-			auto& lastChunk = m_Chunks.back();
-			lastChunk.PopBack();
+			if (m_CreatedElements > 0)
+			{
+				auto& lastChunk = m_Chunks.back();
+				lastChunk.PopBack();
 
-			m_CreatedElements -= 1;
+				m_CreatedElements -= 1;
 
-			if (lastChunk.IsEmpty())
-				PopBackChunk();
+				if (lastChunk.IsEmpty())
+					PopBackChunk();
+			}
 		}
 
 		inline bool IsPositionValid(const uint64_t& chunkIndex, const uint64_t& elementIndex)

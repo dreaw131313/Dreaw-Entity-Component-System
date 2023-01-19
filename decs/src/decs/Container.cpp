@@ -68,8 +68,18 @@ namespace decs
 		{
 			EntityID entityID = entity.ID();
 			EntityData& entityData = *entity.m_EntityData;
-			if (entityData.m_IsEntityInDestruction) return false;
-			entityData.m_IsEntityInDestruction = true;
+			if (entityData.IsInDestruction()) return false;
+
+			if (m_PerformDelayedDestruction)
+			{
+				entityData.SetState(EntityDestructionState::DelayedToDestruction);
+				AddEntityToDelayedDestroy(entity.ID());
+				return true;
+			}
+			else
+			{
+				entityData.SetState(EntityDestructionState::InDestruction);
+			}
 
 			InvokeEntityDestructionObservers(entity);
 
@@ -118,12 +128,11 @@ namespace decs
 
 				RemoveEntityFromArchetype(*entityData.m_CurrentArchetype, entityData);
 			}
-
-			entityData.m_IsEntityInDestruction = false;
-			if (entityData.m_CurrentArchetype == nullptr)
+			else
 			{
 				RemoveFromEmptyEntities(entityData);
 			}
+
 			m_EntityManager->DestroyEntity(entityID);
 			return true;
 		}
@@ -145,7 +154,7 @@ namespace decs
 		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
 		{
 			Archetype& archetype = *archetypes[archetypeIdx];
-			DestroyEntitesInArchetypes(archetype);
+			DestroyEntitesInArchetypes(archetype, invokeOnDestroyListeners);
 			archetype.Reset();
 		}
 
@@ -154,56 +163,16 @@ namespace decs
 		{
 			EntityData& data = *m_EmptyEntities[i];
 			entity.Set(data, this);
-			entity.m_EntityData->m_IsEntityInDestruction = true;
-			InvokeEntityDestructionObservers(entity);
-			entity.m_EntityData->m_IsEntityInDestruction = false;
+			data.SetState(decs::EntityDestructionState::InDestruction);
+			if (invokeOnDestroyListeners)
+			{
+				InvokeEntityDestructionObservers(entity);
+			}
 			m_EntityManager->DestroyEntity(data);
 		}
+		m_EmptyEntities.Clear();
 
 		ClearComponentsContainers();
-		m_EmptyEntities.Clear();
-	}
-
-	void Container::DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners)
-	{
-		auto& entitesData = archetype.m_EntitiesData;
-		uint64_t archetypeComponentsCount = archetype.GetComponentsCount();
-		uint64_t entityDataCount = entitesData.size();
-		uint64_t componentDataIndex = 0;
-
-		if (invokeOnDestroyListeners)
-		{
-			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
-			{
-				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-				m_EntityManager->DestroyEntity(archetypeEntityData.ID());
-			}
-		}
-		else
-		{
-			Entity entity;
-			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
-			{
-				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-				EntityData& data = m_EntityManager->GetEntityData(archetypeEntityData.m_ID);
-				data.m_IsEntityInDestruction = true;
-
-				entity.Set(archetypeEntityData.ID(), this);
-
-				InvokeEntityDestructionObservers(entity);
-
-				for (uint64_t i = 0; i < archetypeComponentsCount; i++)
-				{
-					auto& compRef = archetype.m_ComponentsRefs[componentDataIndex];
-					auto compContext = archetype.m_ComponentContexts[i];
-					compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, entity);
-					componentDataIndex += 1;
-				}
-
-				data.m_IsEntityInDestruction = false;
-				m_EntityManager->DestroyEntity(archetypeEntityData.ID());
-			}
-		}
 	}
 
 	void Container::SetEntityActive(const EntityID& entity, const bool& isActive)
@@ -343,7 +312,10 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
-				Entity spawnedEntity = spawnedEntities.emplace_back(CreateEntity(areActive), this);
+				EntityID entityId = m_EntityManager->CreateEntity(areActive);
+				Entity& spawnedEntity = spawnedEntities.emplace_back(entityId, this);
+				AddToEmptyEntities(*spawnedEntity.m_EntityData);
+				InvokeEntityCreationObservers(spawnedEntity);
 			}
 			return true;
 		}
@@ -448,24 +420,31 @@ namespace decs
 
 	bool Container::RemoveComponent(Entity& entity, const TypeID& componentTypeID)
 	{
-		if (!m_CanRemoveComponents || !entity.IsAlive() || entity.m_Container != this) return false;
+		if (!m_CanRemoveComponents || entity.m_Container != this) return false;
 
 		EntityData& entityData = *entity.m_EntityData;
-		if (entityData.m_IsEntityInDestruction || entityData.m_CurrentArchetype == nullptr) return false;
+		if (!entityData.IsValidToPerformComponentOperation() || entityData.m_CurrentArchetype == nullptr) return false;
 
 		uint64_t compIdxInArch = entityData.m_CurrentArchetype->FindTypeIndex(componentTypeID);
 		if (compIdxInArch == std::numeric_limits<uint64_t>::max())return false;
 
 		ComponentContextBase* componentContext = m_ComponentContexts[componentTypeID];
 
-		auto removedCompData = entityData.GetComponentRef(compIdxInArch);
+		auto& firstRemovedCompData = entityData.GetComponentRef(compIdxInArch);
+		if (m_PerformDelayedDestruction)
+		{
+			firstRemovedCompData.m_DelayedToDestroy = true;
+			AddComponentToDelayedDestroy(entity.ID(), componentTypeID);
+			return true;
+		}
+
 		{
 			componentContext->InvokeOnDestroyComponent_S(
-				removedCompData.ComponentPointer,
+				firstRemovedCompData.ComponentPointer,
 				entity
 			);
 		}
-		removedCompData = entityData.GetComponentRef(compIdxInArch);
+		const auto& removedCompData = entityData.GetComponentRef(compIdxInArch);
 
 		auto allocator = componentContext->GetAllocator();
 		auto result = allocator->RemoveSwapBack(removedCompData.ChunkIndex, removedCompData.ElementIndex);
@@ -515,10 +494,24 @@ namespace decs
 		return true;
 	}
 
-	bool Container::RemoveComponent(EntityID& e, const TypeID& componentTypeID)
+	bool Container::RemoveComponent(const EntityID& e, const TypeID& componentTypeID)
 	{
 		Entity entity(e, this);
 		return RemoveComponent(e, componentTypeID);
+	}
+
+	void Container::ClearComponentsContainers()
+	{
+		for (auto& [key, context] : m_ComponentContexts)
+		{
+			context->GetAllocator()->Clear();
+		}
+	}
+
+	void Container::InvokeOnCreateComponentFromEntityID(ComponentContextBase* componentContext, void* componentPtr, const EntityID& id)
+	{
+		Entity e(id, this);
+		componentContext->InvokeOnCreateComponent_S(componentPtr, e);
 	}
 
 	void Container::AddEntityToArchetype(
@@ -585,20 +578,6 @@ namespace decs
 		entityData.m_CurrentArchetype = &newArchetype;
 		entityData.m_IndexInArchetype = newArchetype.m_EntitiesCount;
 		newArchetype.m_EntitiesCount += 1;
-	}
-
-	void Container::ClearComponentsContainers()
-	{
-		for (auto& [key, context] : m_ComponentContexts)
-		{
-			context->GetAllocator()->Clear();
-		}
-	}
-
-	void Container::InvokeOnCreateComponentFromEntityID(ComponentContextBase* componentContext, void* componentPtr, const EntityID& id)
-	{
-		Entity e(id, this);
-		componentContext->InvokeOnCreateComponent_S(componentPtr, e);
 	}
 
 	void Container::AddEntityToSingleComponentArchetype(
@@ -710,6 +689,47 @@ namespace decs
 		}
 	}
 
+	void Container::DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners)
+	{
+		auto& entitesData = archetype.m_EntitiesData;
+		uint64_t archetypeComponentsCount = archetype.GetComponentsCount();
+		uint64_t entityDataCount = entitesData.size();
+		uint64_t componentDataIndex = 0;
+
+		if (invokeOnDestroyListeners)
+		{
+			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
+			{
+				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
+				m_EntityManager->DestroyEntity(archetypeEntityData.ID());
+			}
+		}
+		else
+		{
+			Entity entity;
+			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
+			{
+				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
+				EntityData& data = m_EntityManager->GetEntityData(archetypeEntityData.m_ID);
+				data.SetState(decs::EntityDestructionState::InDestruction);
+
+				entity.Set(archetypeEntityData.ID(), this);
+
+				InvokeEntityDestructionObservers(entity);
+
+				for (uint64_t i = 0; i < archetypeComponentsCount; i++)
+				{
+					auto& compRef = archetype.m_ComponentsRefs[componentDataIndex];
+					auto compContext = archetype.m_ComponentContexts[i];
+					compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, entity);
+					componentDataIndex += 1;
+				}
+
+				m_EntityManager->DestroyEntity(archetypeEntityData.ID());
+			}
+		}
+	}
+
 	bool Container::SetObserversManager(ObserversManager* observersManager)
 	{
 		if (observersManager == m_ObserversManager) return false;
@@ -753,10 +773,11 @@ namespace decs
 		}
 
 		Entity entity = {};
-		for (uint64_t i = 0; i < m_EmptyEntities.Size(); i++)
+		uint64_t emptyEntitiesSize = m_EmptyEntities.Size();
+		for (uint64_t i = 0; i < emptyEntitiesSize; i++)
 		{
-			EntityData& data = *m_EmptyEntities[i];
-			entity.Set(data, this);
+			EntityData* data = m_EmptyEntities[i];
+			entity.Set(*data, this);
 			InvokeEntityCreationObservers(entity);
 		}
 
@@ -825,7 +846,7 @@ namespace decs
 		uint64_t entityDataCount = archetype.m_EntitesCountToInitialize;
 		Entity entity;
 
-		for (int64_t entityDataIdx = entityDataCount - 1; entityDataIdx > 0; entityDataIdx--)
+		for (int64_t entityDataIdx = entityDataCount - 1; entityDataIdx > -1; entityDataIdx--)
 		{
 			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
 			entity.Set(archetypeEntityData.ID(), this);
@@ -909,7 +930,7 @@ namespace decs
 	{
 		for (auto& data : m_DelayedComponentsToDestroy)
 		{
-			RemoveComponent(data.first, data.second);
+			RemoveComponent(data.m_EntityID, data.m_TypeID);
 		}
 	}
 
@@ -925,7 +946,7 @@ namespace decs
 
 	void Container::AddComponentToDelayedDestroy(const EntityID& entityID, const TypeID typeID)
 	{
-		m_DelayedComponentsToDestroy.emplace_back(entityID, typeID);
+		m_DelayedComponentsToDestroy.insert({ entityID, typeID });
 	}
 
 }

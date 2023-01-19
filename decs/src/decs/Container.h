@@ -8,6 +8,54 @@
 
 #include "ObserversManager.h"
 
+
+namespace decs
+{
+	struct DelayedComponentPair
+	{
+	public:
+		EntityID m_EntityID = std::numeric_limits<EntityID>::max();
+		TypeID m_TypeID = std::numeric_limits<TypeID>::max();
+
+	public:
+		DelayedComponentPair()
+		{
+
+		}
+
+		DelayedComponentPair(
+			const EntityID& entityID,
+			const TypeID& typeID
+		) :
+			m_EntityID(entityID), m_TypeID(typeID)
+		{
+
+		}
+
+		bool operator==(const decs::DelayedComponentPair& rhs) const
+		{
+			return m_EntityID == rhs.m_EntityID && m_TypeID == rhs.m_TypeID;
+		}
+	};
+
+}
+
+//bool operator==(const decs::DelayedComponentPair& lhs, const decs::DelayedComponentPair& rhs) const
+//{
+//	return lhs.m_EntityID == rhs.m_EntityID && lhs.m_TypeID == rhs.m_TypeID;
+//}
+
+template<>
+struct std::hash<decs::DelayedComponentPair>
+{
+	std::size_t operator()(const decs::DelayedComponentPair& data) const
+	{
+		uint64_t eIDHash = std::hash<decs::EntityID>{}(data.m_EntityID);
+		uint64_t typeIdHash = std::hash<decs::TypeID>{}(data.m_TypeID);
+		return eIDHash ^ (typeIdHash + 0x9e3779b9 + (eIDHash << 6) + (eIDHash >> 2));
+	}
+};
+
 namespace decs
 {
 	class Entity;
@@ -17,6 +65,7 @@ namespace decs
 		ElementsCount,
 		BytesCount
 	};
+
 
 	class Container
 	{
@@ -150,8 +199,6 @@ namespace decs
 			return m_EntityManager->GetComponentsCount(entity);
 		}
 
-		void DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners = true);
-
 		inline void AddToEmptyEntities(EntityData& data)
 		{
 			data.m_IndexInArchetype = m_EmptyEntities.Size();
@@ -160,7 +207,7 @@ namespace decs
 
 		inline void RemoveFromEmptyEntities(EntityData& data)
 		{
-			if (data.m_IndexInArchetype < m_EmptyEntities.Size())
+			if (data.m_IndexInArchetype < m_EmptyEntities.Size() - 1)
 			{
 				m_EmptyEntities[data.m_IndexInArchetype] = m_EmptyEntities.Back();
 			}
@@ -320,13 +367,31 @@ namespace decs
 		template<typename ComponentType, typename ...Args>
 		ComponentType* AddComponent(const EntityID& e, Args&&... args)
 		{
-			if (!m_CanAddComponents) return nullptr;
 			constexpr TypeID copmonentTypeID = Type<ComponentType>::ID();
+			if (!m_CanAddComponents) return nullptr;
 			if (e >= m_EntityManager->GetEntitiesDataCount()) return nullptr;
 			EntityData& entityData = m_EntityManager->GetEntityData(e);
 
-			if (entityData.m_IsAlive && !entityData.m_IsEntityInDestruction)
+			if (entityData.IsValidToPerformComponentOperation())
 			{
+				if (m_PerformDelayedDestruction)
+				{
+					if (entityData.m_CurrentArchetype != nullptr)
+					{
+						uint64_t componentIndex = entityData.m_CurrentArchetype->FindTypeIndex(copmonentTypeID);
+						if (componentIndex != std::numeric_limits<uint64_t>::max())
+						{
+							auto& componentRef = entityData.GetComponentRef(componentIndex);
+							if (componentRef.m_DelayedToDestroy)
+							{
+								RemoveComponentFromDelayedToDestroy(e, copmonentTypeID);
+								componentRef.m_DelayedToDestroy = false;
+							}
+							return reinterpret_cast<ComponentType*>(componentRef.ComponentPointer);
+						}
+					}
+				}
+				else
 				{
 					auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
 					if (currentComponent != nullptr) return currentComponent;
@@ -378,15 +443,18 @@ namespace decs
 
 		bool RemoveComponent(Entity& e, const TypeID& componentTypeID);
 
-		bool RemoveComponent(EntityID& e, const TypeID& componentTypeID);
+		bool RemoveComponent(const EntityID& e, const TypeID& componentTypeID);
 
 		template<typename ComponentType>
 		ComponentType* GetComponent(const EntityID& e) const
 		{
-			if (IsEntityAlive(e))
+			if (e < m_EntityManager->GetEntitiesDataCount())
 			{
 				const EntityData& data = m_EntityManager->GetConstEntityData(e);
-				return GetComponentWithoutCheckingIsAlive<ComponentType>(data);
+				if (data.IsValidToPerformComponentOperation())
+				{
+					return GetComponentWithoutCheckingIsAlive<ComponentType>(data);
+				}
 			}
 			return nullptr;
 		}
@@ -394,16 +462,17 @@ namespace decs
 		template<typename ComponentType>
 		bool HasComponent(const EntityID& e) const
 		{
-			if (IsEntityAlive(e))
+			if (e < m_EntityManager->GetEntitiesDataCount())
 			{
 				const EntityData& data = m_EntityManager->GetConstEntityData(e);
+				if (data.IsValidToPerformComponentOperation())
+				{
+					if (data.m_CurrentArchetype == nullptr) return false;
 
-				if (data.m_CurrentArchetype == nullptr) return false;
-
-				uint64_t index = data.m_CurrentArchetype->FindTypeIndex(Type<ComponentType>::ID());
-				return index != std::numeric_limits<uint64_t>::max();
+					uint64_t index = data.m_CurrentArchetype->FindTypeIndex(Type<ComponentType>::ID());
+					return index != std::numeric_limits<uint64_t>::max();
+				}
 			}
-
 			return false;
 		}
 
@@ -480,25 +549,13 @@ namespace decs
 			if (compIndex == std::numeric_limits<uint64_t>::max()) return nullptr;
 
 			uint64_t dataIndex = archetype->GetComponentsCount() * data.m_IndexInArchetype + compIndex;
-			return reinterpret_cast<ComponentType*>(archetype->m_ComponentsRefs[dataIndex].ComponentPointer);
+			ComponentRef& componentRef = archetype->m_ComponentsRefs[dataIndex];
+			return reinterpret_cast<ComponentType*>(componentRef.GetComponentPointer());
 		}
 
 		void ClearComponentsContainers();
 
 		void InvokeOnCreateComponentFromEntityID(ComponentContextBase* componentContext, void* componentPtr, const EntityID& id);
-
-#pragma endregion
-
-#pragma region REMOVING COMPONENTS:
-	private:
-
-
-#pragma endregion
-
-#pragma region ADDING COMPONENTS:
-	private:
-
-
 
 #pragma endregion
 
@@ -564,6 +621,8 @@ namespace decs
 			Archetype* spawnArchetype
 		);
 
+		void DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners = true);
+
 #pragma endregion
 
 #pragma region OBSERVERS
@@ -628,7 +687,8 @@ namespace decs
 
 #pragma region DELAYED DESTROY:
 	private:
-		std::vector<std::pair<EntityID, TypeID>> m_DelayedComponentsToDestroy;
+
+		ecsSet<DelayedComponentPair> m_DelayedComponentsToDestroy;
 		std::vector<EntityID> m_DelayedEntitiesToDestroy;
 
 		bool m_PerformDelayedDestruction = false;
@@ -643,6 +703,12 @@ namespace decs
 		void AddEntityToDelayedDestroy(const EntityID& entityID);
 
 		void AddComponentToDelayedDestroy(const EntityID& entityID, const TypeID typeID);
+
+		inline void RemoveComponentFromDelayedToDestroy(const EntityID& entityID, const TypeID& typeID)
+		{
+			m_DelayedComponentsToDestroy.erase({ entityID, typeID });
+		}
 #pragma endregion
 	};
 }
+

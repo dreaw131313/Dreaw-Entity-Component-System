@@ -28,8 +28,6 @@ namespace decs
 
 		}
 
-		inline operator const EntityID& () const { return m_ID; }
-
 		inline EntityID ID() const { return m_ID; }
 		inline Container* GetContainer() const { return m_Container; }
 
@@ -156,7 +154,7 @@ namespace decs
 template<>
 struct std::hash<decs::Entity>
 {
-	std::size_t operator()(decs::Entity& entity)
+	std::size_t operator()(const decs::Entity& entity) const
 	{
 		return std::hash<uint64_t>{}(entity.ID());
 	}

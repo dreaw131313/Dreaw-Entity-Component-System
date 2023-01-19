@@ -25,6 +25,7 @@ namespace decs
 		{
 			m_FreeEntitiesCount -= 1;
 			EntityData& entityData = m_EntityData[m_FreeEntities.back()];
+			entityData.SetState(EntityDestructionState::Alive);
 			m_FreeEntities.pop_back();
 
 			entityData.m_IsAlive = true;

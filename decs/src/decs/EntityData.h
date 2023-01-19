@@ -8,8 +8,7 @@ namespace decs
 	{
 		Alive = 1,
 		InDestruction = 2,
-		DelayedToDestruction = 3,
-		Destructed = 4
+		DelayedToDestruction = 3
 	};
 
 	class EntityData
@@ -19,8 +18,7 @@ namespace decs
 		uint32_t m_Version = std::numeric_limits<uint32_t>::max();
 		bool m_IsAlive = false;
 		bool m_IsActive = false;
-		bool m_IsEntityInDestruction = false;
-		bool m_IsEntityDelayedToDestroy = false;
+		EntityDestructionState m_DestructionState = EntityDestructionState::Alive;
 
 		Archetype* m_CurrentArchetype = nullptr;
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
@@ -40,6 +38,31 @@ namespace decs
 		{
 			uint64_t dataIndex = (uint64_t)m_CurrentArchetype->GetComponentsCount() * (uint64_t)m_IndexInArchetype + componentTypeIndex;
 			return m_CurrentArchetype->m_ComponentsRefs[dataIndex];
+		}
+
+		inline bool IsAlive() const
+		{
+			return m_IsAlive && m_DestructionState != EntityDestructionState::InDestruction;
+		}
+
+		inline bool IsAliveAndInDestruction() const
+		{
+			return m_IsAlive && m_DestructionState == EntityDestructionState::InDestruction;
+		}
+
+		inline bool IsInDestruction() const
+		{
+			return m_DestructionState == EntityDestructionState::InDestruction;
+		}
+
+		inline void SetState(EntityDestructionState state)
+		{
+			m_DestructionState = state;
+		}
+
+		inline bool IsValidToPerformComponentOperation() const
+		{
+			return m_IsAlive && m_DestructionState == decs::EntityDestructionState::Alive;
 		}
 	};
 }

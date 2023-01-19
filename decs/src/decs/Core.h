@@ -27,12 +27,15 @@ namespace decs
 
 	template<typename Key, typename Value>
 	//using ecsMap = std::unordered_map<Key, Value>;
-	using ecsMap = ska::unordered_map<Key, Value>;
+	//using ecsMap = ska::unordered_map<Key, Value>;
+	using ecsMap = ska::bytell_hash_map<Key, Value>;
 	//using ecsMap = ska::flat_hash_map<Key, Value>;
-	//using ecsMap = ska::bytell_hash_map<Key, Value>;
 
 	template<typename Key>
-	using ecsSet = std::unordered_set<Key>;
+	//using ecsSet = std::unordered_set<Key>;
+	//using ecsSet = std::unordered_set<Key>;
+	using ecsSet = ska::bytell_hash_set<Key>;
+	//using ecsSet = ska::flat_hash_set<Key>;
 
 #if defined _MSC_VER
 #   define FULL_FUNCTION_NAME __FUNCSIG__
@@ -69,4 +72,5 @@ namespace decs
 	{
 		return fnv1a_64(s, c_string_length(s));
 	}
+
 }

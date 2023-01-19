@@ -31,7 +31,7 @@ namespace decs
 		inline bool IsEntityAlive(const EntityID& entity) const
 		{
 			if (entity >= m_enitiesDataCount) return false;
-			return m_EntityData[entity].m_IsAlive;
+			return m_EntityData[entity].IsAlive();
 		}
 
 		/// <summary>
