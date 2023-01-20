@@ -201,7 +201,7 @@ namespace decs
 
 		inline void AddToEmptyEntities(EntityData& data)
 		{
-			data.m_IndexInArchetype = m_EmptyEntities.Size();
+			data.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
 			m_EmptyEntities.EmplaceBack(&data);
 		}
 

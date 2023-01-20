@@ -64,14 +64,18 @@ namespace decs
 
 	bool Container::DestroyEntity(Entity& entity)
 	{
-		if (m_CanDestroyEntities && entity.IsAlive() && entity.m_Container == this)
+		if (m_CanDestroyEntities && entity.m_Container == this)
 		{
 			EntityID entityID = entity.ID();
 			EntityData& entityData = *entity.m_EntityData;
-			if (entityData.IsInDestruction()) return false;
+			if (!entityData.CanBeDestructed())
+			{
+				return false;
+			}
 
 			if (m_PerformDelayedDestruction)
 			{
+				if (entityData.IsDelayedToDestruction()) { return false; }
 				entityData.SetState(EntityDestructionState::DelayedToDestruction);
 				AddEntityToDelayedDestroy(entity.ID());
 				return true;
@@ -87,15 +91,15 @@ namespace decs
 			if (currentArchetype != nullptr)
 			{
 				// Invoke On destroy metyhods
-				uint64_t firstComponentDataIndexInArch = currentArchetype->GetComponentsCount() * entityData.m_IndexInArchetype;
 
 				for (uint64_t i = 0; i < currentArchetype->GetComponentsCount(); i++)
 				{
-					auto& compRef = currentArchetype->m_ComponentsRefs[firstComponentDataIndexInArch + i];
+					auto& compRef = entityData.GetComponentRef(i);
 					auto compContext = currentArchetype->m_ComponentContexts[i];
 					compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, entity);
 				}
 
+				uint64_t firstComponentDataIndexInArch = currentArchetype->GetComponentsCount() * entityData.m_IndexInArchetype;
 				// Remove entity from component bucket:
 				for (uint64_t i = 0; i < currentArchetype->GetComponentsCount(); i++)
 				{
@@ -609,7 +613,11 @@ namespace decs
 
 				if (currentCompID == compTypeID)
 				{
-					newArchetype.m_ComponentsRefs.emplace_back(newCompChunkIndex, newCompElementIndex, newCompPtr);
+					newArchetype.m_ComponentsRefs.emplace_back(
+						(uint32_t)newCompChunkIndex, 
+						(uint32_t)newCompElementIndex, 
+						newCompPtr
+					);
 				}
 				else
 				{
@@ -652,7 +660,11 @@ namespace decs
 		void* componentPointer
 	)
 	{
-		newArchetype.m_ComponentsRefs.emplace_back(newCompChunkIndex, newCompElementIndex, componentPointer);
+		newArchetype.m_ComponentsRefs.emplace_back(
+			(uint32_t)newCompChunkIndex, 
+			(uint32_t)newCompElementIndex, 
+			componentPointer
+		);
 		newArchetype.m_EntitiesData.emplace_back(entityData.m_ID, entityData.m_IsActive);
 
 		entityData.m_CurrentArchetype = &newArchetype;
@@ -721,8 +733,8 @@ namespace decs
 
 		auto& compData = data.m_CurrentArchetype->m_ComponentsRefs[compDataIndex];
 
-		compData.ChunkIndex = compChunkIndex;
-		compData.ElementIndex = compElementIndex;
+		compData.ChunkIndex = (uint32_t)compChunkIndex;
+		compData.ElementIndex = (uint32_t)compElementIndex;
 		compData.ComponentPointer = compPtr;
 	}
 
@@ -746,8 +758,8 @@ namespace decs
 			auto& contextData = spawnData.ComponentContexts[compIdx];
 
 			spawnArchetype->m_ComponentsRefs.emplace_back(
-				contextData.ComponentData.ChunkIndex,
-				contextData.ComponentData.ElementIndex,
+				(uint32_t)contextData.ComponentData.ChunkIndex,
+				(uint32_t)contextData.ComponentData.ElementIndex,
 				contextData.ComponentData.Component
 			);
 		}
@@ -761,14 +773,6 @@ namespace decs
 		uint64_t componentDataIndex = 0;
 
 		if (invokeOnDestroyListeners)
-		{
-			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
-			{
-				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-				m_EntityManager->DestroyEntity(archetypeEntityData.ID());
-			}
-		}
-		else
 		{
 			Entity entity;
 			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
@@ -789,6 +793,14 @@ namespace decs
 					componentDataIndex += 1;
 				}
 
+				m_EntityManager->DestroyEntity(archetypeEntityData.ID());
+			}
+		}
+		else
+		{
+			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
+			{
+				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
 				m_EntityManager->DestroyEntity(archetypeEntityData.ID());
 			}
 		}

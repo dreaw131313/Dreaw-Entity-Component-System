@@ -78,5 +78,15 @@ namespace decs
 		{
 			return m_IsAlive && m_DestructionState == decs::EntityDestructionState::Alive;
 		}
+
+		inline bool CanBeDestructed() const
+		{
+			return m_IsAlive && m_DestructionState != EntityDestructionState::InDestruction;
+		}
+
+		inline bool IsDelayedToDestruction()
+		{
+			return m_DestructionState == EntityDestructionState::DelayedToDestruction;
+		}
 	};
 }

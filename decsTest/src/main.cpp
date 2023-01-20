@@ -75,7 +75,7 @@ int main()
 	container.InvokeEntitesOnCreateListeners();
 
 
-	if (!entity.HasComponent<C1>())
+	/*if (!entity.HasComponent<C1>())
 	{
 		Print("Entity has not component!");
 	}
@@ -83,7 +83,7 @@ int main()
 	if (!entity.RemoveComponent<C1>())
 	{
 		Print("Failed to remove component!");
-	}
+	}*/
 
 	container.DestroyOwnedEntities();
 
