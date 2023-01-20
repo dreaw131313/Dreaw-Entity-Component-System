@@ -376,20 +376,8 @@ namespace decs
 			{
 				if (m_PerformDelayedDestruction)
 				{
-					if (entityData.m_CurrentArchetype != nullptr)
-					{
-						uint64_t componentIndex = entityData.m_CurrentArchetype->FindTypeIndex(copmonentTypeID);
-						if (componentIndex != std::numeric_limits<uint64_t>::max())
-						{
-							auto& componentRef = entityData.GetComponentRef(componentIndex);
-							if (componentRef.m_DelayedToDestroy)
-							{
-								RemoveComponentFromDelayedToDestroy(e, copmonentTypeID);
-								componentRef.m_DelayedToDestroy = false;
-							}
-							return reinterpret_cast<ComponentType*>(componentRef.ComponentPointer);
-						}
-					}
+					ComponentType* delayedToDestroyComponent = TryAddComponentDelayedToDestroy<ComponentType>(entityData);
+					if (delayedToDestroyComponent != nullptr) { return delayedToDestroyComponent; }
 				}
 				else
 				{
@@ -557,6 +545,32 @@ namespace decs
 
 		void InvokeOnCreateComponentFromEntityID(ComponentContextBase* componentContext, void* componentPtr, const EntityID& id);
 
+	private:
+		template<typename ComponentType, typename ...Args>
+		ComponentType* TryAddComponentDelayedToDestroy(
+			EntityData& entityData
+		)
+		{
+			constexpr TypeID copmonentTypeID = Type<ComponentType>::ID();
+			if (entityData.m_CurrentArchetype != nullptr)
+			{
+				uint64_t componentIndex = entityData.m_CurrentArchetype->FindTypeIndex(copmonentTypeID);
+				if (componentIndex != std::numeric_limits<uint64_t>::max())
+				{
+					auto& componentRef = entityData.GetComponentRef(componentIndex);
+					if (componentRef.m_DelayedToDestroy)
+					{
+						RemoveComponentFromDelayedToDestroy(entityData.m_ID, copmonentTypeID);
+						componentRef.m_DelayedToDestroy = false;
+					}
+					return reinterpret_cast<ComponentType*>(componentRef.ComponentPointer);
+				}
+			}
+
+			return nullptr;
+		}
+
+		bool RemoveComponentWithoutInvokingListener(const EntityID& e, const TypeID& componentTypeID);
 #pragma endregion
 
 #pragma region ARCHETYPES:

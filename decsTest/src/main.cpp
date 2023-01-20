@@ -57,8 +57,7 @@ int main()
 	C1Observer c1Observer = {};
 	observerManager.SetComponentCreateObserver<C1>(&c1Observer);
 	observerManager.SetComponentDestroyObserver<C1>(&c1Observer);
-
-
+	
 	decs::Container container = {};
 	decs::Entity entity = container.CreateEntity();
 

@@ -423,19 +423,23 @@ namespace decs
 		if (!m_CanRemoveComponents || entity.m_Container != this) return false;
 
 		EntityData& entityData = *entity.m_EntityData;
-		if (!entityData.IsValidToPerformComponentOperation() || entityData.m_CurrentArchetype == nullptr) return false;
+		if (entityData.m_CurrentArchetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
 
 		uint64_t compIdxInArch = entityData.m_CurrentArchetype->FindTypeIndex(componentTypeID);
-		if (compIdxInArch == std::numeric_limits<uint64_t>::max())return false;
+		if (compIdxInArch == std::numeric_limits<uint64_t>::max()) return false;
 
 		ComponentContextBase* componentContext = m_ComponentContexts[componentTypeID];
 
 		auto& firstRemovedCompData = entityData.GetComponentRef(compIdxInArch);
 		if (m_PerformDelayedDestruction)
 		{
-			firstRemovedCompData.m_DelayedToDestroy = true;
-			AddComponentToDelayedDestroy(entity.ID(), componentTypeID);
-			return true;
+			if (!firstRemovedCompData.m_DelayedToDestroy)
+			{
+				firstRemovedCompData.m_DelayedToDestroy = true;
+				AddComponentToDelayedDestroy(entity.ID(), componentTypeID);
+				return true;
+			}
+			return false;
 		}
 
 		{
@@ -497,7 +501,7 @@ namespace decs
 	bool Container::RemoveComponent(const EntityID& e, const TypeID& componentTypeID)
 	{
 		Entity entity(e, this);
-		return RemoveComponent(e, componentTypeID);
+		return RemoveComponent(entity, componentTypeID);
 	}
 
 	void Container::ClearComponentsContainers()
@@ -512,6 +516,66 @@ namespace decs
 	{
 		Entity e(id, this);
 		componentContext->InvokeOnCreateComponent_S(componentPtr, e);
+	}
+
+	bool Container::RemoveComponentWithoutInvokingListener(const EntityID& entityID, const TypeID& componentTypeID)
+	{
+		Entity entity = { entityID, this };
+		EntityData& entityData = *entity.m_EntityData;
+		if (entityData.m_CurrentArchetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
+
+		uint64_t compIdxInArch = entityData.m_CurrentArchetype->FindTypeIndex(componentTypeID);
+		if (compIdxInArch == std::numeric_limits<uint64_t>::max()) return false;
+
+		ComponentContextBase* componentContext = m_ComponentContexts[componentTypeID];
+
+		const auto& removedCompData = entityData.GetComponentRef(compIdxInArch);
+		auto allocator = componentContext->GetAllocator();
+		auto result = allocator->RemoveSwapBack(removedCompData.ChunkIndex, removedCompData.ElementIndex);
+
+		if (result.IsValid())
+		{
+			uint64_t compTypeIndexInFixedEntityArchetype;
+			EntityData& fixedEntity = m_EntityManager->GetEntityData(result.eID);
+			if (entityData.m_CurrentArchetype == fixedEntity.m_CurrentArchetype)
+			{
+				compTypeIndexInFixedEntityArchetype = compIdxInArch;
+			}
+			else
+			{
+				compTypeIndexInFixedEntityArchetype = fixedEntity.m_CurrentArchetype->FindTypeIndex(componentTypeID);
+			}
+
+			UpdateEntityComponentAccesDataInArchetype(
+				fixedEntity,
+				result.ChunkIndex,
+				result.ElementIndex,
+				allocator->GetComponentAsVoid(result.ChunkIndex, result.ElementIndex),
+				compTypeIndexInFixedEntityArchetype
+			);
+		}
+
+		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(*entityData.m_CurrentArchetype, componentTypeID);
+		if (newEntityArchetype == nullptr)
+		{
+			RemoveEntityFromArchetype(*entityData.m_CurrentArchetype, entityData);
+			AddToEmptyEntities(entityData);
+		}
+		else
+		{
+			AddEntityToArchetype(
+				*newEntityArchetype,
+				entityData,
+				std::numeric_limits<uint64_t>::max(),
+				std::numeric_limits<uint64_t>::max(),
+				componentTypeID,
+				nullptr,
+				false,
+				compIdxInArch
+			);
+		}
+
+		return true;
 	}
 
 	void Container::AddEntityToArchetype(
@@ -770,15 +834,15 @@ namespace decs
 				Archetype& archetype = *archetypes[archetypeIdx];
 				InvokeArchetypeOnCreateListeners(archetype);
 			}
-		}
 
-		Entity entity = {};
-		uint64_t emptyEntitiesSize = m_EmptyEntities.Size();
-		for (uint64_t i = 0; i < emptyEntitiesSize; i++)
-		{
-			EntityData* data = m_EmptyEntities[i];
-			entity.Set(*data, this);
-			InvokeEntityCreationObservers(entity);
+			Entity entity = {};
+			uint64_t emptyEntitiesSize = m_EmptyEntities.Size();
+			for (uint64_t i = 0; i < emptyEntitiesSize; i++)
+			{
+				EntityData* data = m_EmptyEntities[i];
+				entity.Set(*data, this);
+				InvokeEntityCreationObservers(entity);
+			}
 		}
 
 		DestroyDelayedEntities();

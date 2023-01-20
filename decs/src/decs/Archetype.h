@@ -32,8 +32,8 @@ namespace decs
 	{
 	public:
 		bool m_DelayedToDestroy = false;
-		uint64_t ChunkIndex = std::numeric_limits< uint64_t>::max();
-		uint64_t ElementIndex = std::numeric_limits< uint64_t>::max();
+		uint32_t ChunkIndex = std::numeric_limits<uint32_t>::max();
+		uint32_t ElementIndex = std::numeric_limits<uint32_t>::max();
 		void* ComponentPointer = nullptr;
 
 	public:
@@ -43,8 +43,8 @@ namespace decs
 		}
 
 		ComponentRef(
-			const uint64_t& chunkIndex,
-			const uint64_t& elementIndex,
+			const uint32_t& chunkIndex,
+			const uint32_t& elementIndex,
 			void*& componentPointer
 		) :
 			ChunkIndex(chunkIndex),
@@ -158,13 +158,13 @@ namespace decs
 
 		inline uint64_t FindTypeIndex(const TypeID& typeID) const
 		{
-			/*if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
+			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint64_t i = 0; i < m_ComponentsCount; i++)
 					if (m_TypeIDs[i] == typeID) return i;
 
 				return std::numeric_limits<uint64_t>::max();
-			}*/
+			}
 
 			auto it = m_TypeIDsIndexes.find(typeID);
 			if (it == m_TypeIDsIndexes.end())
@@ -177,13 +177,13 @@ namespace decs
 		inline uint64_t FindTypeIndex() const
 		{
 			constexpr TypeID typeID = Type<T>::ID();
-			/*if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
+			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint64_t i = 0; i < m_ComponentsCount; i++)
 					if (m_TypeIDs[i] == typeID) return i;
 
 				return std::numeric_limits<uint64_t>::max();
-			}*/
+			}
 
 			auto it = m_TypeIDsIndexes.find(typeID);
 			if (it == m_TypeIDsIndexes.end())

@@ -42,7 +42,7 @@ namespace decs
 
 		inline bool IsAlive() const
 		{
-			return m_IsAlive && m_DestructionState != EntityDestructionState::InDestruction;
+			return m_IsAlive && m_DestructionState == EntityDestructionState::Alive;
 		}
 
 		inline bool IsAliveAndInDestruction() const
@@ -58,6 +58,20 @@ namespace decs
 		inline void SetState(EntityDestructionState state)
 		{
 			m_DestructionState = state;
+
+			switch (state)
+			{
+				case EntityDestructionState::Alive:
+				{
+					break;
+				}
+				case EntityDestructionState::InDestruction:
+				case EntityDestructionState::DelayedToDestruction:
+				{
+					m_IsActive = false;
+					break;
+				}
+			}
 		}
 
 		inline bool IsValidToPerformComponentOperation() const

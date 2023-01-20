@@ -40,7 +40,7 @@ namespace decs
 
 		inline bool IsAlive() const
 		{
-			return IsValid() && m_Container->IsEntityAlive(m_ID);
+			return IsValid() && m_EntityData->IsAlive();
 		}
 
 		inline void SetActive(const bool& isActive)
@@ -98,7 +98,8 @@ namespace decs
 		template<typename T>
 		inline bool RemoveComponent()
 		{
-			return IsValid() && m_Container->RemoveComponent(*this, Type<T>::ID());
+			constexpr TypeID componentTypeID = Type<T>::ID();
+			return IsValid() && m_Container->RemoveComponent(*this, componentTypeID);
 		}
 
 		inline uint32_t GetVersion() const
