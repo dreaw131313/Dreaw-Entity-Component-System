@@ -36,16 +36,13 @@ namespace decs
 		inline EntityID ID() const { return m_ID; }
 		inline Container* GetContainer() const { return m_Container; }
 
-		bool IsNull() const { return !IsAlive(); }
+		inline bool IsNull() const { return !IsValid() || !m_EntityData->IsAlive(); }
+
+		inline bool IsNotNull() const { return IsValid() && m_EntityData->IsAlive(); }
 
 		inline bool IsActive() const
 		{
 			return IsValid() && m_EntityData->m_IsActive;
-		}
-
-		inline bool IsAlive() const
-		{
-			return IsValid() && m_EntityData->IsAlive();
 		}
 
 		inline void SetActive(const bool& isActive)

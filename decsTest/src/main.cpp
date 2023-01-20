@@ -20,22 +20,26 @@ public:
 	}
 };
 
-class C1Observer : 
+class C1Observer :
 	public decs::CreateComponentObserver<C1>,
 	public decs::DestroyComponentObserver<C1>
 {
+public:
+	decs::Container* m_ECSContainer;
+	C1Observer(decs::Container* ecsContainer) :
+		m_ECSContainer(ecsContainer)
+	{
+
+	}
 public:
 	void OnCreateComponent(C1& c, decs::Entity& e) override
 	{
 		Print("C1 Create");
 
-		if (c.entityToDestroy.IsAlive())
+		m_ECSContainer->Spawn(c.entityToDestroy);
+		if (!c.entityToDestroy.IsNull())
 		{
 			c.entityToDestroy.RemoveComponent<C1>();
-			c.entityToDestroy.AddComponent<C1>();
-
-			c.entityToDestroy.Destroy();
-
 			c.entityToDestroy.AddComponent<C1>();
 			c.entityToDestroy.RemoveComponent<C1>();
 		}
@@ -52,12 +56,7 @@ int main()
 {
 	Print("Start:");
 
-	decs::ObserversManager observerManager;
 
-	C1Observer c1Observer = {};
-	observerManager.SetComponentCreateObserver<C1>(&c1Observer);
-	observerManager.SetComponentDestroyObserver<C1>(&c1Observer);
-	
 	decs::Container container = {};
 	decs::Entity entity = container.CreateEntity();
 
@@ -70,12 +69,17 @@ int main()
 	comp->entityToDestroy = container.CreateEntity();
 	comp->entityToDestroy.AddComponent<C1>();
 
+	decs::ObserversManager observerManager;
+
+	C1Observer c1Observer = { &container };
+	observerManager.SetComponentCreateObserver<C1>(&c1Observer);
+	observerManager.SetComponentDestroyObserver<C1>(&c1Observer);
 
 	container.SetObserversManager(&observerManager);
 	container.InvokeEntitesOnCreateListeners();
 
 
-	/*if (!entity.HasComponent<C1>())
+	if (!entity.HasComponent<C1>())
 	{
 		Print("Entity has not component!");
 	}
@@ -83,7 +87,7 @@ int main()
 	if (!entity.RemoveComponent<C1>())
 	{
 		Print("Failed to remove component!");
-	}*/
+	}
 
 	container.DestroyOwnedEntities();
 
