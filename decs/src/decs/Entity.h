@@ -28,6 +28,11 @@ namespace decs
 
 		}
 
+		bool operator==(const Entity& rhs)const
+		{
+			return this->m_Container == rhs.m_Container && this->m_ID == rhs.m_ID && this->m_Version == rhs.m_Version;
+		}
+
 		inline EntityID ID() const { return m_ID; }
 		inline Container* GetContainer() const { return m_Container; }
 
