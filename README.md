@@ -43,13 +43,6 @@ int main()
 	entity1.RemoveComponent<Component2>();
 	entity1.Destroy()
 	
-	// or container functions:
-	decs::Entity entity2 = container.CreateEntity();
-	Component1* c1 = container.AddComponent<Component1>(entity2, 1.f, 2.f);
-	Component2* c2 = container.AddComponent<Component2>(entity2, 1.f, 2.f);
-	container.RemoveComponent<Component2>(entity2);
-	container.DestroyEntity(entity2);
-	
 	return 0;
 }
 ```
@@ -77,7 +70,7 @@ Entities can also be activated or deactivated. Deactivated entities will not be 
 decs::Container container = {};
 decs::Entity entity = container.CreateEntity();
 entity.SetActive(true);
-container.SetEntityActive(false);
+bool isActive = entity.IsActive();
 ```
 
 ### Iterating over entites
