@@ -35,7 +35,7 @@ namespace decs
 
 		inline bool IsActive() const
 		{
-			return IsValid() && m_Container->IsEntityActive(m_ID);
+			return IsValid() && m_EntityData->m_IsActive;
 		}
 
 		inline bool IsAlive() const

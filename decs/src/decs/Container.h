@@ -37,13 +37,7 @@ namespace decs
 			return m_EntityID == rhs.m_EntityID && m_TypeID == rhs.m_TypeID;
 		}
 	};
-
 }
-
-//bool operator==(const decs::DelayedComponentPair& lhs, const decs::DelayedComponentPair& rhs) const
-//{
-//	return lhs.m_EntityID == rhs.m_EntityID && lhs.m_TypeID == rhs.m_TypeID;
-//}
 
 template<>
 struct std::hash<decs::DelayedComponentPair>
