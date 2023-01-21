@@ -118,74 +118,63 @@ namespace decs
 		}
 
 		template<typename Callable>
-		void ForEach(const IterationType& iterationType, Callable&& func, const bool& fetchEntities = true)
+		void ForEach(Callable&& func)
 		{
 			if (!IsValid()) return;
-			if (fetchEntities)
-			{
-				Fetch();
-			}
-
+			Fetch();
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
 				archContext.ValidateEntitiesCount();
 
-			switch (iterationType)
+			if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 			{
-				case IterationType::Forward:
-				{
-					ForEachForward(func);
-					break;
-				}
-				case IterationType::Backward:
-				{
-					ForEachBackward(func);
-					break;
-				}
+				ForEachWithEntityBackward(func);
+			}
+			else
+			{
+				ForEachBackward(func);
 			}
 		}
 
 		template<typename Callable>
-		void ForEachWithEntity(const IterationType& iterationType, Callable&& func, const bool& fetchEntities = true)
+		void ForEach(Callable&& func, const IterationType& iterationType)
 		{
 			if (!IsValid()) return;
-			if (fetchEntities)
-			{
-				Fetch();
-			}
-
+			Fetch();
 			for (ArchetypeContext& archContext : m_ArchetypesContexts)
 				archContext.ValidateEntitiesCount();
 
-			switch (iterationType)
+			if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 			{
-				case IterationType::Forward:
+				switch (iterationType)
 				{
-					ForEachWithEntityForward(func);
-					break;
-				}
-				case IterationType::Backward:
-				{
-					ForEachWithEntityBackward(func);
-					break;
+					case IterationType::Forward:
+					{
+						ForEachWithEntityForward(func);
+						break;
+					}
+					case IterationType::Backward:
+					{
+						ForEachWithEntityBackward(func);
+						break;
+					}
 				}
 			}
-		}
-
-		template<typename Callable>
-		inline void ForEach(Callable&& func, const bool& fetchEntities = true)
-		{
-			ForEach(IterationType::Backward, func, fetchEntities);
-		}
-
-		template<typename Callable>
-		inline void ForEachWithEntity(Callable&& func, const bool& fetchEntities = true)
-		{
-			ForEachWithEntity(IterationType::Backward, func, fetchEntities);
-		}
-
-		void TestForeach()
-		{
-
+			else
+			{
+				switch (iterationType)
+				{
+					case IterationType::Forward:
+					{
+						ForEachForward(func);
+						break;
+					}
+					case IterationType::Backward:
+					{
+						ForEachBackward(func);
+						break;
+					}
+				}
+			}
 		}
 
 	private:
@@ -659,10 +648,23 @@ namespace decs
 			inline bool IsValid() { return m_IsValid; }
 
 			template<typename Callable>
-			void ForEach(Callable&& func)
+			inline void ForEach(Callable&& func)
 			{
 				if (!m_IsValid) return;
 
+				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+				{
+					ForEachWithEntity(func);
+				}
+				else
+				{
+					ForEachWithoutEntity(func);
+				}
+			}
+		private:
+			template<typename Callable>
+			void ForEachWithoutEntity(Callable&& func)
+			{
 				std::tuple<ComponentsTypes*...> tuple = {};
 				uint64_t contextIndex = m_FirstArchetypeIndex;
 				uint64_t contextCount = m_LastArchetypeIndex + 1;
@@ -710,8 +712,6 @@ namespace decs
 			template<typename Callable>
 			void ForEachWithEntity(Callable&& func)
 			{
-				if (!m_IsValid) return;
-
 				Entity iteratedEntity = {};
 				std::tuple<Entity*, ComponentsTypes*...> tuple = {};
 				std::get<Entity*>(tuple) = &iteratedEntity;
@@ -777,11 +777,11 @@ namespace decs
 			inline void SetTupleElements(
 				std::tuple<ComponentsTypes*...>& tuple,
 				const uint64_t& compIndex,
-				TypeID*& typesIndexe,
+				TypeID*& typesIndexes,
 				ComponentRef*& componentsRefs
 			)const
 			{
-				auto& compRef = componentsRefs[typesIndexe[compIndex]];
+				auto& compRef = componentsRefs[typesIndexes[compIndex]];
 				std::get<T*>(tuple) = reinterpret_cast<T*>(compRef.ComponentPointer);
 
 				if constexpr (sizeof...(Ts) == 0) return;
@@ -789,18 +789,18 @@ namespace decs
 				SetTupleElements<Ts...>(
 					tuple,
 					compIndex + 1,
-					typesIndexe,
+					typesIndexes,
 					componentsRefs
 					);
 			}
 
 			template<>
-			void SetTupleElements<void>(
+			inline void SetTupleElements<void>(
 				std::tuple<ComponentsTypes*...>& tuple,
 				const uint64_t& compIndex,
-				TypeID*& typesIndexe,
+				TypeID*& typesIndexes,
 				ComponentRef*& componentsRefs
-				)
+				) const
 			{
 
 			}
@@ -809,11 +809,11 @@ namespace decs
 			inline void SetWithEntityTupleElements(
 				std::tuple<Entity*, ComponentsTypes*...>& tuple,
 				const uint64_t& compIndex,
-				TypeID*& typesIndexe,
+				TypeID*& typesIndexes,
 				ComponentRef*& componentsRefs
 			) const
 			{
-				auto& compRef = componentsRefs[typesIndexe[compIndex]];
+				auto& compRef = componentsRefs[typesIndexes[compIndex]];
 				std::get<T*>(tuple) = reinterpret_cast<T*>(compRef.ComponentPointer);
 
 				if constexpr (sizeof...(Ts) == 0) return;
@@ -821,18 +821,18 @@ namespace decs
 				SetWithEntityTupleElements<Ts...>(
 					tuple,
 					compIndex + 1,
-					typesIndexe,
+					typesIndexes,
 					componentsRefs
 					);
 			}
 
 			template<>
-			void SetWithEntityTupleElements<void>(
+			inline void SetWithEntityTupleElements<void>(
 				std::tuple<Entity*, ComponentsTypes*...>& tuple,
 				const uint64_t& compIndex,
-				TypeID*& typesIndexe,
+				TypeID*& typesIndexes,
 				ComponentRef*& componentsRefs
-				)
+				) const
 			{
 
 			}

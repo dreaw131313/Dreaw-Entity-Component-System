@@ -94,14 +94,26 @@ int main()
 
 	ViewType testView = { container };
 
-	auto lambda = [&] (decs::Entity& entity, C1& c1)
+	auto lambda1 = [&] (decs::Entity& entity, C1& c1)
+	{
+
+	};
+	auto lambda2 = [&] (C1& c1)
 	{
 
 	};
 
-	testView.ForEachWithEntity(lambda);
-	testView.ForEachWithEntity(decs::IterationType::Forward, lambda);
+	testView.ForEach(lambda1);
+	testView.ForEach(lambda2);
 
+
+	std::vector<ViewType::BatchIterator> iterators;
+	testView.CreateBatchIterators(iterators, 10, 1000);
+	for (auto& it : iterators)
+	{
+		it.ForEach(lambda1);
+		it.ForEach(lambda2);
+	}
 
 	container.DestroyOwnedEntities();
 
