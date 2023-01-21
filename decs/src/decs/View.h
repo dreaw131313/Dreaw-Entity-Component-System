@@ -208,6 +208,7 @@ namespace decs
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				if (ctx.m_EntitiesCount == 0) continue;
 				TypeID* typeIndexes = ctx.TypeIndexes;
 				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
 
@@ -241,6 +242,8 @@ namespace decs
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				if (ctx.m_EntitiesCount == 0) continue;
+
 				TypeID* typeIndexes = ctx.TypeIndexes;
 				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
 
@@ -276,6 +279,8 @@ namespace decs
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				if (ctx.m_EntitiesCount == 0) continue;
+
 				TypeID* typeIndexes = ctx.TypeIndexes;
 				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
 
@@ -316,6 +321,8 @@ namespace decs
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				if (ctx.m_EntitiesCount == 0) continue;
+
 				TypeID* typeIndexes = ctx.TypeIndexes;
 				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
 
