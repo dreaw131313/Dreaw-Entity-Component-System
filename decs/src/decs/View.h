@@ -122,8 +122,11 @@ namespace decs
 		{
 			if (!IsValid()) return;
 			Fetch();
-			for (ArchetypeContext& archContext : m_ArchetypesContexts)
-				archContext.ValidateEntitiesCount();
+			uint64_t archetypesCount = m_ArchetypesContexts.size();
+			for (uint64_t i = 0; i < archetypesCount; i++)
+			{
+				m_ArchetypesContexts[i].ValidateEntitiesCount();
+			}
 
 			if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 			{
@@ -140,8 +143,11 @@ namespace decs
 		{
 			if (!IsValid()) return;
 			Fetch();
-			for (ArchetypeContext& archContext : m_ArchetypesContexts)
-				archContext.ValidateEntitiesCount();
+			uint64_t archetypesCount = m_ArchetypesContexts.size();
+			for (uint64_t i = 0; i < archetypesCount; i++)
+			{
+				m_ArchetypesContexts[i].ValidateEntitiesCount();
+			}
 
 			if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 			{
