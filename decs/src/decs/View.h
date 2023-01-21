@@ -9,6 +9,12 @@
 
 namespace decs
 {
+	enum class IterationType : uint8_t
+	{
+		Forward = 0,
+		Backward = 1
+	};
+
 	template<typename... ComponentsTypes>
 	class View
 	{
@@ -167,6 +173,61 @@ namespace decs
 			}
 		}
 
+		template<typename Callable>
+		void ForEach(const IterationType& iterationType, Callable&& func, const bool& fetchEntities = true)
+		{
+			if (!IsValid()) return;
+			if (fetchEntities)
+			{
+				Fetch();
+			}
+
+			for (ArchetypeContext& archContext : m_ArchetypesContexts)
+				archContext.ValidateEntitiesCount();
+
+			switch (iterationType)
+			{
+				case IterationType::Forward:
+				{
+					ForEachForward(func);
+					break;
+				}
+				case IterationType::Backward:
+				{
+					ForEachBackward(func);
+					break;
+				}
+			}
+		}
+
+		template<typename Callable>
+		void ForEachWithEntity(const IterationType& iterationType, Callable&& func, const bool& fetchEntities = true)
+		{
+			if (!IsValid()) return;
+			if (fetchEntities)
+			{
+				Fetch();
+			}
+
+			for (ArchetypeContext& archContext : m_ArchetypesContexts)
+				archContext.ValidateEntitiesCount();
+
+			switch (iterationType)
+			{
+				case IterationType::Forward:
+				{
+					ForEachWithEntityForward(func);
+					break;
+				}
+				case IterationType::Backward:
+				{
+					ForEachWithEntityBackward(func);
+					break;
+				}
+			}
+		}
+
+
 	private:
 		TypeGroup<ComponentsTypes...> m_Includes = {};
 		std::vector<TypeID> m_Without;
@@ -213,6 +274,150 @@ namespace decs
 				}
 
 				m_ArchetypesCount_Dirty = containerArchetypesCount;
+			}
+		}
+
+		template<typename Callable>
+		void ForEachForward(Callable&& func)
+		{
+			uint64_t contextCount = m_ArchetypesContexts.size();
+			std::tuple<ComponentsTypes*...> tuple = {};
+			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
+			{
+				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				TypeID* typeIndexes = ctx.TypeIndexes;
+				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
+
+				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
+				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
+
+				uint64_t ctxEntitiesCount = ctx.m_EntitiesCount;
+				for (uint64_t iterationIndex = 0; iterationIndex < ctxEntitiesCount; iterationIndex++)
+				{
+					auto& entityData = entitiesData[iterationIndex];
+					if (entityData.IsActive())
+					{
+						SetTupleElements<ComponentsTypes...>(
+							tuple,
+							0,
+							iterationIndex * componentsCount,
+							typeIndexes,
+							componentsRefs
+							);
+						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
+					}
+				}
+			}
+		}
+
+		template<typename Callable>
+		void ForEachBackward(Callable&& func)
+		{
+			uint64_t contextCount = m_ArchetypesContexts.size();
+			std::tuple<ComponentsTypes*...> tuple = {};
+			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
+			{
+				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				TypeID* typeIndexes = ctx.TypeIndexes;
+				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
+
+				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
+				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
+
+				for (int64_t iterationIndex = ctx.m_EntitiesCount - 1; iterationIndex > -1; iterationIndex--)
+				{
+					auto& entityData = entitiesData[iterationIndex];
+					if (entityData.IsActive())
+					{
+						SetTupleElements<ComponentsTypes...>(
+							tuple,
+							0,
+							iterationIndex * componentsCount,
+							typeIndexes,
+							componentsRefs
+							);
+						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
+					}
+				}
+			}
+		}
+
+		template<typename Callable>
+		void ForEachWithEntityForward(Callable&& func)
+		{
+			uint64_t contextCount = m_ArchetypesContexts.size();
+			Entity iteratedEntity = {};
+			std::tuple<Entity*, ComponentsTypes*...> tuple = {};
+			std::get<Entity*>(tuple) = &iteratedEntity;
+
+			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
+			{
+				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				TypeID* typeIndexes = ctx.TypeIndexes;
+				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
+
+				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
+				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
+
+				uint64_t ctxEntitiesCount = ctx.m_EntitiesCount;
+				for (uint64_t iterationIndex = 0; iterationIndex < ctxEntitiesCount; iterationIndex++)
+				{
+					auto& entityData = entitiesData[iterationIndex];
+					if (entityData.IsActive())
+					{
+						iteratedEntity.Set(
+							entityData.ID(),
+							m_Container
+						);
+						SetWithEntityTupleElements<ComponentsTypes...>(
+							tuple,
+							0,
+							iterationIndex * componentsCount,
+							typeIndexes,
+							componentsRefs
+							);
+						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
+					}
+				}
+			}
+		}
+
+		template<typename Callable>
+		void ForEachWithEntityBackward(Callable&& func)
+		{
+			uint64_t contextCount = m_ArchetypesContexts.size();
+			Entity iteratedEntity = {};
+			std::tuple<Entity*, ComponentsTypes*...> tuple = {};
+			std::get<Entity*>(tuple) = &iteratedEntity;
+
+			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
+			{
+				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				TypeID* typeIndexes = ctx.TypeIndexes;
+				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
+
+				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
+				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
+
+				for (int64_t iterationIndex = ctx.m_EntitiesCount - 1; iterationIndex > -1; iterationIndex--)
+				{
+					auto& entityData = entitiesData[iterationIndex];
+					if (entityData.IsActive())
+					{
+						iteratedEntity.Set(
+							entityData.ID(),
+							m_Container
+						);
+						SetWithEntityTupleElements<ComponentsTypes...>(
+							tuple,
+							0,
+							iterationIndex * componentsCount,
+							typeIndexes,
+							componentsRefs
+							);
+						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
+					}
+				}
 			}
 		}
 
