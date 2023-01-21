@@ -220,25 +220,21 @@ namespace decs
 
 		~ArchetypesMap()
 		{
-			for (uint64_t i = 0; i < m_Archetypes.size(); i++)
-			{
-				delete m_Archetypes[i];
-			}
 		}
 
 		inline uint64_t ArchetypesCount() const noexcept
 		{
-			return m_Archetypes.size();
+			return m_Archetypes.Size();
 		}
 
 		inline uint64_t EmptyArchetypesCount() const
 		{
 			uint64_t emptyArchetypesCount = 0;
-			uint64_t archetypesCount = m_Archetypes.size();
+			uint64_t archetypesCount = m_Archetypes.Size();
 
 			for (uint64_t i = 0; i < archetypesCount; i++)
 			{
-				if (m_Archetypes[i]->EntitiesCount() == 0)
+				if (m_Archetypes[i].EntitiesCount() == 0)
 				{
 					emptyArchetypesCount += 1;
 				}
@@ -248,7 +244,7 @@ namespace decs
 		}
 
 	private:
-		std::vector<Archetype*> m_Archetypes;
+		ChunkedVector<Archetype> m_Archetypes;
 		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes;
 		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount;
 
@@ -360,8 +356,6 @@ namespace decs
 
 		void AddArchetypeToCorrectContainers(Archetype& archetype, const bool& bTryAddToSingleComponentsMap = true)
 		{
-			m_Archetypes.push_back(&archetype);
-
 			if (bTryAddToSingleComponentsMap && archetype.GetComponentsCount() == 1)
 			{
 				m_SingleComponentArchetypes[archetype.ComponentsTypes()[0]] = &archetype;
@@ -382,7 +376,7 @@ namespace decs
 
 			if (archetype == nullptr)
 			{
-				archetype = new Archetype(typeID, componentContext);
+				archetype = &m_Archetypes.EmplaceBack(typeID, componentContext);
 				MakeArchetypeEdges(*archetype);
 				AddArchetypeToCorrectContainers(*archetype, false);
 			}
@@ -405,7 +399,7 @@ namespace decs
 				return edge.AddEdge;
 			}
 
-			Archetype* newArchetype = new Archetype();
+			Archetype& newArchetype = m_Archetypes.EmplaceBack();
 			bool isNewComponentTypeAdded = false;
 
 			for (uint32_t i = 0; i < toArchetype.GetComponentsCount(); i++)
@@ -414,19 +408,19 @@ namespace decs
 				if (!isNewComponentTypeAdded && currentTypeID > addedComponentTypeID)
 				{
 					isNewComponentTypeAdded = true;
-					newArchetype->AddTypeID(addedComponentTypeID, componentContainer);
+					newArchetype.AddTypeID(addedComponentTypeID, componentContainer);
 				}
-				newArchetype->AddTypeID(toArchetype.m_TypeIDs[i], toArchetype.m_ComponentContexts[i]);
+				newArchetype.AddTypeID(toArchetype.m_TypeIDs[i], toArchetype.m_ComponentContexts[i]);
 			}
 			if (!isNewComponentTypeAdded)
 			{
-				newArchetype->AddTypeID(addedComponentTypeID, componentContainer);
+				newArchetype.AddTypeID(addedComponentTypeID, componentContainer);
 			}
 
-			MakeArchetypeEdges(*newArchetype);
-			AddArchetypeToCorrectContainers(*newArchetype);
+			MakeArchetypeEdges(newArchetype);
+			AddArchetypeToCorrectContainers(newArchetype);
 
-			return newArchetype;
+			return &newArchetype;
 		}
 
 		template<typename T>
@@ -448,42 +442,26 @@ namespace decs
 				return edge.RemoveEdge;
 			}
 
-			Archetype* newArchetype = new Archetype();
+			Archetype& newArchetype = m_Archetypes.EmplaceBack();
 			for (uint32_t i = 0; i < fromArchetype.GetComponentsCount(); i++)
 			{
 				TypeID typeID = fromArchetype.ComponentsTypes()[i];
 				if (typeID != removedComponentTypeID)
 				{
-					newArchetype->AddTypeID(typeID, fromArchetype.m_ComponentContexts[i]);
+					newArchetype.AddTypeID(typeID, fromArchetype.m_ComponentContexts[i]);
 				}
 			}
 
-			MakeArchetypeEdges(*newArchetype);
-			AddArchetypeToCorrectContainers(*newArchetype);
+			MakeArchetypeEdges(newArchetype);
+			AddArchetypeToCorrectContainers(newArchetype);
 
-			return newArchetype;
+			return &newArchetype;
 		}
 
 		template<typename T>
 		inline Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype)
 		{
 			return GetArchetypeAfterRemoveComponent(fromArchetype, Type<T>::ID());
-		}
-
-		template<typename... Types>
-		Archetype* CreateArchetype()
-		{
-			TypeGroup<Types...> typesGroup = {};
-
-			Archetype* archetype = new Archetype();
-
-			for (uint32_t typeIdx = 0; typeIdx < typesGroup.Size(); typeIdx++)
-			{
-				archetype->AddTypeID(typesGroup.IDs()[typeIdx]);
-			}
-
-			MakeArchetypeEdges(*archetype);
-			AddArchetypeToCorrectContainers(*archetype, true);
 		}
 
 		Archetype* FindArchetype(TypeID* types, const uint64_t typesCount)

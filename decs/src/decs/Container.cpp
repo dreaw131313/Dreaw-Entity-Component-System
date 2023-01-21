@@ -154,10 +154,10 @@ namespace decs
 
 		auto& archetypes = m_ArchetypesMap.m_Archetypes;
 
-		uint64_t archetypesCount = archetypes.size();
+		uint64_t archetypesCount = archetypes.Size();
 		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
 		{
-			Archetype& archetype = *archetypes[archetypeIdx];
+			Archetype& archetype = archetypes[archetypeIdx];
 			DestroyEntitesInArchetypes(archetype, invokeOnDestroyListeners);
 			archetype.Reset();
 		}
@@ -835,15 +835,15 @@ namespace decs
 			BoolSwitch delayedDestroySwitch(m_PerformDelayedDestruction, true);
 
 			auto& archetypes = m_ArchetypesMap.m_Archetypes;
-			for (uint64_t i = 0; i < archetypes.size(); i++)
+			for (uint64_t i = 0; i < archetypes.Size(); i++)
 			{
-				archetypes[i]->ValidateEntitiesCountToInitialize();
+				archetypes[i].ValidateEntitiesCountToInitialize();
 			}
 
-			uint64_t archetypesCount = archetypes.size();
+			uint64_t archetypesCount = archetypes.Size();
 			for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
 			{
-				Archetype& archetype = *archetypes[archetypeIdx];
+				Archetype& archetype = archetypes[archetypeIdx];
 				InvokeArchetypeOnCreateListeners(archetype);
 			}
 
@@ -870,10 +870,10 @@ namespace decs
 		BoolSwitch canRemoveComponentSwitch(m_CanRemoveComponents, false);
 
 		auto& archetypes = m_ArchetypesMap.m_Archetypes;
-		uint64_t archetypesCount = archetypes.size();
+		uint64_t archetypesCount = archetypes.Size();
 		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
 		{
-			Archetype& archetype = *archetypes[archetypeIdx];
+			Archetype& archetype = archetypes[archetypeIdx];
 			InvokeArchetypeOnDestroyListeners(archetype);
 		}
 

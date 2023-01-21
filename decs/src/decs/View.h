@@ -84,92 +84,36 @@ namespace decs
 			return *this;
 		}
 
-		template<typename Callable>
-		void ForEach(Callable&& func, const bool& fetchEntities = true)
+		void Fetch()
 		{
-			if (!IsValid()) return;
-			if (fetchEntities)
+			if (m_IsDirty)
 			{
-				Fetch();
+				m_IsDirty = false;
+				Invalidate();
 			}
 
-			for (ArchetypeContext& archContext : m_ArchetypesContexts)
-				archContext.ValidateEntitiesCount();
-
-			uint64_t contextCount = m_ArchetypesContexts.size();
-			std::tuple<ComponentsTypes*...> tuple = {};
-			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
+			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.m_Archetypes.Size();
+			if (m_ArchetypesCount_Dirty != containerArchetypesCount)
 			{
-				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
-				TypeID* typeIndexes = ctx.TypeIndexes;
-				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
+				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCount_Dirty;
+				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
 
-				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
-				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
+				ArchetypesMap& map = m_Container->m_ArchetypesMap;
+				uint64_t maxComponentsInArchetype = map.m_ArchetypesGroupedByComponentsCount.size();
+				if (maxComponentsInArchetype < minComponentsCountInArchetype) return;
 
-				for (int64_t iterationIndex = ctx.m_EntitiesCount - 1; iterationIndex > -1; iterationIndex--)
+				if (newArchetypesCount > m_ArchetypesContexts.size())
 				{
-					auto& entityData = entitiesData[iterationIndex];
-					if (entityData.IsActive())
-					{
-						ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
-						SetTupleElements<ComponentsTypes...>(
-							tuple,
-							0,
-							typeIndexes,
-							firstComponentPtr
-							);
-						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
-					}
+					// performing normal finding of archetypes
+					NormalArchetypesFetching(map, maxComponentsInArchetype, minComponentsCountInArchetype);
 				}
-			}
-		}
-
-		template<typename Callable>
-		void ForEachWithEntity(Callable&& func, const bool& fetchEntities = true)
-		{
-			if (!IsValid()) return;
-			if (fetchEntities)
-			{
-				Fetch();
-			}
-
-			for (ArchetypeContext& archContext : m_ArchetypesContexts)
-				archContext.ValidateEntitiesCount();
-
-			uint64_t contextCount = m_ArchetypesContexts.size();
-			Entity iteratedEntity = {};
-			std::tuple<Entity*, ComponentsTypes*...> tuple = {};
-			std::get<Entity*>(tuple) = &iteratedEntity;
-
-			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
-			{
-				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
-				TypeID* typeIndexes = ctx.TypeIndexes;
-				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
-
-				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
-				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
-
-				for (int64_t iterationIndex = ctx.m_EntitiesCount - 1; iterationIndex > -1; iterationIndex--)
+				else
 				{
-					auto& entityData = entitiesData[iterationIndex];
-					if (entityData.IsActive())
-					{
-						iteratedEntity.Set(
-							entityData.ID(),
-							m_Container
-						);
-						ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
-						SetWithEntityTupleElements<ComponentsTypes...>(
-							tuple,
-							0,
-							typeIndexes,
-							firstComponentPtr
-							);
-						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
-					}
+					// checking only new archetypes:
+					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCount_Dirty, minComponentsCountInArchetype);
 				}
+
+				m_ArchetypesCount_Dirty = containerArchetypesCount;
 			}
 		}
 
@@ -227,37 +171,21 @@ namespace decs
 			}
 		}
 
-		void Fetch()
+		template<typename Callable>
+		inline void ForEach(Callable&& func, const bool& fetchEntities = true)
 		{
-			if (m_IsDirty)
-			{
-				m_IsDirty = false;
-				Invalidate();
-			}
+			ForEach(IterationType::Backward, func, fetchEntities);
+		}
 
-			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.m_Archetypes.size();
-			if (m_ArchetypesCount_Dirty != containerArchetypesCount)
-			{
-				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCount_Dirty;
-				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
+		template<typename Callable>
+		inline void ForEachWithEntity(Callable&& func, const bool& fetchEntities = true)
+		{
+			ForEachWithEntity(IterationType::Backward, func, fetchEntities);
+		}
 
-				ArchetypesMap& map = m_Container->m_ArchetypesMap;
-				uint64_t maxComponentsInArchetype = map.m_ArchetypesGroupedByComponentsCount.size();
-				if (maxComponentsInArchetype < minComponentsCountInArchetype) return;
+		void TestForeach()
+		{
 
-				if (newArchetypesCount > m_ArchetypesContexts.size())
-				{
-					// performing normal finding of archetypes
-					NormalArchetypesFetching(map, maxComponentsInArchetype, minComponentsCountInArchetype);
-				}
-				else
-				{
-					// checking only new archetypes:
-					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCount_Dirty, minComponentsCountInArchetype);
-				}
-
-				m_ArchetypesCount_Dirty = containerArchetypesCount;
-			}
 		}
 
 	private:
@@ -626,11 +554,11 @@ namespace decs
 			const uint64_t& minComponentsCountInArchetype
 		)
 		{
-			Archetype** archetypes = map.m_Archetypes.data();
-			uint64_t archetypesCount = map.m_Archetypes.size();
+			auto& archetypes = map.m_Archetypes;
+			uint64_t archetypesCount = map.m_Archetypes.Size();
 			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
 			{
-				TryAddArchetypeWithoutNeighbours(*archetypes[i], minComponentsCountInArchetype);
+				TryAddArchetypeWithoutNeighbours(archetypes[i], minComponentsCountInArchetype);
 			}
 		}
 

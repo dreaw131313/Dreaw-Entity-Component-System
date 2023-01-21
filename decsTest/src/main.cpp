@@ -89,6 +89,20 @@ int main()
 		Print("Failed to remove component!");
 	}
 
+
+	using ViewType = decs::View<C1>;
+
+	ViewType testView = { container };
+
+	auto lambda = [&] (decs::Entity& entity, C1& c1)
+	{
+
+	};
+
+	testView.ForEachWithEntity(lambda);
+	testView.ForEachWithEntity(decs::IterationType::Forward, lambda);
+
+
 	container.DestroyOwnedEntities();
 
 	//std::cin.get();
