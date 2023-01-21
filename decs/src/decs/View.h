@@ -118,7 +118,7 @@ namespace decs
 		}
 
 		template<typename Callable>
-		void ForEach(Callable&& func)
+		void ForEach(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
 			Fetch();
@@ -139,7 +139,7 @@ namespace decs
 		}
 
 		template<typename Callable>
-		void ForEach(Callable&& func, const IterationType& iterationType)
+		void ForEach(Callable&& func, const IterationType& iterationType) noexcept
 		{
 			if (!IsValid()) return;
 			Fetch();
@@ -201,24 +201,24 @@ namespace decs
 	private:
 
 		template<typename Callable>
-		void ForEachForward(Callable&& func)
+		void ForEachForward(Callable&& func)const noexcept
 		{
-			uint64_t contextCount = m_ArchetypesContexts.size();
+			const uint64_t contextCount = m_ArchetypesContexts.size();
 			std::tuple<ComponentsTypes*...> tuple = {};
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				const ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
 				if (ctx.m_EntitiesCount == 0) continue;
-				TypeID* typeIndexes = ctx.TypeIndexes;
-				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
+				const TypeID* typeIndexes = ctx.TypeIndexes;
+				const uint64_t componentsCount = ctx.Arch->GetComponentsCount();
 
 				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
 				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
 
-				uint64_t ctxEntitiesCount = ctx.m_EntitiesCount;
+				const uint64_t ctxEntitiesCount = ctx.m_EntitiesCount;
 				for (uint64_t iterationIndex = 0; iterationIndex < ctxEntitiesCount; iterationIndex++)
 				{
-					auto& entityData = entitiesData[iterationIndex];
+					const auto& entityData = entitiesData[iterationIndex];
 					if (entityData.IsActive())
 					{
 						ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
@@ -235,24 +235,24 @@ namespace decs
 		}
 
 		template<typename Callable>
-		void ForEachBackward(Callable&& func)
+		void ForEachBackward(Callable&& func) const noexcept
 		{
-			uint64_t contextCount = m_ArchetypesContexts.size();
+			const uint64_t contextCount = m_ArchetypesContexts.size();
 			std::tuple<ComponentsTypes*...> tuple = {};
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				const ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
 				if (ctx.m_EntitiesCount == 0) continue;
 
-				TypeID* typeIndexes = ctx.TypeIndexes;
-				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
+				const TypeID* typeIndexes = ctx.TypeIndexes;
+				const uint64_t componentsCount = ctx.Arch->GetComponentsCount();
 
-				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
+				const ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
 				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
 
 				for (int64_t iterationIndex = ctx.m_EntitiesCount - 1; iterationIndex > -1; iterationIndex--)
 				{
-					auto& entityData = entitiesData[iterationIndex];
+					const auto& entityData = entitiesData[iterationIndex];
 					if (entityData.IsActive())
 					{
 						ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
@@ -269,28 +269,28 @@ namespace decs
 		}
 
 		template<typename Callable>
-		void ForEachWithEntityForward(Callable&& func)
+		void ForEachWithEntityForward(Callable&& func)const noexcept
 		{
-			uint64_t contextCount = m_ArchetypesContexts.size();
+			const uint64_t contextCount = m_ArchetypesContexts.size();
 			Entity iteratedEntity = {};
 			std::tuple<Entity*, ComponentsTypes*...> tuple = {};
 			std::get<Entity*>(tuple) = &iteratedEntity;
 
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				const ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
 				if (ctx.m_EntitiesCount == 0) continue;
 
-				TypeID* typeIndexes = ctx.TypeIndexes;
-				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
+				const TypeID* typeIndexes = ctx.TypeIndexes;
+				const uint64_t componentsCount = ctx.Arch->GetComponentsCount();
 
-				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
+				const ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
 				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
 
-				uint64_t ctxEntitiesCount = ctx.m_EntitiesCount;
+				const uint64_t ctxEntitiesCount = ctx.m_EntitiesCount;
 				for (uint64_t iterationIndex = 0; iterationIndex < ctxEntitiesCount; iterationIndex++)
 				{
-					auto& entityData = entitiesData[iterationIndex];
+					const auto& entityData = entitiesData[iterationIndex];
 					if (entityData.IsActive())
 					{
 						iteratedEntity.Set(
@@ -311,27 +311,27 @@ namespace decs
 		}
 
 		template<typename Callable>
-		void ForEachWithEntityBackward(Callable&& func)
+		void ForEachWithEntityBackward(Callable&& func)const noexcept
 		{
-			uint64_t contextCount = m_ArchetypesContexts.size();
+			const uint64_t contextCount = m_ArchetypesContexts.size();
 			Entity iteratedEntity = {};
 			std::tuple<Entity*, ComponentsTypes*...> tuple = {};
 			std::get<Entity*>(tuple) = &iteratedEntity;
 
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				const ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
 				if (ctx.m_EntitiesCount == 0) continue;
 
-				TypeID* typeIndexes = ctx.TypeIndexes;
-				uint64_t componentsCount = ctx.Arch->GetComponentsCount();
+				const TypeID* typeIndexes = ctx.TypeIndexes;
+				const uint64_t componentsCount = ctx.Arch->GetComponentsCount();
 
-				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
+				const ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
 				ComponentRef* componentsRefs = ctx.Arch->m_ComponentsRefs.data();
 
 				for (int64_t iterationIndex = ctx.m_EntitiesCount - 1; iterationIndex > -1; iterationIndex--)
 				{
-					auto& entityData = entitiesData[iterationIndex];
+					const auto& entityData = entitiesData[iterationIndex];
 					if (entityData.IsActive())
 					{
 						iteratedEntity.Set(
@@ -569,9 +569,9 @@ namespace decs
 		inline void SetTupleElements(
 			std::tuple<ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
-			TypeID*& typesIndexe,
+			const TypeID*& typesIndexe,
 			ComponentRef*& componentsRefs
-		) const
+		) const noexcept
 		{
 			auto& compRef = componentsRefs[typesIndexe[compIndex]];
 			std::get<T*>(tuple) = reinterpret_cast<T*>(compRef.ComponentPointer);
@@ -590,9 +590,9 @@ namespace decs
 		inline void SetTupleElements<void>(
 			std::tuple<ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
-			TypeID*& typesIndexe,
+			const TypeID*& typesIndexe,
 			ComponentRef*& componentsRefs
-			) const
+			) const noexcept
 		{
 
 		}
@@ -601,9 +601,9 @@ namespace decs
 		inline void SetWithEntityTupleElements(
 			std::tuple<Entity*, ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
-			TypeID*& typesIndexe,
+			const TypeID*& typesIndexe,
 			ComponentRef*& componentsRefs
-		) const
+		) const noexcept
 		{
 			auto& compRef = componentsRefs[typesIndexe[compIndex]];
 			std::get<T*>(tuple) = reinterpret_cast<T*>(compRef.ComponentPointer);
@@ -622,9 +622,9 @@ namespace decs
 		inline void SetWithEntityTupleElements<void>(
 			std::tuple<Entity*, ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
-			TypeID*& typesIndexe,
+			const TypeID*& typesIndexe,
 			ComponentRef*& componentsRefs
-			) const
+			) const noexcept
 		{
 
 		}

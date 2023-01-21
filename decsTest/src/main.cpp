@@ -105,6 +105,10 @@ int main()
 
 	testView.ForEach(lambda1);
 	testView.ForEach(lambda2);
+	testView.ForEach(lambda1, decs::IterationType::Backward);
+	testView.ForEach(lambda2, decs::IterationType::Backward);
+	testView.ForEach(lambda1, decs::IterationType::Forward);
+	testView.ForEach(lambda2, decs::IterationType::Forward);
 
 
 	std::vector<ViewType::BatchIterator> iterators;
