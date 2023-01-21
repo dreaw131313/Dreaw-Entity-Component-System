@@ -112,12 +112,12 @@ namespace decs
 					auto& entityData = entitiesData[iterationIndex];
 					if (entityData.IsActive())
 					{
+						ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
 						SetTupleElements<ComponentsTypes...>(
 							tuple,
 							0,
-							iterationIndex * componentsCount,
 							typeIndexes,
-							componentsRefs
+							firstComponentPtr
 							);
 						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
@@ -160,12 +160,12 @@ namespace decs
 							entityData.ID(),
 							m_Container
 						);
+						ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
 						SetWithEntityTupleElements<ComponentsTypes...>(
 							tuple,
 							0,
-							iterationIndex * componentsCount,
 							typeIndexes,
-							componentsRefs
+							firstComponentPtr
 							);
 						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
@@ -227,23 +227,6 @@ namespace decs
 			}
 		}
 
-
-	private:
-		TypeGroup<ComponentsTypes...> m_Includes = {};
-		std::vector<TypeID> m_Without;
-		std::vector<TypeID> m_WithAnyOf;
-		std::vector<TypeID> m_WithAll;
-
-		Container* m_Container = nullptr;
-		bool m_IsDirty = true;
-
-		std::vector<ArchetypeContext> m_ArchetypesContexts;
-		ecsSet<Archetype*> m_ContainedArchetypes;
-
-		// cache value to check if view should be updated:
-		uint64_t m_ArchetypesCount_Dirty = 0;
-
-	private:
 		void Fetch()
 		{
 			if (m_IsDirty)
@@ -277,6 +260,23 @@ namespace decs
 			}
 		}
 
+	private:
+		TypeGroup<ComponentsTypes...> m_Includes = {};
+		std::vector<TypeID> m_Without;
+		std::vector<TypeID> m_WithAnyOf;
+		std::vector<TypeID> m_WithAll;
+
+		Container* m_Container = nullptr;
+		bool m_IsDirty = true;
+
+		std::vector<ArchetypeContext> m_ArchetypesContexts;
+		ecsSet<Archetype*> m_ContainedArchetypes;
+
+		// cache value to check if view should be updated:
+		uint64_t m_ArchetypesCount_Dirty = 0;
+
+	private:
+
 		template<typename Callable>
 		void ForEachForward(Callable&& func)
 		{
@@ -297,12 +297,12 @@ namespace decs
 					auto& entityData = entitiesData[iterationIndex];
 					if (entityData.IsActive())
 					{
+						ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
 						SetTupleElements<ComponentsTypes...>(
 							tuple,
 							0,
-							iterationIndex * componentsCount,
 							typeIndexes,
-							componentsRefs
+							firstComponentPtr
 							);
 						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
@@ -329,12 +329,12 @@ namespace decs
 					auto& entityData = entitiesData[iterationIndex];
 					if (entityData.IsActive())
 					{
+						ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
 						SetTupleElements<ComponentsTypes...>(
 							tuple,
 							0,
-							iterationIndex * componentsCount,
 							typeIndexes,
-							componentsRefs
+							firstComponentPtr
 							);
 						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
@@ -369,12 +369,12 @@ namespace decs
 							entityData.ID(),
 							m_Container
 						);
+						ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
 						SetWithEntityTupleElements<ComponentsTypes...>(
 							tuple,
 							0,
-							iterationIndex * componentsCount,
 							typeIndexes,
-							componentsRefs
+							firstComponentPtr
 							);
 						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
@@ -408,12 +408,12 @@ namespace decs
 							entityData.ID(),
 							m_Container
 						);
+						ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
 						SetWithEntityTupleElements<ComponentsTypes...>(
 							tuple,
 							0,
-							iterationIndex * componentsCount,
 							typeIndexes,
-							componentsRefs
+							firstComponentPtr
 							);
 						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
@@ -636,73 +636,65 @@ namespace decs
 
 	private:
 		template<typename T = void, typename... Ts>
-		void SetTupleElements(
+		inline void SetTupleElements(
 			std::tuple<ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
-			const uint64_t& firstEntityCompIndex,
 			TypeID*& typesIndexe,
 			ComponentRef*& componentsRefs
-		)
+		) const
 		{
-			uint64_t compIndexInArchetype = typesIndexe[compIndex];
-			auto& compRef = componentsRefs[firstEntityCompIndex + compIndexInArchetype];
+			auto& compRef = componentsRefs[typesIndexe[compIndex]];
 			std::get<T*>(tuple) = reinterpret_cast<T*>(compRef.ComponentPointer);
 
-			if (sizeof...(Ts) == 0) return;
+			if constexpr (sizeof...(Ts) == 0) return;
 
 			SetTupleElements<Ts...>(
 				tuple,
 				compIndex + 1,
-				firstEntityCompIndex,
 				typesIndexe,
 				componentsRefs
 				);
 		}
 
 		template<>
-		void SetTupleElements<void>(
+		inline void SetTupleElements<void>(
 			std::tuple<ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
-			const uint64_t& firstEntityCompIndex,
 			TypeID*& typesIndexe,
 			ComponentRef*& componentsRefs
-			)
+			) const
 		{
 
 		}
 
 		template<typename T = void, typename... Ts>
-		void SetWithEntityTupleElements(
+		inline void SetWithEntityTupleElements(
 			std::tuple<Entity*, ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
-			const uint64_t& firstEntityCompIndex,
 			TypeID*& typesIndexe,
 			ComponentRef*& componentsRefs
-		)
+		) const
 		{
-			uint64_t compIndexInArchetype = typesIndexe[compIndex];
-			auto& compRef = componentsRefs[firstEntityCompIndex + compIndexInArchetype];
+			auto& compRef = componentsRefs[typesIndexe[compIndex]];
 			std::get<T*>(tuple) = reinterpret_cast<T*>(compRef.ComponentPointer);
 
-			if (sizeof...(Ts) == 0) return;
+			if constexpr (sizeof...(Ts) == 0) return;
 
 			SetWithEntityTupleElements<Ts...>(
 				tuple,
 				compIndex + 1,
-				firstEntityCompIndex,
 				typesIndexe,
 				componentsRefs
 				);
 		}
 
 		template<>
-		void SetWithEntityTupleElements<void>(
+		inline void SetWithEntityTupleElements<void>(
 			std::tuple<Entity*, ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
-			const uint64_t& firstEntityCompIndex,
 			TypeID*& typesIndexe,
 			ComponentRef*& componentsRefs
-			)
+			) const
 		{
 
 		}
@@ -774,12 +766,12 @@ namespace decs
 						auto& entityData = entitiesData[iterationIndex];
 						if (entityData.IsActive())
 						{
+							ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
 							SetTupleElements<ComponentsTypes...>(
 								tuple,
 								0,
-								iterationIndex * componentsCount,
 								typeIndexes,
-								componentsRefs
+								firstComponentPtr
 								);
 							decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 						}
@@ -830,12 +822,12 @@ namespace decs
 								entityData.ID(),
 								container
 							);
+							ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
 							SetWithEntityTupleElements<ComponentsTypes...>(
 								tuple,
 								0,
-								iterationIndex * componentsCount,
 								typeIndexes,
-								componentsRefs
+								firstComponentPtr
 								);
 							decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 						}
@@ -854,24 +846,21 @@ namespace decs
 
 		private:
 			template<typename T = void, typename... Ts>
-			void SetTupleElements(
+			inline void SetTupleElements(
 				std::tuple<ComponentsTypes*...>& tuple,
 				const uint64_t& compIndex,
-				const uint64_t& firstEntityCompIndex,
 				TypeID*& typesIndexe,
 				ComponentRef*& componentsRefs
-			)
+			)const
 			{
-				uint64_t compIndexInArchetype = typesIndexe[compIndex];
-				auto& compRef = componentsRefs[firstEntityCompIndex + compIndexInArchetype];
+				auto& compRef = componentsRefs[typesIndexe[compIndex]];
 				std::get<T*>(tuple) = reinterpret_cast<T*>(compRef.ComponentPointer);
 
-				if (sizeof...(Ts) == 0) return;
+				if constexpr (sizeof...(Ts) == 0) return;
 
 				SetTupleElements<Ts...>(
 					tuple,
 					compIndex + 1,
-					firstEntityCompIndex,
 					typesIndexe,
 					componentsRefs
 					);
@@ -881,7 +870,6 @@ namespace decs
 			void SetTupleElements<void>(
 				std::tuple<ComponentsTypes*...>& tuple,
 				const uint64_t& compIndex,
-				const uint64_t& firstEntityCompIndex,
 				TypeID*& typesIndexe,
 				ComponentRef*& componentsRefs
 				)
@@ -890,24 +878,21 @@ namespace decs
 			}
 
 			template<typename T = void, typename... Ts>
-			void SetWithEntityTupleElements(
+			inline void SetWithEntityTupleElements(
 				std::tuple<Entity*, ComponentsTypes*...>& tuple,
 				const uint64_t& compIndex,
-				const uint64_t& firstEntityCompIndex,
 				TypeID*& typesIndexe,
 				ComponentRef*& componentsRefs
-			)
+			) const
 			{
-				uint64_t compIndexInArchetype = typesIndexe[compIndex];
-				auto& compRef = componentsRefs[firstEntityCompIndex + compIndexInArchetype];
+				auto& compRef = componentsRefs[typesIndexe[compIndex]];
 				std::get<T*>(tuple) = reinterpret_cast<T*>(compRef.ComponentPointer);
 
-				if (sizeof...(Ts) == 0) return;
+				if constexpr (sizeof...(Ts) == 0) return;
 
 				SetWithEntityTupleElements<Ts...>(
 					tuple,
 					compIndex + 1,
-					firstEntityCompIndex,
 					typesIndexe,
 					componentsRefs
 					);
@@ -917,7 +902,6 @@ namespace decs
 			void SetWithEntityTupleElements<void>(
 				std::tuple<Entity*, ComponentsTypes*...>& tuple,
 				const uint64_t& compIndex,
-				const uint64_t& firstEntityCompIndex,
 				TypeID*& typesIndexe,
 				ComponentRef*& componentsRefs
 				)
