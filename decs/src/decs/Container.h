@@ -614,7 +614,7 @@ namespace decs
 		{
 			EntityData& data = m_EntityManager->GetEntityData(entityID);
 
-			uint64_t compDataIndex = data.m_CurrentArchetype->FindTypeIndex(Type<ComponentType>::ID());
+			uint64_t compDataIndex = data.m_IndexInArchetype * data.m_CurrentArchetype->FindTypeIndex(Type<ComponentType>::ID());
 
 			auto& compData = data.m_CurrentArchetype->m_ComponentsRefs[compDataIndex];
 

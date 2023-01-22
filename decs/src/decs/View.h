@@ -301,7 +301,6 @@ namespace decs
 						ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
 						SetWithEntityTupleElements<ComponentsTypes...>(
 							tuple,
-							0,
 							typeIndexes,
 							firstComponentPtr
 							);
@@ -342,7 +341,6 @@ namespace decs
 						ComponentRef* firstComponentPtr = componentsRefs + (iterationIndex * componentsCount);
 						SetWithEntityTupleElements<ComponentsTypes...>(
 							tuple,
-							0,
 							typeIndexes,
 							firstComponentPtr
 							);
@@ -602,11 +600,11 @@ namespace decs
 		template<typename T = void, typename... Ts>
 		void SetWithEntityTupleElements(
 			std::tuple<Entity*, ComponentsTypes*...>& tuple,
-			const uint64_t& compIndex,
 			const TypeID*& typesIndexe,
 			ComponentRef*& componentsRefs
 		) const noexcept
 		{
+			constexpr uint64_t compIndex = sizeof...(ComponentsTypes) - sizeof...(Ts) - 1;
 			auto& compRef = componentsRefs[typesIndexe[compIndex]];
 			std::get<T*>(tuple) = reinterpret_cast<T*>(compRef.ComponentPointer);
 
@@ -614,7 +612,6 @@ namespace decs
 
 			SetWithEntityTupleElements<Ts...>(
 				tuple,
-				compIndex + 1,
 				typesIndexe,
 				componentsRefs
 				);
@@ -623,7 +620,6 @@ namespace decs
 		template<>
 		void SetWithEntityTupleElements<void>(
 			std::tuple<Entity*, ComponentsTypes*...>& tuple,
-			const uint64_t& compIndex,
 			const TypeID*& typesIndexe,
 			ComponentRef*& componentsRefs
 			) const noexcept
