@@ -1,11 +1,12 @@
 #pragma once
 #include "Type.h"
 #include "TypeGroup.h"
-#include "core.h"
+#include "Core.h"
 #include "ComponentContainer.h"
 #include "Entity.h"
 #include "Container.h"
 #include "decs/CustomApplay.h"
+#include <algorithm>
 
 namespace decs
 {
@@ -433,6 +434,7 @@ namespace decs
 						context.TypeIndexes[typeIdx] = typeIDIndex;
 					}
 
+					std::sort(context.TypeIndexes, context.TypeIndexes + sizeof...(ComponentsTypes));
 					m_ContainedArchetypes.insert(&archetype);
 					context.Arch = &archetype;
 				}
@@ -541,7 +543,7 @@ namespace decs
 						}
 						context.TypeIndexes[typeIdx] = typeIDIndex;
 					}
-
+					std::sort(context.TypeIndexes, context.TypeIndexes + sizeof...(ComponentsTypes));
 					m_ContainedArchetypes.insert(&archetype);
 					context.Arch = &archetype;
 				}
@@ -598,7 +600,7 @@ namespace decs
 		}
 
 		template<typename T = void, typename... Ts>
-		inline void SetWithEntityTupleElements(
+		void SetWithEntityTupleElements(
 			std::tuple<Entity*, ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
 			const TypeID*& typesIndexe,
@@ -619,7 +621,7 @@ namespace decs
 		}
 
 		template<>
-		inline void SetWithEntityTupleElements<void>(
+		void SetWithEntityTupleElements<void>(
 			std::tuple<Entity*, ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
 			const TypeID*& typesIndexe,
