@@ -18,11 +18,14 @@ namespace decs
 		}
 
 
+		inline virtual void* GetComponentAsVoid(const uint64_t& index) = 0;
 		inline virtual void* GetChunkData(const uint64_t& chunkIndex) const noexcept = 0;
 		inline virtual uint32_t GetChunkSize(const uint64_t& chunkIndex) const noexcept = 0;
 		inline virtual PackedContainerBase* CreateOwnEmptyCopy(const uint64_t& chunkSize) const noexcept = 0;
-
 		inline virtual void* EmplaceFromVoid(void* data) noexcept = 0;
+		inline virtual void RemoveSwapBack(const uint64_t& index) = 0;
+		inline virtual void RemoveSwapBack(const uint64_t& chunkIndex, const uint64_t& elementIndex)=0;
+		inline virtual void PopBack()=0;
 	};
 
 	template<typename DataType>
@@ -48,6 +51,11 @@ namespace decs
 
 		}
 
+		inline virtual void* GetComponentAsVoid(const uint64_t& index)
+		{
+			return &m_Data[index];
+		}
+
 		inline virtual void* GetChunkData(const uint64_t& chunkIndex)const noexcept override
 		{
 			return m_Data.GetChunk(chunkIndex);
@@ -67,6 +75,21 @@ namespace decs
 		{
 			DataType& newElement = m_Data.EmplaceBack(*reinterpret_cast<DataType*>(data));
 			return (void*)(&newElement);
+		}
+
+		inline virtual void RemoveSwapBack(const uint64_t& index) override
+		{
+			m_Data.RemoveSwapBack(index);
+		}
+
+		inline virtual void RemoveSwapBack(const uint64_t& chunkIndex, const uint64_t& elementIndex) override
+		{
+			m_Data.RemoveSwapBack(chunkIndex, elementIndex);
+		}
+
+		inline virtual void PopBack()
+		{
+			m_Data.PopBack();
 		}
 	};
 }

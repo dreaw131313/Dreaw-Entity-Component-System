@@ -2,7 +2,6 @@
 #include "Type.h"
 #include "TypeGroup.h"
 #include "Core.h"
-#include "ComponentContainer.h"
 #include "Entity.h"
 #include "Container.h"
 #include "decs/CustomApplay.h"
@@ -199,12 +198,11 @@ namespace decs
 		// cache value to check if view should be updated:
 		uint64_t m_ArchetypesCount_Dirty = 0;
 
-	private:
-
+	public:
 		template<typename Callable>
 		void ForEachForward(Callable&& func)const noexcept
 		{
-			/*const uint64_t contextCount = m_ArchetypesContexts.size();
+			const uint64_t contextCount = m_ArchetypesContexts.size();
 			std::tuple<ComponentsTypes*...> tuple = {};
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
@@ -232,8 +230,10 @@ namespace decs
 						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
 				}
-			}*/
+			}
 		}
+
+	private:
 
 		template<typename Callable>
 		void ForEachBackward(Callable&& func) const noexcept

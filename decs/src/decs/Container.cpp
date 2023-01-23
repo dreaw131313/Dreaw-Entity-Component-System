@@ -87,7 +87,7 @@ namespace decs
 
 			InvokeEntityDestructionObservers(entity);
 
-			Archetype* currentArchetype = entityData.m_CurrentArchetype;
+			Archetype* currentArchetype = entityData.m_Archetype;
 			if (currentArchetype != nullptr)
 			{
 				// Invoke On destroy metyhods
@@ -111,13 +111,13 @@ namespace decs
 				//	{
 				//		EntityData& fixedEntityData = m_EntityManager->GetEntityData(result.eID);
 				//		uint64_t compTypeIndexInFixedEntityArchetype;
-				//		if (entityData.m_CurrentArchetype == fixedEntityData.m_CurrentArchetype)
+				//		if (entityData.m_Archetype == fixedEntityData.m_Archetype)
 				//		{
 				//			compTypeIndexInFixedEntityArchetype = i;
 				//		}
 				//		else
 				//		{
-				//			compTypeIndexInFixedEntityArchetype = fixedEntityData.m_CurrentArchetype->FindTypeIndex(currentArchetype->m_TypeIDs[i]);
+				//			compTypeIndexInFixedEntityArchetype = fixedEntityData.m_Archetype->FindTypeIndex(currentArchetype->m_TypeIDs[i]);
 				//		}
 
 				//		UpdateEntityComponentAccesDataInArchetype(
@@ -130,7 +130,7 @@ namespace decs
 				//	}
 				//}
 
-				//RemoveEntityFromArchetype(*entityData.m_CurrentArchetype, entityData);
+				//RemoveEntityFromArchetype(*entityData.m_Archetype, entityData);
 			}
 			else
 			{
@@ -193,11 +193,11 @@ namespace decs
 	{
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
-		Container* prefabContainer = prefab.GetContainer();
+		/*Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
 		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
 
-		Archetype* prefabArchetype = prefabEntityData.m_CurrentArchetype;
+		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
 		EntityID entityID = m_EntityManager->CreateEntity(isActive);
 		Entity spawnedEntity(entityID, this);
@@ -233,19 +233,19 @@ namespace decs
 			);
 		}
 
-		m_SpawnDataPerSpawn.PopBack();
-		return spawnedEntity;
+		m_SpawnDataPerSpawn.PopBack();*/
+		return Entity();
 	}
 
 	bool Container::Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive)
 	{
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
-		Container* prefabContainer = prefab.GetContainer();
+		/*Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
 		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
 
-		Archetype* prefabArchetype = prefabEntityData.m_CurrentArchetype;
+		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 		Entity spawnedEntity;
 		if (prefabArchetype == nullptr)
 		{
@@ -296,7 +296,7 @@ namespace decs
 			}
 		}
 
-		m_SpawnDataPerSpawn.PopBack();
+		m_SpawnDataPerSpawn.PopBack();*/
 
 		return true;
 	}
@@ -305,11 +305,11 @@ namespace decs
 	{
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return true;
 
-		Container* prefabContainer = prefab.GetContainer();
+		/*Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
 		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
 
-		Archetype* prefabArchetype = prefabEntityData.m_CurrentArchetype;
+		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 		if (prefabArchetype == nullptr)
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
@@ -351,7 +351,7 @@ namespace decs
 			}
 		}
 
-		m_SpawnDataPerSpawn.PopBack();
+		m_SpawnDataPerSpawn.PopBack();*/
 
 		return true;
 	}
@@ -362,7 +362,7 @@ namespace decs
 		Container* prefabContainer
 	)
 	{
-		Archetype* prefabArchetype = prefabEntityData.m_CurrentArchetype;
+		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 		uint64_t componentsCount = prefabArchetype->GetComponentsCount();
 
 		for (uint64_t i = 0; i < componentsCount; i++)
@@ -408,7 +408,7 @@ namespace decs
 		Container* prefabContainer
 	)
 	{
-		
+
 	}
 
 	bool Container::RemoveComponent(Entity& entity, const TypeID& componentTypeID)
@@ -416,15 +416,15 @@ namespace decs
 		if (!m_CanRemoveComponents || entity.m_Container != this) return false;
 
 		EntityData& entityData = *entity.m_EntityData;
-		if (entityData.m_CurrentArchetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
+		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
 
-		uint64_t compIdxInArch = entityData.m_CurrentArchetype->FindTypeIndex(componentTypeID);
+		uint64_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
 		if (compIdxInArch == std::numeric_limits<uint64_t>::max()) return false;
 
-		/*ComponentContextBase* componentContext = m_ComponentContexts[componentTypeID];
+		ComponentContextBase* componentContext = entityData.m_Archetype->m_ComponentContexts[compIdxInArch];
+		auto& container = entityData.m_Archetype->m_PackedContainers[compIdxInArch];
 
-		auto& firstRemovedCompData = entityData.GetComponentRef(compIdxInArch);
-		if (m_PerformDelayedDestruction)
+		/*if (m_PerformDelayedDestruction)
 		{
 			if (!firstRemovedCompData.m_DelayedToDestroy)
 			{
@@ -433,60 +433,48 @@ namespace decs
 				return true;
 			}
 			return false;
-		}
+		}*/
 
 		{
 			componentContext->InvokeOnDestroyComponent_S(
-				firstRemovedCompData.ComponentPointer,
+				container->GetComponentAsVoid(entityData.m_IndexInArchetype),
 				entity
 			);
 		}
-		const auto& removedCompData = entityData.GetComponentRef(compIdxInArch);
 
-		auto allocator = componentContext->GetAllocator();
-		auto result = allocator->RemoveSwapBack(removedCompData.ChunkIndex, removedCompData.ElementIndex);
+		Archetype* newEntityArchetype = this->m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
+			*entityData.m_Archetype,
+			componentTypeID
+		);
 
-		if (result.IsValid())
+		uint64_t oldArchetypeIndex = entityData.m_IndexInArchetype;
+		Archetype* oldArchetype = entityData.m_Archetype;
+		if (newEntityArchetype != nullptr)
 		{
-			uint64_t compTypeIndexInFixedEntityArchetype;
-			EntityData& fixedEntity = m_EntityManager->GetEntityData(result.eID);
-			if (entityData.m_CurrentArchetype == fixedEntity.m_CurrentArchetype)
-			{
-				compTypeIndexInFixedEntityArchetype = compIdxInArch;
-			}
-			else
-			{
-				compTypeIndexInFixedEntityArchetype = fixedEntity.m_CurrentArchetype->FindTypeIndex(componentTypeID);
-			}
-
-			UpdateEntityComponentAccesDataInArchetype(
-				fixedEntity,
-				result.ChunkIndex,
-				result.ElementIndex,
-				allocator->GetComponentAsVoid(result.ChunkIndex, result.ElementIndex),
-				compTypeIndexInFixedEntityArchetype
+			newEntityArchetype->AddEntityData(entityData.m_ID, entityData.m_IsActive);
+			newEntityArchetype->MoveEntityAfterRemoveComponent(
+				componentTypeID,
+				*entityData.m_Archetype,
+				entityData.m_IndexInArchetype
 			);
-		}
 
-		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(*entityData.m_CurrentArchetype, componentTypeID);
-		if (newEntityArchetype == nullptr)
-		{
-			RemoveEntityFromArchetype(*entityData.m_CurrentArchetype, entityData);
-			AddToEmptyEntities(entityData);
+			entityData.m_Archetype = newEntityArchetype;
+			entityData.m_IndexInArchetype = newEntityArchetype->EntitiesCount();
+			newEntityArchetype->m_EntitiesCount += 1;
 		}
 		else
 		{
-			AddEntityToArchetype(
-				*newEntityArchetype,
-				entityData,
-				std::numeric_limits<uint64_t>::max(),
-				std::numeric_limits<uint64_t>::max(),
-				componentTypeID,
-				nullptr,
-				false,
-				compIdxInArch
-			);
-		}*/
+			entityData.m_Archetype = nullptr;
+			entityData.m_IndexInArchetype = m_EmptyEntities.Size();
+			m_EmptyEntities.EmplaceBack(&entityData);
+		}
+
+		auto result = oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
+		if (result.IsValid())
+		{
+			m_EntityManager->GetEntityData(result.ID).m_IndexInArchetype = result.Index;
+		}
+
 
 		return true;
 	}
@@ -507,9 +495,9 @@ namespace decs
 	{
 		/*Entity entity = { entityID, this };
 		EntityData& entityData = *entity.m_EntityData;
-		if (entityData.m_CurrentArchetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
+		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
 
-		uint64_t compIdxInArch = entityData.m_CurrentArchetype->FindTypeIndex(componentTypeID);
+		uint64_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
 		if (compIdxInArch == std::numeric_limits<uint64_t>::max()) return false;
 
 		ComponentContextBase* componentContext = m_ComponentContexts[componentTypeID];
@@ -522,13 +510,13 @@ namespace decs
 		{
 			uint64_t compTypeIndexInFixedEntityArchetype;
 			EntityData& fixedEntity = m_EntityManager->GetEntityData(result.eID);
-			if (entityData.m_CurrentArchetype == fixedEntity.m_CurrentArchetype)
+			if (entityData.m_Archetype == fixedEntity.m_Archetype)
 			{
 				compTypeIndexInFixedEntityArchetype = compIdxInArch;
 			}
 			else
 			{
-				compTypeIndexInFixedEntityArchetype = fixedEntity.m_CurrentArchetype->FindTypeIndex(componentTypeID);
+				compTypeIndexInFixedEntityArchetype = fixedEntity.m_Archetype->FindTypeIndex(componentTypeID);
 			}
 
 			UpdateEntityComponentAccesDataInArchetype(
@@ -540,10 +528,10 @@ namespace decs
 			);
 		}
 
-		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(*entityData.m_CurrentArchetype, componentTypeID);
+		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(*entityData.m_Archetype, componentTypeID);
 		if (newEntityArchetype == nullptr)
 		{
-			RemoveEntityFromArchetype(*entityData.m_CurrentArchetype, entityData);
+			RemoveEntityFromArchetype(*entityData.m_Archetype, entityData);
 			AddToEmptyEntities(entityData);
 		}
 		else

@@ -20,7 +20,7 @@ namespace decs
 		bool m_IsActive = false;
 		EntityDestructionState m_DestructionState = EntityDestructionState::Alive;
 
-		Archetype* m_CurrentArchetype = nullptr;
+		Archetype* m_Archetype = nullptr;
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 
 	public:
@@ -37,11 +37,11 @@ namespace decs
 		template<typename ComponentType>
 		inline ComponentType* GetComponent()
 		{
-			if (m_CurrentArchetype == nullptr) return nullptr;
-			uint64_t componentIndex = m_CurrentArchetype->FindTypeIndex<ComponentType>();
+			if (m_Archetype == nullptr) return nullptr;
+			uint64_t componentIndex = m_Archetype->FindTypeIndex<ComponentType>();
 			if (componentIndex == std::numeric_limits<uint64_t>::max()) return nullptr;
 
-			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_CurrentArchetype->m_PackedContainers[componentIndex]);
+			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_Archetype->m_PackedContainers[componentIndex]);
 
 			return &packedComponent->m_Data[m_IndexInArchetype];
 		}
@@ -49,7 +49,7 @@ namespace decs
 		template<typename ComponentType>
 		inline ComponentType* GetComponent(const uint64_t& componentIndex)
 		{
-			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_CurrentArchetype->m_PackedContainers[componentIndex]);
+			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_Archetype->m_PackedContainers[componentIndex]);
 
 			return &packedComponent->m_Data[m_IndexInArchetype];
 		}

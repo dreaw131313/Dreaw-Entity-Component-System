@@ -1,6 +1,5 @@
 #pragma once
 #include "Type.h"
-#include "ComponentContainer.h"
 #include "ObserversManager.h"
 
 namespace decs

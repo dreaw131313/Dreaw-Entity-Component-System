@@ -138,7 +138,6 @@
     <ClInclude Include="src\decs\CustomApplay.h" />
     <ClInclude Include="src\decs\EntityManager.h" />
     <ClInclude Include="src\decs\Archetype.h" />
-    <ClInclude Include="src\decs\ComponentContainer.h" />
     <ClInclude Include="src\decs\ComponentContext.h" />
     <ClInclude Include="src\decs\Container.h" />
     <ClInclude Include="src\decs\Containers\ChunkedVector.h" />

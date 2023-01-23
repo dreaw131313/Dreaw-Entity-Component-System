@@ -10,107 +10,76 @@ void Print(const std::string& message)
 	std::cout << message << std::endl;
 }
 
-class C1
+class Position
 {
 public:
-	decs::Entity entityToDestroy;
+	float X = 0, Y = 0;
 
 public:
-	C1()
+	Position()
 	{
-
+		Print("Position Constructor");
 	}
+
+	~Position()
+	{
+		Print("Position Destruction");
+	}
+
+
+	Position(const Position& other)
+	{
+		Print("Position Copy Constructor");
+	}
+	
+	Position(Position&& other) noexcept
+	{
+		Print("Position Move Constructor");
+	}
+
+	Position& operator = (const Position& other)
+	{
+		Print("Position Copy Assigment");
+		return *this;
+	}
+
+	Position& operator = (Position&& other) noexcept
+	{
+		Print("Position Move Assigment");
+		return *this;
+	}
+	
 };
 
-class C1Observer :
-	public decs::CreateComponentObserver<C1>,
-	public decs::DestroyComponentObserver<C1>
-{
-public:
-	decs::Container* m_ECSContainer;
-	C1Observer(decs::Container* ecsContainer) :
-		m_ECSContainer(ecsContainer)
-	{
-
-	}
-public:
-	void OnCreateComponent(C1& c, decs::Entity& e) override
-	{
-		Print("C1 Create");
-
-		m_ECSContainer->Spawn(c.entityToDestroy);
-		if (!c.entityToDestroy.IsNull())
-		{
-			c.entityToDestroy.RemoveComponent<C1>();
-			c.entityToDestroy.AddComponent<C1>();
-			c.entityToDestroy.RemoveComponent<C1>();
-		}
-	}
-
-	void OnDestroyComponent(C1& c, decs::Entity& e) override
-	{
-		Print("C1 Destroy");
-	}
-
-};
 
 int main()
 {
 	Print("Start:");
 
-
 	decs::Container container = {};
-	decs::Entity entity = container.CreateEntity();
+	decs::Entity e1 = container.CreateEntity();
+	decs::Entity e2 = container.CreateEntity();
 
-	C1* comp = entity.AddComponent<C1>();
+ 	e1.AddComponent<Position>();
+	e1.AddComponent<float>();
+	e1.AddComponent<int>();
 
+ 	e2.AddComponent<Position>();
+	e2.AddComponent<float>();
+	e2.AddComponent<int>();
 
+	e1.RemoveComponent<int>();
+	e1.RemoveComponent<float>();
+	e1.RemoveComponent<Position>();
 
-	/*if (!entity.HasComponent<C1>())
-	{
-		Print("Entity has not component!");
-	}
+	decs::View<Position> testView = { container };
 
-	if (!entity.RemoveComponent<C1>())
-	{
-		Print("Failed to remove component!");
-	}
-
-
-	using ViewType = decs::View<C1>;
-
-	ViewType testView = { container };
-
-	auto lambda1 = [&] (decs::Entity& entity, C1& c1)
+	auto lambda = [&] (const Position& position)
 	{
 
 	};
-	auto lambda2 = [&] (C1& c1)
-	{
-
-	};
-
-	testView.ForEach(lambda1);
-	testView.ForEach(lambda2);
-	testView.ForEach(lambda1, decs::IterationType::Backward);
-	testView.ForEach(lambda2, decs::IterationType::Backward);
-	testView.ForEach(lambda1, decs::IterationType::Forward);
-	testView.ForEach(lambda2, decs::IterationType::Forward);
+	testView.ForEachForward(lambda);
 
 
-	std::vector<ViewType::BatchIterator> iterators;
-	testView.CreateBatchIterators(iterators, 10, 1000);
-	for (auto& it : iterators)
-	{
-		it.ForEach(lambda1);
-		it.ForEach(lambda2);
-	}
-
-	container.DestroyOwnedEntities();*/
-
-
-	decs::PackedContainer<float> packedContainerTest = { 1000 };
-
-	//std::cin.get();
 	return 0;
 }

@@ -24,9 +24,6 @@
     <ClInclude Include="src\decs\Archetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\ComponentContainer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decs\ComponentContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
