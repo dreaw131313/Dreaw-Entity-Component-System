@@ -3,6 +3,7 @@
 #include "ComponentContext.h"
 #include "Type.h"
 #include "TypeGroup.h"
+#include "PackedComponentContainer.h"
 
 namespace decs
 {
@@ -25,38 +26,6 @@ namespace decs
 			AddEdge(addEdge)
 		{
 
-		}
-	};
-
-	struct ComponentRef
-	{
-	public:
-		bool m_DelayedToDestroy = false;
-		uint32_t ChunkIndex = std::numeric_limits<uint32_t>::max();
-		uint32_t ElementIndex = std::numeric_limits<uint32_t>::max();
-		void* ComponentPointer = nullptr;
-
-	public:
-		ComponentRef()
-		{
-
-		}
-
-		ComponentRef(
-			const uint32_t& chunkIndex,
-			const uint32_t& elementIndex,
-			void*& componentPointer
-		) :
-			ChunkIndex(chunkIndex),
-			ElementIndex(elementIndex),
-			ComponentPointer(componentPointer)
-		{
-
-		}
-
-		inline void* GetComponentPointer()
-		{
-			return m_DelayedToDestroy ? nullptr : ComponentPointer;
 		}
 	};
 
@@ -96,21 +65,20 @@ namespace decs
 
 	private:
 		static constexpr uint64_t m_MinComponentsInArchetypeToPerformMapLookup = 20;
+		static constexpr uint64_t DefaultChunkSize = 1000;
 
 	public:
 		uint32_t m_ComponentsCount = 0; // number of components for each entity
 		uint32_t m_EntitiesCount = 0;
 
 		std::vector<ArchetypeEntityData> m_EntitiesData;
-		std::vector<ComponentRef> m_ComponentsRefs;
+		std::vector<PackedContainerBase*> m_PackedContainers;
 
 		std::vector<ComponentContextBase*> m_ComponentContexts;
 		ecsMap<TypeID, ArchetypeEdge> m_Edges;
 
 		std::vector<TypeID> m_TypeIDs;
 		ecsMap<TypeID, uint64_t> m_TypeIDsIndexes;
-
-		//std::vector<ComponentContextBase*> m_OrderedComponentContextsToInvokeObservers;
 
 		uint64_t m_EntitesCountToInitialize = 0;
 
@@ -132,22 +100,8 @@ namespace decs
 
 		}
 
-		void AddTypeID(TypeID id, ComponentContextBase* componentContext)
-		{
-			auto it = m_TypeIDsIndexes.find(id);
-			if (it == m_TypeIDsIndexes.end())
-			{
-				m_ComponentsCount += 1;
-				m_TypeIDsIndexes[id] = m_TypeIDs.size();
-				m_TypeIDs.push_back(id);
-				m_ComponentContexts.push_back(componentContext);
-			}
-		}
-
 		inline uint32_t GetComponentsCount() const { return m_ComponentsCount; }
-
 		inline const TypeID* const ComponentsTypes() const { return m_TypeIDs.data(); }
-
 		inline uint32_t EntitiesCount() const { return m_EntitiesCount; }
 		inline uint64_t EntitesCountToInvokeCallbacks() const { return m_EntitesCountToInitialize; }
 
@@ -192,12 +146,39 @@ namespace decs
 			return it->second;
 		}
 
+		template<typename ComponentType>
+		void AddTypeID(ComponentContextBase* componentContext)
+		{
+			constexpr id = Type<ComponentType>::ID();
+			auto it = m_TypeIDsIndexes.find(id);
+			if (it == m_TypeIDsIndexes.end())
+			{
+				m_ComponentsCount += 1;
+				m_TypeIDsIndexes[id] = m_TypeIDs.size();
+				m_TypeIDs.push_back(id);
+				m_ComponentContexts.push_back(componentContext);
+				m_PackedContainers.push_back(new PackedContainer<ComponentType>(DefaultChunkSize));
+			}
+		}
+
+		void AddTypeID(const TypeID id, PackedContainerBase* frompackedContainer, ComponentContextBase* componentContext)
+		{
+			auto it = m_TypeIDsIndexes.find(id);
+			if (it == m_TypeIDsIndexes.end())
+			{
+				m_ComponentsCount += 1;
+				m_TypeIDsIndexes[id] = m_TypeIDs.size();
+				m_TypeIDs.push_back(id);
+				m_ComponentContexts.push_back(componentContext);
+				m_PackedContainers.push_back(frompackedContainer->CreateOwnEmptyCopy(DefaultChunkSize));
+			}
+		}
+
 	private:
 		void Reset()
 		{
 			m_EntitiesCount = 0;
 			m_EntitiesData.clear();
-			m_ComponentsRefs.clear();
 		}
 
 		inline void ValidateEntitiesCountToInitialize()
@@ -390,8 +371,10 @@ namespace decs
 			return GetSingleComponentArchetype(componentContext, Type<T>::ID());
 		}
 
-		Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype, const TypeID& addedComponentTypeID, ComponentContextBase* componentContainer)
+		template<typename T>
+		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype, ComponentContextBase* componentContext)
 		{
+			constexpr TypeID& addedComponentTypeID = Type<T>::ID();
 			ArchetypeEdge& edge = toArchetype.m_Edges[addedComponentTypeID];
 
 			if (edge.AddEdge != nullptr)
@@ -423,11 +406,6 @@ namespace decs
 			return &newArchetype;
 		}
 
-		template<typename T>
-		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype, ComponentContextBase* componentContext)
-		{
-			return GetArchetypeAfterAddComponent(toArchetype, Type<T>::ID(), componentContext);
-		}
 
 		Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, const TypeID& removedComponentTypeID)
 		{
@@ -448,7 +426,7 @@ namespace decs
 				TypeID typeID = fromArchetype.ComponentsTypes()[i];
 				if (typeID != removedComponentTypeID)
 				{
-					newArchetype.AddTypeID(typeID, fromArchetype.m_ComponentContexts[i]);
+					newArchetype.AddTypeID(typeID, fromArchetype.m_PackedContainers[i], fromArchetype.m_ComponentContexts[i]);
 				}
 			}
 

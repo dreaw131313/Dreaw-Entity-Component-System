@@ -146,10 +146,9 @@ namespace decs
 #pragma region ENTITIES:
 	private:
 		bool m_HaveOwnEntityManager = false;
-		EntityManager* m_EntityManager = nullptr;
-
 		bool m_bInvokeEntityActivationStateListeners = true;
 
+		EntityManager* m_EntityManager = nullptr;
 		ChunkedVector<EntityData*> m_EmptyEntities = { 100 };
 
 	public:
@@ -368,57 +367,57 @@ namespace decs
 
 			if (entityData.IsValidToPerformComponentOperation())
 			{
-				if (m_PerformDelayedDestruction)
-				{
-					ComponentType* delayedToDestroyComponent = TryAddComponentDelayedToDestroy<ComponentType>(entityData);
-					if (delayedToDestroyComponent != nullptr) { return delayedToDestroyComponent; }
-				}
-				else
-				{
-					auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
-					if (currentComponent != nullptr) return currentComponent;
-				}
+				//if (m_PerformDelayedDestruction)
+				//{
+				//	ComponentType* delayedToDestroyComponent = TryAddComponentDelayedToDestroy<ComponentType>(entityData);
+				//	if (delayedToDestroyComponent != nullptr) { return delayedToDestroyComponent; }
+				//}
+				//else
+				//{
+				//	auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
+				//	if (currentComponent != nullptr) return currentComponent;
+				//}
 
-				auto componentContext = GetOrCreateComponentContext<ComponentType>();
-				StableComponentAllocator<ComponentType>* container = &componentContext->Allocator;
+				//auto componentContext = GetOrCreateComponentContext<ComponentType>();
+				//StableComponentAllocator<ComponentType>* container = &componentContext->Allocator;
 
-				auto createResult = container->EmplaceBack(e, std::forward<Args>(args)...);
-				if (!createResult.IsValid()) return nullptr;
+				//auto createResult = container->EmplaceBack(e, std::forward<Args>(args)...);
+				//if (!createResult.IsValid()) return nullptr;
 
-				Archetype* archetype;
-				// making operations on archetypes:
-				if (entityData.m_CurrentArchetype == nullptr)
-				{
-					RemoveFromEmptyEntities(entityData);
-					archetype = m_ArchetypesMap.GetSingleComponentArchetype<ComponentType>(componentContext);
-					AddEntityToSingleComponentArchetype(
-						*archetype,
-						entityData,
-						createResult.ChunkIndex,
-						createResult.ElementIndex,
-						createResult.Component
-					);
-				}
-				else
-				{
-					archetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<ComponentType>(
-						*entityData.m_CurrentArchetype,
-						componentContext
-						);
-					AddEntityToArchetype(
-						*archetype,
-						entityData,
-						createResult.ChunkIndex,
-						createResult.ElementIndex,
-						copmonentTypeID,
-						createResult.Component,
-						true,
-						std::numeric_limits<uint64_t>::max()
-					);
-				}
-				InvokeOnCreateComponentFromEntityID(componentContext, createResult.Component, e);
+				//Archetype* archetype;
+				//// making operations on archetypes:
+				//if (entityData.m_CurrentArchetype == nullptr)
+				//{
+				//	RemoveFromEmptyEntities(entityData);
+				//	archetype = m_ArchetypesMap.GetSingleComponentArchetype<ComponentType>(componentContext);
+				//	AddEntityToSingleComponentArchetype(
+				//		*archetype,
+				//		entityData,
+				//		createResult.ChunkIndex,
+				//		createResult.ElementIndex,
+				//		createResult.Component
+				//	);
+				//}
+				//else
+				//{
+				//	archetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<ComponentType>(
+				//		*entityData.m_CurrentArchetype,
+				//		componentContext
+				//		);
+				//	AddEntityToArchetype(
+				//		*archetype,
+				//		entityData,
+				//		createResult.ChunkIndex,
+				//		createResult.ElementIndex,
+				//		copmonentTypeID,
+				//		createResult.Component,
+				//		true,
+				//		std::numeric_limits<uint64_t>::max()
+				//	);
+				//}
+				//InvokeOnCreateComponentFromEntityID(componentContext, createResult.Component, e);
 
-				return createResult.Component;
+				//return createResult.Component;
 			}
 			return nullptr;
 		}
@@ -430,14 +429,6 @@ namespace decs
 		template<typename ComponentType>
 		ComponentType* GetComponent(const EntityID& e) const
 		{
-			if (e < m_EntityManager->GetEntitiesDataCount())
-			{
-				const EntityData& data = m_EntityManager->GetConstEntityData(e);
-				if (data.IsValidToPerformComponentOperation())
-				{
-					return GetComponentWithoutCheckingIsAlive<ComponentType>(data);
-				}
-			}
 			return nullptr;
 		}
 
@@ -521,22 +512,6 @@ namespace decs
 				delete value;
 		}
 
-		template<typename ComponentType>
-		inline ComponentType* GetComponentWithoutCheckingIsAlive(const EntityData& data) const
-		{
-			Archetype* archetype = data.m_CurrentArchetype;
-			if (archetype == nullptr) return nullptr;
-
-			uint64_t compIndex = archetype->FindTypeIndex<ComponentType>();
-			if (compIndex == std::numeric_limits<uint64_t>::max()) return nullptr;
-
-			uint64_t dataIndex = archetype->GetComponentsCount() * data.m_IndexInArchetype + compIndex;
-			ComponentRef& componentRef = archetype->m_ComponentsRefs[dataIndex];
-			return reinterpret_cast<ComponentType*>(componentRef.GetComponentPointer());
-		}
-
-		void ClearComponentsContainers();
-
 		void InvokeOnCreateComponentFromEntityID(ComponentContextBase* componentContext, void* componentPtr, const EntityID& id);
 
 	private:
@@ -551,13 +526,13 @@ namespace decs
 				uint64_t componentIndex = entityData.m_CurrentArchetype->FindTypeIndex(copmonentTypeID);
 				if (componentIndex != std::numeric_limits<uint64_t>::max())
 				{
-					auto& componentRef = entityData.GetComponentRef(componentIndex);
+					/*auto& componentRef = entityData.GetComponentRef(componentIndex);
 					if (componentRef.m_DelayedToDestroy)
 					{
 						RemoveComponentFromDelayedToDestroy(entityData.m_ID, copmonentTypeID);
 						componentRef.m_DelayedToDestroy = false;
 					}
-					return reinterpret_cast<ComponentType*>(componentRef.ComponentPointer);
+					return reinterpret_cast<ComponentType*>(componentRef.ComponentPointer);*/
 				}
 			}
 
@@ -575,60 +550,6 @@ namespace decs
 		ArchetypesMap m_ArchetypesMap;
 
 	private:
-		void AddEntityToArchetype(
-			Archetype& newArchetype,
-			EntityData& entityData,
-			const uint64_t& newCompChunkIndex,
-			const uint64_t& newCompElementIndex,
-			const TypeID& compTypeID,
-			void* newCompPtr,
-			const bool& bIsNewComponentAdded,
-			const uint64_t& removedComponentIndex
-		);
-
-		void AddEntityToSingleComponentArchetype(
-			Archetype& newArchetype,
-			EntityData& entityData,
-			const uint64_t& newCompChunkIndex,
-			const uint64_t& newCompElementIndex,
-			void* componentPointer
-		);
-
-		void RemoveEntityFromArchetype(Archetype& archetype, EntityData& entityData);
-
-		void UpdateEntityComponentAccesDataInArchetype(
-			EntityData& data,
-			const uint64_t& compChunkIndex,
-			const uint64_t& compElementIndex,
-			void* compPtr,
-			const uint64_t& typeIndex
-		);
-
-		template<typename ComponentType>
-		void UpdateEntityComponentAccesDataInArchetype(
-			const EntityID& entityID,
-			const uint64_t& compChunkIndex,
-			const uint64_t& compElementIndex,
-			void* compPtr
-		)
-		{
-			EntityData& data = m_EntityManager->GetEntityData(entityID);
-
-			uint64_t compDataIndex = data.m_IndexInArchetype * data.m_CurrentArchetype->FindTypeIndex(Type<ComponentType>::ID());
-
-			auto& compData = data.m_CurrentArchetype->m_ComponentsRefs[compDataIndex];
-
-			compData.ChunkIndex = compChunkIndex;
-			compData.ElementIndex = compElementIndex;
-			compData.ComponentPointer = compPtr;
-		}
-
-		void AddSpawnedEntityToArchetype(
-			PrefabSpawnData& spawnData,
-			EntityData& data,
-			Archetype* spawnArchetype
-		);
-
 		void DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners = true);
 
 #pragma endregion
@@ -644,11 +565,6 @@ namespace decs
 		void InvokeEntitesOnCreateListeners();
 
 		void InvokeEntitesOnDestroyListeners();
-
-	private:
-		void InvokeEntitesOnCreateListeners_2();
-
-		void InvokeEntitesOnDestroyListeners_2();
 
 	private:
 		inline void InvokeEntityCreationObservers(Entity& entity)
@@ -686,10 +602,6 @@ namespace decs
 		void InvokeArchetypeOnCreateListeners(Archetype& archetype);
 
 		void InvokeArchetypeOnDestroyListeners(Archetype& archetype);
-
-		void InvokeComponentOnCreateListeners(ComponentContextBase* coponentContext);
-
-		void InvokeComponentOnDestroyListeners(ComponentContextBase* coponentContext);
 
 #pragma endregion
 

@@ -6,4 +6,3 @@
 #include "View.h"
 #include "Observers.h"
 #include "ObserversManager.h"
-#include "EntityCommandBuffer.h"

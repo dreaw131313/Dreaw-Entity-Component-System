@@ -204,7 +204,7 @@ namespace decs
 		template<typename Callable>
 		void ForEachForward(Callable&& func)const noexcept
 		{
-			const uint64_t contextCount = m_ArchetypesContexts.size();
+			/*const uint64_t contextCount = m_ArchetypesContexts.size();
 			std::tuple<ComponentsTypes*...> tuple = {};
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
@@ -232,13 +232,13 @@ namespace decs
 						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
 				}
-			}
+			}*/
 		}
 
 		template<typename Callable>
 		void ForEachBackward(Callable&& func) const noexcept
 		{
-			const uint64_t contextCount = m_ArchetypesContexts.size();
+			/*const uint64_t contextCount = m_ArchetypesContexts.size();
 			std::tuple<ComponentsTypes*...> tuple = {};
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
@@ -266,13 +266,13 @@ namespace decs
 						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
 				}
-			}
+			}*/
 		}
 
 		template<typename Callable>
 		void ForEachWithEntityForward(Callable&& func)const noexcept
 		{
-			const uint64_t contextCount = m_ArchetypesContexts.size();
+			/*const uint64_t contextCount = m_ArchetypesContexts.size();
 			Entity iteratedEntity = {};
 			std::tuple<Entity*, ComponentsTypes*...> tuple = {};
 			std::get<Entity*>(tuple) = &iteratedEntity;
@@ -307,13 +307,13 @@ namespace decs
 						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
 				}
-			}
+			}*/
 		}
 
 		template<typename Callable>
 		void ForEachWithEntityBackward(Callable&& func)const noexcept
 		{
-			const uint64_t contextCount = m_ArchetypesContexts.size();
+			/*const uint64_t contextCount = m_ArchetypesContexts.size();
 			Entity iteratedEntity = {};
 			std::tuple<Entity*, ComponentsTypes*...> tuple = {};
 			std::get<Entity*>(tuple) = &iteratedEntity;
@@ -347,7 +347,7 @@ namespace decs
 						decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 					}
 				}
-			}
+			}*/
 		}
 
 		inline uint64_t GetMinComponentsCount() const
@@ -565,7 +565,7 @@ namespace decs
 		}
 
 	private:
-		template<typename T = void, typename... Ts>
+		/*template<typename T = void, typename... Ts>
 		inline void SetTupleElements(
 			std::tuple<ComponentsTypes*...>& tuple,
 			const uint64_t& compIndex,
@@ -625,7 +625,7 @@ namespace decs
 			) const noexcept
 		{
 
-		}
+		}*/
 
 #pragma region BATCH ITERATOR
 	public:
@@ -676,7 +676,7 @@ namespace decs
 			template<typename Callable>
 			void ForEachWithoutEntity(Callable&& func)
 			{
-				std::tuple<ComponentsTypes*...> tuple = {};
+				/*std::tuple<ComponentsTypes*...> tuple = {};
 				uint64_t contextIndex = m_FirstArchetypeIndex;
 				uint64_t contextCount = m_LastArchetypeIndex + 1;
 
@@ -717,13 +717,13 @@ namespace decs
 							decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 						}
 					}
-				}
+				}*/
 			}
 
 			template<typename Callable>
 			void ForEachWithEntity(Callable&& func)
 			{
-				Entity iteratedEntity = {};
+				/*Entity iteratedEntity = {};
 				std::tuple<Entity*, ComponentsTypes*...> tuple = {};
 				std::get<Entity*>(tuple) = &iteratedEntity;
 				uint64_t contextIndex = m_FirstArchetypeIndex;
@@ -771,7 +771,7 @@ namespace decs
 							decs::ApplayTupleWithPointersAsRefrences(func, tuple);
 						}
 					}
-				}
+				}*/
 			}
 
 		protected:
@@ -784,7 +784,7 @@ namespace decs
 			uint64_t m_LastIterationIndex = 0;
 
 		private:
-			template<typename T = void, typename... Ts>
+			/*template<typename T = void, typename... Ts>
 			inline void SetTupleElements(
 				std::tuple<ComponentsTypes*...>& tuple,
 				const uint64_t& compIndex,
@@ -846,7 +846,7 @@ namespace decs
 				) const
 			{
 
-			}
+			}*/
 		};
 
 #pragma endregion

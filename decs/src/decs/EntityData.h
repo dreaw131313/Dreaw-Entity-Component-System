@@ -34,10 +34,24 @@ namespace decs
 
 		}
 
-		inline ComponentRef& GetComponentRef(const uint64_t& componentTypeIndex)
+		template<typename ComponentType>
+		inline ComponentType* GetComponent()
 		{
-			uint64_t dataIndex = (uint64_t)m_CurrentArchetype->GetComponentsCount() * (uint64_t)m_IndexInArchetype + componentTypeIndex;
-			return m_CurrentArchetype->m_ComponentsRefs[dataIndex];
+			if (m_CurrentArchetype == nullptr) return nullptr;
+			uint64_t componentIndex = m_CurrentArchetype->FindTypeIndex<ComponentType>();
+			if (componentIndex == std::numeric_limits<uint64_t>::max()) return nullptr;
+
+			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_CurrentArchetype->m_PackedContainers[componentIndex]);
+
+			return &packedComponent->m_Data[m_IndexInArchetype];
+		}
+
+		template<typename ComponentType>
+		inline ComponentType* GetComponent(const uint64_t& componentIndex)
+		{
+			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_CurrentArchetype->m_PackedContainers[componentIndex]);
+
+			return &packedComponent->m_Data[m_IndexInArchetype];
 		}
 
 		inline bool IsAlive() const

@@ -2,6 +2,8 @@
 
 #include "decs/decs.h"
 
+#include "decs/PackedComponentContainer.h"
+
 
 void Print(const std::string& message)
 {
@@ -61,25 +63,10 @@ int main()
 	decs::Entity entity = container.CreateEntity();
 
 	C1* comp = entity.AddComponent<C1>();
-	if (comp == nullptr)
-	{
-		Print("component is not added!");
-	}
-
-	comp->entityToDestroy = container.CreateEntity();
-	comp->entityToDestroy.AddComponent<C1>();
-
-	decs::ObserversManager observerManager;
-
-	C1Observer c1Observer = { &container };
-	observerManager.SetComponentCreateObserver<C1>(&c1Observer);
-	observerManager.SetComponentDestroyObserver<C1>(&c1Observer);
-
-	container.SetObserversManager(&observerManager);
-	container.InvokeEntitesOnCreateListeners();
 
 
-	if (!entity.HasComponent<C1>())
+
+	/*if (!entity.HasComponent<C1>())
 	{
 		Print("Entity has not component!");
 	}
@@ -119,7 +106,10 @@ int main()
 		it.ForEach(lambda2);
 	}
 
-	container.DestroyOwnedEntities();
+	container.DestroyOwnedEntities();*/
+
+
+	decs::PackedContainer<float> packedContainerTest = { 1000 };
 
 	//std::cin.get();
 	return 0;
