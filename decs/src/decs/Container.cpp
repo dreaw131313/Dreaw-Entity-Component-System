@@ -175,6 +175,7 @@ namespace decs
 			m_EntityManager->DestroyEntity(data);
 		}
 		m_EmptyEntities.Clear();
+
 	}
 
 	void Container::SetEntityActive(const EntityID& entity, const bool& isActive)
@@ -556,7 +557,6 @@ namespace decs
 		auto& entitesData = archetype.m_EntitiesData;
 		uint64_t archetypeComponentsCount = archetype.GetComponentsCount();
 		uint64_t entityDataCount = entitesData.size();
-		uint64_t componentDataIndex = 0;
 
 		if (invokeOnDestroyListeners)
 		{
@@ -573,10 +573,8 @@ namespace decs
 
 				for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 				{
-					/*auto& compRef = archetype.m_ComponentsRefs[componentDataIndex];
-					auto compContext = archetype.m_ComponentContexts[i];
-					compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, entity);
-					componentDataIndex += 1;*/
+					void* compPtr = archetype.GetComponentVoidPtr(entityDataIdx, i);
+					archetype.m_ComponentContexts[i]->InvokeOnDestroyComponent_S(compPtr, entity);
 				}
 
 				m_EntityManager->DestroyEntity(archetypeEntityData.ID());

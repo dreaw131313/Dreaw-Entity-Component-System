@@ -18,37 +18,17 @@ public:
 public:
 	Position()
 	{
-		Print("Position Constructor");
+	}
+
+	Position(float x, float y) : X(x), Y(y)
+	{
 	}
 
 	~Position()
 	{
-		Print("Position Destruction");
+		Print("Position Destructor");
 	}
 
-
-	Position(const Position& other)
-	{
-		Print("Position Copy Constructor");
-	}
-	
-	Position(Position&& other) noexcept
-	{
-		Print("Position Move Constructor");
-	}
-
-	Position& operator = (const Position& other)
-	{
-		Print("Position Copy Assigment");
-		return *this;
-	}
-
-	Position& operator = (Position&& other) noexcept
-	{
-		Print("Position Move Assigment");
-		return *this;
-	}
-	
 };
 
 
@@ -60,26 +40,21 @@ int main()
 	decs::Entity e1 = container.CreateEntity();
 	decs::Entity e2 = container.CreateEntity();
 
- 	e1.AddComponent<Position>();
+	e1.AddComponent<Position>(1, 1);
 	e1.AddComponent<float>();
-	e1.AddComponent<int>();
-
- 	e2.AddComponent<Position>();
+	e2.AddComponent<Position>(2, 2);
 	e2.AddComponent<float>();
-	e2.AddComponent<int>();
-
-	e1.RemoveComponent<int>();
-	e1.RemoveComponent<float>();
-	e1.RemoveComponent<Position>();
 
 	decs::View<Position> testView = { container };
 
 	auto lambda = [&] (const Position& position)
 	{
-
+		std::cout << "X: " << position.X << " Y: " << position.Y << std::endl;
 	};
-	testView.ForEachForward(lambda);
+	testView.ForEach(lambda);
 
+
+	container.DestroyOwnedEntities();
 
 	return 0;
 }

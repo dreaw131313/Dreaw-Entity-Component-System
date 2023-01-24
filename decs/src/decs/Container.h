@@ -427,7 +427,7 @@ namespace decs
 			if (e < m_EntityManager->GetEntitiesDataCount())
 			{
 				EntityData& entityData = m_EntityManager->GetEntityData(e);
-				if (entityData.IsValidToPerformComponentOperation() && entityData.m_Archetype != nullptr)
+				if (entityData.m_Archetype != nullptr && entityData.IsValidToPerformComponentOperation())
 				{
 					uint64_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
 					if (findTypeIndex != std::numeric_limits<uint64_t>::max())
@@ -465,10 +465,8 @@ namespace decs
 			if (e < m_EntityManager->GetEntitiesDataCount())
 			{
 				const EntityData& data = m_EntityManager->GetConstEntityData(e);
-				if (data.IsValidToPerformComponentOperation())
+				if (data.m_Archetype != nullptr && data.IsValidToPerformComponentOperation())
 				{
-					if (data.m_Archetype == nullptr) return false;
-
 					uint64_t index = data.m_Archetype->FindTypeIndex(Type<ComponentType>::ID());
 					return index != std::numeric_limits<uint64_t>::max();
 				}

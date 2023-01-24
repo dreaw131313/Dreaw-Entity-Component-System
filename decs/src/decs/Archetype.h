@@ -85,7 +85,7 @@ namespace decs
 		template<typename... ComponentTypes>
 		friend 	class ViewBatchIterator;
 
-	private:
+	public:
 		static constexpr uint64_t m_MinComponentsInArchetypeToPerformMapLookup = 20;
 		static constexpr uint64_t DefaultChunkSize = 1000;
 
@@ -121,6 +121,15 @@ namespace decs
 		inline const TypeID* const ComponentsTypes() const { return m_TypeIDs.data(); }
 		inline uint32_t EntitiesCount() const { return m_EntitiesCount; }
 		inline uint64_t EntitesCountToInvokeCallbacks() const { return m_EntitesCountToInitialize; }
+
+		inline uint64_t GetChunksCount() const noexcept
+		{
+			return m_PackedContainers[0]->GetChunksCount();
+		}
+		inline uint64_t GetChunkSize(const uint64_t& index)const noexcept
+		{
+			return m_PackedContainers[0]->GetChunkSize(index);
+		}
 
 		inline bool ContainType(const TypeID& typeID) const
 		{
@@ -229,7 +238,7 @@ namespace decs
 			}
 		}
 
-		void MoveEntityAfterRemoveComponent(const TypeID& componentTypeID,Archetype& fromArchetype, const uint64_t& fromIndex)
+		void MoveEntityAfterRemoveComponent(const TypeID& componentTypeID, Archetype& fromArchetype, const uint64_t& fromIndex)
 		{
 			uint64_t thisArchetypeIndex = 0;
 			uint64_t fromArchetypeIndex = 0;
@@ -274,11 +283,21 @@ namespace decs
 		{
 			return dynamic_cast<PackedContainer<ComponentType>*>(m_PackedContainers[index]);
 		}
+
+		inline void* GetComponentVoidPtr(const uint64_t& entityIndex, const uint64_t& componentIndex = 0)const noexcept
+		{
+			return m_PackedContainers[componentIndex]->GetComponentAsVoid(entityIndex);
+		}
+
 	private:
 		void Reset()
 		{
 			m_EntitiesCount = 0;
 			m_EntitiesData.clear();
+			for (uint64_t compIdx = 0; compIdx < m_ComponentsCount; compIdx++)
+			{
+				m_PackedContainers[compIdx]->Clear();
+			}
 		}
 
 		inline void ValidateEntitiesCountToInitialize()
