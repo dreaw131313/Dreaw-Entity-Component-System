@@ -2,7 +2,6 @@
 #include "Core.h"
 #include "ComponentContext.h"
 #include "Type.h"
-#include "TypeGroup.h"
 #include "PackedComponentContainer.h"
 
 namespace decs

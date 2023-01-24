@@ -1,6 +1,5 @@
 #pragma once
 #include "Type.h"
-#include "TypeGroup.h"
 #include "Core.h"
 #include "Entity.h"
 #include "Container.h"
@@ -128,16 +127,14 @@ namespace decs
 				m_ArchetypesContexts[i].ValidateEntitiesCount();
 			}
 
-			/*if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+			if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 			{
 				ForEachWithEntityBackward(func);
 			}
 			else
 			{
 				ForEachBackward(func);
-			}*/
-
-			ForEachForward(func);
+			}
 		}
 
 		template<typename Callable>
@@ -220,7 +217,7 @@ namespace decs
 				{
 					CreateBucketsTuple<ComponentsTypes...>(arraysTuple, ctx, chunkIdx);
 					uint64_t chunkSize = ctx.Arch->GetChunkSize(chunkIdx);
-					for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++)
+					for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++, entityIndex++)
 					{
 						const auto& entityData = entitiesData[entityIndex];
 						if (entityData.IsActive())
@@ -254,18 +251,16 @@ namespace decs
 				{
 					CreateBucketsTuple<ComponentsTypes...>(arraysTuple, ctx, chunkIdx);
 					int32_t elementIndex = (int32_t)ctx.Arch->GetChunkSize(chunkIdx) - 1;
-					for (; elementIndex > -1; elementIndex--)
+					for (; elementIndex > -1; elementIndex--, entityIndex--)
 					{
 						const auto& entityData = entitiesData[entityIndex];
 						if (entityData.IsActive())
 						{
-							//std::apply(func, std::tie(std::get<ComponentsTypes*>(arraysTuple)[elementIndex]...));
 							std::apply(
 								func,
 								std::forward_as_tuple(std::get<ComponentsTypes*>(arraysTuple)[elementIndex]...)
 							);
 						}
-						entityIndex -= 1;
 					}
 				}
 			}
@@ -282,15 +277,15 @@ namespace decs
 				const ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
 				if (ctx.m_EntitiesCount == 0) continue;
 
-				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
-				uint64_t chunksCount = ctx.Arch->GetChunksCount();
+				const ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
+				const uint64_t chunksCount = ctx.Arch->GetChunksCount();
 				uint64_t entityIndex = 0;
 
 				for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
 				{
 					CreateBucketsTuple<ComponentsTypes...>(arraysTuple, ctx, chunkIdx);
 					uint64_t chunkSize = ctx.Arch->GetChunkSize(chunkIdx);
-					for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++)
+					for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++, entityIndex++)
 					{
 						const auto& entityData = entitiesData[entityIndex];
 						if (entityData.IsActive())
@@ -301,7 +296,6 @@ namespace decs
 								std::forward_as_tuple(entityBuffor, std::get<ComponentsTypes*>(arraysTuple)[elementIndex]...)
 							);
 						}
-						entityIndex += 1;
 					}
 				}
 			}
@@ -323,11 +317,11 @@ namespace decs
 				uint64_t entityIndex = ctx.Arch->m_EntitiesData.size() - 1;
 				int32_t chunkIdx = (int32_t)ctx.Arch->GetChunksCount() - 1;
 
-				for (; chunkIdx > -1; chunkIdx--)
+				for (; chunkIdx > -1; chunkIdx--, entityIndex--)
 				{
 					CreateBucketsTuple<ComponentsTypes...>(arraysTuple, ctx, chunkIdx);
 					int32_t elementIndex = (int32_t)ctx.Arch->GetChunkSize(chunkIdx) - 1;
-					for (; elementIndex > -1; elementIndex--)
+					for (; elementIndex > -1; elementIndex--, entityIndex--)
 					{
 						const auto& entityData = entitiesData[entityIndex];
 						if (entityData.IsActive())
@@ -338,7 +332,6 @@ namespace decs
 								std::forward_as_tuple(entityBuffor, std::get<ComponentsTypes*>(arraysTuple)[elementIndex]...)
 							);
 						}
-						entityIndex -= 1;
 					}
 				}
 			}

@@ -148,7 +148,6 @@
     <ClInclude Include="src\decs\Observers.h" />
     <ClInclude Include="src\decs\ObserversManager.h" />
     <ClInclude Include="src\decs\Type.h" />
-    <ClInclude Include="src\decs\TypeGroup.h" />
     <ClInclude Include="src\decs\View.h" />
     <ClInclude Include="src\decs\ThirdParty\skarupke\bytell_hash_map.hpp" />
     <ClInclude Include="src\decs\ThirdParty\skarupke\flat_hash_map.hpp" />
