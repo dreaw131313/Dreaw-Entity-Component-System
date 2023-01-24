@@ -206,6 +206,15 @@ namespace decs
 			}
 			m_EmptyEntities.PopBack();
 		}
+
+		inline void ValidateEntityInArchetype(const EntityRemoveSwapBackResult& swapBackResult)
+		{
+			if (swapBackResult.IsValid())
+			{
+				m_EntityManager->GetEntityData(swapBackResult.ID).m_IndexInArchetype = swapBackResult.Index;
+			}
+		}
+
 #pragma endregion
 
 #pragma region SPAWNING ENTIES
@@ -397,10 +406,7 @@ namespace decs
 						entityData.m_IndexInArchetype
 						);
 					auto result = entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
-					if (result.IsValid())
-					{
-						m_EntityManager->GetEntityData(result.ID).m_IndexInArchetype = result.Index;
-					}
+					ValidateEntityInArchetype(result);
 				}
 				else
 				{

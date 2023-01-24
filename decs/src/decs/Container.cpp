@@ -92,45 +92,18 @@ namespace decs
 			{
 				// Invoke On destroy metyhods
 
-				//for (uint64_t i = 0; i < currentArchetype->GetComponentsCount(); i++)
-				//{
-				//	auto& compRef = entityData.GetComponentRef(i);
-				//	auto compContext = currentArchetype->m_ComponentContexts[i];
-				//	compContext->InvokeOnDestroyComponent_S(compRef.ComponentPointer, entity);
-				//}
+				for (uint64_t i = 0; i < currentArchetype->GetComponentsCount(); i++)
+				{
+					void* compPtr = currentArchetype->GetComponentVoidPtr(entityData.m_IndexInArchetype, i);
+					auto compContext = currentArchetype->m_ComponentContexts[i];
+					compContext->InvokeOnDestroyComponent_S(compPtr, entity);
+				}
 
-				//uint64_t firstComponentDataIndexInArch = currentArchetype->GetComponentsCount() * entityData.m_IndexInArchetype;
-				//// Remove entity from component bucket:
-				//for (uint64_t i = 0; i < currentArchetype->GetComponentsCount(); i++)
-				//{
-				//	auto& compRef = currentArchetype->m_ComponentsRefs[firstComponentDataIndexInArch + i];
-				//	auto allocator = currentArchetype->m_ComponentContexts[i]->GetAllocator();
-				//	auto result = allocator->RemoveSwapBack(compRef.ChunkIndex, compRef.ElementIndex);
+				uint64_t firstComponentDataIndexInArch = currentArchetype->GetComponentsCount() * entityData.m_IndexInArchetype;
+				// Remove entity from component bucket:
 
-				//	if (result.IsValid())
-				//	{
-				//		EntityData& fixedEntityData = m_EntityManager->GetEntityData(result.eID);
-				//		uint64_t compTypeIndexInFixedEntityArchetype;
-				//		if (entityData.m_Archetype == fixedEntityData.m_Archetype)
-				//		{
-				//			compTypeIndexInFixedEntityArchetype = i;
-				//		}
-				//		else
-				//		{
-				//			compTypeIndexInFixedEntityArchetype = fixedEntityData.m_Archetype->FindTypeIndex(currentArchetype->m_TypeIDs[i]);
-				//		}
-
-				//		UpdateEntityComponentAccesDataInArchetype(
-				//			fixedEntityData,
-				//			result.ChunkIndex,
-				//			result.ElementIndex,
-				//			allocator->GetComponentAsVoid(result.ChunkIndex, result.ElementIndex),
-				//			i
-				//		);
-				//	}
-				//}
-
-				//RemoveEntityFromArchetype(*entityData.m_Archetype, entityData);
+				auto result = currentArchetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
+				ValidateEntityInArchetype(result);
 			}
 			else
 			{
@@ -471,11 +444,7 @@ namespace decs
 		}
 
 		auto result = oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
-		if (result.IsValid())
-		{
-			m_EntityManager->GetEntityData(result.ID).m_IndexInArchetype = result.Index;
-		}
-
+		ValidateEntityInArchetype(result);
 
 		return true;
 	}
