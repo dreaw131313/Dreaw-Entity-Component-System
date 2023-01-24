@@ -81,5 +81,12 @@ int main()
 
 	container.DestroyOwnedEntities();
 
+	float* f = new float(1.f);
+	float& fref = *f;
+
+	delete f;
+
+	fref = 10;
+
 	return 0;
 }

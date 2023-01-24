@@ -118,7 +118,7 @@ namespace decs
 		}
 
 		template<typename Callable>
-		void ForEach(Callable func) noexcept
+		void ForEach(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
 			Fetch();
@@ -162,7 +162,7 @@ namespace decs
 					}
 					case IterationType::Backward:
 					{
-						//ForEachWithEntityBackward(func);
+						ForEachWithEntityBackward(func);
 						break;
 					}
 				}
@@ -225,14 +225,6 @@ namespace decs
 						const auto& entityData = entitiesData[entityIndex];
 						if (entityData.IsActive())
 						{
-							/*SetTupleElements<ComponentsTypes...>(
-								componentsTuple,
-								arraysTuple,
-								elementIndex
-								);
-
-							decs::ApplayTupleWithPointersAsRefrences(func, componentsTuple);*/
-							//std::apply(func, std::tie(std::get<ComponentsTypes*>(arraysTuple)[elementIndex]...));
 							std::apply(
 								func,
 								std::forward_as_tuple(std::get<ComponentsTypes*>(arraysTuple)[elementIndex]...)
@@ -327,11 +319,11 @@ namespace decs
 				const ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
 				if (ctx.m_EntitiesCount == 0) continue;
 
-				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
+				const ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
 				uint64_t entityIndex = ctx.Arch->m_EntitiesData.size() - 1;
-				int32_t chunksCount = (int32_t)ctx.Arch->GetChunksCount();
+				int32_t chunkIdx = (int32_t)ctx.Arch->GetChunksCount() - 1;
 
-				for (int32_t chunkIdx = chunksCount - 1; chunkIdx > -1; chunkIdx--)
+				for (; chunkIdx > -1; chunkIdx--)
 				{
 					CreateBucketsTuple<ComponentsTypes...>(arraysTuple, ctx, chunkIdx);
 					int32_t elementIndex = (int32_t)ctx.Arch->GetChunkSize(chunkIdx) - 1;
