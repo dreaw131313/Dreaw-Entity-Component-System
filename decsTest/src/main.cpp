@@ -75,13 +75,14 @@ int main()
 
 	decs::View<Position, float> testView = { container };
 
-	auto lambda = [&] (decs::Entity& e, Position& position, float& f)
+	auto lambda = [&] (/*decs::Entity& e,*/ Position& position, float& f)
 	{
-		std::cout << "Entity ID: " << e.ID() << " - float = " << f << std::endl;
-		f *= 2; 
+		//std::cout << "Entity ID: " << e.ID() << " - float = " << f << std::endl;
+		std::cout << " float = " << f << std::endl;
 	};
 	testView.ForEach(lambda, decs::IterationType::Forward);
-	testView.ForEach(lambda, decs::IterationType::Forward);
+	std::cout << std::endl;
+	testView.ForEach(lambda, decs::IterationType::Backward);
 
 	container.DestroyOwnedEntities();
 
