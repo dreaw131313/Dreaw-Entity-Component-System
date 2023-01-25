@@ -103,6 +103,7 @@ namespace decs
 
 		uint64_t m_EntitesCountToInitialize = 0;
 
+		
 	public:
 		Archetype()
 		{
@@ -182,7 +183,7 @@ namespace decs
 				m_TypeIDsIndexes[id] = m_TypeIDs.size();
 				m_TypeIDs.push_back(id);
 				m_ComponentContexts.push_back(componentContext);
-				m_PackedContainers.push_back(new PackedContainer<ComponentType>(DefaultChunkSize));
+				m_PackedContainers.push_back(new PackedContainer<ComponentType>(componentContext->GetChunkCapacity()));
 			}
 		}
 
@@ -195,7 +196,7 @@ namespace decs
 				m_TypeIDsIndexes[id] = m_TypeIDs.size();
 				m_TypeIDs.push_back(id);
 				m_ComponentContexts.push_back(componentContext);
-				m_PackedContainers.push_back(frompackedContainer->CreateOwnEmptyCopy(DefaultChunkSize));
+				m_PackedContainers.push_back(frompackedContainer->CreateOwnEmptyCopy(componentContext->GetChunkCapacity()));
 			}
 		}
 

@@ -17,6 +17,7 @@ namespace decs
 
 		}
 
+		inline virtual uint64_t GetChunkCapacity() const = 0;
 		inline virtual void* GetComponentAsVoid(const uint64_t& index) = 0;
 		inline virtual void* GetChunkData(const uint64_t& chunkIndex) const noexcept = 0;
 		inline virtual uint32_t GetChunkSize(const uint64_t& chunkIndex) const noexcept = 0;
@@ -41,8 +42,8 @@ namespace decs
 
 		}
 
-		PackedContainer(const uint64_t& bucketSize) :
-			m_Data(bucketSize)
+		PackedContainer(const uint64_t& chunkSize) :
+			m_Data(chunkSize)
 		{
 
 		}
@@ -52,6 +53,10 @@ namespace decs
 
 		}
 
+		inline virtual uint64_t GetChunkCapacity() const override
+		{
+			return m_Data.ChuknCapacity();
+		}
 		inline virtual void* GetComponentAsVoid(const uint64_t& index)
 		{
 			return &m_Data[index];

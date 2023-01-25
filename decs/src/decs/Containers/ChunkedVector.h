@@ -233,6 +233,8 @@ namespace decs
 			return *this;
 		}
 
+		
+
 		inline T& operator[](const uint64_t& index) noexcept
 		{
 			uint64_t chunkIndex = index / m_ChunkCapacity;
@@ -371,6 +373,7 @@ namespace decs
 		inline T* GetChunk(const uint64_t& index) const { return m_Chunks[index].m_Data; }
 
 		inline uint64_t GetChunkSize(const uint64_t& index)const { return m_Chunks[index].m_Size; }
+
 
 	private:
 		std::vector<Chunk> m_Chunks;

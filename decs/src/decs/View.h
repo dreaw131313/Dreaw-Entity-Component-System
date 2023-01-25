@@ -5,46 +5,88 @@
 #include "Container.h"
 #include "decs/CustomApplay.h"
 #include <algorithm>
+#include "Containers\ChunkedVector.h"
 
 namespace decs
 {
-	template<typename T>
-	struct ChunkData
-	{
-	public:
-		T* ChunkPtr;
-		ChunkedVector<T>* chunkedVector;
-
-		uint32_t ChunkIndex;
-		uint32_t ChunkSize;
-		uint32_t Index;
-
-		inline void Increment()
-		{
-			Index += 1;
-			if (Index > ChunkSize)
-			{
-				ChunkIndex += 1;
-				if (ChunkIndex < chunkedVector->ChunksCount())
-				{
-					ChunkPtr = chunkedVector->GetChunk(ChunkIndex);
-				}
-			}
-			else
-			{
-				ChunkPtr += 1;
-			}
-		}
-
-		ChunkData(ChunkedVector<T>* chunkedVector, bool backward)
-		{
-
-		}
-	};
 	enum class IterationType : uint8_t
 	{
 		Forward = 0,
 		Backward = 1
+	};
+
+	template<typename T>
+	struct ChunksIterator
+	{
+	public:
+		ChunkedVector<T>* m_ChunkedVector = nullptr;
+		uint32_t m_ChunksCount = 0;
+		uint32_t m_ChunkIndex = 0;
+		uint32_t m_ChunkSize = 0;
+		uint32_t m_Index = 0;
+		T* m_DataPtr = nullptr;
+
+		ChunksIterator()
+		{
+
+		}
+
+		ChunksIterator(ChunkedVector<T>* chunkedVector, bool isBackward = false) :
+			m_ChunkedVector(chunkedVector),
+			m_ChunksCount(m_ChunkedVector->ChunksCount()),
+			m_ChunkIndex(m_ChunksCount - 1),
+			m_ChunkSize(chunkedVector->GetChunkSize(m_ChunkIndex)),
+			m_Index(m_ChunkSize - 1),
+			m_DataPtr(chunkedVector->GetChunk(m_ChunkIndex))
+		{
+
+		}
+
+		void Set(ChunkedVector<T>* chunkedVector, bool isBackward = false)
+		{
+			if (isBackward)
+			{
+				m_ChunkedVector = chunkedVector;
+				m_ChunksCount = m_ChunkedVector->ChunksCount();
+				m_ChunkIndex = m_ChunksCount - 1;
+				m_ChunkSize = chunkedVector->GetChunkSize(m_ChunkIndex);
+				m_Index = m_ChunkSize - 1;
+				m_DataPtr = chunkedVector->GetChunk(m_ChunkIndex);
+			}
+			else
+			{
+				m_ChunkedVector = chunkedVector;
+				m_ChunksCount = m_ChunkedVector->ChunksCount();
+				m_ChunkIndex = 0;
+				m_ChunkSize = chunkedVector->GetChunkSize(m_ChunkIndex);
+				m_Index = 0;
+				m_DataPtr = chunkedVector->GetChunk(m_ChunkIndex);
+			}
+		}
+
+		inline void Increment()
+		{
+			m_Index += 1;
+			if (m_Index > m_ChunkSize)
+			{
+				m_ChunkIndex += 1;
+				m_Index = 0;
+				if (m_ChunkIndex < m_ChunksCount)
+				{
+					m_DataPtr = m_ChunkedVector->GetChunk(m_ChunkIndex);
+					m_ChunkSize = m_ChunkedVector->GetChunkSize(m_ChunkIndex);
+				}
+			}
+			else
+			{
+				m_DataPtr += 1;
+			}
+		}
+
+		inline void Decrement()
+		{
+
+		}
 	};
 
 	template<typename... ComponentsTypes>
@@ -55,9 +97,9 @@ namespace decs
 		{
 		public:
 			Archetype* Arch = nullptr;
-			//uint64_t TypeIndexes[sizeof...(ComponentsTypes)]; // indexy kontenerów z archetypu z których ma ko¿ystaæ widok - shit
 			uint64_t m_EntitiesCount = 0;
 			PackedContainerBase* m_Containers[sizeof...(ComponentsTypes)];
+			bool m_SameBucketsSizeInContainers = true;
 
 		public:
 			inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntitiesCount(); }
@@ -154,12 +196,7 @@ namespace decs
 		void ForEach(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
-			Fetch();
-			uint64_t archetypesCount = m_ArchetypesContexts.size();
-			for (uint64_t i = 0; i < archetypesCount; i++)
-			{
-				m_ArchetypesContexts[i].ValidateEntitiesCount();
-			}
+			ValidateView();
 
 			if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 			{
@@ -175,12 +212,7 @@ namespace decs
 		void ForEach(Callable&& func, const IterationType& iterationType) noexcept
 		{
 			if (!IsValid()) return;
-			Fetch();
-			uint64_t archetypesCount = m_ArchetypesContexts.size();
-			for (uint64_t i = 0; i < archetypesCount; i++)
-			{
-				m_ArchetypesContexts[i].ValidateEntitiesCount();
-			}
+			ValidateView();
 
 			if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 			{
@@ -232,35 +264,70 @@ namespace decs
 		uint64_t m_ArchetypesCount_Dirty = 0;
 
 	private:
+		inline void ValidateView()
+		{
+			Fetch();
+			uint64_t archetypesCount = m_ArchetypesContexts.size();
+			for (uint64_t i = 0; i < archetypesCount; i++)
+			{
+				m_ArchetypesContexts[i].ValidateEntitiesCount();
+			}
+		}
+
 		template<typename Callable>
 		void ForEachForward(Callable&& func)const noexcept
 		{
 			const uint64_t contextCount = m_ArchetypesContexts.size();
-			std::tuple<ComponentsTypes*...> arraysTuple = {};
-			//std::tuple<ComponentsTypes*...> componentsTuple = {};
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				const ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
 				if (ctx.m_EntitiesCount == 0) continue;
 
 				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
-				uint64_t chunksCount = ctx.Arch->GetChunksCount();
-				uint64_t entityIndex = 0;
-
-				for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
+				if (ctx.m_SameBucketsSizeInContainers)
 				{
-					CreateBucketsTuple<ComponentsTypes...>(arraysTuple, ctx, chunkIdx);
-					uint64_t chunkSize = ctx.Arch->GetChunkSize(chunkIdx);
-					for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++, entityIndex++)
+					std::tuple<ComponentsTypes*...> arraysTuple = {};
+					uint64_t chunksCount = ctx.Arch->GetChunksCount();
+					uint64_t entityIndex = 0;
+
+					for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
+					{
+						CreateBucketsTuple<ComponentsTypes...>(arraysTuple, ctx, chunkIdx);
+						uint64_t chunkSize = ctx.Arch->GetChunkSize(chunkIdx);
+						for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++, entityIndex++)
+						{
+							const auto& entityData = entitiesData[entityIndex];
+							if (entityData.IsActive())
+							{
+								std::apply(
+									func,
+									std::forward_as_tuple(std::get<ComponentsTypes*>(arraysTuple)[elementIndex]...)
+								);
+							}
+						}
+					}
+				}
+				else
+				{
+					std::tuple<ChunksIterator<ComponentsTypes>...> vectorsTuple = {};
+					const uint64_t entitiesCount = ctx.m_EntitiesCount;
+					uint64_t entityIndex = 0;
+
+					CreateChunksIteratorTuple<ComponentsTypes...>(vectorsTuple, ctx, false);
+
+					while (entityIndex < entitiesCount)
 					{
 						const auto& entityData = entitiesData[entityIndex];
 						if (entityData.IsActive())
 						{
 							std::apply(
 								func,
-								std::forward_as_tuple(std::get<ComponentsTypes*>(arraysTuple)[elementIndex]...)
+								std::forward_as_tuple(*std::get<ChunksIterator<ComponentsTypes>>(vectorsTuple).m_DataPtr...)
 							);
 						}
+
+						IncremenetChunksIterators<ComponentsTypes...>(vectorsTuple);
+						entityIndex += 1;
 					}
 				}
 			}
@@ -277,7 +344,7 @@ namespace decs
 				if (ctx.m_EntitiesCount == 0) continue;
 
 				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
-				uint64_t entityIndex = ctx.Arch->EntitiesCount()-1;
+				uint64_t entityIndex = ctx.Arch->EntitiesCount() - 1;
 				int32_t chunksCount = (int32_t)ctx.Arch->GetChunksCount();
 
 				for (int32_t chunkIdx = chunksCount - 1; chunkIdx > -1; chunkIdx--)
@@ -302,23 +369,47 @@ namespace decs
 		template<typename Callable>
 		void ForEachWithEntityForward(Callable&& func)const noexcept
 		{
-			const uint64_t contextCount = m_ArchetypesContexts.size();
-			std::tuple<ComponentsTypes*...> arraysTuple = {};
 			Entity entityBuffor = {};
+			const uint64_t contextCount = m_ArchetypesContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				const ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
 				if (ctx.m_EntitiesCount == 0) continue;
 
-				const ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
-				const uint64_t chunksCount = ctx.Arch->GetChunksCount();
-				uint64_t entityIndex = 0;
-
-				for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
+				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
+				if (ctx.m_SameBucketsSizeInContainers)
 				{
-					CreateBucketsTuple<ComponentsTypes...>(arraysTuple, ctx, chunkIdx);
-					uint64_t chunkSize = ctx.Arch->GetChunkSize(chunkIdx);
-					for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++, entityIndex++)
+					std::tuple<ComponentsTypes*...> arraysTuple = {};
+					uint64_t chunksCount = ctx.Arch->GetChunksCount();
+					uint64_t entityIndex = 0;
+
+					for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
+					{
+						CreateBucketsTuple<ComponentsTypes...>(arraysTuple, ctx, chunkIdx);
+						uint64_t chunkSize = ctx.Arch->GetChunkSize(chunkIdx);
+						for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++, entityIndex++)
+						{
+							const auto& entityData = entitiesData[entityIndex];
+							if (entityData.IsActive())
+							{
+								entityBuffor.Set(entityData.m_ID, this->m_Container);
+								std::apply(
+									func,
+									std::forward_as_tuple(entityBuffor, std::get<ComponentsTypes*>(arraysTuple)[elementIndex]...)
+								);
+							}
+						}
+					}
+				}
+				else
+				{
+					std::tuple<ChunksIterator<ComponentsTypes>...> vectorsTuple = {};
+					const uint64_t entitiesCount = ctx.m_EntitiesCount;
+					uint64_t entityIndex = 0;
+
+					CreateChunksIteratorTuple<ComponentsTypes...>(vectorsTuple, ctx, false);
+
+					while (entityIndex < entitiesCount)
 					{
 						const auto& entityData = entitiesData[entityIndex];
 						if (entityData.IsActive())
@@ -326,9 +417,12 @@ namespace decs
 							entityBuffor.Set(entityData.m_ID, this->m_Container);
 							std::apply(
 								func,
-								std::forward_as_tuple(entityBuffor, std::get<ComponentsTypes*>(arraysTuple)[elementIndex]...)
+								std::forward_as_tuple(entityBuffor, *std::get<ChunksIterator<ComponentsTypes>>(vectorsTuple).m_DataPtr...)
 							);
 						}
+
+						IncremenetChunksIterators<ComponentsTypes...>(vectorsTuple);
+						entityIndex += 1;
 					}
 				}
 			}
@@ -440,6 +534,7 @@ namespace decs
 				// includes
 				{
 					ArchetypeContext& context = m_ArchetypesContexts.emplace_back();
+					uint64_t chunkSizeInContainer = 0;
 
 					for (uint64_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
 					{
@@ -449,7 +544,18 @@ namespace decs
 							m_ArchetypesContexts.pop_back();
 							return false;
 						}
-						context.m_Containers[typeIdx] = archetype.m_PackedContainers[typeIDIndex];
+
+						auto& packedContainer = archetype.m_PackedContainers[typeIDIndex];
+						if (typeIdx == 0)
+						{
+							chunkSizeInContainer = packedContainer->GetChunkCapacity();
+						}
+						else if (context.m_SameBucketsSizeInContainers)
+						{
+							context.m_SameBucketsSizeInContainers = chunkSizeInContainer == packedContainer->GetChunkCapacity();
+						}
+
+						context.m_Containers[typeIdx] = packedContainer;
 					}
 					m_ContainedArchetypes.insert(&archetype);
 					context.Arch = &archetype;
@@ -548,6 +654,7 @@ namespace decs
 				// includes
 				{
 					ArchetypeContext& context = m_ArchetypesContexts.emplace_back();
+					uint64_t chunkSizeInContainer = 0;
 
 					for (uint64_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
 					{
@@ -557,7 +664,18 @@ namespace decs
 							m_ArchetypesContexts.pop_back();
 							return false;
 						}
-						context.m_Containers[typeIdx] = archetype.m_PackedContainers[typeIDIndex];
+
+						auto& packedContainer = archetype.m_PackedContainers[typeIDIndex];
+						if (typeIdx == 0)
+						{
+							chunkSizeInContainer = packedContainer->GetChunkCapacity();
+						}
+						else if (context.m_SameBucketsSizeInContainers)
+						{
+							context.m_SameBucketsSizeInContainers = chunkSizeInContainer == packedContainer->GetChunkCapacity();
+						}
+
+						context.m_Containers[typeIdx] = packedContainer;
 					}
 					m_ContainedArchetypes.insert(&archetype);
 					context.Arch = &archetype;
@@ -610,6 +728,68 @@ namespace decs
 		{
 
 		}
+
+
+		template<typename T = void, typename... Args>
+		void CreateChunksIteratorTuple(
+			std::tuple<ChunksIterator<ComponentsTypes>...>& vectorsTuple,
+			const ArchetypeContext& context,
+			const bool& isBackward
+		) const
+		{
+			constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
+			std::get<ChunksIterator<T>>(vectorsTuple).Set(&((PackedContainer<T>*)context.m_Containers[compIdx])->m_Data, isBackward);
+
+			if constexpr (sizeof...(Args) == 0) return;
+			CreateChunksIteratorTuple<Args...>(vectorsTuple, context, isBackward);
+		}
+
+		template<>
+		void CreateChunksIteratorTuple<void>(
+			std::tuple<ChunksIterator<ComponentsTypes>...>& vectorsTuple,
+			const ArchetypeContext& context,
+			const bool& isBackward
+			) const
+		{
+
+		}
+
+		template<typename T = void, typename... Args>
+		void IncremenetChunksIterators(
+			std::tuple<ChunksIterator<ComponentsTypes>...>& vectorsTuple
+		) const
+		{
+			std::get<ChunksIterator<T>>(vectorsTuple).Increment();
+			if constexpr (sizeof...(Args) == 0) return;
+			IncremenetChunksIterators<Args...>(vectorsTuple);
+		}
+
+		template<>
+		void IncremenetChunksIterators(
+			std::tuple<ChunksIterator<ComponentsTypes>...>& vectorsTuple
+		)const
+		{
+
+		}
+
+		template<typename T = void, typename... Args>
+		void DecrementChunksIterators(
+			std::tuple<ChunksIterator<ComponentsTypes>...>& vectorsTuple
+		) const
+		{
+			std::get<ChunksIterator<T>>(vectorsTuple).Decrement();
+			if constexpr (sizeof...(Args) == 0) return;
+			IncremenetChunksIterators<Args...>(vectorsTuple);
+		}
+
+		template<>
+		void DecrementChunksIterators(
+			std::tuple<ChunksIterator<ComponentsTypes>...>& vectorsTuple
+		)const
+		{
+
+		}
+
 
 	private:
 		template<typename T = void, typename... Ts>

@@ -287,7 +287,7 @@ namespace decs
 		/// <param name="chunkSizeSize">Size of one chunkSize in compnent allocator.</param>
 		/// <returns>True if set chunkSize size is successful, else false.</returns>
 		template<typename ComponentType>
-		bool SetComponentChunkSize(const uint64_t& chunkSize, const decs::ChunkSizeType& chunkSizeType)
+		bool SetComponentChunkCapacity(const uint64_t& chunkSize, const decs::ChunkSizeType& chunkSizeType = decs::ChunkSizeType::ElementsCount)
 		{
 			if (chunkSize == 0) return false;
 			auto& context = m_ComponentContexts[Type<ComponentType>::ID()];
@@ -481,11 +481,11 @@ namespace decs
 				ComponentContext<ComponentType>* context;
 				if (m_ObserversManager != nullptr)
 				{
-					context = new ComponentContext<ComponentType>(m_ObserversManager->GetComponentObserver<ComponentType>());
+					context = new ComponentContext<ComponentType>(chunkSize,m_ObserversManager->GetComponentObserver<ComponentType>());
 				}
 				else
 				{
-					context = new ComponentContext<ComponentType>(nullptr);
+					context = new ComponentContext<ComponentType>(chunkSize,nullptr);
 				}
 				componentContext = context;
 				return context;

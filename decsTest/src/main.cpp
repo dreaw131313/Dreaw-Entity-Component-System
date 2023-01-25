@@ -60,39 +60,27 @@ int main()
 	Print("Start:");
 
 	decs::Container container = {};
+	
+	container.SetComponentChunkCapacity<Position>(500, decs::ChunkSizeType::ElementsCount);
+	container.SetComponentChunkCapacity<float>(600, decs::ChunkSizeType::ElementsCount);
 
 	for (int i = 0; i < 5; i++)
 	{
 		decs::Entity e = container.CreateEntity();
 		e.AddComponent<Position>(i, 2 * i);
-		e.AddComponent<float>();
+		e.AddComponent<float>(i * 3);
 	}
 
 
-	decs::View<Position> testView = { container };
+	decs::View<Position, float> testView = { container };
 
-	decs::Entity e = container.CreateEntity();
-	decs::ComponentRef<int> intRef = { e };
-	if (intRef.Get() != nullptr)
+	auto lambda = [&] (decs::Entity& e, Position& position, float& f)
 	{
-		std::cout << "Entity have not added component!" << std::endl;
-	}
-
-	e.AddComponent<int>(101);
-
-	if (intRef.Get() != nullptr)
-	{
-		std::cout << "Entity " << e.ID() << " int = " << *intRef.Get() << std::endl;
-	}
-
-	std::cout << std::endl;
-	auto lambda = [&] (decs::Entity& e, Position& position)
-	{
-		std::cout << "Entity ID: " << e.ID() << "\tPosition: X: " << position.X << ", Y: " << position.Y << std::endl;
-		position.X += 1.f;
-		position.Y += 1.f;
+		std::cout << "Entity ID: " << e.ID() << " - float = " << f << std::endl;
+		f *= 2; 
 	};
-	testView.ForEach(lambda, decs::IterationType::Backward);
+	testView.ForEach(lambda, decs::IterationType::Forward);
+	testView.ForEach(lambda, decs::IterationType::Forward);
 
 	container.DestroyOwnedEntities();
 

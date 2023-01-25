@@ -22,7 +22,8 @@ namespace decs
 
 		}
 
-		virtual BaseComponentAllocator* GetAllocator() = 0;
+		inline virtual uint64_t GetChunkCapacity() const = 0;
+
 		virtual TypeID GetComponentTypeID() const = 0;
 		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity) = 0;
 		virtual void InvokeOnDestroyComponent_S(void* component, Entity& entity) = 0;
@@ -31,9 +32,9 @@ namespace decs
 
 		inline int GetObservatorOrder() const { return m_ObservatorOrder; }
 
+
 	private:
 		int m_ObservatorOrder = 0;
-		uint64_t m_ComponentsCountToIterate = 0;
 	};
 
 	template<typename ComponentType>
@@ -41,10 +42,14 @@ namespace decs
 	{
 		friend class Container;
 	public:
-		StableComponentAllocator<ComponentType> Allocator;
 		ComponentObserver<ComponentType>* m_Observer = nullptr;
+
 	public:
-		ComponentContext(ComponentObserver<ComponentType>* observer) :
+		ComponentContext(
+			const uint64_t& chunkCapacity,
+			ComponentObserver<ComponentType>* observer
+		) :
+			m_ChunkCapacity(chunkCapacity),
 			m_Observer(observer)
 		{
 
@@ -55,8 +60,12 @@ namespace decs
 
 		}
 
+		inline virtual uint64_t GetChunkCapacity() const override
+		{
+			return m_ChunkCapacity;
+		}
+
 		virtual TypeID GetComponentTypeID() const { return Type<ComponentType>::ID(); }
-		virtual BaseComponentAllocator* GetAllocator() override { return &Allocator; }
 
 		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity)override
 		{
@@ -105,8 +114,12 @@ namespace decs
 		ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) override
 		{
 			return new ComponentContext<ComponentType>(
+				m_ChunkCapacity,
 				observerManager->GetComponentObserver<ComponentType>()
 				);
 		}
+
+	private:
+		uint64_t m_ChunkCapacity = 1000;
 	};
 }
