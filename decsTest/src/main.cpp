@@ -59,8 +59,6 @@ int main()
 	Print("Start:");
 
 	decs::Container container = {};
-	
-	container.SetComponentChunkCapacity<Position>(500);
 
 	for (int i = 0; i < 5; i++)
 	{
@@ -70,17 +68,32 @@ int main()
 		e.RemoveComponent<int>();
 	}
 
+	using ViewType = decs::View<Position, float>;
+	ViewType testView = { container };
 
-	decs::View<Position, float> testView = { container };
-
-	auto lambda = [&] (/*decs::Entity& e,*/ Position& position, float& f)
+	auto lambda = [&] (decs::Entity& e, Position& position, float& f)
 	{
-		//std::cout << "Entity ID: " << e.ID() << " - float = " << f << std::endl;
-		std::cout << " float = " << f << std::endl;
+		std::cout << "Entity ID: " << e.ID() << " - float = " << f << std::endl;
 	};
+	auto lambda2 = [&] (Position& position, float& f)
+	{
+		std::cout << "float = " << f << std::endl;
+	};
+
 	/*testView.ForEach(lambda, decs::IterationType::Forward);
-	std::cout << std::endl;*/
-	testView.ForEach(lambda, decs::IterationType::Forward);
+	std::cout << std::endl;
+	testView.ForEach(lambda2, decs::IterationType::Backward);*/
+
+	std::vector< ViewType::BatchIterator> iterators;
+
+	testView.CreateBatchIterators(iterators, 10, 1000);
+
+	for (auto& it : iterators)
+	{
+		it.ForEach(lambda);
+		it.ForEach(lambda2);
+	}
+
 
 	container.DestroyOwnedEntities();
 

@@ -372,7 +372,6 @@ namespace decs
 
 		inline uint64_t GetChunkSize(const uint64_t& index)const { return m_Chunks[index].m_Size; }
 
-
 	private:
 		std::vector<Chunk> m_Chunks;
 		uint64_t m_ChunkCapacity = 100;

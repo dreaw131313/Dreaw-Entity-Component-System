@@ -122,13 +122,19 @@ namespace decs
 		inline uint32_t EntitiesCount() const { return m_EntitiesCount; }
 		inline uint64_t EntitesCountToInvokeCallbacks() const { return m_EntitesCountToInitialize; }
 
-		inline uint64_t GetChunksCount() const noexcept
+		inline uint64_t GetChunksCount(const uint64_t& packedContainerIndex) const noexcept
 		{
-			return m_PackedContainers[0]->GetChunksCount();
+			return m_PackedContainers[packedContainerIndex]->GetChunksCount();
 		}
-		inline uint64_t GetChunkSize(const uint64_t& index)const noexcept
+
+		inline uint64_t GetChunksCapacity(const uint64_t& packedContainerIndex) const noexcept
 		{
-			return m_PackedContainers[0]->GetChunkSize(index);
+			return m_PackedContainers[packedContainerIndex]->GetChunkCapacity();
+		}
+
+		inline uint64_t GetChunkSize(const uint64_t& packedContainerIndex ,const uint64_t& chunkIndex)const noexcept
+		{
+			return m_PackedContainers[packedContainerIndex]->GetChunkSize(chunkIndex);
 		}
 
 		inline bool ContainType(const TypeID& typeID) const
