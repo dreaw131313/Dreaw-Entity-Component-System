@@ -61,14 +61,15 @@ int main()
 
 	decs::Container container = {};
 	
-	container.SetComponentChunkCapacity<Position>(500, decs::ChunkSizeType::ElementsCount);
-	container.SetComponentChunkCapacity<float>(600, decs::ChunkSizeType::ElementsCount);
+	container.SetComponentChunkCapacity<Position>(500);
+	container.SetComponentChunkCapacity<float>(600);
 
 	for (int i = 0; i < 5; i++)
 	{
 		decs::Entity e = container.CreateEntity();
 		e.AddComponent<Position>(i, 2 * i);
 		e.AddComponent<float>(i * 3);
+		e.RemoveComponent<int>();
 	}
 
 

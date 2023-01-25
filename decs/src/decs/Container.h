@@ -1,8 +1,9 @@
 #pragma once
 #include "Core.h"
+#include "Enums.h"
 #include "Type.h"
 #include "EntityManager.h"
-#include "ComponentContext.h"
+#include "ComponentContextsManager.h"
 #include "Observers.h"
 
 #include "ObserversManager.h"
@@ -54,13 +55,6 @@ namespace decs
 {
 	class Entity;
 
-	enum class ChunkSizeType
-	{
-		ElementsCount,
-		BytesCount
-	};
-
-
 	class Container
 	{
 		template<typename ...Types>
@@ -75,7 +69,6 @@ namespace decs
 
 		Container(
 			const uint64_t& enititesChunkSize,
-			const ChunkSizeType& componentContainerChunkSizeType,
 			const uint64_t& componentContainerChunkSize,
 			const bool& invokeEntityActivationStateListeners,
 			const uint64_t m_EmptyEntitiesChunkSize = 100
@@ -83,7 +76,7 @@ namespace decs
 
 		Container(
 			EntityManager* entityManager,
-			const ChunkSizeType& componentContainerChunkSizeType,
+			ComponentContextsManager* componentContextsManager,
 			const uint64_t& componentContainerChunkSize,
 			const bool& invokeEntityActivationStateListeners,
 			const uint64_t m_EmptyEntitiesChunkSize = 100
@@ -96,13 +89,11 @@ namespace decs
 
 	private:
 		uint64_t m_ComponentContainerChunkSize = 1000;
-		ChunkSizeType m_ContainerSizeType = ChunkSizeType::ElementsCount;
 
 	public:
-		inline void SetDefaultComponentChunkSize(const uint64_t& size, const ChunkSizeType& sizeType)
+		inline void SetDefaultComponentChunkSize(const uint64_t& size)
 		{
-			m_ContainerSizeType = sizeType;
-			m_ComponentContainerChunkSize = size;
+			m_ComponentContexts->SetDefaultComponentChunkSize(size);
 		}
 
 #pragma region FLAGS:
@@ -279,6 +270,10 @@ namespace decs
 #pragma endregion
 
 #pragma region COMPONENTS:
+	private:
+		bool m_HaveOwnComponentContextManager = true;
+		ComponentContextsManager* m_ComponentContexts = nullptr;
+
 	public:
 		/// <summary>
 		/// Must be invoked before addaing any component of type ComponentType in this container
@@ -287,49 +282,10 @@ namespace decs
 		/// <param name="chunkSizeSize">Size of one chunkSize in compnent allocator.</param>
 		/// <returns>True if set chunkSize size is successful, else false.</returns>
 		template<typename ComponentType>
-		bool SetComponentChunkCapacity(const uint64_t& chunkSize, const decs::ChunkSizeType& chunkSizeType = decs::ChunkSizeType::ElementsCount)
+		bool SetComponentChunkCapacity(const uint64_t& chunkSize)
 		{
-			if (chunkSize == 0) return false;
-			auto& context = m_ComponentContexts[Type<ComponentType>::ID()];
-			if (context != nullptr) return false;
-
-			uint64_t newChunkSize = 0;
-			switch (chunkSizeType)
-			{
-				case decs::ChunkSizeType::ElementsCount:
-				{
-					newChunkSize = chunkSize;
-					break;
-				}
-				case decs::ChunkSizeType::BytesCount:
-				{
-					newChunkSize = chunkSize / sizeof(ComponentType);
-					if ((chunkSize % sizeof(ComponentType)) > 0)
-					{
-						newChunkSize += 1;
-					}
-					break;
-				}
-				default:
-				{
-					newChunkSize = m_ComponentContainerChunkSize;
-					break;
-				}
-			}
-
-			if (m_ObserversManager != nullptr)
-			{
-				context = new ComponentContext<ComponentType>(newChunkSize, m_ObserversManager->GetComponentObserver<ComponentType>());
-			}
-			else
-			{
-				context = new ComponentContext<ComponentType>(newChunkSize, nullptr);
-			}
-			return true;
+			return m_ComponentContexts->SetComponentChunkCapacity<ComponentType>(chunkSize);
 		}
-
-	private:
-		ecsMap<TypeID, ComponentContextBase*> m_ComponentContexts;
 
 	private:
 		template<typename ComponentType, typename ...Args>
@@ -361,7 +317,7 @@ namespace decs
 					newComponentContext,
 					componentContainerIndex
 					);
-				
+
 				PackedContainer<ComponentType>* container = reinterpret_cast<PackedContainer<ComponentType>*>(entityNewArchetype->m_PackedContainers[componentContainerIndex]);
 				ComponentType* createdComponent = &container->m_Data.EmplaceBack(std::forward<Args>(args)...);
 
@@ -447,69 +403,6 @@ namespace decs
 			return false;
 		}
 
-		template<typename ComponentType>
-		ComponentContext<ComponentType>* GetOrCreateComponentContext()
-		{
-			constexpr TypeID id = Type<ComponentType>::ID();
-
-			auto& componentContext = m_ComponentContexts[id];
-			if (componentContext == nullptr)
-			{
-				uint64_t chunkSize = 0;
-				switch (m_ContainerSizeType)
-				{
-					case decs::ChunkSizeType::ElementsCount:
-					{
-						chunkSize = m_ComponentContainerChunkSize;
-						break;
-					}
-					case decs::ChunkSizeType::BytesCount:
-					{
-						chunkSize = m_ComponentContainerChunkSize / sizeof(ComponentType);
-						if ((m_ComponentContainerChunkSize % sizeof(ComponentType)) > 0)
-						{
-							chunkSize += 1;
-						}
-						break;
-					}
-					default:
-					{
-						chunkSize = m_ComponentContainerChunkSize;
-						break;
-					}
-				}
-				ComponentContext<ComponentType>* context;
-				if (m_ObserversManager != nullptr)
-				{
-					context = new ComponentContext<ComponentType>(chunkSize,m_ObserversManager->GetComponentObserver<ComponentType>());
-				}
-				else
-				{
-					context = new ComponentContext<ComponentType>(chunkSize,nullptr);
-				}
-				componentContext = context;
-				return context;
-			}
-			else
-			{
-				ComponentContext<ComponentType>* containedContext = dynamic_cast<ComponentContext<ComponentType>*>(componentContext);
-
-				if (containedContext == nullptr)
-				{
-					std::string errorMessage = "decs::Container contains component context with id " + std::to_string(id) + " to type other than " + typeid(ComponentType).name();
-					throw new std::runtime_error(errorMessage.c_str());
-				}
-
-				return containedContext;
-			}
-		}
-
-		inline void DestroyComponentsContexts()
-		{
-			for (auto& [key, value] : m_ComponentContexts)
-				delete value;
-		}
-
 		void InvokeOnCreateComponentFromEntityID(ComponentContextBase* componentContext, void* componentPtr, const EntityID& id);
 
 	private:
@@ -563,7 +456,7 @@ namespace decs
 				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype<ComponentType>();
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = GetOrCreateComponentContext<ComponentType>();
+					auto context = m_ComponentContexts->GetOrCreateComponentContext<ComponentType>();
 					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<ComponentType>(
 						newComponentContext
@@ -581,7 +474,7 @@ namespace decs
 					);
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = GetOrCreateComponentContext<ComponentType>();
+					auto context = m_ComponentContexts->GetOrCreateComponentContext<ComponentType>();
 					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<ComponentType>(
 						*toArchetype,
@@ -605,8 +498,6 @@ namespace decs
 		ObserversManager* m_ObserversManager = nullptr;
 	public:
 		bool SetObserversManager(ObserversManager* observersManager);
-
-		void ReassignObservers();
 
 		void InvokeEntitesOnCreateListeners();
 

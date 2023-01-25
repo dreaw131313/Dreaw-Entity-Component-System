@@ -66,10 +66,13 @@
     <ClInclude Include="src\decs\ObserversManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\ComponentContainer.h">
+    <ClInclude Include="src\decs\ComponentRef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\ComponentRef.h">
+    <ClInclude Include="src\decs\ComponentContextsManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\Enums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

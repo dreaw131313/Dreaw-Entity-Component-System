@@ -1,6 +1,5 @@
 #pragma once
 #include "Type.h"
-#include "ComponentContainer.h"
 #include "ObserversManager.h"
 
 namespace decs
@@ -31,7 +30,6 @@ namespace decs
 		virtual ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) = 0;
 
 		inline int GetObservatorOrder() const { return m_ObservatorOrder; }
-
 
 	private:
 		int m_ObservatorOrder = 0;

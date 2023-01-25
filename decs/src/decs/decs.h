@@ -7,3 +7,4 @@
 #include "Observers.h"
 #include "ObserversManager.h"
 #include "ComponentRef.h"
+#include "Enums.h"

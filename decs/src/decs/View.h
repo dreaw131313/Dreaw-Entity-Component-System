@@ -1,6 +1,7 @@
 #pragma once
-#include "Type.h"
 #include "Core.h"
+#include "Enums.h"
+#include "Type.h"
 #include "Entity.h"
 #include "Container.h"
 #include "decs/CustomApplay.h"
@@ -9,12 +10,6 @@
 
 namespace decs
 {
-	enum class IterationType : uint8_t
-	{
-		Forward = 0,
-		Backward = 1
-	};
-
 	template<typename T>
 	struct ChunksIterator
 	{
