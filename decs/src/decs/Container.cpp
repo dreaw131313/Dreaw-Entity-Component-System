@@ -167,7 +167,7 @@ namespace decs
 	{
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
-		/*Container* prefabContainer = prefab.GetContainer();
+		Container* prefabContainer = prefab.GetContainer();
 		bool isTheSameContainer = prefabContainer == this;
 		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
 
@@ -185,7 +185,7 @@ namespace decs
 
 		uint64_t componentsCount = prefabArchetype->GetComponentsCount();
 		PrefabSpawnData& spawnData = m_SpawnDataPerSpawn.EmplaceBack();
-		spawnData.Reserve(componentsCount);
+		spawnData.m_ComponentContexts.reserve(componentsCount);
 
 		PreapareSpawnData(spawnData, prefabEntityData, prefabContainer);
 
@@ -200,14 +200,14 @@ namespace decs
 		InvokeEntityCreationObservers(spawnedEntity);
 		for (uint64_t i = 0; i < componentsCount; i++)
 		{
-			auto& componentContext = spawnData.ComponentContexts[i];
+			/*auto& componentContext = spawnData.ComponentContexts[i];
 			componentContext.ComponentContext->InvokeOnCreateComponent_S(
 				componentContext.ComponentData.Component,
 				spawnedEntity
-			);
+			);*/
 		}
 
-		m_SpawnDataPerSpawn.PopBack();*/
+		m_SpawnDataPerSpawn.PopBack();
 		return Entity();
 	}
 
@@ -336,41 +336,14 @@ namespace decs
 		Container* prefabContainer
 	)
 	{
-		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
-		uint64_t componentsCount = prefabArchetype->GetComponentsCount();
+		Archetype& prefabArchetype = *prefabEntityData.m_Archetype;
+		uint64_t componentsCount = prefabArchetype.GetComponentsCount();
 
 		for (uint64_t i = 0; i < componentsCount; i++)
 		{
-			/*TypeID typeID = prefabArchetype->ComponentsTypes()[i];
-			auto& context = m_ComponentContexts[typeID];
-			auto prefabComponentContext = prefabArchetype->m_ComponentContexts[i];
+			TypeID typeID = prefabArchetype.ComponentsTypes()[i];
 
-			if (context == nullptr)
-			{
-				context = prefabComponentContext->CreateOwnEmptyCopy(m_ObserversManager);
-			}
 
-			auto& spawnComponentContext = spawnData.ComponentContexts.emplace_back(
-				typeID,
-				prefabComponentContext,
-				context
-			);
-
-			auto& prefabComponentData = prefabEntityData.GetComponentRef(i);
-			spawnComponentContext.CopiedComponentPointer = prefabComponentData.ComponentPointer;
-
-			if (i == 0)
-			{
-				spawnData.m_SpawnArchetype = m_ArchetypesMap.GetSingleComponentArchetype(context, typeID);
-			}
-			else
-			{
-				spawnData.m_SpawnArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent(
-					*spawnData.m_SpawnArchetype,
-					typeID,
-					context
-				);
-			}*/
 		}
 	}
 

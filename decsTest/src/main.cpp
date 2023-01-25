@@ -68,15 +68,30 @@ int main()
 		e.AddComponent<float>();
 	}
 
+
 	decs::View<Position> testView = { container };
 
+	decs::Entity e = container.CreateEntity();
+	decs::ComponentRef<int> intRef = { e };
+	if (intRef.Get() != nullptr)
+	{
+		std::cout << "Entity have not added component!" << std::endl;
+	}
+
+	e.AddComponent<int>(101);
+
+	if (intRef.Get() != nullptr)
+	{
+		std::cout << "Entity " << e.ID() << " int = " << *intRef.Get() << std::endl;
+	}
+
+	std::cout << std::endl;
 	auto lambda = [&] (decs::Entity& e, Position& position)
 	{
 		std::cout << "Entity ID: " << e.ID() << "\tPosition: X: " << position.X << ", Y: " << position.Y << std::endl;
 		position.X += 1.f;
 		position.Y += 1.f;
 	};
-
 	testView.ForEach(lambda, decs::IterationType::Backward);
 
 	container.DestroyOwnedEntities();

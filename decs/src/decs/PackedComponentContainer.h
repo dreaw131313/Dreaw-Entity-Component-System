@@ -17,7 +17,6 @@ namespace decs
 
 		}
 
-
 		inline virtual void* GetComponentAsVoid(const uint64_t& index) = 0;
 		inline virtual void* GetChunkData(const uint64_t& chunkIndex) const noexcept = 0;
 		inline virtual uint32_t GetChunkSize(const uint64_t& chunkIndex) const noexcept = 0;

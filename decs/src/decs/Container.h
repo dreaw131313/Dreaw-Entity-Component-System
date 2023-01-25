@@ -219,53 +219,20 @@ namespace decs
 
 #pragma region SPAWNING ENTIES
 	private:
-		struct PrefabSpawnComponentContext
+		struct SpawnComponentContext
 		{
 		public:
-			TypeID ComponentType = std::numeric_limits<TypeID>::max();
-			ComponentContextBase* PrefabComponentContext = nullptr;
-			ComponentContextBase* ComponentContext = nullptr;
+			void* m_ComponentVoidPtr = nullptr;
 
-			void* CopiedComponentPointer = nullptr;
 		public:
-			PrefabSpawnComponentContext()
-			{
 
-			}
-
-			PrefabSpawnComponentContext(
-				const TypeID& componentType,
-				ComponentContextBase* prefabContext,
-				ComponentContextBase* context
-			) :
-				ComponentType(componentType), PrefabComponentContext(prefabContext), ComponentContext(context)
-			{
-
-			}
 		};
 
 		struct PrefabSpawnData
 		{
 		public:
-			Archetype* m_SpawnArchetype = nullptr;
-			std::vector<PrefabSpawnComponentContext> ComponentContexts;
-
-		public:
-			void Clear()
-			{
-				m_SpawnArchetype = nullptr;
-				ComponentContexts.clear();
-			}
-
-			void Reserve(const uint64_t& capacity)
-			{
-				ComponentContexts.reserve(capacity);
-			}
-
-			inline bool IsValid()const
-			{
-				return ComponentContexts.size() > 0;
-			}
+			Archetype* m_SpawnedEntityArchetype = nullptr;
+			std::vector<SpawnComponentContext> m_ComponentContexts;
 		};
 
 	private:

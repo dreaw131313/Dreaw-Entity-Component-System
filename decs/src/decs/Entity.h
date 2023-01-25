@@ -12,6 +12,8 @@ namespace decs
 		template<typename ...Types>
 		friend class View;
 		friend class Container;
+		template<typename ComponentType>
+		friend class ComponentRef;
 
 	public:
 		Entity()

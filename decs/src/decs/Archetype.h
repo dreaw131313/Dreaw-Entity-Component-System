@@ -288,6 +288,23 @@ namespace decs
 			return m_PackedContainers[componentIndex]->GetComponentAsVoid(entityIndex);
 		}
 
+		template<typename ComponentType>
+		ComponentType* GetEntityComponent(const uint64_t& entityIndex, uint64_t& componentIndex)
+		{
+			return dynamic_cast<PackedContainer<ComponentType>*>(m_PackedContainers[componentIndex])->m_Data[entityIndex];
+		}
+
+		template<typename ComponentType>
+		ComponentType* GetEntityComponent(const uint64_t& entityIndex)
+		{
+			const uint64_t componentIndex = FindTypeIndex<ComponentType>();
+			if (componentIndex != std::numeric_limits<uint64_t>::max())
+			{
+				return dynamic_cast<PackedContainer<ComponentType>*>(m_PackedContainers[componentIndex])->m_Data[entityIndex];
+			}
+			return nullptr;
+		}
+
 	private:
 		void Reset()
 		{
@@ -570,11 +587,50 @@ namespace decs
 			return GetArchetypeAfterRemoveComponent(fromArchetype, Type<T>::ID());
 		}
 
+		Archetype* GetSingleComponentArchetype(const TypeID& typeID)
+		{
+			auto it = m_SingleComponentArchetypes.find(typeID);
+			if (it != m_SingleComponentArchetypes.end())
+			{
+				return it->second;
+			}
+			return nullptr;
+		}
+
 		Archetype* FindArchetype(TypeID* types, const uint64_t typesCount)
 		{
+			Archetype* archetype = GetSingleComponentArchetype(types[0]);
+			uint64_t typeIndex = 1;
+
+			if (archetype == nullptr) return nullptr;
+
+			while (typeIndex < typesCount)
+			{
+				auto it = archetype->m_Edges.find(types[typeIndex]);
+				if (it != archetype->m_Edges.end() && it->second.AddEdge != nullptr)
+				{
+					archetype = it->second.AddEdge;
+					typeIndex += 1;
+					continue;
+				}
+				return nullptr;
+			}
+
+			return archetype;
+		}
+
+		Archetype* FindArchetypeFromOther(Archetype& fromArchetype, ecsMap<TypeID, ComponentContextBase*>& m_ComponentContexts)
+		{
+			Archetype* archetype = FindArchetype(fromArchetype.m_TypeIDs.data(), fromArchetype.m_TypeIDs.size());
+			if (archetype == nullptr)
+			{
+				uint64_t typeIndex = 0;
+
+			}
 
 			return nullptr;
 		}
+
 
 	};
 }

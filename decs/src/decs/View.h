@@ -8,6 +8,39 @@
 
 namespace decs
 {
+	template<typename T>
+	struct ChunkData
+	{
+	public:
+		T* ChunkPtr;
+		ChunkedVector<T>* chunkedVector;
+
+		uint32_t ChunkIndex;
+		uint32_t ChunkSize;
+		uint32_t Index;
+
+		inline void Increment()
+		{
+			Index += 1;
+			if (Index > ChunkSize)
+			{
+				ChunkIndex += 1;
+				if (ChunkIndex < chunkedVector->ChunksCount())
+				{
+					ChunkPtr = chunkedVector->GetChunk(ChunkIndex);
+				}
+			}
+			else
+			{
+				ChunkPtr += 1;
+			}
+		}
+
+		ChunkData(ChunkedVector<T>* chunkedVector, bool backward)
+		{
+
+		}
+	};
 	enum class IterationType : uint8_t
 	{
 		Forward = 0,
