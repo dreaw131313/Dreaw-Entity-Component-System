@@ -10,98 +10,11 @@
 
 namespace decs
 {
-	template<typename T>
-	struct ChunksIterator
-	{
-	public:
-		ChunkedVector<T>* m_ChunkedVector = nullptr;
-		int32_t m_ChunksCount = 0;
-		int32_t m_ChunkIndex = 0;
-		int32_t m_ChunkSize = 0;
-		int32_t m_Index = 0;
-		T* m_DataPtr = nullptr;
-
-		ChunksIterator()
-		{
-
-		}
-
-		ChunksIterator(ChunkedVector<T>* chunkedVector, bool isBackward = false) :
-			m_ChunkedVector(chunkedVector),
-			m_ChunksCount(m_ChunkedVector->ChunksCount()),
-			m_ChunkIndex(m_ChunksCount - 1),
-			m_ChunkSize(chunkedVector->GetChunkSize(m_ChunkIndex)),
-			m_Index(m_ChunkSize - 1),
-			m_DataPtr(chunkedVector->GetChunk(m_ChunkIndex))
-		{
-
-		}
-
-		void Set(ChunkedVector<T>* chunkedVector, bool isBackward = false)
-		{
-			if (isBackward)
-			{
-				m_ChunkedVector = chunkedVector;
-				m_ChunksCount = m_ChunkedVector->ChunksCount();
-				m_ChunkIndex = m_ChunksCount - 1;
-				m_ChunkSize = chunkedVector->GetChunkSize(m_ChunkIndex);
-				m_Index = m_ChunkSize - 1;
-				m_DataPtr = chunkedVector->GetChunk(m_ChunkIndex) + m_Index;
-			}
-			else
-			{
-				m_ChunkedVector = chunkedVector;
-				m_ChunksCount = m_ChunkedVector->ChunksCount();
-				m_ChunkIndex = 0;
-				m_ChunkSize = chunkedVector->GetChunkSize(m_ChunkIndex);
-				m_Index = 0;
-				m_DataPtr = chunkedVector->GetChunk(m_ChunkIndex);
-			}
-		}
-
-		inline void Increment()
-		{
-			m_Index += 1;
-			if (m_Index > m_ChunkSize)
-			{
-				m_ChunkIndex += 1;
-				m_Index = 0;
-				if (m_ChunkIndex < m_ChunksCount)
-				{
-					m_DataPtr = m_ChunkedVector->GetChunk(m_ChunkIndex);
-					m_ChunkSize = m_ChunkedVector->GetChunkSize(m_ChunkIndex);
-				}
-			}
-			else
-			{
-				m_DataPtr += 1;
-			}
-		}
-
-		inline void Decrement()
-		{
-			m_Index -= 1;
-			if (m_Index < 0)
-			{
-				m_ChunkIndex -= 1;
-				if (m_ChunkIndex > -1)
-				{
-					m_DataPtr = m_ChunkedVector->GetChunk(m_ChunkIndex);
-					m_ChunkSize = m_ChunkedVector->GetChunkSize(m_ChunkIndex);
-					m_Index = m_ChunkSize - 1;
-				}
-			}
-			else
-			{
-				m_DataPtr -= 1;
-			}
-		}
-	};
-
 	template<typename... ComponentsTypes>
 	class View
 	{
 	private:
+#pragma region ARCHETYPE CONTEXT
 		struct ArchetypeContext
 		{
 		public:
@@ -113,6 +26,98 @@ namespace decs
 		public:
 			inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntitiesCount(); }
 		};
+#pragma endregion
+
+#pragma region CHUNKS ITERATOR
+		template<typename T>
+		struct ChunksIterator
+		{
+		public:
+			ChunkedVector<T>* m_ChunkedVector = nullptr;
+			int32_t m_ChunksCount = 0;
+			int32_t m_ChunkIndex = 0;
+			int32_t m_ChunkSize = 0;
+			int32_t m_Index = 0;
+			T* m_DataPtr = nullptr;
+
+			ChunksIterator()
+			{
+
+			}
+
+			ChunksIterator(ChunkedVector<T>* chunkedVector, bool isBackward = false) :
+				m_ChunkedVector(chunkedVector),
+				m_ChunksCount(m_ChunkedVector->ChunksCount()),
+				m_ChunkIndex(m_ChunksCount - 1),
+				m_ChunkSize(chunkedVector->GetChunkSize(m_ChunkIndex)),
+				m_Index(m_ChunkSize - 1),
+				m_DataPtr(chunkedVector->GetChunk(m_ChunkIndex))
+			{
+
+			}
+
+			void Set(ChunkedVector<T>* chunkedVector, bool isBackward = false)
+			{
+				if (isBackward)
+				{
+					m_ChunkedVector = chunkedVector;
+					m_ChunksCount = m_ChunkedVector->ChunksCount();
+					m_ChunkIndex = m_ChunksCount - 1;
+					m_ChunkSize = chunkedVector->GetChunkSize(m_ChunkIndex);
+					m_Index = m_ChunkSize - 1;
+					m_DataPtr = chunkedVector->GetChunk(m_ChunkIndex) + m_Index;
+				}
+				else
+				{
+					m_ChunkedVector = chunkedVector;
+					m_ChunksCount = m_ChunkedVector->ChunksCount();
+					m_ChunkIndex = 0;
+					m_ChunkSize = chunkedVector->GetChunkSize(m_ChunkIndex);
+					m_Index = 0;
+					m_DataPtr = chunkedVector->GetChunk(m_ChunkIndex);
+				}
+			}
+
+			void Increment()
+			{
+				m_Index += 1;
+				if (m_Index < m_ChunkSize)
+				{
+					m_DataPtr += 1;
+				}
+				else
+				{
+					m_ChunkIndex += 1;
+					m_Index = 0;
+					if (m_ChunkIndex < m_ChunksCount)
+					{
+						m_DataPtr = m_ChunkedVector->GetChunk(m_ChunkIndex);
+						m_ChunkSize = m_ChunkedVector->GetChunkSize(m_ChunkIndex);
+					}
+				}
+			}
+
+			void Decrement()
+			{
+				m_Index -= 1;
+				if (m_Index < 0)
+				{
+					m_ChunkIndex -= 1;
+					if (m_ChunkIndex > -1)
+					{
+						m_ChunkSize = m_ChunkedVector->GetChunkSize(m_ChunkIndex);
+						m_Index = m_ChunkSize - 1;
+						m_DataPtr = &m_ChunkedVector->GetChunk(m_ChunkIndex)[m_Index];
+					}
+				}
+				else
+				{
+					m_DataPtr -= 1;
+				}
+			}
+		};
+
+#pragma endregion
 
 	public:
 		View()

@@ -54,7 +54,6 @@ public:
 	}*/
 };
 
-
 int main()
 {
 	Print("Start:");
@@ -62,7 +61,6 @@ int main()
 	decs::Container container = {};
 	
 	container.SetComponentChunkCapacity<Position>(500);
-	container.SetComponentChunkCapacity<float>(600);
 
 	for (int i = 0; i < 5; i++)
 	{
@@ -80,9 +78,9 @@ int main()
 		//std::cout << "Entity ID: " << e.ID() << " - float = " << f << std::endl;
 		std::cout << " float = " << f << std::endl;
 	};
+	/*testView.ForEach(lambda, decs::IterationType::Forward);
+	std::cout << std::endl;*/
 	testView.ForEach(lambda, decs::IterationType::Forward);
-	std::cout << std::endl;
-	testView.ForEach(lambda, decs::IterationType::Backward);
 
 	container.DestroyOwnedEntities();
 

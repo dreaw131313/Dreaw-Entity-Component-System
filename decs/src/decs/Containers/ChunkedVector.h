@@ -233,8 +233,6 @@ namespace decs
 			return *this;
 		}
 
-		
-
 		inline T& operator[](const uint64_t& index) noexcept
 		{
 			uint64_t chunkIndex = index / m_ChunkCapacity;
