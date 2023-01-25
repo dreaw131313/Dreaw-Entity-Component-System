@@ -58,41 +58,47 @@ int main()
 {
 	Print("Start:");
 
-	decs::Container container = {};
+	decs::Container container = { };
+	container.SetComponentChunkCapacity<Position>(500);
 
 	for (int i = 0; i < 5; i++)
 	{
 		decs::Entity e = container.CreateEntity();
 		e.AddComponent<Position>(i, 2 * i);
-		e.AddComponent<float>(i * 3);
-		e.RemoveComponent<int>();
+		e.AddComponent<int>(i);
 	}
 
-	using ViewType = decs::View<Position, float>;
+	using ViewType = decs::View<int, Position>;
 	ViewType testView = { container };
 
-	auto lambda = [&] (decs::Entity& e, Position& position, float& f)
+	auto lambda = [&] (decs::Entity& e, int& i, Position& position)
 	{
-		std::cout << "Entity ID: " << e.ID() << " - float = " << f << std::endl;
+		std::cout << "Entity ID: " << e.ID() << ": int = " << i << std::endl;
 	};
-	auto lambda2 = [&] (Position& position, float& f)
+	auto lambda2 = [&] (int& i, Position& position)
 	{
-		std::cout << "float = " << f << std::endl;
+		std::cout << "int = " << i << std::endl;
 	};
 
-	/*testView.ForEach(lambda, decs::IterationType::Forward);
+	testView.ForEach(lambda, decs::IterationType::Forward);
+	/*testView.ForEach(lambda, decs::IterationType::Backward);
 	std::cout << std::endl;
+	testView.ForEach(lambda2, decs::IterationType::Forward);
 	testView.ForEach(lambda2, decs::IterationType::Backward);*/
 
 	std::vector< ViewType::BatchIterator> iterators;
+	testView.CreateBatchIterators(iterators, 2, 3);
 
-	testView.CreateBatchIterators(iterators, 10, 1000);
-
+	std::cout << std::endl;
 	for (auto& it : iterators)
 	{
-		it.ForEach(lambda);
 		it.ForEach(lambda2);
 	}
+	/*std::cout << std::endl;
+	for (auto& it : iterators)
+	{
+		it.ForEach(lambda2);
+	}*/
 
 
 	container.DestroyOwnedEntities();

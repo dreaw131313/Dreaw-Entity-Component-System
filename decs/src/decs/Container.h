@@ -87,9 +87,6 @@ namespace decs
 		Container& operator = (const Container& other) = delete;
 		Container& operator = (Container&& other) = delete;
 
-	private:
-		uint64_t m_ComponentContainerChunkSize = 1000;
-
 	public:
 		inline void SetDefaultComponentChunkSize(const uint64_t& size)
 		{

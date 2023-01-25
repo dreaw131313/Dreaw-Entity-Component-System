@@ -22,8 +22,7 @@ namespace decs
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(enititesChunkSize)),
 		m_HaveOwnComponentContextManager(true),
-		m_ComponentContexts(new ComponentContextsManager(1000, nullptr)),
-		m_ComponentContainerChunkSize(componentContainerChunkSize),
+		m_ComponentContexts(new ComponentContextsManager(componentContainerChunkSize, nullptr)),
 		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners),
 		m_EmptyEntities(m_EmptyEntitiesChunkSize)
 	{
@@ -40,7 +39,6 @@ namespace decs
 		m_EntityManager(entityManager),
 		m_HaveOwnComponentContextManager(false),
 		m_ComponentContexts(componentContextsManager),
-		m_ComponentContainerChunkSize(componentContainerChunkSize),
 		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners),
 		m_EmptyEntities(m_EmptyEntitiesChunkSize)
 	{
