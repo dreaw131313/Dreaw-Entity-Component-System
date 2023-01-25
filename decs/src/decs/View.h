@@ -227,7 +227,6 @@ namespace decs
 								std::forward_as_tuple(std::get<ComponentsTypes*>(arraysTuple)[elementIndex]...)
 							);
 						}
-						entityIndex += 1;
 					}
 				}
 			}

@@ -21,7 +21,12 @@ public:
 		Print("Position Constructor");
 	}
 
-	Position(const Position& other)
+	Position(float x, float y) : X(x), Y(y)
+	{
+		Print("Position Constructor");
+	}
+
+	/*Position(const Position& other)
 	{
 		Print("Position Copy Constructor");
 	}
@@ -46,7 +51,7 @@ public:
 	{
 		Print("Position Move Assigment");
 		return *this;
-	}
+	}*/
 };
 
 
@@ -55,19 +60,19 @@ int main()
 	Print("Start:");
 
 	decs::Container container = {};
-	decs::Entity e1 = container.CreateEntity();
-	decs::Entity e2 = container.CreateEntity();
 
-	e1.AddComponent<Position>();
-	e1.AddComponent<float>();
-	e2.AddComponent<Position>();
-	e2.AddComponent<float>();
+	for (int i = 0; i < 5; i++)
+	{
+		decs::Entity e = container.CreateEntity();
+		e.AddComponent<Position>(i, 2 * i);
+		e.AddComponent<float>();
+	}
 
 	decs::View<Position> testView = { container };
 
 	auto lambda = [&] (decs::Entity& e, Position& position)
 	{
-		std::cout << "Entity ID:\t" << e.ID() << " X: " << position.X << " Y: " << position.Y << std::endl;
+		std::cout << "Entity ID: " << e.ID() << "\tPosition: X: " << position.X << ", Y: " << position.Y << std::endl;
 		position.X += 1.f;
 		position.Y += 1.f;
 	};

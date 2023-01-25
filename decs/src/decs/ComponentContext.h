@@ -1,5 +1,6 @@
 #pragma once
 #include "Type.h"
+#include "ComponentContainer.h"
 #include "ObserversManager.h"
 
 namespace decs
@@ -21,6 +22,7 @@ namespace decs
 
 		}
 
+		virtual BaseComponentAllocator* GetAllocator() = 0;
 		virtual TypeID GetComponentTypeID() const = 0;
 		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity) = 0;
 		virtual void InvokeOnDestroyComponent_S(void* component, Entity& entity) = 0;
@@ -39,8 +41,8 @@ namespace decs
 	{
 		friend class Container;
 	public:
+		StableComponentAllocator<ComponentType> Allocator;
 		ComponentObserver<ComponentType>* m_Observer = nullptr;
-
 	public:
 		ComponentContext(ComponentObserver<ComponentType>* observer) :
 			m_Observer(observer)
@@ -54,6 +56,7 @@ namespace decs
 		}
 
 		virtual TypeID GetComponentTypeID() const { return Type<ComponentType>::ID(); }
+		virtual BaseComponentAllocator* GetAllocator() override { return &Allocator; }
 
 		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity)override
 		{
