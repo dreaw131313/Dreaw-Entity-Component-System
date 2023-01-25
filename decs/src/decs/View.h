@@ -22,8 +22,9 @@ namespace decs
 		{
 		public:
 			Archetype* Arch = nullptr;
-			uint64_t TypeIndexes[sizeof...(ComponentsTypes)]; // indexy kontenerów z archetypu z których ma ko¿ystaæ widok - shit
+			//uint64_t TypeIndexes[sizeof...(ComponentsTypes)]; // indexy kontenerów z archetypu z których ma ko¿ystaæ widok - shit
 			uint64_t m_EntitiesCount = 0;
+			PackedContainerBase* m_Containers[sizeof...(ComponentsTypes)];
 
 		public:
 			inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntitiesCount(); }
@@ -243,7 +244,7 @@ namespace decs
 				if (ctx.m_EntitiesCount == 0) continue;
 
 				ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
-				uint64_t entityIndex = ctx.Arch->m_EntitiesData.size() - 1;
+				uint64_t entityIndex = ctx.Arch->EntitiesCount()-1;
 				int32_t chunksCount = (int32_t)ctx.Arch->GetChunksCount();
 
 				for (int32_t chunkIdx = chunksCount - 1; chunkIdx > -1; chunkIdx--)
@@ -313,7 +314,7 @@ namespace decs
 				if (ctx.m_EntitiesCount == 0) continue;
 
 				const ArchetypeEntityData* entitiesData = ctx.Arch->m_EntitiesData.data();
-				uint64_t entityIndex = ctx.Arch->m_EntitiesData.size() - 1;
+				uint64_t entityIndex = ctx.Arch->EntitiesCount() - 1;
 				int32_t chunkIdx = (int32_t)ctx.Arch->GetChunksCount() - 1;
 
 				for (; chunkIdx > -1; chunkIdx--, entityIndex--)
@@ -415,7 +416,7 @@ namespace decs
 							m_ArchetypesContexts.pop_back();
 							return false;
 						}
-						context.TypeIndexes[typeIdx] = typeIDIndex;
+						context.m_Containers[typeIdx] = archetype.m_PackedContainers[typeIDIndex];
 					}
 					m_ContainedArchetypes.insert(&archetype);
 					context.Arch = &archetype;
@@ -523,7 +524,7 @@ namespace decs
 							m_ArchetypesContexts.pop_back();
 							return false;
 						}
-						context.TypeIndexes[typeIdx] = typeIDIndex;
+						context.m_Containers[typeIdx] = archetype.m_PackedContainers[typeIDIndex];
 					}
 					m_ContainedArchetypes.insert(&archetype);
 					context.Arch = &archetype;
@@ -556,7 +557,7 @@ namespace decs
 		) const noexcept
 		{
 			constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
-			std::get<T*>(arraysTuple) = reinterpret_cast<T*>(context.Arch->m_PackedContainers[context.TypeIndexes[compIdx]]->GetChunkData(chunkIndex));
+			std::get<T*>(arraysTuple) = reinterpret_cast<T*>(context.m_Containers[compIdx]->GetChunkData(chunkIndex));
 
 			if constexpr (sizeof...(Args) == 0) return;
 
