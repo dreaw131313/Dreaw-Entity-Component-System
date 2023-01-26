@@ -7,7 +7,7 @@
 
 void Print(const std::string& message)
 {
-	// std::cout << message << std::endl;
+	std::cout << message << "\n";
 }
 
 class Position
@@ -26,39 +26,16 @@ public:
 		Print("Position Constructor");
 	}
 
-	/*Position(const Position& other)
-	{
-		Print("Position Copy Constructor");
-	}
-
-	Position(Position&& other) noexcept
-	{
-		Print("Position Move Constructor");
-	}
-
 	~Position()
 	{
 		Print("Position Destructor");
 	}
 
-	Position& operator = (const Position& other)
-	{
-		Print("Position Copy Assigment");
-		return *this;
-	}
-
-	Position& operator = (Position&& other) noexcept
-	{
-		Print("Position Move Assigment");
-		return *this;
-	}*/
 };
 
 int main()
 {
-	Print("Start:");
-
-	decs::Container container = { };
+	/*decs::Container container = { };
 	container.SetComponentChunkCapacity<Position>(500);
 
 	for (int i = 0; i < 5; i++)
@@ -81,27 +58,40 @@ int main()
 	};
 
 	testView.ForEach(lambda, decs::IterationType::Forward);
-	/*testView.ForEach(lambda, decs::IterationType::Backward);
+	testView.ForEach(lambda, decs::IterationType::Backward);
 	std::cout << std::endl;
 	testView.ForEach(lambda2, decs::IterationType::Forward);
-	testView.ForEach(lambda2, decs::IterationType::Backward);*/
+	testView.ForEach(lambda2, decs::IterationType::Backward);
 
 	std::vector< ViewType::BatchIterator> iterators;
 	testView.CreateBatchIterators(iterators, 2, 3);
 
-	std::cout << std::endl;
+	std::cout << "\n";
+	for (auto& it : iterators)
+	{
+		it.ForEach(lambda);
+	}
+	std::cout << "\n";
 	for (auto& it : iterators)
 	{
 		it.ForEach(lambda2);
 	}
-	/*std::cout << std::endl;
-	for (auto& it : iterators)
-	{
-		it.ForEach(lambda2);
-	}*/
 
+	container.DestroyOwnedEntities();*/
 
-	container.DestroyOwnedEntities();
+	decs::ChunkedVector<int> testVector = { 2 };
+
+	testVector.EmplaceBack(1);
+	testVector.EmplaceBack(1);
+	testVector.EmplaceBack(1);
+	testVector.EmplaceBack(1);
+
+	testVector.PopBack();
+	testVector.PopBack();
+	testVector.PopBack();
+	testVector.PopBack();
+	testVector.PopBack();
+
 
 	return 0;
 }

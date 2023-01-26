@@ -80,7 +80,7 @@ namespace decs
 
 			void SetForwardFromIndex(ChunkedVector<T>* chunkedVector, const int32_t& startIndex)
 			{
-				int32_t chunkCapacity = (int32_t)chunkedVector->ChuknCapacity();
+				int32_t chunkCapacity = (int32_t)chunkedVector->ChunkCapacity();
 				m_ChunkIndex = startIndex / chunkCapacity;
 				m_Index = startIndex % chunkCapacity;
 

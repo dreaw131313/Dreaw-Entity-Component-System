@@ -55,7 +55,7 @@ namespace decs
 
 		inline virtual uint64_t GetChunkCapacity() const override
 		{
-			return m_Data.ChuknCapacity();
+			return m_Data.ChunkCapacity();
 		}
 		inline virtual void* GetComponentAsVoid(const uint64_t& index)
 		{
