@@ -87,12 +87,6 @@ namespace decs
 		Container& operator = (const Container& other) = delete;
 		Container& operator = (Container&& other) = delete;
 
-	public:
-		inline void SetDefaultComponentChunkSize(const uint64_t& size)
-		{
-			m_ComponentContexts->SetDefaultComponentChunkSize(size);
-		}
-
 #pragma region FLAGS:
 	private:
 		struct BoolSwitch final
@@ -271,19 +265,6 @@ namespace decs
 		bool m_HaveOwnComponentContextManager = true;
 		ComponentContextsManager* m_ComponentContexts = nullptr;
 
-	public:
-		/// <summary>
-		/// Must be invoked before addaing any component of type ComponentType in this container
-		/// </summary>
-		/// <typeparam name="ComponentType"></typeparam>
-		/// <param name="chunkSizeSize">Size of one chunkSize in compnent allocator.</param>
-		/// <returns>True if set chunkSize size is successful, else false.</returns>
-		template<typename ComponentType>
-		bool SetComponentChunkCapacity(const uint64_t& chunkSize)
-		{
-			return m_ComponentContexts->SetComponentChunkCapacity<ComponentType>(chunkSize);
-		}
-
 	private:
 		template<typename ComponentType, typename ...Args>
 		ComponentType* AddComponent(const EntityID& e, Args&&... args)
@@ -316,7 +297,7 @@ namespace decs
 					);
 
 				PackedContainer<ComponentType>* container = reinterpret_cast<PackedContainer<ComponentType>*>(entityNewArchetype->m_PackedContainers[componentContainerIndex]);
-				ComponentType* createdComponent = &container->m_Data.EmplaceBack(std::forward<Args>(args)...);
+				ComponentType* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
 
 				entityNewArchetype->AddEntityData(entityData.m_ID, entityData.m_IsActive);
 				if (entityData.m_Archetype != nullptr)
@@ -433,6 +414,8 @@ namespace decs
 #pragma region ARCHETYPES:
 	public:
 		inline const ArchetypesMap& ArchetypesData() const { return m_ArchetypesMap; }
+
+		void ShrinkArchetypesToFit();
 
 	private:
 		ArchetypesMap m_ArchetypesMap;

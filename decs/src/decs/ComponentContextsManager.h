@@ -35,37 +35,6 @@ namespace decs
 			DestroyComponentsContexts();
 		}
 
-		inline void SetDefaultComponentChunkSize(const uint64_t& size)
-		{
-			m_DefaultComponentChunkSize = size;
-		}
-
-		/// <summary>
-		/// Must be invoked before addaing any component of type ComponentType to container which contains this manager.
-		/// </summary>
-		/// <typeparam name="ComponentType"></typeparam>
-		/// <param name="chunkSizeSize">Size of one chunkSize in compnent allocator.</param>
-		/// <returns>True if set chunkSize size is successful, else false.</returns>
-		/// 
-		template<typename ComponentType>
-		bool SetComponentChunkCapacity(const uint64_t& chunkSize)
-		{
-			if (chunkSize == 0) return false;
-			auto& context = m_Contexts[Type<ComponentType>::ID()];
-			if (context != nullptr) return false;
-
-			uint64_t newChunkSize = chunkSize;
-			if (m_ObserversManager != nullptr)
-			{
-				context = new ComponentContext<ComponentType>(newChunkSize, m_ObserversManager->GetComponentObserver<ComponentType>());
-			}
-			else
-			{
-				context = new ComponentContext<ComponentType>(newChunkSize, nullptr);
-			}
-			return true;
-		}
-
 		bool SetObserversManager(ObserversManager* observersManager)
 		{
 			if (observersManager == m_ObserversManager) return false;

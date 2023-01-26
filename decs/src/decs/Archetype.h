@@ -89,7 +89,6 @@ namespace decs
 		static constexpr uint64_t DefaultChunkSize = 1000;
 
 	public:
-		uint32_t m_ComponentsCount = 0; // number of components for each entity
 		uint32_t m_EntitiesCount = 0;
 
 		std::vector<ArchetypeEntityData> m_EntitiesData;
@@ -103,6 +102,8 @@ namespace decs
 
 		uint64_t m_EntitesCountToInitialize = 0;
 
+	private:
+		uint32_t m_ComponentsCount = 0; // number of components for each entity
 		
 	public:
 		Archetype()
@@ -121,21 +122,6 @@ namespace decs
 		inline const TypeID* const ComponentsTypes() const { return m_TypeIDs.data(); }
 		inline uint32_t EntitiesCount() const { return m_EntitiesCount; }
 		inline uint64_t EntitesCountToInvokeCallbacks() const { return m_EntitesCountToInitialize; }
-
-		inline uint64_t GetChunksCount(const uint64_t& packedContainerIndex) const noexcept
-		{
-			return m_PackedContainers[packedContainerIndex]->GetChunksCount();
-		}
-
-		inline uint64_t GetChunksCapacity(const uint64_t& packedContainerIndex) const noexcept
-		{
-			return m_PackedContainers[packedContainerIndex]->GetChunkCapacity();
-		}
-
-		inline uint64_t GetChunkSize(const uint64_t& packedContainerIndex ,const uint64_t& chunkIndex)const noexcept
-		{
-			return m_PackedContainers[packedContainerIndex]->GetChunkSize(chunkIndex);
-		}
 
 		inline bool ContainType(const TypeID& typeID) const
 		{
@@ -232,11 +218,9 @@ namespace decs
 				m_EntitiesData[index] = m_EntitiesData.back();
 				m_EntitiesData.pop_back();
 
-				const uint64_t chunkIndex = index / DefaultChunkSize;
-				const uint64_t elementIndex = index % DefaultChunkSize;
 				for (uint64_t i = 0; i < m_ComponentsCount; i++)
 				{
-					m_PackedContainers[i]->RemoveSwapBack(chunkIndex, elementIndex);
+					m_PackedContainers[i]->RemoveSwapBack(index);
 				}
 
 				m_EntitiesCount -= 1;
@@ -310,6 +294,15 @@ namespace decs
 				return dynamic_cast<PackedContainer<ComponentType>*>(m_PackedContainers[componentIndex])->m_Data[entityIndex];
 			}
 			return nullptr;
+		}
+
+		void ShrinkToFit()
+		{
+			m_EntitiesData.shrink_to_fit();
+			for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
+			{
+				m_PackedContainers[idx]->ShrinkToFit();
+			}
 		}
 
 	private:

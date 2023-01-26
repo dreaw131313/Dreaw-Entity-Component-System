@@ -498,6 +498,24 @@ namespace decs
 		return true;
 	}
 
+	void Container::ShrinkArchetypesToFit()
+	{
+		ChunkedVector<Archetype>& archetypes = m_ArchetypesMap.m_Archetypes;
+
+		uint64_t chunksCount = archetypes.ChunksCount();
+		for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
+		{
+			uint64_t chunkSize = archetypes.GetChunkSize(chunkIdx);
+			Archetype* chunk = archetypes.GetChunk(chunkIdx);
+
+			for (uint64_t idx = 0; idx < chunkSize; idx++)
+			{
+				Archetype& archetype = archetypes[idx];
+				archetype.ShrinkToFit();
+			}
+		}
+	}
+
 	void Container::DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners)
 	{
 		auto& entitesData = archetype.m_EntitiesData;

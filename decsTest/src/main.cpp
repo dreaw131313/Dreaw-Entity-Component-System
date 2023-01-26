@@ -18,17 +18,17 @@ public:
 public:
 	Position()
 	{
-		Print("Position Constructor");
+		//Print("Position Constructor");
 	}
 
 	Position(float x, float y) : X(x), Y(y)
 	{
-		Print("Position Constructor");
+		//Print("Position Constructor");
 	}
 
 	~Position()
 	{
-		Print("Position Destructor");
+		//Print("Position Destructor");
 	}
 
 };
@@ -36,13 +36,28 @@ public:
 int main()
 {
 	decs::Container container = { };
-	container.SetComponentChunkCapacity<Position>(500);
 
 	for (int i = 0; i < 5; i++)
 	{
 		decs::Entity e = container.CreateEntity();
 		e.AddComponent<Position>(i, 2 * i);
 		e.AddComponent<int>(i);
+	}
+
+	decs::Entity entity = container.CreateEntity();
+	
+	decs::ComponentRef<float> compRef = { entity };
+
+	if (compRef)
+	{
+		std::cout << "Float com exist = " << *compRef.Get() << "\n";
+	}
+
+	entity.AddComponent<float>(10);
+
+	if (compRef)
+	{
+		std::cout << "Float com exist = " << *compRef.Get() << "\n";
 	}
 
 	using ViewType = decs::View<int, Position>;
@@ -57,16 +72,15 @@ int main()
 		std::cout << "int = " << i << std::endl;
 	};
 
-	testView.ForEach(lambda, decs::IterationType::Forward);
-	testView.ForEach(lambda, decs::IterationType::Backward);
+	testView.ForEachForward(lambda);
+	testView.ForEachBackward(lambda);
 	std::cout << std::endl;
-	testView.ForEach(lambda2, decs::IterationType::Forward);
-	testView.ForEach(lambda2, decs::IterationType::Backward);
+	testView.ForEachBackward(lambda2);
+	testView.ForEachForward(lambda2);
 
 	std::vector< ViewType::BatchIterator> iterators;
 	testView.CreateBatchIterators(iterators, 2, 3);
 
-	std::cout << "\n";
 	for (auto& it : iterators)
 	{
 		it.ForEach(lambda);
@@ -78,20 +92,6 @@ int main()
 	}
 
 	container.DestroyOwnedEntities();
-
-	//decs::ChunkedVector<int> testVector = { 2 };
-
-	/*testVector.EmplaceBack(1);
-	testVector.EmplaceBack(1);
-	testVector.EmplaceBack(1);
-	testVector.EmplaceBack(1);
-
-	testVector.PopBack();
-	testVector.PopBack();
-	testVector.PopBack();
-	testVector.PopBack();
-	testVector.PopBack();*/
-
 
 	return 0;
 }
