@@ -58,14 +58,14 @@ namespace decs
 	{
 	public:
 		EntityID ID = std::numeric_limits<EntityID>::max();
-		uint64_t Index = std::numeric_limits<uint64_t>::max();
+		uint32_t Index = std::numeric_limits<uint32_t>::max();
 
 		EntityRemoveSwapBackResult()
 		{
 
 		}
 
-		EntityRemoveSwapBackResult(EntityID id, uint64_t index) : ID(id), Index(index)
+		EntityRemoveSwapBackResult(EntityID id, uint32_t index) : ID(id), Index(index)
 		{
 
 		}
@@ -104,7 +104,7 @@ namespace decs
 
 	private:
 		uint32_t m_ComponentsCount = 0; // number of components for each entity
-		
+
 	public:
 		Archetype()
 		{
@@ -224,7 +224,7 @@ namespace decs
 				}
 
 				m_EntitiesCount -= 1;
-				return EntityRemoveSwapBackResult(m_EntitiesData[index].m_ID, index);
+				return EntityRemoveSwapBackResult(m_EntitiesData[index].m_ID, (uint32_t)index);
 			}
 		}
 
@@ -303,6 +303,19 @@ namespace decs
 			{
 				m_PackedContainers[idx]->ShrinkToFit();
 			}
+		}
+
+		void ReserveSpaceInArchetype(const uint64_t& desiredCapacity)
+		{
+			if (m_EntitiesData.capacity() < desiredCapacity)
+			{
+				m_EntitiesData.reserve(desiredCapacity);
+				for (auto& packedComponent : m_PackedContainers)
+				{
+					packedComponent->Reserve(desiredCapacity);
+				}
+			}
+
 		}
 
 	private:

@@ -66,13 +66,16 @@
     <ClInclude Include="src\decs\ObserversManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\ComponentRef.h">
+    <ClInclude Include="src\decs\ComponentRefs\ComponentRef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\ComponentContextsManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Enums.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\ComponentRefs\ComponentRefAsVoid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -84,6 +87,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\decs\PackedComponentContainer.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

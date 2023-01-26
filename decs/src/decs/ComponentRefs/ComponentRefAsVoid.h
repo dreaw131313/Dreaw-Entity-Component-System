@@ -1,50 +1,30 @@
 #pragma once
-#include "Core.h"
-#include "EntityData.h"
-#include "Entity.h"
+#include "decs\Core.h"
+#include "decs\Type.h"
+#include "decs\EntityData.h"
 
 namespace decs
 {
-	template<typename ComponentType>
-	class ComponentRef final
+	class Entity;
+
+	class ComponentRefAsVoid final
 	{
 	public:
-		ComponentRef(EntityData& entityData) :
-			m_EntityData(&entityData)
-		{
-			FetchWhenIsInvalid();
-		}
+		ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData);
+		
+		ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData, const uint64_t& componentIndex);
+		
+		ComponentRefAsVoid(const TypeID& typeID, Entity& entity);
 
-		ComponentRef(
-			EntityData& entityData,
-			const uint64_t& componentIndex
-		) :
-			m_EntityData(&entityData),
-			m_ComponentIndex(componentIndex)
-		{
-			FetchWithoutGettingComponentIndex();
-		}
-
-		ComponentRef(
-			Entity& entity
-		) :
-			m_EntityData(entity.m_EntityData)
-		{
-			if (m_EntityData != nullptr)
-			{
-				FetchWhenIsInvalid();
-			}
-		}
-
-		inline ComponentType* Get()
+		inline void* Get()
 		{
 			if (!IsValid())
 			{
 				FetchWhenIsInvalid();
 			}
-			if (m_ComponentsVector != nullptr)
+			if (m_PackedContainer != nullptr)
 			{
-				return &m_ComponentsVector->operator[](m_IndexInArchetype);
+				return m_PackedContainer->GetComponentAsVoid(m_ComponentIndex);
 			}
 			return nullptr;
 		}
@@ -52,11 +32,12 @@ namespace decs
 		operator bool() { return Get() != nullptr; }
 
 	private:
+		TypeID m_TypeID = std::numeric_limits<TypeID>::min();
 		EntityData* m_EntityData = nullptr;
 		Archetype* m_Archetype = nullptr;
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 		uint64_t m_ComponentIndex = std::numeric_limits<uint64_t>::max();
-		std::vector<ComponentType>* m_ComponentsVector = nullptr;
+		PackedContainerBase* m_PackedContainer = nullptr;
 
 	private:
 		inline bool IsValid() const
@@ -66,7 +47,7 @@ namespace decs
 
 		inline void SetComponentFromValidData()
 		{
-			m_ComponentsVector = &((PackedContainer<ComponentType>*)m_Archetype->m_PackedContainers[m_ComponentIndex])->m_Data;
+			m_PackedContainer = m_Archetype->m_PackedContainers[m_ComponentIndex];
 		}
 
 		inline void FetchWhenIsInvalid()
@@ -74,13 +55,13 @@ namespace decs
 			if (m_Archetype != m_EntityData->m_Archetype)
 			{
 				m_Archetype = m_EntityData->m_Archetype;
-				m_ComponentIndex = m_Archetype->FindTypeIndex<ComponentType>();
+				m_ComponentIndex = m_Archetype->FindTypeIndex(m_TypeID);
 			}
 			m_IndexInArchetype = m_EntityData->m_IndexInArchetype;
 
 			if (m_Archetype == nullptr || m_ComponentIndex == std::numeric_limits<uint64_t>::max())
 			{
-				m_ComponentsVector = nullptr;
+				m_PackedContainer = nullptr;
 			}
 			else
 			{
@@ -93,9 +74,9 @@ namespace decs
 			m_Archetype = m_EntityData->m_Archetype;
 			m_IndexInArchetype = m_EntityData->m_IndexInArchetype;
 
-			if (m_Archetype == nullptr || m_ComponentIndex == std::numeric_limits<uint64_t>)
+			if (m_Archetype == nullptr || m_ComponentIndex == std::numeric_limits<uint64_t>::max())
 			{
-				m_ComponentsVector = nullptr;
+				m_PackedContainer = nullptr;
 			}
 			else
 			{
@@ -111,7 +92,7 @@ namespace decs
 				m_IndexInArchetype = m_EntityData->m_IndexInArchetype;
 				if (m_Archetype != nullptr)
 				{
-					m_ComponentIndex = m_Archetype->FindTypeIndex<ComponentType>();
+					m_ComponentIndex = m_Archetype->FindTypeIndex(m_TypeID);
 					if (m_ComponentIndex != std::numeric_limits<uint64_t>::max())
 					{
 						SetComponentFromValidData();
@@ -119,7 +100,5 @@ namespace decs
 				}
 			}
 		}
-
-
 	};
 }

@@ -19,9 +19,11 @@ namespace decs
 		bool m_IsAlive = false;
 		bool m_IsActive = false;
 		EntityDestructionState m_DestructionState = EntityDestructionState::Alive;
-
+		
 		Archetype* m_Archetype = nullptr;
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
+
+		bool m_IsUsedAsPrefab = false;
 
 	public:
 		EntityData()
@@ -90,7 +92,7 @@ namespace decs
 
 		inline bool IsValidToPerformComponentOperation() const
 		{
-			return m_IsAlive && m_DestructionState == decs::EntityDestructionState::Alive;
+			return m_IsAlive && m_DestructionState == decs::EntityDestructionState::Alive && !m_IsUsedAsPrefab;
 		}
 
 		inline bool CanBeDestructed() const
@@ -101,6 +103,11 @@ namespace decs
 		inline bool IsDelayedToDestruction()
 		{
 			return m_DestructionState == EntityDestructionState::DelayedToDestruction;
+		}
+		
+		inline bool IsUsedAsPrefab()
+		{
+			return m_IsUsedAsPrefab;
 		}
 	};
 

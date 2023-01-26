@@ -8,7 +8,7 @@
 
 #include "ObserversManager.h"
 #include "PackedComponentContainer.h"
-
+#include "ComponentRefs\ComponentRefAsVoid.h"
 
 namespace decs
 {
@@ -201,20 +201,12 @@ namespace decs
 
 #pragma region SPAWNING ENTIES
 	private:
-		struct SpawnComponentContext
-		{
-		public:
-			void* m_ComponentVoidPtr = nullptr;
-
-		public:
-
-		};
 
 		struct PrefabSpawnData
 		{
 		public:
 			Archetype* m_SpawnedEntityArchetype = nullptr;
-			std::vector<SpawnComponentContext> m_ComponentContexts;
+			std::vector<ComponentRefAsVoid> m_ComponentRefs;
 		};
 
 	private:

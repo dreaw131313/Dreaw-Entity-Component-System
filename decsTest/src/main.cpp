@@ -40,7 +40,7 @@ int main()
 	for (int i = 0; i < 5; i++)
 	{
 		decs::Entity e = container.CreateEntity();
-		e.AddComponent<Position>(i, 2 * i);
+		e.AddComponent<Position>((float)i, 2.f * i);
 		e.AddComponent<int>(i);
 	}
 
@@ -53,7 +53,7 @@ int main()
 		std::cout << "Float com exist = " << *compRef.Get() << "\n";
 	}
 
-	entity.AddComponent<float>(10);
+	entity.AddComponent<float>(10.f);
 
 	if (compRef)
 	{

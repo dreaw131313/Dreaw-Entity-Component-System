@@ -14,6 +14,7 @@ namespace decs
 		friend class Container;
 		template<typename ComponentType>
 		friend class ComponentRef;
+		friend class ComponentRefAsVoid;
 
 	public:
 		Entity()

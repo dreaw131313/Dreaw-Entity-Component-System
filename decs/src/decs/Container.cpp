@@ -171,47 +171,47 @@ namespace decs
 	{
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
-		Container* prefabContainer = prefab.GetContainer();
-		bool isTheSameContainer = prefabContainer == this;
-		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
+		//Container* prefabContainer = prefab.GetContainer();
+		//bool isTheSameContainer = prefabContainer == this;
+		//EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
 
-		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
+		//Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
-		EntityID entityID = m_EntityManager->CreateEntity(isActive);
-		Entity spawnedEntity(entityID, this);
+		//EntityID entityID = m_EntityManager->CreateEntity(isActive);
+		//Entity spawnedEntity(entityID, this);
 
-		if (prefabArchetype == nullptr)
-		{
-			AddToEmptyEntities(*spawnedEntity.m_EntityData);
-			InvokeEntityCreationObservers(spawnedEntity);
-			return spawnedEntity;
-		}
+		//if (prefabArchetype == nullptr)
+		//{
+		//	AddToEmptyEntities(*spawnedEntity.m_EntityData);
+		//	InvokeEntityCreationObservers(spawnedEntity);
+		//	return spawnedEntity;
+		//}
 
-		uint64_t componentsCount = prefabArchetype->GetComponentsCount();
-		PrefabSpawnData& spawnData = m_SpawnDataPerSpawn.EmplaceBack();
-		spawnData.m_ComponentContexts.reserve(componentsCount);
+		//uint64_t componentsCount = prefabArchetype->GetComponentsCount();
+		//PrefabSpawnData& spawnData = m_SpawnDataPerSpawn.EmplaceBack();
+		//spawnData.m_ComponentContexts.reserve(componentsCount);
 
-		PreapareSpawnData(spawnData, prefabEntityData, prefabContainer);
+		//PreapareSpawnData(spawnData, prefabEntityData, prefabContainer);
 
-		CreateEntityFromSpawnData(
-			spawnedEntity,
-			spawnData,
-			componentsCount,
-			prefabEntityData,
-			prefabContainer
-		);
+		//CreateEntityFromSpawnData(
+		//	spawnedEntity,
+		//	spawnData,
+		//	componentsCount,
+		//	prefabEntityData,
+		//	prefabContainer
+		//);
 
-		InvokeEntityCreationObservers(spawnedEntity);
-		for (uint64_t i = 0; i < componentsCount; i++)
-		{
-			/*auto& componentContext = spawnData.ComponentContexts[i];
-			componentContext.ComponentContext->InvokeOnCreateComponent_S(
-				componentContext.ComponentData.Component,
-				spawnedEntity
-			);*/
-		}
+		//InvokeEntityCreationObservers(spawnedEntity);
+		//for (uint64_t i = 0; i < componentsCount; i++)
+		//{
+		//	/*auto& componentContext = spawnData.ComponentContexts[i];
+		//	componentContext.ComponentContext->InvokeOnCreateComponent_S(
+		//		componentContext.ComponentData.Component,
+		//		spawnedEntity
+		//	);*/
+		//}
 
-		m_SpawnDataPerSpawn.PopBack();
+		//m_SpawnDataPerSpawn.PopBack();
 		return Entity();
 	}
 
@@ -416,7 +416,7 @@ namespace decs
 		else
 		{
 			entityData.m_Archetype = nullptr;
-			entityData.m_IndexInArchetype = m_EmptyEntities.Size();
+			entityData.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
 			m_EmptyEntities.EmplaceBack(&entityData);
 		}
 

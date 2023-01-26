@@ -135,8 +135,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\ComponentRefs\ComponentRefAsVoid.h" />
     <ClInclude Include="src\decs\ComponentContextsManager.h" />
-    <ClInclude Include="src\decs\ComponentRef.h" />
+    <ClInclude Include="src\decs\ComponentRefs\ComponentRef.h" />
     <ClInclude Include="src\decs\CustomApplay.h" />
     <ClInclude Include="src\decs\EntityManager.h" />
     <ClInclude Include="src\decs\Archetype.h" />
@@ -157,6 +158,7 @@
     <ClInclude Include="src\decs\ThirdParty\skarupke\unordered_map.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp" />
     <ClCompile Include="src\decs\Container.cpp" />
     <ClCompile Include="src\decs\EntityManager.cpp" />
     <ClCompile Include="src\decs\PackedComponentContainer.h" />
