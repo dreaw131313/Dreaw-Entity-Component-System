@@ -156,6 +156,7 @@ namespace decs
 	public:
 		ChunkedVector()
 		{
+			AddChunk();
 		}
 
 		~ChunkedVector()
@@ -167,6 +168,7 @@ namespace decs
 		ChunkedVector(uint64_t chunkCapacity) :
 			m_ChunkCapacity(chunkCapacity)
 		{
+			AddChunk();
 		}
 
 		ChunkedVector(const ChunkedVector& other)
@@ -252,6 +254,7 @@ namespace decs
 
 		inline uint64_t Capacity() const { return m_ChunksCount * m_ChunkCapacity; }
 		inline uint64_t ChunksCount() const { return m_ChunksCount; }
+		inline uint64_t ChuknCapacity() const { return m_ChunkCapacity; }
 		inline uint64_t ChunkCapacity() const { return m_ChunkCapacity; }
 		inline uint64_t Size() const { return m_CreatedElements; }
 		inline bool IsEmpty()const { return m_CreatedElements == 0; }
@@ -322,6 +325,7 @@ namespace decs
 
 			lastChunk.PopBack();
 
+
 			if (lastChunk.IsEmpty())
 				PopBackChunk();
 			return true;
@@ -390,7 +394,7 @@ namespace decs
 
 		void PopBackChunk()
 		{
-			//if (m_ChunksCount <= 1) return;
+			if (m_ChunksCount <= 1) return;
 
 			auto& lastChunk = m_Chunks.back();
 			Chunk::Destroy(lastChunk);

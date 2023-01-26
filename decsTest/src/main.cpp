@@ -35,7 +35,7 @@ public:
 
 int main()
 {
-	/*decs::Container container = { };
+	decs::Container container = { };
 	container.SetComponentChunkCapacity<Position>(500);
 
 	for (int i = 0; i < 5; i++)
@@ -77,11 +77,11 @@ int main()
 		it.ForEach(lambda2);
 	}
 
-	container.DestroyOwnedEntities();*/
+	container.DestroyOwnedEntities();
 
-	decs::ChunkedVector<int> testVector = { 2 };
+	//decs::ChunkedVector<int> testVector = { 2 };
 
-	testVector.EmplaceBack(1);
+	/*testVector.EmplaceBack(1);
 	testVector.EmplaceBack(1);
 	testVector.EmplaceBack(1);
 	testVector.EmplaceBack(1);
@@ -90,7 +90,7 @@ int main()
 	testVector.PopBack();
 	testVector.PopBack();
 	testVector.PopBack();
-	testVector.PopBack();
+	testVector.PopBack();*/
 
 
 	return 0;
