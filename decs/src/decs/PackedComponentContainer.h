@@ -25,7 +25,7 @@ namespace decs
 		inline virtual void Reserve(const uint64_t& newCapacity) = 0;
 
 
-		inline virtual PackedContainerBase* CreateOwnEmptyCopy(const uint64_t& chunkSize) const noexcept = 0;
+		inline virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept = 0;
 		inline virtual void* GetComponentAsVoid(const uint64_t& index) = 0;
 
 		inline virtual void RemoveSwapBack(const uint64_t& index) = 0;
@@ -55,7 +55,7 @@ namespace decs
 
 		}
 
-		virtual PackedContainerBase* CreateOwnEmptyCopy(const uint64_t& chunkSize) const noexcept override
+		virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept override
 		{
 			return new PackedContainer<DataType>();
 		}

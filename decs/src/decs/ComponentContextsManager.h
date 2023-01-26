@@ -8,6 +8,7 @@ namespace decs
 	class ComponentContextsManager final
 	{
 		friend class Container;
+		friend class ArchetypesMap;
 	public:
 		ComponentContextsManager()
 		{

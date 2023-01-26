@@ -35,52 +35,42 @@ public:
 
 int main()
 {
+	decs::Container prefabsContainer = { };
 	decs::Container container = { };
 
-	for (int i = 0; i < 5; i++)
+	decs::Entity prefab = prefabsContainer.CreateEntity();
+	prefab.AddComponent<Position>(111.f, 111.f);
+	prefab.AddComponent<int>(111);
+
+	for (int i = 0; i < 1; i++)
 	{
-		decs::Entity e = container.CreateEntity();
-		e.AddComponent<Position>((float)i, 2.f * i);
-		e.AddComponent<int>(i);
+		decs::Entity e = container.Spawn(prefab);
 	}
 
 	decs::Entity entity = container.CreateEntity();
-	
-	decs::ComponentRef<float> compRef = { entity };
-
-	if (compRef)
-	{
-		std::cout << "Float com exist = " << *compRef.Get() << "\n";
-	}
-
-	entity.AddComponent<float>(10.f);
-
-	if (compRef)
-	{
-		std::cout << "Float com exist = " << *compRef.Get() << "\n";
-	}
 
 	using ViewType = decs::View<int, Position>;
 	ViewType testView = { container };
 
 	auto lambda = [&] (decs::Entity& e, int& i, Position& position)
 	{
-		std::cout << "Entity ID: " << e.ID() << ": int = " << i << std::endl;
+		std::cout << "Entity ID: " << e.ID() << ": int = " << i << "\n";
 	};
 	auto lambda2 = [&] (int& i, Position& position)
 	{
-		std::cout << "int = " << i << std::endl;
+		std::cout << "int = " << i << "\n";
 	};
 
 	testView.ForEachForward(lambda);
 	testView.ForEachBackward(lambda);
-	std::cout << std::endl;
+	std::cout << "\n";
 	testView.ForEachBackward(lambda2);
 	testView.ForEachForward(lambda2);
 
 	std::vector< ViewType::BatchIterator> iterators;
 	testView.CreateBatchIterators(iterators, 2, 3);
 
+	std::cout << "\n";
 	for (auto& it : iterators)
 	{
 		it.ForEach(lambda);

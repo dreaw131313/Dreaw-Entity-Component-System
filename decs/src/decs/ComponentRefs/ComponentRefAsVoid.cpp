@@ -20,6 +20,7 @@ namespace decs
 	}
 
 	ComponentRefAsVoid::ComponentRefAsVoid(const TypeID& typeID, Entity& entity) :
+		m_TypeID(typeID),
 		m_EntityData(entity.m_EntityData)
 	{
 		if (m_EntityData != nullptr)

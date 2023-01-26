@@ -73,12 +73,12 @@ namespace decs
 			return std::numeric_limits<uint32_t>::max();
 		}
 
-		inline uint32_t GetComponentsCount(const EntityID& entity) const
+		inline uint32_t ComponentsCount(const EntityID& entity) const
 		{
 			auto& data = m_EntityData[entity];
 			if (data.m_IsAlive && data.m_Archetype != nullptr)
 			{
-				return data.m_Archetype->GetComponentsCount();
+				return data.m_Archetype->ComponentsCount();
 			}
 			return 0;
 		}

@@ -169,9 +169,9 @@ namespace decs
 			return m_EntityManager->IsEntityActive(entity);
 		}
 
-		inline uint32_t GetComponentsCount(const EntityID& entity) const
+		inline uint32_t ComponentsCount(const EntityID& entity) const
 		{
-			return m_EntityManager->GetComponentsCount(entity);
+			return m_EntityManager->ComponentsCount(entity);
 		}
 
 		inline void AddToEmptyEntities(EntityData& data)
@@ -201,16 +201,23 @@ namespace decs
 
 #pragma region SPAWNING ENTIES
 	private:
-
-		struct PrefabSpawnData
+		struct SpawnData
 		{
 		public:
-			Archetype* m_SpawnedEntityArchetype = nullptr;
-			std::vector<ComponentRefAsVoid> m_ComponentRefs;
+			std::vector<ComponentRefAsVoid> m_PrefabComponentRefs;
+			Archetype* m_SpawnArchetype = nullptr;
+			std::vector<ComponentRefAsVoid> m_EntityComponentRefs;
+
+		public:
+			void Reserve(const uint64_t& size)
+			{
+				m_PrefabComponentRefs.reserve(size);
+				m_EntityComponentRefs.reserve(size);
+			}
 		};
 
 	private:
-		ChunkedVector<PrefabSpawnData> m_SpawnDataPerSpawn = { 20 };
+		ChunkedVector<SpawnData> m_SpawnDataPerSpawn = { 20 };
 
 	public:
 		Entity Spawn(
@@ -236,18 +243,15 @@ namespace decs
 		/// 
 		/// </summary>
 		/// <returns>True if spawnd data preparation succeded else false.</returns>
-		void PreapareSpawnData(
-			PrefabSpawnData& spawnData,
+		void PrepareSpawnDataFromPrefab(
+			SpawnData& spawnData,
 			EntityData& prefabEntityData,
 			Container* prefabContainer
 		);
 
 		void CreateEntityFromSpawnData(
-			Entity& entity,
-			PrefabSpawnData& spawnData,
-			const uint64_t componentsCount,
-			const EntityData& prefabEntityData,
-			Container* prefabContainer
+			EntityData& spawnedEntityData,
+			SpawnData& spawnData
 		);
 
 #pragma endregion
@@ -255,7 +259,7 @@ namespace decs
 #pragma region COMPONENTS:
 	private:
 		bool m_HaveOwnComponentContextManager = true;
-		ComponentContextsManager* m_ComponentContexts = nullptr;
+		ComponentContextsManager* m_ComponentContextManager = nullptr;
 
 	private:
 		template<typename ComponentType, typename ...Args>
@@ -291,6 +295,7 @@ namespace decs
 				PackedContainer<ComponentType>* container = reinterpret_cast<PackedContainer<ComponentType>*>(entityNewArchetype->m_PackedContainers[componentContainerIndex]);
 				ComponentType* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
 
+				uint64_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
 				entityNewArchetype->AddEntityData(entityData.m_ID, entityData.m_IsActive);
 				if (entityData.m_Archetype != nullptr)
 				{
@@ -306,8 +311,7 @@ namespace decs
 					RemoveFromEmptyEntities(entityData);
 				}
 
-				entityData.m_IndexInArchetype = entityNewArchetype->EntitiesCount();
-				entityNewArchetype->m_EntitiesCount += 1;
+				entityData.m_IndexInArchetype = entityIndexBuffor;
 				entityData.m_Archetype = entityNewArchetype;
 
 				InvokeOnCreateComponentFromEntityID(newComponentContext, createdComponent, e);
@@ -428,7 +432,7 @@ namespace decs
 				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype<ComponentType>();
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = m_ComponentContexts->GetOrCreateComponentContext<ComponentType>();
+					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>();
 					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<ComponentType>(
 						newComponentContext
@@ -446,7 +450,7 @@ namespace decs
 					);
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = m_ComponentContexts->GetOrCreateComponentContext<ComponentType>();
+					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>();
 					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<ComponentType>(
 						*toArchetype,

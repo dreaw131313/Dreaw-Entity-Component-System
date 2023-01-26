@@ -112,10 +112,10 @@ namespace decs
 			return m_Version;
 		}
 
-		inline uint32_t GetComponentsCount()
+		inline uint32_t ComponentsCount()
 		{
 			if (IsValid())
-				return m_Container->GetComponentsCount(m_ID);
+				return m_Container->ComponentsCount(m_ID);
 			return 0;
 		}
 

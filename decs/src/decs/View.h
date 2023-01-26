@@ -277,7 +277,7 @@ namespace decs
 
 		bool TryAddArchetype(Archetype& archetype, const bool& tryAddNeighbours)
 		{
-			if (!ContainArchetype(&archetype) && archetype.GetComponentsCount())
+			if (!ContainArchetype(&archetype) && archetype.ComponentsCount())
 			{
 				// exclude test
 				{
@@ -386,9 +386,9 @@ namespace decs
 
 		bool TryAddArchetypeWithoutNeighbours(Archetype& archetype, const uint64_t minComponentsCountInArchetype)
 		{
-			if (archetype.GetComponentsCount() < minComponentsCountInArchetype) return false;
+			if (archetype.ComponentsCount() < minComponentsCountInArchetype) return false;
 
-			if (!ContainArchetype(&archetype) && archetype.GetComponentsCount())
+			if (!ContainArchetype(&archetype) && archetype.ComponentsCount())
 			{
 				// exclude test
 				{
