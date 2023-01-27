@@ -26,9 +26,9 @@ namespace decs
 	using TypeID = uint64_t;
 
 	template<typename Key, typename Value>
-	//using ecsMap = std::unordered_map<Key, Value>;
+	using ecsMap = std::unordered_map<Key, Value>;
 	//using ecsMap = ska::unordered_map<Key, Value>;
-	using ecsMap = ska::bytell_hash_map<Key, Value>;
+	//using ecsMap = ska::bytell_hash_map<Key, Value>;
 	//using ecsMap = ska::flat_hash_map<Key, Value>;
 
 	template<typename Key>

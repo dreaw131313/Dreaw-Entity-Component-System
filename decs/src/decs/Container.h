@@ -87,18 +87,27 @@ namespace decs
 		Container& operator = (const Container& other) = delete;
 		Container& operator = (Container&& other) = delete;
 
+#pragma region UTILITY
+	public:
+		/// <summary>
+		/// Some functions change internal state of container during invocation and if error will be thrown in this functions they can leave invalid internal state of Container object. This function brings back container to valid state.
+		/// </summary>
+		void ValidateInternalState();
+#pragma endregion
 #pragma region FLAGS:
 	private:
 		struct BoolSwitch final
 		{
 		public:
 			BoolSwitch(bool& boolToSwitch) :
-				m_Bool(boolToSwitch)
+				m_Bool(boolToSwitch),
+				m_FinalValue(!boolToSwitch)
 			{
 			}
 
 			BoolSwitch(bool& boolToSwitch, const bool& startValue) :
-				m_Bool(boolToSwitch)
+				m_Bool(boolToSwitch),
+				m_FinalValue(!startValue)
 			{
 				m_Bool = startValue;
 			}
@@ -111,11 +120,12 @@ namespace decs
 
 			~BoolSwitch()
 			{
-				m_Bool = !m_Bool;
+				m_Bool = m_FinalValue;
 			}
 
 		private:
 			bool& m_Bool;
+			bool m_FinalValue;
 		};
 	private:
 		bool m_CanCreateEntities = true;
@@ -205,7 +215,7 @@ namespace decs
 		{
 		public:
 			std::vector<ComponentRefAsVoid> m_PrefabComponentRefs;
-			Archetype* m_SpawnArchetype = nullptr;
+			std::vector < Archetype*> m_SpawnArchetypes;
 			std::vector<ComponentRefAsVoid> m_EntityComponentRefs;
 
 		public:
@@ -214,10 +224,52 @@ namespace decs
 				m_PrefabComponentRefs.reserve(size);
 				m_EntityComponentRefs.reserve(size);
 			}
+
+			void Clear()
+			{
+				m_PrefabComponentRefs.clear();
+				m_EntityComponentRefs.clear();
+				m_SpawnArchetypes.clear();
+			}
+
+			void RemoveSpawnState(const uint64_t& archetypeIdx, const uint64_t& refsStartIdx)
+			{
+				if (archetypeIdx == 0)
+				{
+					Clear();
+				}
+				else
+				{
+					m_SpawnArchetypes.pop_back();
+
+					auto pIt = m_PrefabComponentRefs.begin();
+					std::advance(pIt, refsStartIdx);
+					m_PrefabComponentRefs.erase(pIt, m_PrefabComponentRefs.end());
+
+					auto eIt = m_EntityComponentRefs.begin();
+					std::advance(eIt, refsStartIdx);
+					m_EntityComponentRefs.erase(eIt, m_EntityComponentRefs.end());
+				}
+			}
+		};
+
+		struct SpawnDataState
+		{
+		public:
+			uint64_t m_CompRefsStart;
+			uint64_t m_ArchetypeIndex;
+
+		public:
+			SpawnDataState(SpawnData& spawnData) :
+				m_CompRefsStart(spawnData.m_EntityComponentRefs.size()),
+				m_ArchetypeIndex(spawnData.m_SpawnArchetypes.size())
+			{
+
+			}
 		};
 
 	private:
-		ChunkedVector<SpawnData> m_SpawnDataPerSpawn = { 20 };
+		SpawnData m_SpawnData;
 
 	public:
 		Entity Spawn(
@@ -239,19 +291,19 @@ namespace decs
 		);
 
 	private:
+
 		/// <summary>
 		/// 
 		/// </summary>
 		/// <returns>True if spawnd data preparation succeded else false.</returns>
 		void PrepareSpawnDataFromPrefab(
-			SpawnData& spawnData,
 			EntityData& prefabEntityData,
 			Container* prefabContainer
 		);
 
 		void CreateEntityFromSpawnData(
 			EntityData& spawnedEntityData,
-			SpawnData& spawnData
+			const SpawnDataState& spawnState
 		);
 
 #pragma endregion
@@ -295,7 +347,7 @@ namespace decs
 				PackedContainer<ComponentType>* container = reinterpret_cast<PackedContainer<ComponentType>*>(entityNewArchetype->m_PackedContainers[componentContainerIndex]);
 				ComponentType* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
 
-				uint64_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
+				uint32_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
 				entityNewArchetype->AddEntityData(entityData.m_ID, entityData.m_IsActive);
 				if (entityData.m_Archetype != nullptr)
 				{
@@ -543,5 +595,7 @@ namespace decs
 		}
 #pragma endregion
 	};
+
+
 }
 

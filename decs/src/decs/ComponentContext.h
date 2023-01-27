@@ -111,9 +111,17 @@ namespace decs
 
 		ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) override
 		{
+			if (observerManager != nullptr)
+			{
+				return new ComponentContext<ComponentType>(
+					m_ChunkCapacity,
+					observerManager->GetComponentObserver<ComponentType>()
+					);
+			}
+
 			return new ComponentContext<ComponentType>(
 				m_ChunkCapacity,
-				observerManager->GetComponentObserver<ComponentType>()
+				nullptr
 				);
 		}
 

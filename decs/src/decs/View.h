@@ -344,11 +344,11 @@ namespace decs
 
 			if (tryAddNeighbours)
 			{
-				for (auto& [key, edge] : archetype.m_Edges)
+				for (auto& [key, edge] : archetype.m_AddEdges)
 				{
-					if (edge.AddEdge != nullptr)
+					if (edge != nullptr)
 					{
-						TryAddArchetype(*edge.AddEdge, tryAddNeighbours);
+						TryAddArchetype(*edge, tryAddNeighbours);
 					}
 				}
 			}

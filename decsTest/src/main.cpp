@@ -33,18 +33,45 @@ public:
 
 };
 
+struct A
+{
+	float X;
+};
+
+struct B
+{
+	float X;
+
+};
+
+struct C
+{
+	float X;
+};
+
+struct D
+{
+	float X;
+};
+
+
 int main()
 {
 	decs::Container prefabsContainer = { };
 	decs::Container container = { };
 
-	decs::Entity prefab = prefabsContainer.CreateEntity();
+	// Przetestowaæ spawnowanie podczas spawnowania aby przetestowaæ spawnState
+
+	decs::Entity prefab = container.CreateEntity();
 	prefab.AddComponent<Position>(111.f, 111.f);
 	prefab.AddComponent<int>(111);
+	prefab.AddComponent<float>(1.f);
 
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		decs::Entity e = container.Spawn(prefab);
+		int* intComp = e.GetComponent<int>();
+		(*intComp) = i+1;
 	}
 
 	decs::Entity entity = container.CreateEntity();
