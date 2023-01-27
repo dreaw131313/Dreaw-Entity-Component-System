@@ -125,9 +125,6 @@ namespace decs
 		template<typename Callable>
 		void ForEach(Callable&& func, const IterationType& iterationType) noexcept
 		{
-			if (!IsValid()) return;
-			ValidateView();
-
 			switch (iterationType)
 			{
 				case IterationType::Forward:
@@ -168,17 +165,11 @@ namespace decs
 						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 						{
 							entityBuffor.Set(entityData.m_ID, this->m_Container);
-							std::apply(
-								func,
-								std::forward_as_tuple(entityBuffor, std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...)
-							);
+							func(entityBuffor, std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
 						}
 						else
 						{
-							std::apply(
-								func,
-								std::forward_as_tuple(std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...)
-							);
+							func(std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
 						}
 					}
 				}
@@ -211,17 +202,11 @@ namespace decs
 						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 						{
 							entityBuffor.Set(entityData.m_ID, this->m_Container);
-							std::apply(
-								func,
-								std::forward_as_tuple(entityBuffor, std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...)
-							);
+							func(entityBuffor, std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
 						}
 						else
 						{
-							std::apply(
-								func,
-								std::forward_as_tuple(std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...)
-							);
+							func(std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
 						}
 					}
 				}
@@ -570,17 +555,11 @@ namespace decs
 							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
 								entityBuffor.Set(entityData.m_ID, container);
-								std::apply(
-									func,
-									std::forward_as_tuple(entityBuffor, std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...)
-								);
+								func(entityBuffor, std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
 							}
 							else
 							{
-								std::apply(
-									func,
-									std::forward_as_tuple(std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...)
-								);
+								func(std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
 							}
 						}
 					}
