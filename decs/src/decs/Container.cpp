@@ -16,14 +16,12 @@ namespace decs
 	Container::Container(
 		const uint64_t& enititesChunkSize,
 		const uint64_t& componentContainerChunkSize,
-		const bool& invokeEntityActivationStateListeners,
 		const uint64_t m_EmptyEntitiesChunkSize
 	) :
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(enititesChunkSize)),
 		m_HaveOwnComponentContextManager(true),
 		m_ComponentContextManager(new ComponentContextsManager(componentContainerChunkSize, nullptr)),
-		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners),
 		m_EmptyEntities(m_EmptyEntitiesChunkSize)
 	{
 	}
@@ -32,14 +30,12 @@ namespace decs
 		EntityManager* entityManager,
 		ComponentContextsManager* componentContextsManager,
 		const uint64_t& componentContainerChunkSize,
-		const bool& invokeEntityActivationStateListeners,
 		const uint64_t m_EmptyEntitiesChunkSize
 	) :
 		m_HaveOwnEntityManager(false),
 		m_EntityManager(entityManager),
 		m_HaveOwnComponentContextManager(false),
 		m_ComponentContextManager(componentContextsManager),
-		m_bInvokeEntityActivationStateListeners(invokeEntityActivationStateListeners),
 		m_EmptyEntities(m_EmptyEntitiesChunkSize)
 	{
 	}
@@ -161,7 +157,7 @@ namespace decs
 
 	void Container::SetEntityActive(const EntityID& entity, const bool& isActive)
 	{
-		if (m_EntityManager->SetEntityActive(entity, isActive) && m_bInvokeEntityActivationStateListeners)
+		if (m_EntityManager->SetEntityActive(entity, isActive))
 		{
 			Entity e{ entity , this };
 			if (isActive)

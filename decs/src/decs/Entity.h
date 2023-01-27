@@ -58,9 +58,11 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				m_Container->DestroyEntity(*this);
-				Invalidate();
-				return true;
+				if (m_Container->DestroyEntity(*this))
+				{
+					Invalidate();
+					return true;
+				}
 			}
 			return false;
 		}

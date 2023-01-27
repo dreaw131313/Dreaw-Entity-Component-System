@@ -70,7 +70,6 @@ namespace decs
 		Container(
 			const uint64_t& enititesChunkSize,
 			const uint64_t& componentContainerChunkSize,
-			const bool& invokeEntityActivationStateListeners,
 			const uint64_t m_EmptyEntitiesChunkSize = 100
 		);
 
@@ -78,7 +77,6 @@ namespace decs
 			EntityManager* entityManager,
 			ComponentContextsManager* componentContextsManager,
 			const uint64_t& componentContainerChunkSize,
-			const bool& invokeEntityActivationStateListeners,
 			const uint64_t m_EmptyEntitiesChunkSize = 100
 		);
 
@@ -94,6 +92,7 @@ namespace decs
 		/// </summary>
 		void ValidateInternalState();
 #pragma endregion
+
 #pragma region FLAGS:
 	private:
 		struct BoolSwitch final
@@ -138,17 +137,10 @@ namespace decs
 #pragma region ENTITIES:
 	private:
 		bool m_HaveOwnEntityManager = false;
-		bool m_bInvokeEntityActivationStateListeners = true;
-
 		EntityManager* m_EntityManager = nullptr;
 		ChunkedVector<EntityData*> m_EmptyEntities = { 100 };
 
 	public:
-		inline uint64_t GetAliveEntitesCount() const
-		{
-			return m_EntityManager->GetCreatedEntitiesCount();
-		}
-
 		Entity CreateEntity(const bool& isActive = true);
 
 		bool DestroyEntity(Entity& entity);
@@ -595,7 +587,4 @@ namespace decs
 		}
 #pragma endregion
 	};
-
-
 }
-

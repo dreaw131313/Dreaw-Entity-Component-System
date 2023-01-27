@@ -100,12 +100,12 @@ namespace decs
 			return m_IsAlive && m_DestructionState != EntityDestructionState::InDestruction;
 		}
 
-		inline bool IsDelayedToDestruction()
+		inline bool IsDelayedToDestruction() const
 		{
 			return m_DestructionState == EntityDestructionState::DelayedToDestruction;
 		}
 		
-		inline bool IsUsedAsPrefab()
+		inline bool IsUsedAsPrefab() const
 		{
 			return m_IsUsedAsPrefab;
 		}
