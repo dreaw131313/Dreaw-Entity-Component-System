@@ -4,10 +4,11 @@
 
 #include "decs/PackedComponentContainer.h"
 
+constexpr char endline = '\n';
 
 void Print(const std::string& message)
 {
-	std::cout << message << "\n";
+	std::cout << message << endline;
 }
 
 class Position
@@ -30,62 +31,41 @@ public:
 	{
 		//Print("Position Destructor");
 	}
-
 };
-
-struct A
-{
-	float X;
-};
-
-struct B
-{
-	float X;
-
-};
-
-struct C
-{
-	float X;
-};
-
-struct D
-{
-	float X;
-};
-
 
 int main()
 {
 	decs::Container prefabsContainer = { };
 	decs::Container container = { };
 
-	// Przetestowaæ spawnowanie podczas spawnowania aby przetestowaæ spawnState
 
-	decs::Entity prefab = container.CreateEntity();
+	decs::Entity prefab = prefabsContainer.CreateEntity();
 	prefab.AddComponent<Position>(111.f, 111.f);
 	prefab.AddComponent<int>(111);
 	prefab.AddComponent<float>(1.f);
 
-	for (int i = 0; i < 5; i++)
-	{
-		decs::Entity e = container.Spawn(prefab);
-		int* intComp = e.GetComponent<int>();
-		(*intComp) = i+1;
-	}
+	std::vector<decs::Entity> spawnedEntities = {};
+	container.Spawn(prefab, spawnedEntities, 3, true);
 
-	decs::Entity entity = container.CreateEntity();
+	Print("Spawned entities count " + std::to_string(spawnedEntities.size()));
+	for (int i = 0; i < spawnedEntities.size(); i++)
+	{
+		Print("Entity ID: " + std::to_string(spawnedEntities[i].ID()));
+	}
+	std::cout << endline;
 
 	using ViewType = decs::View<int, Position>;
 	ViewType testView = { container };
 
-	auto lambda = [&] (decs::Entity& e, int& i, Position& position)
+	auto lambda = [&] (const decs::Entity& e, int& i, Position& position)
 	{
-		std::cout << "Entity ID: " << e.ID() << ": int = " << i << "\n";
+		i *= e.ID() + 1;
+		std::cout << "Entity ID: " << e.ID() << ": int = " << i << endline;
 	};
 	auto lambda2 = [&] (int& i, Position& position)
 	{
-		std::cout << "int = " << i << "\n";
+		i *= 2;
+		std::cout << "int = " << i << endline;
 	};
 
 	testView.ForEachForward(lambda);
@@ -97,12 +77,12 @@ int main()
 	std::vector< ViewType::BatchIterator> iterators;
 	testView.CreateBatchIterators(iterators, 2, 3);
 
-	std::cout << "\n";
+	std::cout << endline;
 	for (auto& it : iterators)
 	{
 		it.ForEach(lambda);
 	}
-	std::cout << "\n";
+	std::cout << endline;
 	for (auto& it : iterators)
 	{
 		it.ForEach(lambda2);

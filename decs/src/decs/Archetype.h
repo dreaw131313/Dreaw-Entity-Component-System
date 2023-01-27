@@ -9,8 +9,6 @@ namespace decs
 	class Entity;
 	class Archetype;
 
-
-
 	struct ArchetypeEntityData
 	{
 	public:

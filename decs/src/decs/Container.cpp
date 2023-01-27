@@ -98,7 +98,7 @@ namespace decs
 			Archetype* currentArchetype = entityData.m_Archetype;
 			if (currentArchetype != nullptr)
 			{
-				// Invoke On destroy metyhods
+				// Invoke On destroy methods
 
 				for (uint64_t i = 0; i < currentArchetype->ComponentsCount(); i++)
 				{
@@ -183,10 +183,11 @@ namespace decs
 
 		EntityID entityID = m_EntityManager->CreateEntity(isActive);
 		Entity spawnedEntity(entityID, this);
+		EntityData& spawnedEntityData = *spawnedEntity.m_EntityData;
 
 		if (prefabArchetype == nullptr)
 		{
-			AddToEmptyEntities(*spawnedEntity.m_EntityData);
+			AddToEmptyEntities(spawnedEntityData);
 			InvokeEntityCreationObservers(spawnedEntity);
 			return spawnedEntity;
 		}
@@ -195,13 +196,15 @@ namespace decs
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
-		CreateEntityFromSpawnData(*spawnedEntity.m_EntityData, spawnState);
+		CreateEntityFromSpawnData(spawnedEntityData, spawnState);
 
 		InvokeEntityCreationObservers(spawnedEntity);
-		auto& componentContexts = m_SpawnData.m_SpawnArchetypes[0]->m_ComponentContexts;
-		for (uint64_t i = 0; i < componentsCount; i++)
+
+		auto& componentContexts = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_ComponentContexts;
+
+		for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
 		{
-			componentContexts[i]->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[i].Get(), spawnedEntity);
+			componentContexts[idx]->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[compRefIdx].Get(), spawnedEntity);
 		}
 
 		m_SpawnData.RemoveSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -213,12 +216,13 @@ namespace decs
 	{
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
-		/*Container* prefabContainer = prefab.GetContainer();
-		bool isTheSameContainer = prefabContainer == this;
-		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
-
+		Container* prefabContainer = prefab.GetContainer();
+		EntityData& prefabEntityData = *prefab.m_EntityData;
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
+		BoolSwitch prefabOperationsLock = { prefabEntityData.m_IsUsedAsPrefab, true };
+
 		Entity spawnedEntity;
+
 		if (prefabArchetype == nullptr)
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
@@ -235,10 +239,14 @@ namespace decs
 		}
 
 		uint64_t componentsCount = prefabArchetype->ComponentsCount();
-		PrefabSpawnData& spawnData = m_SpawnDataPerSpawn.EmplaceBack();
-		spawnData.Reserve(componentsCount);
+		SpawnDataState spawnState(m_SpawnData);
 
-		PreapareSpawnData(spawnData, prefabEntityData, prefabContainer);
+		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
+
+		Archetype* spawnArchetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
+		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntitiesCount() + spawnCount);
+
+		auto& componentContexts = spawnArchetype->m_ComponentContexts;
 
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
@@ -248,46 +256,37 @@ namespace decs
 				this
 			);
 
-			CreateEntityFromSpawnData(
-				spawnedEntity,
-				spawnData,
-				componentsCount,
-				prefabEntityData,
-				prefabContainer
-			);
-
+			CreateEntityFromSpawnData(*spawnedEntity.m_EntityData, spawnState);
 			InvokeEntityCreationObservers(spawnedEntity);
 
-			for (uint64_t i = 0; i < componentsCount; i++)
+			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
 			{
-				auto& componentContext = spawnData.ComponentContexts[i];
-				componentContext.ComponentContext->InvokeOnCreateComponent_S(
-					componentContext.ComponentData.Component,
-					spawnedEntity
-				);
+				componentContexts[idx]->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[compRefIdx].Get(), spawnedEntity);
 			}
 		}
 
-		m_SpawnDataPerSpawn.PopBack();*/
+		m_SpawnData.RemoveSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
 
 		return true;
 	}
 
 	bool Container::Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive)
 	{
-		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return true;
+		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
-		/*Container* prefabContainer = prefab.GetContainer();
-		bool isTheSameContainer = prefabContainer == this;
-		EntityData prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
-
+		Container* prefabContainer = prefab.GetContainer();
+		EntityData& prefabEntityData = *prefab.m_EntityData;
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
+		BoolSwitch prefabOperationsLock = { prefabEntityData.m_IsUsedAsPrefab, true };
+
+		spawnedEntities.reserve(spawnedEntities.size() + spawnCount);
+
 		if (prefabArchetype == nullptr)
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
-				EntityID entityId = m_EntityManager->CreateEntity(areActive);
-				Entity& spawnedEntity = spawnedEntities.emplace_back(entityId, this);
+				EntityID entityID = m_EntityManager->CreateEntity(areActive);
+				Entity& spawnedEntity = spawnedEntities.emplace_back(entityID, this);
 				AddToEmptyEntities(*spawnedEntity.m_EntityData);
 				InvokeEntityCreationObservers(spawnedEntity);
 			}
@@ -295,35 +294,30 @@ namespace decs
 		}
 
 		uint64_t componentsCount = prefabArchetype->ComponentsCount();
-		PrefabSpawnData& spawnData = m_SpawnDataPerSpawn.EmplaceBack();
-		spawnData.Reserve(componentsCount);
+		SpawnDataState spawnState(m_SpawnData);
 
-		PreapareSpawnData(spawnData, prefabEntityData, prefabContainer);
+		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
 
-		for (uint64_t i = 0; i < spawnCount; i++)
+		Archetype* spawnArchetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
+		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntitiesCount() + spawnCount);
+
+		auto& componentContexts = spawnArchetype->m_ComponentContexts;
+
+		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
-			EntityID id = m_EntityManager->CreateEntity(areActive);
-			Entity& spawnedEntity = spawnedEntities.emplace_back(id, this);
-			CreateEntityFromSpawnData(
-				spawnedEntity,
-				spawnData,
-				componentsCount,
-				prefabEntityData,
-				prefabContainer
-			);
+			EntityID entityID = m_EntityManager->CreateEntity(areActive);
+			Entity& spawnedEntity = spawnedEntities.emplace_back(entityID, this);
 
+			CreateEntityFromSpawnData(*spawnedEntity.m_EntityData, spawnState);
 			InvokeEntityCreationObservers(spawnedEntity);
-			for (uint64_t i = 0; i < componentsCount; i++)
+
+			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
 			{
-				auto& componentContext = spawnData.ComponentContexts[i];
-				componentContext.ComponentContext->InvokeOnCreateComponent_S(
-					componentContext.ComponentData.Component,
-					spawnedEntity
-				);
+				componentContexts[idx]->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[compRefIdx].Get(), spawnedEntity);
 			}
 		}
 
-		m_SpawnDataPerSpawn.PopBack();*/
+		m_SpawnData.RemoveSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
 
 		return true;
 	}

@@ -68,7 +68,10 @@ namespace decs
 			}
 		}
 		inline virtual void Clear() override { m_Data.clear(); }
-		inline virtual void ShrinkToFit() override { m_Data.shrink_to_fit(); }
+		inline virtual void ShrinkToFit() override
+		{
+			m_Data.shrink_to_fit();
+		}
 		inline virtual uint64_t Capacity() override { return m_Data.capacity(); }
 		inline virtual uint64_t Size() override { return m_Data.size(); }
 		inline virtual void Reserve(const uint64_t& newCapacity) override { m_Data.reserve(newCapacity); }
