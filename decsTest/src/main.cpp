@@ -2,6 +2,8 @@
 
 #include "decs/decs.h"
 
+#include "decs\decs.h"
+
 #include "decs/PackedComponentContainer.h"
 
 constexpr char endline = '\n';
@@ -38,11 +40,12 @@ int main()
 	decs::Container prefabsContainer = { };
 	decs::Container container = { };
 
-
 	decs::Entity prefab = prefabsContainer.CreateEntity();
 	prefab.AddComponent<Position>(111.f, 111.f);
 	prefab.AddComponent<int>(111);
 	prefab.AddComponent<float>(1.f);
+	prefab.GetComponent<int>();
+	prefab.HasComponent<int>();
 
 	std::vector<decs::Entity> spawnedEntities = {};
 	container.Spawn(prefab, spawnedEntities, 3, true);

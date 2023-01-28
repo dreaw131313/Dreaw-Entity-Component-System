@@ -2,6 +2,8 @@
 #include "Core.h"
 #include "Enums.h"
 #include "Type.h"
+
+#include "Archetypes\ArchetypesMap.h"
 #include "EntityManager.h"
 #include "ComponentContextsManager.h"
 #include "Observers.h"
@@ -126,7 +128,9 @@ namespace decs
 			bool& m_Bool;
 			bool m_FinalValue;
 		};
+
 	private:
+		bool m_IsDestroyingOwnedEntities = false;
 		bool m_CanCreateEntities = true;
 		bool m_CanDestroyEntities = true;
 		bool m_CanSpawn = true;
@@ -153,17 +157,6 @@ namespace decs
 		}
 
 	private:
-
-		inline bool IsEntityAlive(const EntityID& entity) const
-		{
-			return m_EntityManager->IsEntityAlive(entity);
-		}
-
-		inline uint32_t GetEntityVersion(const EntityID& entity) const
-		{
-			return m_EntityManager->GetEntityVersion(entity);
-		}
-
 		void SetEntityActive(const EntityID& entity, const bool& isActive);
 
 		bool IsEntityActive(const EntityID& entity) const
@@ -283,11 +276,6 @@ namespace decs
 		);
 
 	private:
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <returns>True if spawnd data preparation succeded else false.</returns>
 		void PrepareSpawnDataFromPrefab(
 			EntityData& prefabEntityData,
 			Container* prefabContainer
@@ -310,9 +298,17 @@ namespace decs
 		ComponentType* AddComponent(const EntityID& e, Args&&... args)
 		{
 			constexpr TypeID copmonentTypeID = Type<ComponentType>::ID();
-			if (!m_CanAddComponents) return nullptr;
 			if (e >= m_EntityManager->GetEntitiesDataCount()) return nullptr;
 			EntityData& entityData = m_EntityManager->GetEntityData(e);
+
+			return AddComponent(entityData, std::forward<Args>(args)...);
+		}
+
+		template<typename ComponentType, typename ...Args>
+		ComponentType* AddComponent(EntityData& entityData, Args&&... args)
+		{
+			constexpr TypeID copmonentTypeID = Type<ComponentType>::ID();
+			if (!m_CanAddComponents) return nullptr;
 
 			if (entityData.IsValidToPerformComponentOperation())
 			{
@@ -322,7 +318,6 @@ namespace decs
 					if (delayedToDestroyComponent != nullptr) { return delayedToDestroyComponent; }
 				}
 				else*/
-
 				{
 					auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
 					if (currentComponent != nullptr) return currentComponent;
@@ -358,7 +353,7 @@ namespace decs
 				entityData.m_IndexInArchetype = entityIndexBuffor;
 				entityData.m_Archetype = entityNewArchetype;
 
-				InvokeOnCreateComponentFromEntityID(newComponentContext, createdComponent, e);
+				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(newComponentContext, createdComponent, entityData);
 				return createdComponent;
 			}
 			return nullptr;
@@ -374,18 +369,25 @@ namespace decs
 			if (e < m_EntityManager->GetEntitiesDataCount())
 			{
 				EntityData& entityData = m_EntityManager->GetEntityData(e);
-				if (entityData.m_Archetype != nullptr && entityData.IsValidToPerformComponentOperation())
-				{
-					uint64_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
-					if (findTypeIndex != std::numeric_limits<uint64_t>::max())
-					{
-						PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[findTypeIndex];
-
-						return &container->m_Data[entityData.m_IndexInArchetype];
-					}
-				}
+				return GetComponent(entityData);
 			}
 
+			return nullptr;
+		}
+
+		template<typename ComponentType>
+		ComponentType* GetComponent(EntityData& entityData) const
+		{
+			if (entityData.m_Archetype != nullptr && entityData.IsValidToPerformComponentOperation())
+			{
+				uint64_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
+				if (findTypeIndex != std::numeric_limits<uint64_t>::max())
+				{
+					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[findTypeIndex];
+
+					return &container->m_Data[entityData.m_IndexInArchetype];
+				}
+			}
 			return nullptr;
 		}
 
@@ -398,11 +400,9 @@ namespace decs
 				if (findTypeIndex != std::numeric_limits<uint64_t>::max())
 				{
 					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[findTypeIndex];
-
 					return &container->m_Data[entityData.m_IndexInArchetype];
 				}
 			}
-
 			return nullptr;
 		}
 
@@ -412,18 +412,24 @@ namespace decs
 			if (e < m_EntityManager->GetEntitiesDataCount())
 			{
 				const EntityData& data = m_EntityManager->GetConstEntityData(e);
-				if (data.m_Archetype != nullptr && data.IsValidToPerformComponentOperation())
-				{
-					uint64_t index = data.m_Archetype->FindTypeIndex(Type<ComponentType>::ID());
-					return index != std::numeric_limits<uint64_t>::max();
-				}
+				return HasComponent(data);
 			}
 			return false;
 		}
 
-		void InvokeOnCreateComponentFromEntityID(ComponentContextBase* componentContext, void* componentPtr, const EntityID& id);
+		template<typename ComponentType>
+		bool HasComponent(EntityData& entityData) const
+		{
+			if (entityData.m_Archetype != nullptr && entityData.IsValidToPerformComponentOperation())
+			{
+				uint64_t index = entityData.m_Archetype->FindTypeIndex(Type<ComponentType>::ID());
+				return index != std::numeric_limits<uint64_t>::max();
+			}
+			return false;
+		}
 
-	private:
+		void InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData);
+
 		template<typename ComponentType, typename ...Args>
 		ComponentType* TryAddComponentDelayedToDestroy(
 			EntityData& entityData
@@ -448,13 +454,10 @@ namespace decs
 			return nullptr;
 		}
 
-		bool RemoveComponentWithoutInvokingListener(const EntityID& e, const TypeID& componentTypeID);
 #pragma endregion
 
 #pragma region ARCHETYPES:
 	public:
-		inline const ArchetypesMap& ArchetypesData() const { return m_ArchetypesMap; }
-
 		void ShrinkArchetypesToFit();
 
 	private:

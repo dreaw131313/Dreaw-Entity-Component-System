@@ -1,6 +1,6 @@
 #pragma once
 #include "Core.h"
-#include "Archetype.h"
+#include "Archetypes\Archetype.h"
 
 namespace decs
 {
@@ -35,6 +35,8 @@ namespace decs
 		{
 
 		}
+
+		inline EntityID ID() const noexcept { return m_ID; }
 
 		template<typename ComponentType>
 		inline ComponentType* GetComponent()

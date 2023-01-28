@@ -1,7 +1,7 @@
 #pragma once
 #include "Core.h"
 #include "EntityData.h"
-#include "Archetype.h"
+#include "Archetypes\Archetype.h"
 #include "Containers\ChunkedVector.h"
 
 namespace decs

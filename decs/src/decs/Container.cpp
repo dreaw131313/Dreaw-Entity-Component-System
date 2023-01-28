@@ -51,6 +51,11 @@ namespace decs
 
 	void Container::ValidateInternalState()
 	{
+		m_CanCreateEntities = true;
+		m_CanDestroyEntities = true;
+		m_CanSpawn = true;
+		m_CanAddComponents = true;
+		m_CanRemoveComponents = true;
 	}
 
 	Entity Container::CreateEntity(const bool& isActive)
@@ -123,6 +128,8 @@ namespace decs
 
 	void Container::DestroyOwnedEntities(const bool& invokeOnDestroyListeners)
 	{
+		if (m_IsDestroyingOwnedEntities) return;
+		BoolSwitch isDestroyingEntitesFlag(m_IsDestroyingOwnedEntities, true);
 		BoolSwitch canCreateSwitch(m_CanCreateEntities, false);
 		BoolSwitch canDestroySwitch(m_CanDestroyEntities, false);
 		BoolSwitch canSpawnSwitch(m_CanSpawn, false);
@@ -436,70 +443,10 @@ namespace decs
 		return RemoveComponent(entity, componentTypeID);
 	}
 
-	void Container::InvokeOnCreateComponentFromEntityID(ComponentContextBase* componentContext, void* componentPtr, const EntityID& id)
+	void Container::InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData)
 	{
-		Entity e(id, this);
+		Entity e = { entityData, this };
 		componentContext->InvokeOnCreateComponent_S(componentPtr, e);
-	}
-
-	bool Container::RemoveComponentWithoutInvokingListener(const EntityID& entityID, const TypeID& componentTypeID)
-	{
-		/*Entity entity = { entityID, this };
-		EntityData& entityData = *entity.m_EntityData;
-		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
-
-		uint64_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
-		if (compIdxInArch == std::numeric_limits<uint64_t>::max()) return false;
-
-		ComponentContextBase* componentContext = m_ComponentContextManager[componentTypeID];
-
-		const auto& removedCompData = entityData.GetComponentRef(compIdxInArch);
-		auto allocator = componentContext->GetAllocator();
-		auto result = allocator->RemoveSwapBack(removedCompData.ChunkIndex, removedCompData.ElementIndex);
-
-		if (result.IsValid())
-		{
-			uint64_t compTypeIndexInFixedEntityArchetype;
-			EntityData& fixedEntity = m_EntityManager->GetEntityData(result.eID);
-			if (entityData.m_Archetype == fixedEntity.m_Archetype)
-			{
-				compTypeIndexInFixedEntityArchetype = compIdxInArch;
-			}
-			else
-			{
-				compTypeIndexInFixedEntityArchetype = fixedEntity.m_Archetype->FindTypeIndex(componentTypeID);
-			}
-
-			UpdateEntityComponentAccesDataInArchetype(
-				fixedEntity,
-				result.ChunkIndex,
-				result.ElementIndex,
-				allocator->GetComponentAsVoid(result.ChunkIndex, result.ElementIndex),
-				compTypeIndexInFixedEntityArchetype
-			);
-		}
-
-		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(*entityData.m_Archetype, componentTypeID);
-		if (newEntityArchetype == nullptr)
-		{
-			RemoveEntityFromArchetype(*entityData.m_Archetype, entityData);
-			AddToEmptyEntities(entityData);
-		}
-		else
-		{
-			AddEntityToArchetype(
-				*newEntityArchetype,
-				entityData,
-				std::numeric_limits<uint64_t>::max(),
-				std::numeric_limits<uint64_t>::max(),
-				componentTypeID,
-				nullptr,
-				false,
-				compIdxInArch
-			);
-		}*/
-
-		return true;
 	}
 
 	void Container::ShrinkArchetypesToFit()

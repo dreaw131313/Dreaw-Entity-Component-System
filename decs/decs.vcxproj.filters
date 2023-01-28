@@ -21,7 +21,7 @@
     <ClInclude Include="src\decs\View.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Archetype.h">
+    <ClInclude Include="src\decs\Archetypes\Archetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\ComponentContext.h">
@@ -76,6 +76,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\ComponentRefs\ComponentRefAsVoid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -62,10 +62,7 @@ namespace decs
 
 		inline virtual void PopBack() override
 		{
-			if (m_Data.size() > 0)
-			{
-				m_Data.pop_back();
-			}
+			if (m_Data.size() > 0) { m_Data.pop_back(); }
 		}
 		inline virtual void Clear() override { m_Data.clear(); }
 		inline virtual void ShrinkToFit() override
