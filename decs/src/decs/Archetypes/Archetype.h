@@ -53,7 +53,7 @@ namespace decs
 
 		inline bool IsValid() const noexcept
 		{
-			return ID != std::numeric_limits<EntityID>::max() && Index != std::numeric_limits<uint64_t>::max();
+			return ID != std::numeric_limits<EntityID>::max() && Index != std::numeric_limits<uint32_t>::max();
 		}
 	};
 
@@ -80,9 +80,9 @@ namespace decs
 		ecsMap<TypeID, Archetype*> m_RemoveEdges;
 
 		std::vector<TypeID> m_TypeIDs;
-		ecsMap<TypeID, uint64_t> m_TypeIDsIndexes;
+		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
 
-		uint64_t m_EntitesCountToInitialize = 0;
+		uint32_t m_EntitesCountToInitialize = 0;
 
 	private:
 		uint32_t m_ComponentsCount = 0; // number of components for each entity
@@ -105,45 +105,45 @@ namespace decs
 		inline uint32_t ComponentsCount() const { return m_ComponentsCount; }
 		inline const TypeID* const ComponentsTypes() const { return m_TypeIDs.data(); }
 		inline uint32_t EntitiesCount() const { return m_EntitiesCount; }
-		inline uint64_t EntitesCountToInvokeCallbacks() const { return m_EntitesCountToInitialize; }
+		inline uint32_t EntitesCountToInvokeCallbacks() const { return m_EntitesCountToInitialize; }
 
 		inline bool ContainType(const TypeID& typeID) const
 		{
 			return m_TypeIDsIndexes.find(typeID) != m_TypeIDsIndexes.end();
 		}
 
-		inline uint64_t FindTypeIndex(const TypeID& typeID) const
+		inline uint32_t FindTypeIndex(const TypeID& typeID) const
 		{
 			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
 			{
-				for (uint64_t i = 0; i < m_ComponentsCount; i++)
+				for (uint32_t i = 0; i < m_ComponentsCount; i++)
 					if (m_TypeIDs[i] == typeID) return i;
 
-				return std::numeric_limits<uint64_t>::max();
+				return std::numeric_limits<uint32_t>::max();
 			}
 
 			auto it = m_TypeIDsIndexes.find(typeID);
 			if (it == m_TypeIDsIndexes.end())
-				return std::numeric_limits<uint64_t>::max();
+				return std::numeric_limits<uint32_t>::max();
 
 			return it->second;
 		}
 
 		template<typename T>
-		inline uint64_t FindTypeIndex() const
+		inline uint32_t FindTypeIndex() const
 		{
 			constexpr TypeID typeID = Type<T>::ID();
 			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
 			{
-				for (uint64_t i = 0; i < m_ComponentsCount; i++)
+				for (uint32_t i = 0; i < m_ComponentsCount; i++)
 					if (m_TypeIDs[i] == typeID) return i;
 
-				return std::numeric_limits<uint64_t>::max();
+				return std::numeric_limits<uint32_t>::max();
 			}
 
 			auto it = m_TypeIDsIndexes.find(typeID);
 			if (it == m_TypeIDsIndexes.end())
-				return std::numeric_limits<uint64_t>::max();
+				return std::numeric_limits<uint32_t>::max();
 
 			return it->second;
 		}
@@ -167,7 +167,7 @@ namespace decs
 			if (it == m_TypeIDsIndexes.end())
 			{
 				m_ComponentsCount += 1;
-				m_TypeIDsIndexes[id] = m_TypeIDs.size();
+				m_TypeIDsIndexes[id] = (uint32_t)m_TypeIDs.size();
 				m_TypeIDs.push_back(id);
 				m_ComponentContexts.push_back(componentContext);
 				m_PackedContainers.push_back(new PackedContainer<ComponentType>(componentContext->GetChunkCapacity()));
@@ -180,7 +180,7 @@ namespace decs
 			if (it == m_TypeIDsIndexes.end())
 			{
 				m_ComponentsCount += 1;
-				m_TypeIDsIndexes[id] = m_TypeIDs.size();
+				m_TypeIDsIndexes[id] = (uint32_t)m_TypeIDs.size();
 				m_TypeIDs.push_back(id);
 				m_ComponentContexts.push_back(componentContext);
 				m_PackedContainers.push_back(frompackedContainer->CreateOwnEmptyCopy());
@@ -284,8 +284,8 @@ namespace decs
 		template<typename ComponentType>
 		ComponentType* GetEntityComponent(const uint64_t& entityIndex)
 		{
-			const uint64_t componentIndex = FindTypeIndex<ComponentType>();
-			if (componentIndex != std::numeric_limits<uint64_t>::max())
+			const uint32_t componentIndex = FindTypeIndex<ComponentType>();
+			if (componentIndex != std::numeric_limits<uint32_t>::max())
 			{
 				return dynamic_cast<PackedContainer<ComponentType>*>(m_PackedContainers[componentIndex])->m_Data[entityIndex];
 			}
@@ -321,7 +321,7 @@ namespace decs
 			m_TypeIDs.reserve(m_ComponentsCount);
 			m_AddingOrderTypeIDs.reserve(m_ComponentsCount);
 
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint32_t i = 0; i < m_ComponentsCount; i++)
 			{
 				TypeID id = other.m_TypeIDs[i];
 				m_TypeIDs.push_back(id);

@@ -12,7 +12,7 @@ namespace decs
 	public:
 		ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData);
 		
-		ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData, const uint64_t& componentIndex);
+		ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData, const uint32_t& componentIndex);
 		
 		ComponentRefAsVoid(const TypeID& typeID, Entity& entity);
 
@@ -36,7 +36,7 @@ namespace decs
 		EntityData* m_EntityData = nullptr;
 		Archetype* m_Archetype = nullptr;
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
-		uint64_t m_ComponentIndex = std::numeric_limits<uint64_t>::max();
+		uint32_t m_ComponentIndex = Limits::MaxComponentCount;
 		PackedContainerBase* m_PackedContainer = nullptr;
 
 	private:
@@ -59,7 +59,7 @@ namespace decs
 			}
 			m_IndexInArchetype = m_EntityData->m_IndexInArchetype;
 
-			if (m_Archetype == nullptr || m_ComponentIndex == std::numeric_limits<uint64_t>::max())
+			if (m_Archetype == nullptr || m_ComponentIndex == std::numeric_limits<uint32_t>::max())
 			{
 				m_PackedContainer = nullptr;
 			}
@@ -74,7 +74,7 @@ namespace decs
 			m_Archetype = m_EntityData->m_Archetype;
 			m_IndexInArchetype = m_EntityData->m_IndexInArchetype;
 
-			if (m_Archetype == nullptr || m_ComponentIndex == std::numeric_limits<uint64_t>::max())
+			if (m_Archetype == nullptr || m_ComponentIndex == std::numeric_limits<uint32_t>::max())
 			{
 				m_PackedContainer = nullptr;
 			}
@@ -93,7 +93,7 @@ namespace decs
 				if (m_Archetype != nullptr)
 				{
 					m_ComponentIndex = m_Archetype->FindTypeIndex(m_TypeID);
-					if (m_ComponentIndex != std::numeric_limits<uint64_t>::max())
+					if (m_ComponentIndex != std::numeric_limits<uint32_t>::max())
 					{
 						SetComponentFromValidData();
 					}

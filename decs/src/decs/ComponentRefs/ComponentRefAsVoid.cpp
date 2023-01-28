@@ -11,7 +11,7 @@ namespace decs
 		FetchWhenIsInvalid();
 	}
 
-	ComponentRefAsVoid::ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData, const uint64_t& componentIndex) :
+	ComponentRefAsVoid::ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData, const uint32_t& componentIndex) :
 		m_TypeID(typeID),
 		m_EntityData(&entityData),
 		m_ComponentIndex(componentIndex)

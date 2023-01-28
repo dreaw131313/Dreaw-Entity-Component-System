@@ -34,6 +34,8 @@ namespace decs
 	//using ecsSet = ska::flat_hash_set<Key>;
 	//using ecsSet = std::unordered_set<Key>;
 
+	using EntityID = uint64_t;
+	using TypeID = uint64_t;
 
 	namespace MemorySize
 	{
@@ -42,8 +44,11 @@ namespace decs
 		constexpr uint64_t GigaByte = 1073741824;
 	}
 
-	using EntityID = uint64_t;
-	using TypeID = uint64_t;
+
+	namespace Limits
+	{
+		constexpr uint32_t MaxComponentCount = std::numeric_limits<uint32_t>::max();
+	}
 
 	// FNV-1a 32bit hashing algorithm.
 	constexpr TypeID fnv1a_32(char const* s, uint64_t count)

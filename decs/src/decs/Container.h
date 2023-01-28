@@ -242,13 +242,13 @@ namespace decs
 		struct SpawnDataState
 		{
 		public:
-			uint64_t m_CompRefsStart;
-			uint64_t m_ArchetypeIndex;
+			uint32_t m_CompRefsStart;
+			uint32_t m_ArchetypeIndex;
 
 		public:
 			SpawnDataState(SpawnData& spawnData) :
-				m_CompRefsStart(spawnData.m_EntityComponentRefs.size()),
-				m_ArchetypeIndex(spawnData.m_SpawnArchetypes.size())
+				m_CompRefsStart((uint32_t)spawnData.m_EntityComponentRefs.size()),
+				m_ArchetypeIndex((uint32_t)spawnData.m_SpawnArchetypes.size())
 			{
 
 			}
@@ -325,7 +325,7 @@ namespace decs
 				}
 
 				ComponentContextBase* newComponentContext;
-				uint64_t componentContainerIndex = 0;
+				uint32_t componentContainerIndex = 0;
 				Archetype* entityNewArchetype = GetArchetypeAfterAddComponent<ComponentType>(
 					entityData.m_Archetype,
 					newComponentContext,
@@ -381,8 +381,8 @@ namespace decs
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsValidToPerformComponentOperation())
 			{
-				uint64_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
-				if (findTypeIndex != std::numeric_limits<uint64_t>::max())
+				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
+				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
 				{
 					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[findTypeIndex];
 
@@ -397,8 +397,8 @@ namespace decs
 		{
 			if (entityData.m_Archetype != nullptr)
 			{
-				uint64_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
-				if (findTypeIndex != std::numeric_limits<uint64_t>::max())
+				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
+				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
 				{
 					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[findTypeIndex];
 					return &container->m_Data[entityData.m_IndexInArchetype];
@@ -423,8 +423,8 @@ namespace decs
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsValidToPerformComponentOperation())
 			{
-				uint64_t index = entityData.m_Archetype->FindTypeIndex(Type<ComponentType>::ID());
-				return index != std::numeric_limits<uint64_t>::max();
+				uint32_t index = entityData.m_Archetype->FindTypeIndex(Type<ComponentType>::ID());
+				return index != std::numeric_limits<uint32_t>::max();
 			}
 			return false;
 		}
@@ -439,8 +439,8 @@ namespace decs
 			constexpr TypeID copmonentTypeID = Type<ComponentType>::ID();
 			if (entityData.m_Archetype != nullptr)
 			{
-				uint64_t componentIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
-				if (componentIndex != std::numeric_limits<uint64_t>::max())
+				uint32_t componentIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
+				if (componentIndex != std::numeric_limits<uint32_t>::max())
 				{
 					RemoveComponentFromDelayedToDestroy(entityData.m_ID, copmonentTypeID);
 					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[componentIndex];
@@ -467,7 +467,7 @@ namespace decs
 		Archetype* GetArchetypeAfterAddComponent(
 			Archetype* toArchetype,
 			ComponentContextBase*& newComponentContext,
-			uint64_t& componentContainerIndex
+			uint32_t& componentContainerIndex
 		)
 		{
 			Archetype* entityNewArchetype = nullptr;

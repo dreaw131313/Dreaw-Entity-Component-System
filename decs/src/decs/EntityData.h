@@ -42,8 +42,8 @@ namespace decs
 		inline ComponentType* GetComponent()
 		{
 			if (m_Archetype == nullptr) return nullptr;
-			uint64_t componentIndex = m_Archetype->FindTypeIndex<ComponentType>();
-			if (componentIndex == std::numeric_limits<uint64_t>::max()) return nullptr;
+			uint32_t componentIndex = m_Archetype->FindTypeIndex<ComponentType>();
+			if (componentIndex == std::numeric_limits<uint32_t>::max()) return nullptr;
 
 			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_Archetype->m_PackedContainers[componentIndex]);
 
@@ -51,7 +51,7 @@ namespace decs
 		}
 
 		template<typename ComponentType>
-		inline ComponentType* GetComponent(const uint64_t& componentIndex)
+		inline ComponentType* GetComponent(const uint32_t& componentIndex)
 		{
 			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_Archetype->m_PackedContainers[componentIndex]);
 

@@ -17,7 +17,7 @@ namespace decs
 
 		ComponentRef(
 			EntityData& entityData,
-			const uint64_t& componentIndex
+			const uint32_t& componentIndex
 		) :
 			m_EntityData(&entityData),
 			m_ComponentIndex(componentIndex)
@@ -55,7 +55,7 @@ namespace decs
 		EntityData* m_EntityData = nullptr;
 		Archetype* m_Archetype = nullptr;
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
-		uint64_t m_ComponentIndex = std::numeric_limits<uint64_t>::max();
+		uint32_t m_ComponentIndex = Limits::MaxComponentCount;
 		std::vector<ComponentType>* m_ComponentsVector = nullptr;
 
 	private:
@@ -78,7 +78,7 @@ namespace decs
 			}
 			m_IndexInArchetype = m_EntityData->m_IndexInArchetype;
 
-			if (m_Archetype == nullptr || m_ComponentIndex == std::numeric_limits<uint64_t>::max())
+			if (m_Archetype == nullptr || m_ComponentIndex == std::numeric_limits<uint32_t>::max())
 			{
 				m_ComponentsVector = nullptr;
 			}
@@ -93,7 +93,7 @@ namespace decs
 			m_Archetype = m_EntityData->m_Archetype;
 			m_IndexInArchetype = m_EntityData->m_IndexInArchetype;
 
-			if (m_Archetype == nullptr || m_ComponentIndex == std::numeric_limits<uint64_t>::max())
+			if (m_Archetype == nullptr || m_ComponentIndex == std::numeric_limits<uint32_t>::max())
 			{
 				m_ComponentsVector = nullptr;
 			}
@@ -112,7 +112,7 @@ namespace decs
 				if (m_Archetype != nullptr)
 				{
 					m_ComponentIndex = m_Archetype->FindTypeIndex<ComponentType>();
-					if (m_ComponentIndex != std::numeric_limits<uint64_t>::max())
+					if (m_ComponentIndex != std::numeric_limits<uint32_t>::max())
 					{
 						SetComponentFromValidData();
 					}

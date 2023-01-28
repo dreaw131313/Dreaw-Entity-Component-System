@@ -347,7 +347,7 @@ namespace decs
 			m_SpawnData.m_SpawnArchetypes.push_back(m_ArchetypesMap.FindArchetypeFromOther(*prefabEntityData.m_Archetype, m_ComponentContextManager, m_ObserversManager));
 		}
 
-		for (uint64_t i = 0; i < componentsCount; i++)
+		for (uint32_t i = 0; i < componentsCount; i++)
 		{
 			TypeID typeID = prefabArchetype.ComponentsTypes()[i];
 			m_SpawnData.m_PrefabComponentRefs.emplace_back(
@@ -371,7 +371,7 @@ namespace decs
 		archetype->AddEntityData(spawnedEntityData.m_ID, spawnedEntityData.m_IsActive);
 
 		std::vector<PackedContainerBase*>& archetypeContainers = archetype->m_PackedContainers;
-		for (uint64_t i = spawnState.m_CompRefsStart; i < componentsCount; i++)
+		for (uint32_t i = spawnState.m_CompRefsStart; i < componentsCount; i++)
 		{
 			void* componentPtr = archetypeContainers[i]->EmplaceFromVoid(m_SpawnData.m_PrefabComponentRefs[i].Get());
 			m_SpawnData.m_EntityComponentRefs.emplace_back(archetype->m_TypeIDs[i], spawnedEntityData, i);
@@ -385,8 +385,8 @@ namespace decs
 		EntityData& entityData = *entity.m_EntityData;
 		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
 
-		uint64_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
-		if (compIdxInArch == std::numeric_limits<uint64_t>::max()) return false;
+		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
+		if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
 
 		ComponentContextBase* componentContext = entityData.m_Archetype->m_ComponentContexts[compIdxInArch];
 		auto& container = entityData.m_Archetype->m_PackedContainers[compIdxInArch];
@@ -587,12 +587,12 @@ namespace decs
 
 			// fill entity component refs, component refs are needed couse if component will be added to current entity it will chang its archetype.
 			m_ComponentRefsToInvokeObserverCallbacks.clear();
-			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
+			for (uint32_t i = 0; i < archetypeComponentsCount; i++)
 			{
 				m_ComponentRefsToInvokeObserverCallbacks.emplace_back(archetype.m_TypeIDs[i], *entity.m_EntityData, i);
 			}
 
-			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
+			for (uint32_t i = 0; i < archetypeComponentsCount; i++)
 			{
 				auto& compRef = m_ComponentRefsToInvokeObserverCallbacks[i];
 				auto& compContext = archetype.m_ComponentContexts[i];

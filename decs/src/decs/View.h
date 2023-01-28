@@ -310,10 +310,10 @@ namespace decs
 				{
 					ArchetypeContext& context = m_ArchetypesContexts.emplace_back();
 
-					for (uint64_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
+					for (uint32_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
 					{
 						auto typeIDIndex = archetype.FindTypeIndex(m_Includes.IDs()[typeIdx]);
-						if (typeIDIndex == std::numeric_limits<uint64_t>::max())
+						if (typeIDIndex == std::numeric_limits<uint32_t>::max())
 						{
 							m_ArchetypesContexts.pop_back();
 							return false;
@@ -420,10 +420,10 @@ namespace decs
 				{
 					ArchetypeContext& context = m_ArchetypesContexts.emplace_back();
 
-					for (uint64_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
+					for (uint32_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
 					{
 						auto typeIDIndex = archetype.FindTypeIndex(m_Includes.IDs()[typeIdx]);
-						if (typeIDIndex == std::numeric_limits<uint64_t>::max())
+						if (typeIDIndex == std::numeric_limits<uint32_t>::max())
 						{
 							m_ArchetypesContexts.pop_back();
 							return false;
