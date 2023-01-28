@@ -43,7 +43,7 @@ namespace decs
 }
 
 template<>
-struct std::hash<decs::DelayedComponentPair>
+struct ::std::hash<decs::DelayedComponentPair>
 {
 	std::size_t operator()(const decs::DelayedComponentPair& data) const
 	{
@@ -52,6 +52,7 @@ struct std::hash<decs::DelayedComponentPair>
 		return eIDHash ^ (typeIdHash + 0x9e3779b9 + (eIDHash << 6) + (eIDHash >> 2));
 	}
 };
+
 
 namespace decs
 {
@@ -66,23 +67,23 @@ namespace decs
 	public:
 		Container();
 
-		Container(const Container& other) = delete;
-		Container(Container&& other) = delete;
-
 		Container(
 			const uint64_t& enititesChunkSize,
 			const uint64_t& componentContainerChunkSize,
-			const uint64_t m_EmptyEntitiesChunkSize = 100
+			const uint64_t& m_EmptyEntitiesChunkSize = 100
 		);
 
 		Container(
 			EntityManager* entityManager,
 			ComponentContextsManager* componentContextsManager,
 			const uint64_t& componentContainerChunkSize,
-			const uint64_t m_EmptyEntitiesChunkSize = 100
+			const uint64_t& m_EmptyEntitiesChunkSize = 100
 		);
 
 		~Container();
+
+		Container(const Container& other) = delete;
+		Container(Container&& other) = delete;
 
 		Container& operator = (const Container& other) = delete;
 		Container& operator = (Container&& other) = delete;
@@ -217,7 +218,7 @@ namespace decs
 				m_SpawnArchetypes.clear();
 			}
 
-			void RemoveSpawnState(const uint64_t& archetypeIdx, const uint64_t& refsStartIdx)
+			void PopBackSpawnState(const uint64_t& archetypeIdx, const uint64_t& refsStartIdx)
 			{
 				if (archetypeIdx == 0)
 				{
@@ -312,12 +313,12 @@ namespace decs
 
 			if (entityData.IsValidToPerformComponentOperation())
 			{
-				/*if (m_PerformDelayedDestruction)
+				if (m_PerformDelayedDestruction)
 				{
 					ComponentType* delayedToDestroyComponent = TryAddComponentDelayedToDestroy<ComponentType>(entityData);
 					if (delayedToDestroyComponent != nullptr) { return delayedToDestroyComponent; }
 				}
-				else*/
+				else
 				{
 					auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
 					if (currentComponent != nullptr) return currentComponent;
@@ -430,7 +431,7 @@ namespace decs
 
 		void InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData);
 
-		template<typename ComponentType, typename ...Args>
+		template<typename ComponentType>
 		ComponentType* TryAddComponentDelayedToDestroy(
 			EntityData& entityData
 		)
@@ -438,16 +439,12 @@ namespace decs
 			constexpr TypeID copmonentTypeID = Type<ComponentType>::ID();
 			if (entityData.m_Archetype != nullptr)
 			{
-				uint64_t componentIndex = entityData.m_Archetype->FindTypeIndex(copmonentTypeID);
+				uint64_t componentIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
 				if (componentIndex != std::numeric_limits<uint64_t>::max())
 				{
-					/*auto& componentRef = entityData.GetComponentRef(componentIndex);
-					if (componentRef.m_DelayedToDestroy)
-					{
-						RemoveComponentFromDelayedToDestroy(entityData.m_ID, copmonentTypeID);
-						componentRef.m_DelayedToDestroy = false;
-					}
-					return reinterpret_cast<ComponentType*>(componentRef.ComponentPointer);*/
+					RemoveComponentFromDelayedToDestroy(entityData.m_ID, copmonentTypeID);
+					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[componentIndex];
+					return &container->m_Data[entityData.m_IndexInArchetype];
 				}
 			}
 
@@ -519,6 +516,8 @@ namespace decs
 #pragma region OBSERVERS
 	private:
 		ObserversManager* m_ObserversManager = nullptr;
+		std::vector<ComponentRefAsVoid> m_ComponentRefsToInvokeObserverCallbacks;
+
 	public:
 		bool SetObserversManager(ObserversManager* observersManager);
 
@@ -567,9 +566,8 @@ namespace decs
 
 #pragma region DELAYED DESTROY:
 	private:
-
-		ecsSet<DelayedComponentPair> m_DelayedComponentsToDestroy;
 		std::vector<EntityID> m_DelayedEntitiesToDestroy;
+		ecsSet<DelayedComponentPair> m_DelayedComponentsToDestroy;
 
 		bool m_PerformDelayedDestruction = false;
 
@@ -582,11 +580,15 @@ namespace decs
 
 		void AddEntityToDelayedDestroy(const EntityID& entityID);
 
-		void AddComponentToDelayedDestroy(const EntityID& entityID, const TypeID typeID);
-
-		inline void RemoveComponentFromDelayedToDestroy(const EntityID& entityID, const TypeID& typeID)
+		inline bool AddComponentToDelayedDestroy(const EntityID& entityID, const TypeID typeID)
 		{
-			m_DelayedComponentsToDestroy.erase({ entityID, typeID });
+			auto pair = m_DelayedComponentsToDestroy.insert({ entityID, typeID });
+			return pair.second;
+		}
+
+		inline bool RemoveComponentFromDelayedToDestroy(const EntityID& entityID, const TypeID& typeID)
+		{
+			return m_DelayedComponentsToDestroy.erase({ entityID, typeID });
 		}
 #pragma endregion
 	};

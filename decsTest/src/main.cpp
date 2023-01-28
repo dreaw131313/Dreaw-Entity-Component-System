@@ -2,15 +2,12 @@
 
 #include "decs/decs.h"
 
-#include "decs\decs.h"
 
 #include "decs/PackedComponentContainer.h"
 
-constexpr char endline = '\n';
-
 void Print(const std::string& message)
 {
-	std::cout << message << endline;
+	std::cout << message << "\n";
 }
 
 class Position
@@ -55,7 +52,7 @@ int main()
 	{
 		Print("Entity ID: " + std::to_string(spawnedEntities[i].ID()));
 	}
-	std::cout << endline;
+	std::cout << "\n";
 
 	using ViewType = decs::View<int, Position>;
 	ViewType testView = { container };
@@ -63,12 +60,12 @@ int main()
 	auto lambda = [&] (const decs::Entity& e, int& i, Position& position)
 	{
 		i *= e.ID() + 1;
-		std::cout << "Entity ID: " << e.ID() << ": int = " << i << endline;
+		std::cout << "Entity ID: " << e.ID() << ": int = " << i << "\n";
 	};
 	auto lambda2 = [&] (int& i, Position& position)
 	{
 		i *= 2;
-		std::cout << "int = " << i << endline;
+		std::cout << "int = " << i << "\n";
 	};
 
 	testView.ForEachForward(lambda);
@@ -80,12 +77,12 @@ int main()
 	std::vector< ViewType::BatchIterator> iterators;
 	testView.CreateBatchIterators(iterators, 2, 3);
 
-	std::cout << endline;
+	std::cout << "\n";
 	for (auto& it : iterators)
 	{
 		it.ForEach(lambda);
 	}
-	std::cout << endline;
+	std::cout << "\n";
 	for (auto& it : iterators)
 	{
 		it.ForEach(lambda2);
