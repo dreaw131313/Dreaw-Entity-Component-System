@@ -24,7 +24,6 @@ namespace decs
 		inline virtual uint64_t Size() = 0;
 		inline virtual void Reserve(const uint64_t& newCapacity) = 0;
 
-
 		inline virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept = 0;
 		inline virtual void* GetComponentAsVoid(const uint64_t& index) = 0;
 

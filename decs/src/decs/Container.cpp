@@ -660,5 +660,4 @@ namespace decs
 		m_DelayedEntitiesToDestroy.push_back(entityID);
 	}
 
-
 }
