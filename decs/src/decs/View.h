@@ -313,7 +313,7 @@ namespace decs
 					for (uint32_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
 					{
 						auto typeIDIndex = archetype.FindTypeIndex(m_Includes.IDs()[typeIdx]);
-						if (typeIDIndex == std::numeric_limits<uint32_t>::max())
+						if (typeIDIndex == Limits::MaxComponentCount)
 						{
 							m_ArchetypesContexts.pop_back();
 							return false;
@@ -423,7 +423,7 @@ namespace decs
 					for (uint32_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
 					{
 						auto typeIDIndex = archetype.FindTypeIndex(m_Includes.IDs()[typeIdx]);
-						if (typeIDIndex == std::numeric_limits<uint32_t>::max())
+						if (typeIDIndex == Limits::MaxComponentCount)
 						{
 							m_ArchetypesContexts.pop_back();
 							return false;

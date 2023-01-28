@@ -382,7 +382,7 @@ namespace decs
 			if (entityData.m_Archetype != nullptr && entityData.IsValidToPerformComponentOperation())
 			{
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
-				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
+				if (findTypeIndex != Limits::MaxComponentCount)
 				{
 					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[findTypeIndex];
 
@@ -398,7 +398,7 @@ namespace decs
 			if (entityData.m_Archetype != nullptr)
 			{
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
-				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
+				if (findTypeIndex != Limits::MaxComponentCount)
 				{
 					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[findTypeIndex];
 					return &container->m_Data[entityData.m_IndexInArchetype];
@@ -424,7 +424,7 @@ namespace decs
 			if (entityData.m_Archetype != nullptr && entityData.IsValidToPerformComponentOperation())
 			{
 				uint32_t index = entityData.m_Archetype->FindTypeIndex(Type<ComponentType>::ID());
-				return index != std::numeric_limits<uint32_t>::max();
+				return index != Limits::MaxComponentCount;
 			}
 			return false;
 		}
@@ -440,7 +440,7 @@ namespace decs
 			if (entityData.m_Archetype != nullptr)
 			{
 				uint32_t componentIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
-				if (componentIndex != std::numeric_limits<uint32_t>::max())
+				if (componentIndex != Limits::MaxComponentCount)
 				{
 					RemoveComponentFromDelayedToDestroy(entityData.m_ID, copmonentTypeID);
 					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[componentIndex];

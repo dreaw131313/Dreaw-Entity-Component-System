@@ -119,12 +119,12 @@ namespace decs
 				for (uint32_t i = 0; i < m_ComponentsCount; i++)
 					if (m_TypeIDs[i] == typeID) return i;
 
-				return std::numeric_limits<uint32_t>::max();
+				return Limits::MaxComponentCount;
 			}
 
 			auto it = m_TypeIDsIndexes.find(typeID);
 			if (it == m_TypeIDsIndexes.end())
-				return std::numeric_limits<uint32_t>::max();
+				return Limits::MaxComponentCount;
 
 			return it->second;
 		}
@@ -138,12 +138,12 @@ namespace decs
 				for (uint32_t i = 0; i < m_ComponentsCount; i++)
 					if (m_TypeIDs[i] == typeID) return i;
 
-				return std::numeric_limits<uint32_t>::max();
+				return Limits::MaxComponentCount;
 			}
 
 			auto it = m_TypeIDsIndexes.find(typeID);
 			if (it == m_TypeIDsIndexes.end())
-				return std::numeric_limits<uint32_t>::max();
+				return Limits::MaxComponentCount;
 
 			return it->second;
 		}
@@ -285,7 +285,7 @@ namespace decs
 		ComponentType* GetEntityComponent(const uint64_t& entityIndex)
 		{
 			const uint32_t componentIndex = FindTypeIndex<ComponentType>();
-			if (componentIndex != std::numeric_limits<uint32_t>::max())
+			if (componentIndex != Limits::MaxComponentCount)
 			{
 				return dynamic_cast<PackedContainer<ComponentType>*>(m_PackedContainers[componentIndex])->m_Data[entityIndex];
 			}

@@ -43,7 +43,7 @@ namespace decs
 		{
 			if (m_Archetype == nullptr) return nullptr;
 			uint32_t componentIndex = m_Archetype->FindTypeIndex<ComponentType>();
-			if (componentIndex == std::numeric_limits<uint32_t>::max()) return nullptr;
+			if (componentIndex == Limits::MaxComponentCount) return nullptr;
 
 			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_Archetype->m_PackedContainers[componentIndex]);
 
