@@ -18,17 +18,40 @@ public:
 public:
 	Position()
 	{
-		//Print("Position Constructor");
+		Print("Position Constructor");
 	}
 
 	Position(float x, float y) : X(x), Y(y)
 	{
-		//Print("Position Constructor");
+		Print("Position Constructor");
+	}
+
+
+	Position(const Position& other)
+	{
+		Print("Copy Constructor");
+	}
+
+	Position(Position&& other) noexcept
+	{
+		Print("Move Constructor");
 	}
 
 	~Position()
 	{
-		//Print("Position Destructor");
+		Print("Position Destructor");
+	}
+
+	Position& operator=(const Position& other)
+	{
+		Print("Copy assigment");
+		return *this;
+	}
+
+	Position& operator=(Position&& other) noexcept
+	{
+		Print("Move assigment");
+		return *this;
 	}
 };
 
@@ -41,15 +64,28 @@ int main()
 	prefab.AddComponent<Position>(111.f, 111.f);
 	prefab.AddComponent<int>(111);
 	prefab.AddComponent<float>(1.f);
-
 	prefab.GetComponent<int>();
 
 	std::vector<decs::Entity> spawnedEntities = {};
-	container.Spawn(prefab, spawnedEntities, 3, true);
+	//container.Spawn(prefab, spawnedEntities, 3, true);
+	decs::Entity testEntity = container.Spawn(prefab);
+	std::cout << "\n";
+	container.Spawn(prefab);
+	std::cout << "\n";
+	container.Spawn(prefab);
+	std::cout << "\n";
+	container.Spawn(prefab);
+	std::cout << "\n";
+	container.Spawn(prefab);
+	std::cout << "\n";
+	container.Spawn(prefab);
+
+	std::cout << "\n";
+	testEntity.Destroy();
 
 	decs::ArchetypesShrinkToFitState shrinkState = { 1, 1.f };
 
-	do
+	/*do
 	{
 		container.ShrinkArchetypesToFit(shrinkState); // naprawiæ bo nie dzia³a
 	} while (!shrinkState.IsEnded());
@@ -95,7 +131,7 @@ int main()
 		it.ForEach(lambda2);
 	}
 
-	container.DestroyOwnedEntities();
+	container.DestroyOwnedEntities();*/
 
 	return 0;
 }
