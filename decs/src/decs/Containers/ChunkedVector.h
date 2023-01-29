@@ -255,12 +255,14 @@ namespace decs
 		inline uint64_t Capacity() const { return m_ChunksCount * m_ChunkCapacity; }
 		inline uint64_t ChunksCount() const { return m_ChunksCount; }
 		inline uint64_t ChuknCapacity() const { return m_ChunkCapacity; }
+		inline uint64_t ChunkCapacity() const { return m_ChunkCapacity; }
 		inline uint64_t Size() const { return m_CreatedElements; }
 		inline bool IsEmpty()const { return m_CreatedElements == 0; }
 
 		template<typename... Args>
 		T& EmplaceBack(Args&&... args)
 		{
+			if (m_ChunksCount == 0)AddChunk();
 			Chunk& b = m_Chunks.back();
 
 			m_CreatedElements += 1;
@@ -277,6 +279,7 @@ namespace decs
 		template<typename... Args>
 		EmplaceBackData EmplaceBack_CR(Args&&... args)
 		{
+			if (m_ChunksCount == 0)AddChunk();
 			Chunk& b = m_Chunks.back();
 
 			m_CreatedElements += 1;

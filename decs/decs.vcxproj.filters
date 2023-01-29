@@ -21,10 +21,7 @@
     <ClInclude Include="src\decs\View.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Archetype.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\ComponentContainer.h">
+    <ClInclude Include="src\decs\ComponentContainers\StableContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\ComponentContext.h">
@@ -42,9 +39,6 @@
     <ClInclude Include="src\decs\Entity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\EntityCommandBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decs\EntityData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -52,9 +46,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Type.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\TypeGroup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\ThirdParty\skarupke\bytell_hash_map.hpp">
@@ -75,12 +66,36 @@
     <ClInclude Include="src\decs\ObserversManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\decs\Archetypes\Archetype.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\ComponentRefs\ComponentRef.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\ComponentRefs\ComponentRefAsVoid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\ComponentContextsManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\Enums.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\ComponentContainers\PackedContainer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\decs\Container.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\decs\EntityManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

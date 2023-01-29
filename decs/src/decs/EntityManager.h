@@ -1,7 +1,7 @@
 #pragma once
 #include "Core.h"
 #include "EntityData.h"
-#include "Archetype.h"
+#include "Archetypes\Archetype.h"
 #include "Containers\ChunkedVector.h"
 
 namespace decs
@@ -50,7 +50,7 @@ namespace decs
 			if (data.m_IsActive != isActive)
 			{
 				data.m_IsActive = isActive;
-				auto& archEntityData = data.m_CurrentArchetype->m_EntitiesData[data.m_IndexInArchetype];
+				auto& archEntityData = data.m_Archetype->m_EntitiesData[data.m_IndexInArchetype];
 				archEntityData.m_IsActive = isActive;
 				return true;
 			}
@@ -73,12 +73,12 @@ namespace decs
 			return std::numeric_limits<uint32_t>::max();
 		}
 
-		inline uint32_t GetComponentsCount(const EntityID& entity) const
+		inline uint32_t ComponentsCount(const EntityID& entity) const
 		{
 			auto& data = m_EntityData[entity];
-			if (data.m_IsAlive && data.m_CurrentArchetype != nullptr)
+			if (data.m_IsAlive && data.m_Archetype != nullptr)
 			{
-				return data.m_CurrentArchetype->GetComponentsCount();
+				return data.m_Archetype->ComponentsCount();
 			}
 			return 0;
 		}

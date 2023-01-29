@@ -12,6 +12,9 @@ namespace decs
 		template<typename ...Types>
 		friend class View;
 		friend class Container;
+		template<typename ComponentType>
+		friend class ComponentRef;
+		friend class ComponentRefAsVoid;
 
 	public:
 		Entity()
@@ -28,17 +31,27 @@ namespace decs
 
 		}
 
+		Entity(EntityData& entityData, Container* container) :
+			m_ID(entityData.ID()),
+			m_Container(container),
+			m_EntityData(&entityData),
+			m_Version(m_EntityData->m_Version)
+		{
+
+		}
+
+	public:
+
 		bool operator==(const Entity& rhs)const
 		{
 			return this->m_Container == rhs.m_Container && this->m_ID == rhs.m_ID && this->m_Version == rhs.m_Version;
 		}
 
 		inline EntityID ID() const { return m_ID; }
+
 		inline Container* GetContainer() const { return m_Container; }
 
 		inline bool IsNull() const { return !IsValid() || !m_EntityData->IsAlive(); }
-
-		inline bool IsNotNull() const { return IsValid() && m_EntityData->IsAlive(); }
 
 		inline bool IsActive() const
 		{
@@ -66,7 +79,7 @@ namespace decs
 		inline T* GetComponent() const
 		{
 			if (IsValid())
-				return m_Container->GetComponent<T>(m_ID);
+				return m_Container->GetComponent<T>(*m_EntityData);
 
 			return nullptr;
 		}
@@ -74,14 +87,14 @@ namespace decs
 		template<typename T>
 		inline bool HasComponent() const
 		{
-			return IsValid() && m_Container->HasComponent<T>(m_ID);
+			return IsValid() && m_Container->HasComponent<T>(*m_EntityData);
 		}
 
 		template<typename T>
 		inline bool TryGetComponent(T*& component) const
 		{
 			if (IsValid())
-				component = m_Container->GetComponent<T>(m_ID);
+				component = m_Container->GetComponent<T>(*m_EntityData);
 			else
 				component = nullptr;
 
@@ -92,7 +105,7 @@ namespace decs
 		inline T* AddComponent(Args&&... args)
 		{
 			if (IsValid())
-				return m_Container->AddComponent<T>(m_ID, std::forward<Args>(args)...);
+				return m_Container->AddComponent<T>(*m_EntityData, std::forward<Args>(args)...);
 
 			return nullptr;
 		}
@@ -109,10 +122,10 @@ namespace decs
 			return m_Version;
 		}
 
-		inline uint32_t GetComponentsCount()
+		inline uint32_t ComponentsCount()
 		{
 			if (IsValid())
-				return m_Container->GetComponentsCount(m_ID);
+				return m_Container->ComponentsCount(m_ID);
 			return 0;
 		}
 

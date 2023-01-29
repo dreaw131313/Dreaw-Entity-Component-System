@@ -6,4 +6,6 @@
 #include "View.h"
 #include "Observers.h"
 #include "ObserversManager.h"
-#include "EntityCommandBuffer.h"
+#include "ComponentRefs\ComponentRef.h"
+#include "ComponentRefs\ComponentRefAsVoid.h"
+#include "Enums.h"

@@ -1,4 +1,4 @@
- #pragma once 
+#pragma once 
 #include <stdint.h>
 #include <unordered_map>
 #include <unordered_set>
@@ -15,33 +15,32 @@
 
 namespace decs
 {
-	namespace MemorySize
-	{
-		constexpr uint64_t KiloByte = 1024;
-		constexpr uint64_t MegaByte = 1048576;
-		constexpr uint64_t GigaByte = 1073741824;
-	}
-
-	using EntityID = uint64_t;
-	using TypeID = uint64_t;
-
-	template<typename Key, typename Value>
-	//using ecsMap = std::unordered_map<Key, Value>;
-	//using ecsMap = ska::unordered_map<Key, Value>;
-	using ecsMap = ska::bytell_hash_map<Key, Value>;
-	//using ecsMap = ska::flat_hash_map<Key, Value>;
-
-	template<typename Key>
-	//using ecsSet = std::unordered_set<Key>;
-	//using ecsSet = std::unordered_set<Key>;
-	using ecsSet = ska::bytell_hash_set<Key>;
-	//using ecsSet = ska::flat_hash_set<Key>;
-
 #if defined _MSC_VER
 #   define FULL_FUNCTION_NAME __FUNCSIG__
 #elif defined __clang__ || (defined __GNUC__)
 #   define FULL_FUNCTION_NAME __PRETTY_FUNCTION__
 #endif
+
+
+	template<typename Key, typename Value>
+	//using ecsMap = ska::bytell_hash_map<Key, Value>;
+	//using ecsMap = ska::unordered_map<Key, Value>;
+	//using ecsMap = ska::flat_hash_map<Key, Value>;
+	using ecsMap = std::unordered_map<Key, Value>;
+
+	template<typename Key>
+	//using ecsSet = ska::bytell_hash_set<Key>;
+	//using ecsSet = std::unordered_set<Key>;
+	//using ecsSet = ska::flat_hash_set<Key>;
+	using ecsSet = std::unordered_set<Key>;
+
+	using EntityID = uint64_t;
+	using TypeID = uint64_t;
+
+	namespace Limits
+	{
+		constexpr uint32_t MaxComponentCount = std::numeric_limits<uint32_t>::max();
+	}
 
 	// FNV-1a 32bit hashing algorithm.
 	constexpr TypeID fnv1a_32(char const* s, uint64_t count)
