@@ -47,6 +47,13 @@ int main()
 	std::vector<decs::Entity> spawnedEntities = {};
 	container.Spawn(prefab, spawnedEntities, 3, true);
 
+	decs::ArchetypesShrinkToFitState shrinkState = { 1, 1.f };
+
+	do
+	{
+		container.ShrinkArchetypesToFit(shrinkState); // naprawiæ bo nie dzia³a
+	} while (!shrinkState.IsEnded());
+
 	Print("Spawned entities count " + std::to_string(spawnedEntities.size()));
 	for (int i = 0; i < spawnedEntities.size(); i++)
 	{

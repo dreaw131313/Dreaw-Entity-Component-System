@@ -53,7 +53,6 @@ struct ::std::hash<decs::DelayedComponentPair>
 	}
 };
 
-
 namespace decs
 {
 	class Entity;
@@ -455,7 +454,15 @@ namespace decs
 
 #pragma region ARCHETYPES:
 	public:
-		void ShrinkArchetypesToFit();
+		inline void ShrinkArchetypesToFit()
+		{
+			m_ArchetypesMap.ShrinkArchetypesToFit();
+		}
+
+		inline void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state)
+		{
+			m_ArchetypesMap.ShrinkArchetypesToFit(state);
+		}
 
 	private:
 		ArchetypesMap m_ArchetypesMap;

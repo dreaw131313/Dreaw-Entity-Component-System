@@ -107,6 +107,12 @@ namespace decs
 		inline uint32_t EntitiesCount() const { return m_EntitiesCount; }
 		inline uint32_t EntitesCountToInvokeCallbacks() const { return m_EntitesCountToInitialize; }
 
+		inline float GetLoadFactor()const
+		{
+			if (m_EntitiesData.capacity() == 0) return 1.f;
+			return (float)m_EntitiesCount / (float)m_EntitiesData.capacity();
+		}
+
 		inline bool ContainType(const TypeID& typeID) const
 		{
 			return m_TypeIDsIndexes.find(typeID) != m_TypeIDsIndexes.end();

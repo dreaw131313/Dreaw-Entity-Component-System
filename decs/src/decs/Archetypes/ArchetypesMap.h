@@ -7,6 +7,56 @@
 
 namespace decs
 {
+	class ArchetypesShrinkToFitState
+	{
+		friend class ArchetypesMap;
+	private:
+		enum class State
+		{
+			Started,
+			Ended
+		};
+
+	public:
+		ArchetypesShrinkToFitState()
+		{
+
+		}
+
+		ArchetypesShrinkToFitState(const uint64_t& archetypesToShrinkInOneCall, const float& maxArchetypeLoadFactor) :
+			m_ArchetypesToShrinkInOneCall(archetypesToShrinkInOneCall),
+			m_MaxArchetypeLoadFactor(maxArchetypeLoadFactor)
+		{
+
+		}
+
+		void Reset()
+		{
+			m_State = State::Ended;
+			m_ArchetypesCountToShrink = 0;
+			m_CurretnArchetypeIndex = 0;
+		}
+
+		inline bool IsEnded()
+		{
+			return m_State == State::Ended;
+		}
+
+	private:
+		State m_State = State::Ended;
+		uint64_t m_ArchetypesCountToShrink = 0;
+		uint64_t m_ArchetypesToShrinkInOneCall = 100;
+		uint64_t m_CurretnArchetypeIndex = 0;
+		float m_MaxArchetypeLoadFactor = 1.f;
+
+	private:
+		void Start(const uint64_t& archetypesToShrink)
+		{
+			m_State = State::Started;
+			m_ArchetypesCountToShrink = archetypesToShrink;
+			m_CurretnArchetypeIndex = 0;
+		}
+	};
 
 	class ArchetypesMap
 	{
@@ -45,13 +95,71 @@ namespace decs
 			return emptyArchetypesCount;
 		}
 
+		void ShrinkArchetypesToFit()
+		{
+			if (ArchetypesCount() == 0)
+			{
+				return;
+			}
+
+			uint64_t chunksCount = m_Archetypes.ChunksCount();
+			for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
+			{
+				uint64_t chunkSize = m_Archetypes.GetChunkSize(chunkIdx);
+				Archetype* chunk = m_Archetypes.GetChunk(chunkIdx);
+
+				for (uint64_t idx = 0; idx < chunkSize; idx++)
+				{
+					Archetype& archetype = chunk[idx];
+					archetype.ShrinkToFit();
+				}
+			}
+		}
+
+		void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state)
+		{
+			if (ArchetypesCount() == 0)
+			{
+				return;
+			}
+
+			if (state.m_State == ArchetypesShrinkToFitState::State::Ended)
+			{
+				state.Start(m_Archetypes.Size());
+			}
+
+			int archetypesToShrink = (int)state.m_ArchetypesToShrinkInOneCall;
+
+			for (uint64_t idx = state.m_CurretnArchetypeIndex; idx < state.m_ArchetypesCountToShrink; idx++)
+			{
+				state.m_CurretnArchetypeIndex += 1;
+				Archetype& archetype = m_Archetypes[idx];
+
+				float loadFactor = archetype.GetLoadFactor();
+				if (loadFactor <= state.m_MaxArchetypeLoadFactor)
+				{
+					archetype.ShrinkToFit();
+					archetypesToShrink--;
+				}
+
+				if (archetypesToShrink <= 0)
+				{
+					break;
+				}
+			}
+
+			if (state.m_CurretnArchetypeIndex >= state.m_ArchetypesCountToShrink)
+			{
+				state.Reset();
+			}
+		}
+
 	private:
 		ChunkedVector<Archetype> m_Archetypes;
 		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes;
 		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount;
 
 	private:
-
 #pragma region UTILITY
 		void MakeArchetypeEdges(Archetype& archetype)
 		{
@@ -242,7 +350,7 @@ namespace decs
 
 				for (uint64_t i = 1; i < archetype->ComponentsCount() - 1; i++)
 				{
-					archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype);
+					archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
 				}
 
 				MakeArchetypeEdges(*archetype);
@@ -282,13 +390,14 @@ namespace decs
 		Archetype* CreateSingleComponentArchetype(Archetype& from)
 		{
 			uint64_t typeID = from.m_AddingOrderTypeIDs[0];
+			uint64_t typeIndex = from.FindTypeIndex(typeID);
 			auto& archetype = m_SingleComponentArchetypes[typeID];
 			if (archetype != nullptr) return archetype;
 			archetype = &m_Archetypes.EmplaceBack();
-			archetype->AddTypeID(typeID, from.m_PackedContainers[0], from.m_ComponentContexts[0]);
+			archetype->AddTypeID(typeID, from.m_PackedContainers[typeIndex], from.m_ComponentContexts[typeIndex]);
 			AddArchetypeToCorrectContainers(*archetype, false);
 			MakeArchetypeEdges(*archetype);
-			archetype->AddTypeToAddingComponentOrder(from.m_AddingOrderTypeIDs[0]);
+			archetype->AddTypeToAddingComponentOrder(typeID);
 			return archetype;
 		}
 
@@ -341,11 +450,12 @@ namespace decs
 
 		inline Archetype* CreateArchetypeAfterAddComponent(
 			Archetype& toArchetype,
-			Archetype& archetypeToGetContainer
+			Archetype& archetypeToGetContainer,
+			uint64_t addedComponentIndex
 		)
 		{
-			uint64_t componentIndexToAdd = toArchetype.ComponentsCount();
-			TypeID addedComponentTypeID = archetypeToGetContainer.m_TypeIDs[componentIndexToAdd];
+			TypeID addedComponentTypeID = archetypeToGetContainer.m_AddingOrderTypeIDs[addedComponentIndex];
+			uint64_t componentIndexToAdd = archetypeToGetContainer.FindTypeIndex(addedComponentTypeID);
 
 			auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
 			if (edge != nullptr)
@@ -372,6 +482,7 @@ namespace decs
 				newArchetype.AddTypeID(currentTypeID, toArchetype.m_PackedContainers[i], toArchetype.m_ComponentContexts[i]);
 				newArchetype.AddTypeToAddingComponentOrder(toArchetype.m_AddingOrderTypeIDs[i]);
 			}
+
 			if (!isNewComponentTypeAdded)
 			{
 				newArchetype.AddTypeID(
