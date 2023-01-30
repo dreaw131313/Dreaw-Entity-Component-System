@@ -1,126 +1,37 @@
 #include <iostream>
 
 #include "decs/decs.h"
+#include "decs/ComponentContainers/StableContainer.h"
 
 
-void Print(const std::string& message)
-{
-	std::cout << message << std::endl;
-}
-
-class C1
+class Position
 {
 public:
-	decs::Entity entityToDestroy;
+	float X = 0, Y = 0;
 
-public:
-	C1()
+	Position()
+	{
+
+	}
+
+	Position(float x, float y) :X(x), Y(y)
 	{
 
 	}
 };
 
-class C1Observer :
-	public decs::CreateComponentObserver<C1>,
-	public decs::DestroyComponentObserver<C1>
-{
-public:
-	decs::Container* m_ECSContainer;
-	C1Observer(decs::Container* ecsContainer) :
-		m_ECSContainer(ecsContainer)
-	{
-
-	}
-public:
-	void OnCreateComponent(C1& c, decs::Entity& e) override
-	{
-		Print("C1 Create");
-
-		m_ECSContainer->Spawn(c.entityToDestroy);
-		if (!c.entityToDestroy.IsNull())
-		{
-			c.entityToDestroy.RemoveComponent<C1>();
-			c.entityToDestroy.AddComponent<C1>();
-			c.entityToDestroy.RemoveComponent<C1>();
-		}
-	}
-
-	void OnDestroyComponent(C1& c, decs::Entity& e) override
-	{
-		Print("C1 Destroy");
-	}
-
-};
 
 int main()
 {
-	Print("Start:");
+	decs::StableContainer<Position> stableContainer(2);
 
+	auto result1 = stableContainer.Emplace(1.f, 1.f);
+	auto result2 = stableContainer.Emplace(1.f, 1.f);
+	auto result3 = stableContainer.Emplace(1.f, 1.f);
+	auto result4 = stableContainer.Emplace(1.f, 1.f);
+	auto result5 = stableContainer.Emplace(1.f, 1.f);
 
-	decs::Container container = {};
-	decs::Entity entity = container.CreateEntity();
-
-	C1* comp = entity.AddComponent<C1>();
-	if (comp == nullptr)
-	{
-		Print("component is not added!");
-	}
-
-	comp->entityToDestroy = container.CreateEntity();
-	comp->entityToDestroy.AddComponent<C1>();
-
-	decs::ObserversManager observerManager;
-
-	C1Observer c1Observer = { &container };
-	observerManager.SetComponentCreateObserver<C1>(&c1Observer);
-	observerManager.SetComponentDestroyObserver<C1>(&c1Observer);
-
-	container.SetObserversManager(&observerManager);
-	container.InvokeEntitesOnCreateListeners();
-
-
-	if (!entity.HasComponent<C1>())
-	{
-		Print("Entity has not component!");
-	}
-
-	if (!entity.RemoveComponent<C1>())
-	{
-		Print("Failed to remove component!");
-	}
-
-
-	using ViewType = decs::View<C1>;
-
-	ViewType testView = { container };
-
-	auto lambda1 = [&] (decs::Entity& entity, C1& c1)
-	{
-
-	};
-	auto lambda2 = [&] (C1& c1)
-	{
-
-	};
-
-	testView.ForEach(lambda1);
-	testView.ForEach(lambda2);
-	testView.ForEach(lambda1, decs::IterationType::Backward);
-	testView.ForEach(lambda2, decs::IterationType::Backward);
-	testView.ForEach(lambda1, decs::IterationType::Forward);
-	testView.ForEach(lambda2, decs::IterationType::Forward);
-
-
-	std::vector<ViewType::BatchIterator> iterators;
-	testView.CreateBatchIterators(iterators, 10, 1000);
-	for (auto& it : iterators)
-	{
-		it.ForEach(lambda1);
-		it.ForEach(lambda2);
-	}
-
-	container.DestroyOwnedEntities();
-
-	//std::cin.get();
+	stableContainer.Remove(result3.m_ChunkIndex, result3.m_Index);
+	stableContainer.Remove(result4.m_ChunkIndex, result4.m_Index);
 	return 0;
 }

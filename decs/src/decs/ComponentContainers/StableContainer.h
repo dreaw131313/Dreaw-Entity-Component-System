@@ -1,180 +1,113 @@
 #pragma once
-#include "Core.h"
-#include "Containers/ChunkedVector.h"
+#include "decs\Core.h"
+#include "decs\Containers/ChunkedVector.h"
 
 namespace decs
 {
-	template<typename ComponentType>
-	struct ComponentAllocationData
+	template<typename DataType>
+	struct AllocationResult final
 	{
 	public:
-		uint64_t ChunkIndex = std::numeric_limits<uint64_t>::max();
-		uint64_t ElementIndex = std::numeric_limits<uint64_t>::max();;
-		ComponentType* Component = nullptr;
+		uint64_t Index = std::numeric_limits<uint64_t>::max();
+		DataType* Data = nullptr;
 
 	public:
-		ComponentAllocationData() {}
+		AllocationResult() {}
 
-		ComponentAllocationData(uint64_t chunkIndex, uint64_t index, ComponentType* component) :
-			ChunkIndex(chunkIndex), ElementIndex(index), Component(component)
-		{
-
-		}
-
-		inline bool IsValid()const
-		{
-			return Component != nullptr;
-		}
-	};
-
-	using ComponentCopyData = ComponentAllocationData<void>;
-
-	struct ComponentAllocatorSwapData
-	{
-	public:
-		uint64_t ChunkIndex = std::numeric_limits<EntityID>::max();
-		uint64_t ElementIndex = std::numeric_limits<EntityID>::max();
-		EntityID eID = std::numeric_limits<EntityID>::max();
-
-	public:
-		ComponentAllocatorSwapData()
-		{
-		}
-
-		ComponentAllocatorSwapData(
-			uint64_t chunkIndex,
-			uint64_t index,
-			EntityID entityID
+		AllocationResult(
+			const uint64_t& index,
+			DataType* data
 		) :
-			ChunkIndex(chunkIndex), ElementIndex(index), eID(entityID)
+			Index(index),
+			Data(data)
 		{
+
 		}
 
 		inline bool IsValid() const
 		{
-			return eID != std::numeric_limits<EntityID>::max();
+			return Data != nullptr;
 		}
 	};
 
-	class BaseComponentAllocator
-	{
-	public:
-		virtual ComponentAllocatorSwapData RemoveSwapBack(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
-
-		virtual void* GetComponentAsVoid(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
-
-		virtual ComponentCopyData CreateCopy(const EntityID& entityID, const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
-
-		virtual ComponentCopyData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
-
-		virtual ComponentCopyData CreateCopy(const EntityID& entityID, void* voidCompPtr) = 0;
-
-		virtual BaseComponentAllocator* CreateEmptyCopyOfYourself() = 0;
-
-		virtual void Clear() = 0;
-
-
-		virtual uint64_t ChunksCount() = 0;
-		virtual uint64_t ChunkSize(const uint64_t& chunkIndex) = 0;
-		virtual uint64_t ElementsCount() = 0;
-		virtual std::pair<EntityID, void*> GetEntityAndComponentData(const uint64_t& index) = 0;
-		virtual std::pair<EntityID, void*> GetEntityAndComponentData(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
-	};
-
 	template<typename DataType>
-	class StableComponentAllocator : public BaseComponentAllocator
+	class Chunk final
 	{
-		using AllocationData = ComponentAllocationData<DataType>;
-	private:
-#pragma region ChunkAllocationResult
-		struct ChunkAllocationResult final
+		using ChunkAllocationResult = AllocationResult<DataType>;
+	public:
+		uint64_t m_Index = 0;
+		uint64_t m_IndexInFreeSpaces = 0;
+		bool m_IsInFreeSpaces = 0;
+	public:
+		Chunk(const uint64_t& capacity) :
+			m_Capacity(capacity),
+			m_AllocationFlags(new bool[capacity]()),
+			m_Data(static_cast<DataType*> (::operator new(capacity * sizeof(DataType))))
 		{
-		public:
-			uint64_t Index = std::numeric_limits<uint64_t>::max();
-			DataType* Data = nullptr;
+		}
 
-		public:
-			ChunkAllocationResult() {}
-
-			ChunkAllocationResult(
-				const uint64_t& index,
-				DataType* data
-			) :
-				Index(index),
-				Data(data)
-			{
-
-			}
-
-			inline bool IsValid() const
-			{
-				return Data != nullptr;
-			}
-		};
-#pragma endregion
-
-#pragma region Chunk
-		class Chunk final
+		~Chunk()
 		{
-		public:
-			DataType* m_Data = nullptr;
-			uint64_t m_CreatedElements = 0;
-			uint64_t m_CurrentAllocationOffset = 0;
-			uint64_t m_Index = 0;
-			uint64_t m_Capacity = 0;
-
-			bool bIsInChunksWithFreeSpace = true;
-			uint64_t m_IndexInWithFreeSpaces = 0;
-
-			uint64_t m_FreeSpacesCount = 0;
-			std::vector<uint64_t> m_FreeSpaces;
-
-		public:
-			Chunk()
+			if (m_Size > 0)
 			{
-
-			}
-
-			~Chunk()
-			{
-
-			}
-
-			inline bool IsEmpty() const { return m_CreatedElements == 0; }
-			inline bool IsFull() const
-			{
-				return m_Capacity == m_CreatedElements;
-			}
-
-			template<typename... Args>
-			ChunkAllocationResult Add(Args&&... args)
-			{
-				if (IsFull()) return ChunkAllocationResult();
-
-				m_CreatedElements += 1;
-
-				if (m_FreeSpacesCount > 0)
+				for (uint32_t i = 0; i < m_Capacity; i++)
 				{
-					m_FreeSpacesCount -= 1;
-					uint64_t freeSpaceIndex = m_FreeSpaces.back();
-					m_FreeSpaces.pop_back();
-					DataType* data = new(&m_Data[freeSpaceIndex])DataType(std::forward<Args>(args)...);
-
-					return ChunkAllocationResult(freeSpaceIndex, data);
+					if (m_AllocationFlags[i])
+					{
+						m_Data[i].~DataType();
+					}
 				}
-
-				uint64_t allocationIndex = m_CurrentAllocationOffset;
-				m_CurrentAllocationOffset += 1;
-				DataType* data = new(&m_Data[allocationIndex])DataType(std::forward<Args>(args)...);
-
-				return ChunkAllocationResult(allocationIndex, data);
 			}
 
-			bool RemoveAt(const uint64_t& index)
-			{
-				if (index >= m_Capacity) return false;
+			::operator delete(m_Data, m_Capacity * sizeof(DataType));
+			delete[] m_AllocationFlags;
+		}
 
-				m_CreatedElements -= 1;
+		inline bool IsEmpty() const
+		{
+			return m_Size == 0;
+		}
+
+		inline bool IsFull() const { return m_Capacity == m_Size; }
+
+		DataType& operator[](const uint64_t& index) const { return m_Data[index]; }
+
+		inline bool IsAllocatedAt(const uint64_t& index) const
+		{
+			return m_AllocationFlags[index];
+		}
+		template<typename... Args>
+		ChunkAllocationResult Emplace(Args&&... args)
+		{
+			if (IsFull()) return ChunkAllocationResult();
+
+			m_Size += 1;
+
+			if (m_FreeSpacesCount > 0)
+			{
+				m_FreeSpacesCount -= 1;
+				uint64_t freeSpaceIndex = m_FreeSpaces.back();
+				m_FreeSpaces.pop_back();
+				DataType* data = new(&m_Data[freeSpaceIndex])DataType(std::forward<Args>(args)...);
+
+				m_AllocationFlags[freeSpaceIndex] = true;
+				return ChunkAllocationResult(freeSpaceIndex, data);
+			}
+
+			uint64_t allocationIndex = m_CurrentAllocationOffset;
+			m_CurrentAllocationOffset += 1;
+			DataType* data = new(&m_Data[allocationIndex])DataType(std::forward<Args>(args)...);
+
+			m_AllocationFlags[allocationIndex] = true;
+
+			return ChunkAllocationResult(allocationIndex, data);
+		}
+
+		bool RemoveAt(const uint64_t& index)
+		{
+			if (index < m_Capacity && m_AllocationFlags[index])
+			{
+				m_Size -= 1;
 				if (index == (m_CurrentAllocationOffset - 1))
 				{
 					m_CurrentAllocationOffset -= 1;
@@ -192,314 +125,227 @@ namespace decs
 					m_FreeSpacesCount = 0;
 				}
 
+				m_AllocationFlags[index] = false;
 				m_Data[index].~DataType();
 				return true;
 			}
-
-		};
-#pragma endregion
-
-#pragma region Entity node info
-		struct NodeInfo
-		{
-		public:
-			EntityID eID = std::numeric_limits<EntityID>::max();
-			Chunk* ChunkPtr = nullptr;
-			DataType* Data = nullptr;
-			uint64_t Index = std::numeric_limits<uint64_t>::max();// index in chunk
-
-		public:
-			NodeInfo(
-				const EntityID& entityID,
-				Chunk* chunk,
-				DataType* data,
-				const uint64_t& index
-			) :
-				eID(entityID),
-				ChunkPtr(chunk),
-				Data(data),
-				Index(index)
-			{
-
-			}
-
-			~NodeInfo()
-			{
-
-			}
-		};
-#pragma endregion
-
-	public:
-		StableComponentAllocator()
-		{
-
-		}
-
-		StableComponentAllocator(const uint64_t& chunkCapacity) :
-			m_ChunkCapacity(chunkCapacity),
-			m_Nodes(chunkCapacity)
-		{
-			//CreateChunk();
-		}
-
-		~StableComponentAllocator()
-		{
-			DestroyChunks();
-		}
-
-		ChunkedVector<NodeInfo>& Nodes() { return m_Nodes; }
-
-		virtual void Clear() override
-		{
-			DestroyChunks();
-			m_Nodes.Clear();
-			m_Chunks.clear();
-			m_ChunksWithFreeSpaces.clear();
-		}
-
-		inline uint64_t GetChunkCapacity() const { return m_ChunkCapacity; }
-
-		template<typename... Args>
-		AllocationData EmplaceBack(const EntityID& entityID, Args&&... args)
-		{
-			Chunk* chunk = nullptr;
-			if (m_ChunksWithFreeSpaces.size() > 0)
-			{
-				chunk = m_ChunksWithFreeSpaces[0];
-			}
-			else
-			{
-				chunk = CreateChunk();
-			}
-
-			auto chunkAllocationData = chunk->Add(std::forward<Args>(args)...);
-			auto nodeAllocationData = m_Nodes.EmplaceBack_CR(entityID, chunk, chunkAllocationData.Data, chunkAllocationData.Index);
-
-			RemoveChunkFromChunksWithFreeSpaces(chunk);
-
-			return AllocationData(nodeAllocationData.ChunkIndex, nodeAllocationData.ElementIndex, chunkAllocationData.Data);
-		}
-
-		virtual ComponentAllocatorSwapData RemoveSwapBack(const uint64_t& chunkIndex, const uint64_t& elementIndex) override
-		{
-			NodeInfo& node = m_Nodes(chunkIndex, elementIndex);
-			node.ChunkPtr->RemoveAt(node.Index);
-
-			if (!RemoveEmptyChunk(node.ChunkPtr))
-			{
-				AddChunkToChunksWithFreeSpaces(node.ChunkPtr);
-			}
-
-			m_Nodes.RemoveSwapBack(chunkIndex, elementIndex);
-			if (m_Nodes.IsPositionValid(chunkIndex, elementIndex))
-			{
-				auto& swappedNodeInfo = m_Nodes(chunkIndex, elementIndex);
-				return ComponentAllocatorSwapData(chunkIndex, elementIndex, swappedNodeInfo.eID);
-			}
-
-			return ComponentAllocatorSwapData();
-		}
-
-		virtual void* GetComponentAsVoid(const uint64_t& chunkIndex, const uint64_t& elementIndex) override
-		{
-			return m_Nodes(chunkIndex, elementIndex).Data;
-		}
-
-		virtual ComponentCopyData CreateCopy(const EntityID& entityID, const uint64_t& chunkIndex, const uint64_t& elementIndex) override
-		{
-			if (!m_Nodes.IsPositionValid(chunkIndex, elementIndex))
-			{
-				return ComponentCopyData();
-			}
-
-			NodeInfo& nodeToCopy = m_Nodes(chunkIndex, elementIndex);
-			AllocationData allocationData = EmplaceBack(entityID, *nodeToCopy.Data);
-
-			return ComponentCopyData(allocationData.ChunkIndex, allocationData.ElementIndex, allocationData.Component);
-		}
-
-		virtual ComponentCopyData CreateCopy(BaseComponentAllocator* fromContainer, const EntityID& entityID, const uint64_t& chunkIndex, const uint64_t& elementIndex) override
-		{
-			using ContainerType = StableComponentAllocator<DataType>;
-			ContainerType* from = dynamic_cast<ContainerType*>(fromContainer);
-			if (from == nullptr)
-			{
-				return ComponentCopyData();
-			}
-			if (!from->m_Nodes.IsPositionValid(chunkIndex, elementIndex))
-			{
-				return ComponentCopyData();
-			}
-
-			NodeInfo& nodeToCopy = from->m_Nodes(chunkIndex, elementIndex);
-			AllocationData allocationData = EmplaceBack(entityID, *nodeToCopy.Data);
-
-			return ComponentCopyData(allocationData.ChunkIndex, allocationData.ElementIndex, allocationData.Component);
-		}
-
-		virtual ComponentCopyData CreateCopy(const EntityID& entityID, void* voidCompPtr) override
-		{
-			DataType* component = reinterpret_cast<DataType*>(voidCompPtr);
-
-			Chunk* chunk = nullptr;
-			if (m_ChunksWithFreeSpaces.size() > 0)
-			{
-				chunk = m_ChunksWithFreeSpaces[0];
-			}
-			else
-			{
-				chunk = CreateChunk();
-			}
-
-			auto chunkAllocationData = chunk->Add(*component);
-			auto nodeAllocationData = m_Nodes.EmplaceBack_CR(entityID, chunk, chunkAllocationData.Data, chunkAllocationData.Index);
-
-			RemoveChunkFromChunksWithFreeSpaces(chunk);
-
-			return ComponentCopyData(nodeAllocationData.ChunkIndex, nodeAllocationData.ElementIndex, chunkAllocationData.Data);
-		}
-
-		virtual BaseComponentAllocator* CreateEmptyCopyOfYourself() override
-		{
-			return new StableComponentAllocator<DataType>(m_ChunkCapacity);
-		}
-
-
-		virtual uint64_t ChunksCount() override
-		{
-			return m_Nodes.ChunksCount();
-		}
-
-		virtual uint64_t ChunkSize(const uint64_t& chunkIndex) override
-		{
-			return m_Nodes.GetChunkSize(chunkIndex);
-		}
-
-		virtual uint64_t ElementsCount() override
-		{
-			return m_Nodes.Size();
-		}
-
-		virtual std::pair<EntityID, void*> GetEntityAndComponentData(const uint64_t& index) override
-		{
-			NodeInfo& node = m_Nodes[index];
-			return { node.eID, node.Data };
-		}
-
-		virtual std::pair<EntityID, void*> GetEntityAndComponentData(const uint64_t& chunkIndex, const uint64_t& elementIndex) override
-		{
-			NodeInfo& node = m_Nodes(chunkIndex, elementIndex);
-			return { node.eID, node.Data };
-		}
-
-
-	private:
-		uint64_t m_ChunkCapacity = 128;
-		ChunkedVector<NodeInfo> m_Nodes;
-
-		std::vector<Chunk*> m_Chunks;
-		std::vector<Chunk*> m_ChunksWithFreeSpaces;
-
-	private:
-		Chunk* CreateChunk()
-		{
-			Chunk* chunk = new Chunk();
-			chunk->m_Capacity = m_ChunkCapacity;
-			chunk->m_Data = static_cast<DataType*> (::operator new(m_ChunkCapacity * sizeof(DataType)));
-			chunk->m_Index = m_Chunks.size();
-			chunk->m_IndexInWithFreeSpaces = m_ChunksWithFreeSpaces.size();
-
-			m_Chunks.push_back(chunk);
-			m_ChunksWithFreeSpaces.push_back(chunk);
-			return chunk;
-		}
-
-		void DestroyChunk(Chunk* chunk)
-		{
-			::operator delete(chunk->m_Data, chunk->m_Capacity * sizeof(DataType));
-			delete chunk;
-		}
-
-		bool RemoveEmptyChunk(Chunk* chunk)
-		{
-			if (m_Chunks.size() > 1)
-			{
-				if (!chunk->IsEmpty()) return false;
-
-				{
-					Chunk* lastChunk = m_Chunks.back();
-					if (chunk != lastChunk)
-					{
-						lastChunk->m_Index = chunk->m_Index;
-						m_Chunks[lastChunk->m_Index] = lastChunk;
-					}
-					m_Chunks.pop_back();
-				}
-
-				{
-					if (chunk->bIsInChunksWithFreeSpace)
-					{
-						Chunk* lastChunk = m_ChunksWithFreeSpaces.back();
-						if (chunk != lastChunk)
-						{
-							lastChunk->m_IndexInWithFreeSpaces = chunk->m_IndexInWithFreeSpaces;
-							m_ChunksWithFreeSpaces[lastChunk->m_Index] = lastChunk;
-						}
-						m_ChunksWithFreeSpaces.pop_back();
-					}
-				}
-
-				DestroyChunk(chunk);
-				return true;
-			}
-
 			return false;
 		}
 
-		void DestroyChunks()
+	private:
+		uint64_t m_Capacity = 0;
+		DataType* m_Data = nullptr;
+		bool* m_AllocationFlags = nullptr;
+
+		uint64_t m_CurrentAllocationOffset = 0;
+		uint64_t m_Size = 0;
+
+		uint64_t m_FreeSpacesCount = 0;
+		std::vector<uint64_t> m_FreeSpaces;
+	};
+
+	class ComponentNodeInfo
+	{
+	public:
+		uint64_t m_ChunkIndex = std::numeric_limits<uint64_t>::max();
+		uint64_t m_Index = std::numeric_limits<uint64_t>::max();
+		void* m_ComponentPtr = nullptr;
+
+	public:
+		ComponentNodeInfo()
 		{
-			uint64_t m_NodesChunkCount = m_Nodes.ChunksCount();
-			for (uint64_t chunkIdx = 0; chunkIdx < m_NodesChunkCount; chunkIdx++)
+
+		}
+
+		ComponentNodeInfo(
+			void* componentPtr,
+			const uint64_t& chunkIndex,
+			const uint64_t& index
+		) :
+			m_ComponentPtr(m_ComponentPtr), m_ChunkIndex(chunkIndex), m_Index(index)
+		{
+
+		}
+
+	};
+
+	class StableContainerBase
+	{
+	public:
+		virtual bool Remove(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
+		virtual ComponentNodeInfo EmplaceFromVoid(void* ptr) = 0;
+	};
+
+	template<typename DataType>
+	class StableContainer : StableContainerBase
+	{
+		using ChunkType = Chunk<DataType>;
+
+	public:
+		StableContainer()
+		{
+
+		}
+
+		StableContainer(const uint64_t& chunkCapacity) :
+			m_ChunkCapacity(chunkCapacity)
+		{
+		}
+
+		~StableContainer()
+		{
+			for (auto& chunk : m_Chunks)
 			{
-				NodeInfo* chunk = m_Nodes.GetChunk(chunkIdx);
-				uint64_t elementsInChunk = m_Nodes.GetChunkSize(chunkIdx);
-				for (uint64_t elementIdx = 0; elementIdx < elementsInChunk; elementIdx++)
+				if (chunk != nullptr)
 				{
-					chunk[elementIdx].Data->~DataType();
+					delete chunk;
+				}
+			}
+		}
+
+		template<typename... Args>
+		ComponentNodeInfo Emplace(Args&&... args)
+		{
+			ChunkType* chunk = GetCurrentChunk();
+			auto result = chunk->Emplace(std::forward<Args>(args)...);
+
+			if (chunk->IsFull())
+			{
+				RemoveChunkFromFreeSpaces(chunk);
+			}
+
+			return ComponentNodeInfo(result.Data, chunk->m_Index, result.Index);
+		}
+
+		bool Remove(const uint64_t& chunkIndex, const uint64_t& elementIndex) override
+		{
+			if (chunkIndex < m_Chunks.size() && m_Chunks[chunkIndex] != nullptr)
+			{
+				ChunkType* chunk = m_Chunks[chunkIndex];
+				bool wasChunkFull = chunk->IsFull();
+				if (chunk->RemoveAt(elementIndex))
+				{
+					if (chunk->IsEmpty())
+					{
+						RemoveChunk(chunk);
+					}
+					else
+					{
+						AddChunkToFreeSpaces(chunk);
+					}
+					return true;
+				}
+			}
+			return false;
+		}
+
+		virtual ComponentNodeInfo EmplaceFromVoid(void* ptr)override
+		{
+			return Emplace(*static_cast<DataType*>(ptr));
+		}
+
+	private:
+		uint64_t m_ChunkCapacity = 1000;
+		ChunkType* m_CurrentChunk = nullptr;
+		std::vector<ChunkType*> m_Chunks;
+		std::vector<ChunkType*> m_ChunksWithFreeSpace;
+
+	private:
+		ChunkType* GetCurrentChunk()
+		{
+			if (m_CurrentChunk == nullptr || m_CurrentChunk->IsFull())
+			{
+				if (m_ChunksWithFreeSpace.size() != 0)
+				{
+					m_CurrentChunk = m_ChunksWithFreeSpace[0];
+				}
+				else
+				{
+					m_CurrentChunk = new ChunkType(m_ChunkCapacity);
+					m_CurrentChunk->m_IsInFreeSpaces = true;
+					m_CurrentChunk->m_IndexInFreeSpaces = m_ChunksWithFreeSpace.size();
+					m_ChunksWithFreeSpace.push_back(m_CurrentChunk);
+
+					bool isChunkPlacedInChunks = false;
+					for (uint32_t i = 0; i < m_Chunks.size(); i++)
+					{
+						if (m_Chunks[i] == nullptr)
+						{
+							m_Chunks[i] = m_CurrentChunk;
+							m_CurrentChunk->m_Index = i;
+							isChunkPlacedInChunks = true;
+							break;
+						}
+					}
+
+					if (!isChunkPlacedInChunks)
+					{
+						m_CurrentChunk->m_Index = m_Chunks.size();
+						m_Chunks.push_back(m_CurrentChunk);
+					}
 				}
 			}
 
-			uint64_t chunksCount = m_Chunks.size();
-			for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
-			{
-				DestroyChunk(m_Chunks[chunkIdx]);
-			}
+			return m_CurrentChunk;
 		}
 
-		void RemoveChunkFromChunksWithFreeSpaces(Chunk* chunk)
+		void RemoveChunk(ChunkType* chunk)
 		{
-			if (chunk->bIsInChunksWithFreeSpace && chunk->IsFull())
+			RemoveChunkFromFreeSpaces(chunk);
+
+			if (chunk == m_Chunks.back())
 			{
-				Chunk* lastChunk = m_ChunksWithFreeSpaces.back();
-				chunk->bIsInChunksWithFreeSpace = false;
-				if (chunk != lastChunk)
+				m_Chunks.pop_back();
+
+				for (int i = (int)m_Chunks.size() - 1; i > -1; i++)
 				{
-					lastChunk->m_IndexInWithFreeSpaces = chunk->m_IndexInWithFreeSpaces;
-					m_ChunksWithFreeSpaces[lastChunk->m_IndexInWithFreeSpaces] = lastChunk;
+					if (m_Chunks[i] == nullptr)
+					{
+						m_Chunks.pop_back();
+					}
+					else
+					{
+						break;
+					}
 				}
-				m_ChunksWithFreeSpaces.pop_back();
 			}
+			else
+			{
+				m_Chunks[chunk->m_Index] = nullptr;
+			}
+
+			if (chunk == m_CurrentChunk)
+			{
+				m_CurrentChunk = nullptr;
+			}
+
+			delete chunk;
 		}
 
-		void AddChunkToChunksWithFreeSpaces(Chunk* chunk)
+		bool RemoveChunkFromFreeSpaces(ChunkType* chunk)
 		{
-			if (chunk->bIsInChunksWithFreeSpace || chunk->IsFull()) return;
+			if (!chunk->m_IsInFreeSpaces) return false;
 
-			chunk->bIsInChunksWithFreeSpace = true;
-			chunk->m_IndexInWithFreeSpaces = m_ChunksWithFreeSpaces.size();
-			m_ChunksWithFreeSpaces.push_back(chunk);
+			if (m_ChunksWithFreeSpace.back() != chunk)
+			{
+				m_ChunksWithFreeSpace.back()->m_IndexInFreeSpaces = chunk->m_IndexInFreeSpaces;
+				m_ChunksWithFreeSpace[chunk->m_IndexInFreeSpaces] = m_ChunksWithFreeSpace.back();
+			}
+			m_ChunksWithFreeSpace.pop_back();
+			chunk->m_IsInFreeSpaces = false;
+
+			return true;
 		}
 
+		bool AddChunkToFreeSpaces(ChunkType* chunk)
+		{
+			if (chunk->m_IsInFreeSpaces || chunk->IsFull()) return false;
+
+			chunk->m_IsInFreeSpaces = true;
+			chunk->m_IndexInFreeSpaces = m_ChunksWithFreeSpace.size();
+			m_ChunksWithFreeSpace.push_back(chunk);
+
+			return true;
+		}
 	};
 }

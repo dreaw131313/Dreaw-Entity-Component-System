@@ -1,9 +1,10 @@
 #pragma once
-#include "Core.h"
-#include "Archetype.h"
-#include "ComponentContextsManager.h"
-#include "Type.h"
+#include "decs\Core.h"
+#include "decs\ComponentContextsManager.h"
+#include "decs\Type.h"
 #include "decs\ComponentContainers\PackedContainer.h"
+
+#include "Archetype.h"
 
 namespace decs
 {

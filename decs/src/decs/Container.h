@@ -10,6 +10,7 @@
 
 #include "ObserversManager.h"
 #include "decs\ComponentContainers\PackedContainer.h"
+#include "decs\ComponentContainers\StableContainer.h"
 #include "ComponentRefs\ComponentRefAsVoid.h"
 
 namespace decs
@@ -292,6 +293,20 @@ namespace decs
 	private:
 		bool m_HaveOwnComponentContextManager = true;
 		ComponentContextsManager* m_ComponentContextManager = nullptr;
+		ecsMap<TypeID, StableContainerBase*> m_StableContainers;
+	public:
+		template<typename ComponentType>
+		bool SetStableComponent(const uint64_t& chunkSize)
+		{
+			constexpr TypeID id = Type<ComponentType>::ID();
+			auto& stableContainer = m_StableContainers[id];
+			if (stableContainer != nullptr) return false;
+
+			stableContainer = new StableContainer<ComponentType>(chunkSize);
+
+			return true;
+		}
+
 
 	private:
 		template<typename ComponentType, typename ...Args>

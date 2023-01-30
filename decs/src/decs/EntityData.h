@@ -1,6 +1,7 @@
 #pragma once
 #include "Core.h"
 #include "Archetypes\Archetype.h"
+#include "ComponentContainers\StableContainer.h"
 
 namespace decs
 {
@@ -25,6 +26,7 @@ namespace decs
 
 		bool m_IsUsedAsPrefab = false;
 
+		ecsMap<TypeID, ComponentNodeInfo> m_ComponentsNodes;
 	public:
 		EntityData()
 		{
