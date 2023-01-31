@@ -14,7 +14,6 @@ namespace decs
 	class View
 	{
 	private:
-#pragma region ARCHETYPE CONTEXT
 		struct ArchetypeContext
 		{
 		public:
@@ -25,7 +24,6 @@ namespace decs
 		public:
 			inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntitiesCount(); }
 		};
-#pragma endregion
 
 	public:
 		View()
@@ -479,7 +477,6 @@ namespace decs
 		{
 
 		}
-
 
 #pragma region BATCH ITERATOR
 	public:

@@ -307,7 +307,6 @@ namespace decs
 			return true;
 		}
 
-
 	private:
 		template<typename ComponentType, typename ...Args>
 		ComponentType* AddComponent(const EntityID& e, Args&&... args)

@@ -13,6 +13,8 @@
 #include "ThirdParty/skarupke/bytell_hash_map.hpp"
 #include "ThirdParty/skarupke/unordered_map.hpp"
 
+#include "traits.h"
+
 namespace decs
 {
 #if defined _MSC_VER

@@ -154,6 +154,7 @@
     <ClInclude Include="src\decs\Observers.h" />
     <ClInclude Include="src\decs\ObserversManager.h" />
     <ClInclude Include="src\decs\ComponentContainers\PackedContainer.h" />
+    <ClInclude Include="src\decs\traits.h" />
     <ClInclude Include="src\decs\Type.h" />
     <ClInclude Include="src\decs\View.h" />
     <ClInclude Include="src\decs\ThirdParty\skarupke\bytell_hash_map.hpp" />

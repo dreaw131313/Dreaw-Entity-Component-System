@@ -23,10 +23,10 @@ namespace decs
 		
 		Archetype* m_Archetype = nullptr;
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
+		ecsMap<TypeID, ComponentNodeInfo> m_StableComponentsNodes;
 
 		bool m_IsUsedAsPrefab = false;
 
-		ecsMap<TypeID, ComponentNodeInfo> m_ComponentsNodes;
 	public:
 		EntityData()
 		{
@@ -101,7 +101,7 @@ namespace decs
 
 		inline bool CanBeDestructed() const
 		{
-			return m_IsAlive && m_DestructionState != EntityDestructionState::InDestruction;
+			return m_IsAlive && m_DestructionState != EntityDestructionState::InDestruction && !m_IsUsedAsPrefab;
 		}
 
 		inline bool IsDelayedToDestruction() const

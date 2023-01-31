@@ -4,6 +4,27 @@
 #include "decs/ComponentContainers/StableContainer.h"
 
 
+template<typename T>
+class StableComponent
+{
+
+};
+
+template<typename T>
+struct is_stable_component
+{
+	static constexpr bool value = false;
+};
+
+template<typename T>
+struct is_stable_component<StableComponent<T>>
+{
+	static constexpr bool value = true;
+};
+
+
+
+
 class Position
 {
 public:
@@ -23,15 +44,22 @@ public:
 
 int main()
 {
-	decs::StableContainer<Position> stableContainer(2);
+	std::cout << decs::is_stable_component<decs::Stable<float>>::value << "\n";
+	std::cout << decs::is_stable_component<Position>::value << "\n";
 
-	auto result1 = stableContainer.Emplace(1.f, 1.f);
-	auto result2 = stableContainer.Emplace(1.f, 1.f);
-	auto result3 = stableContainer.Emplace(1.f, 1.f);
-	auto result4 = stableContainer.Emplace(1.f, 1.f);
-	auto result5 = stableContainer.Emplace(1.f, 1.f);
+	decs::Container container;
 
-	stableContainer.Remove(result3.m_ChunkIndex, result3.m_Index);
-	stableContainer.Remove(result4.m_ChunkIndex, result4.m_Index);
+	auto e = container.CreateEntity();
+	e.AddComponent<Position>(1.f, 2.f);
+
+	decs::View<Position> view = { container };
+
+	auto lambda = [] (Position& pos)
+	{
+		std::cout << "Fuck \n";
+	};
+
+	view.ForEach(lambda);
+
 	return 0;
 }

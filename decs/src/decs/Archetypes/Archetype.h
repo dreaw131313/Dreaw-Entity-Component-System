@@ -176,7 +176,7 @@ namespace decs
 				m_TypeIDsIndexes[id] = (uint32_t)m_TypeIDs.size();
 				m_TypeIDs.push_back(id);
 				m_ComponentContexts.push_back(componentContext);
-				m_PackedContainers.push_back(new PackedContainer<ComponentType>(componentContext->GetChunkCapacity()));
+				m_PackedContainers.push_back(new PackedContainer<ComponentType>());
 			}
 		}
 

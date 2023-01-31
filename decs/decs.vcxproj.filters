@@ -87,6 +87,9 @@
     <ClInclude Include="src\decs\ComponentContainers\PackedContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\decs\traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\decs\Container.cpp">
