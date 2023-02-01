@@ -23,7 +23,6 @@ namespace decs
 		
 		Archetype* m_Archetype = nullptr;
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
-		ecsMap<TypeID, std::pair<uint64_t, uint64_t>> m_StableComponentsNodes; // first - chunk index, second - element index
 
 		bool m_IsUsedAsPrefab = false;
 

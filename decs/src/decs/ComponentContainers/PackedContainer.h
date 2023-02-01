@@ -17,7 +17,9 @@ namespace decs
 		inline virtual void Reserve(const uint64_t& newCapacity) = 0;
 
 		inline virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept = 0;
-		inline virtual void* GetComponentAsVoid(const uint64_t& index) = 0;
+		inline virtual void* GetComponentPtrAsVoid(const uint64_t& index) noexcept = 0;
+
+		inline virtual void* GetComponentDataAsVoid(const uint64_t& index) noexcept = 0;
 
 		inline virtual void RemoveSwapBack(const uint64_t& index) = 0;
 		inline virtual void* EmplaceFromVoid(void* data) noexcept = 0;
@@ -59,10 +61,16 @@ namespace decs
 		inline virtual uint64_t Size() override { return m_Data.size(); }
 		inline virtual void Reserve(const uint64_t& newCapacity) override { m_Data.reserve(newCapacity); }
 
-		inline virtual void* GetComponentAsVoid(const uint64_t& index)
+		inline virtual void* GetComponentPtrAsVoid(const uint64_t& index) noexcept override
 		{
 			return &m_Data[index];
 		}
+
+		inline virtual void* GetComponentDataAsVoid(const uint64_t& index) noexcept override
+		{
+			return &m_Data[index];
+		}
+
 
 		inline virtual void* EmplaceFromVoid(void* data)  noexcept override
 		{
@@ -86,12 +94,30 @@ namespace decs
 
 	};
 
+	struct StableComponentRef
+	{
+	public:
+		uint32_t m_ChunkIndex = std::numeric_limits<uint32_t>::max();
+		uint32_t m_ElementIndex = std::numeric_limits<uint32_t>::max();
+		void* m_ComponentPtr = nullptr;
+
+		StableComponentRef()
+		{
+
+		}
+
+		StableComponentRef(const uint32_t& chunkIndex, const uint32_t& elementIndex, void* componentPtr) :
+			m_ChunkIndex(chunkIndex), m_ElementIndex(elementIndex), m_ComponentPtr(componentPtr)
+		{
+
+		}
+	};
 
 	template<typename ComponentType>
 	class PackedContainer<decs::Stable<ComponentType>> : public PackedContainerBase
 	{
 	public:
-		std::vector<ComponentType*> m_Data;
+		std::vector<StableComponentRef> m_Data;
 
 	public:
 		PackedContainer()
@@ -124,15 +150,20 @@ namespace decs
 		inline virtual uint64_t Size() override { return m_Data.size(); }
 		inline virtual void Reserve(const uint64_t& newCapacity) override { m_Data.reserve(newCapacity); }
 
-		inline virtual void* GetComponentAsVoid(const uint64_t& index)
+		inline virtual void* GetComponentPtrAsVoid(const uint64_t& index) noexcept override
 		{
-			return m_Data[index];
+			return m_Data[index].m_ComponentPtr;
 		}
 
-		inline virtual void* EmplaceFromVoid(void* data)  noexcept override
+		inline virtual void* GetComponentDataAsVoid(const uint64_t& index) noexcept override
 		{
-			ComponentType* newElement = m_Data.emplace_back(reinterpret_cast<ComponentType*>(data));
-			return (void*)newElement;
+			return &m_Data[index];
+		}
+
+		inline virtual void* EmplaceFromVoid(void* data) noexcept override
+		{
+			StableComponentRef& newElement = m_Data.emplace_back(*reinterpret_cast<StableComponentRef*>(data));
+			return newElement.m_ComponentPtr;
 		}
 
 		inline virtual void RemoveSwapBack(const uint64_t& index) override
@@ -146,7 +177,7 @@ namespace decs
 
 		inline ComponentType& GetAsRef(const uint64_t& index) noexcept
 		{
-			return *m_Data[index];
+			return *static_cast<ComponentType*>(m_Data[index].m_ComponentPtr);
 		}
 
 	};

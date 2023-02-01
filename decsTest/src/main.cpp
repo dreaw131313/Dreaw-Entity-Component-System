@@ -27,18 +27,14 @@ public:
 
 int main()
 {
-	std::cout << sizeof(decs::EntityData) << std::endl;
-
 	decs::Container container;
 
 	auto e = container.CreateEntity();
-	Position* p1 = e.AddComponent<decs::Stable<Position>>(101.f, 202.f);
-	Position* p2 = e.AddComponent<Position>(101.f, 202.f);
 
-	e.RemoveComponent<Position>();
+	Position* p1 = e.AddComponent<decs::Stable<Position>>(101.f, 202.f);
 	e.RemoveComponent<decs::Stable<Position>>();
 
-	decs::View<Position> view = { container };
+	decs::View<decs::Stable<Position>> view = { container };
 
 	auto lambda = [] (Position& pos)
 	{

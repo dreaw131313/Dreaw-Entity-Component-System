@@ -379,7 +379,7 @@ namespace decs
 		}
 	}
 
-	bool Container::RemoveComponent(Entity& entity, const TypeID& componentTypeID)
+	bool Container::RemoveUnstableComponent(Entity& entity, const TypeID& componentTypeID)
 	{
 		if (!m_CanRemoveComponents || entity.m_Container != this) return false;
 
@@ -398,7 +398,7 @@ namespace decs
 		}
 
 		componentContext->InvokeOnDestroyComponent_S(
-			container->GetComponentAsVoid(entityData.m_IndexInArchetype),
+			container->GetComponentPtrAsVoid(entityData.m_IndexInArchetype),
 			entity
 		);
 
@@ -435,10 +435,10 @@ namespace decs
 		return true;
 	}
 
-	bool Container::RemoveComponent(const EntityID& e, const TypeID& componentTypeID)
+	bool Container::RemoveUnstableComponent(const EntityID& e, const TypeID& componentTypeID)
 	{
 		Entity entity(e, this);
-		return RemoveComponent(entity, componentTypeID);
+		return RemoveUnstableComponent(entity, componentTypeID);
 	}
 
 	bool Container::RemoveStableComponent(Entity& entity, const TypeID& componentTypeID)
@@ -460,7 +460,7 @@ namespace decs
 		}
 
 		componentContext->InvokeOnDestroyComponent_S(
-			container->GetComponentAsVoid(entityData.m_IndexInArchetype),
+			container->GetComponentPtrAsVoid(entityData.m_IndexInArchetype),
 			entity
 		);
 
@@ -491,10 +491,20 @@ namespace decs
 			m_EmptyEntities.EmplaceBack(&entityData);
 		}
 
+		StableComponentRef* componentRef = static_cast<StableComponentRef*>(container->GetComponentDataAsVoid(oldArchetypeIndex));
+		StableContainerBase* stableContainer = this->m_StableContainers[componentTypeID];
+		stableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_ElementIndex);
+		
 		auto result = oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
 		ValidateEntityInArchetype(result);
 
 		return true;
+	}
+
+	bool Container::RemoveStableComponent(const EntityID& e, const TypeID& componentTypeID)
+	{
+		Entity entity(e, this);
+		return RemoveStableComponent(entity, componentTypeID);
 	}
 
 	void Container::InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData)
@@ -684,7 +694,7 @@ namespace decs
 	{
 		for (auto& data : m_DelayedComponentsToDestroy)
 		{
-			RemoveComponent(data.m_EntityID, data.m_TypeID);
+			//RemoveComponent(data.m_EntityID, data.m_TypeID);
 		}
 		m_DelayedComponentsToDestroy.clear();
 	}

@@ -24,7 +24,7 @@ namespace decs
 			}
 			if (m_PackedContainer != nullptr)
 			{
-				return m_PackedContainer->GetComponentAsVoid(m_IndexInArchetype);
+				return m_PackedContainer->GetComponentPtrAsVoid(m_IndexInArchetype);
 			}
 			return nullptr;
 		}

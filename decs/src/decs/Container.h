@@ -416,12 +416,15 @@ namespace decs
 				// Adding component to stable component container
 				StableContainer<ComponentType>* stableContainer = GetOrCreateStableContainer<ComponentType>();
 				ComponentNodeInfo componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
-				entityData.m_StableComponentsNodes[copmonentTypeID] = { componentNodeInfo.m_ChunkIndex, componentNodeInfo.m_Index };
 
 				// Adding component pointer to packed container in archetype
 				PackedContainer<Stable<ComponentType>>* packedPointersContainer = reinterpret_cast<PackedContainer<Stable<ComponentType>>*>(entityNewArchetype->m_PackedContainers[componentContainerIndex]);
 
-				packedPointersContainer->m_Data.push_back(static_cast<ComponentType*>(componentNodeInfo.m_ComponentPtr));
+				packedPointersContainer->m_Data.emplace_back(
+					(uint32_t)componentNodeInfo.m_ChunkIndex, 
+					(uint32_t)componentNodeInfo.m_Index,
+					componentNodeInfo.m_ComponentPtr
+					);
 				ComponentType* componentPtr = static_cast<ComponentType*>(componentNodeInfo.m_ComponentPtr);
 
 				// Adding entity to archetype
@@ -459,15 +462,18 @@ namespace decs
 			}
 			else
 			{
-				return RemoveComponent(entity, Type<ComponentType>::ID());
+				return RemoveUnstableComponent(entity, Type<ComponentType>::ID());
 			}
 		}
 
-		bool RemoveComponent(const EntityID& e, const TypeID& componentTypeID);
 
-		bool RemoveComponent(Entity& entity, const TypeID& componentTypeID);
+		bool RemoveUnstableComponent(Entity& entity, const TypeID& componentTypeID);
+
+		bool RemoveUnstableComponent(const EntityID& e, const TypeID& componentTypeID);
 
 		bool RemoveStableComponent(Entity& entity, const TypeID& componentTypeID);
+
+		bool RemoveStableComponent(const EntityID& e, const TypeID& componentTypeID);
 
 		template<typename ComponentType>
 		ComponentType* GetComponent(const EntityID& e) const
@@ -521,7 +527,7 @@ namespace decs
 				if (findTypeIndex != Limits::MaxComponentCount)
 				{
 					PackedContainer<Stable<ComponentType>>* container = static_cast<PackedContainer<Stable<ComponentType>>*>(entityData.m_Archetype->m_PackedContainers[findTypeIndex]);
-					return container->m_Data[entityData.m_IndexInArchetype];
+					return static_cast<ComponentType*>(container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr);
 				}
 			}
 			return nullptr;

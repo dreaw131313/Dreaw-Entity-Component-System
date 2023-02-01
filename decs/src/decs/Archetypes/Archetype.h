@@ -242,7 +242,7 @@ namespace decs
 					fromArchetypeIndex += 1;
 				}
 				m_PackedContainers[thisArchetypeIndex]->EmplaceFromVoid(
-					fromArchetype.m_PackedContainers[fromArchetypeIndex]->GetComponentAsVoid(fromIndex)
+					fromArchetype.m_PackedContainers[fromArchetypeIndex]->GetComponentDataAsVoid(fromIndex)
 				);
 			}
 		}
@@ -263,7 +263,7 @@ namespace decs
 				}
 
 				m_PackedContainers[thisArchetypeIndex]->EmplaceFromVoid(
-					fromArchetype.m_PackedContainers[fromArchetypeIndex]->GetComponentAsVoid(fromIndex)
+					fromArchetype.m_PackedContainers[fromArchetypeIndex]->GetComponentDataAsVoid(fromIndex)
 				);
 
 				fromArchetypeIndex++;
@@ -278,7 +278,7 @@ namespace decs
 
 		inline void* GetComponentVoidPtr(const uint64_t& entityIndex, const uint64_t& componentIndex = 0)const noexcept
 		{
-			return m_PackedContainers[componentIndex]->GetComponentAsVoid(entityIndex);
+			return m_PackedContainers[componentIndex]->GetComponentPtrAsVoid(entityIndex);
 		}
 
 		template<typename ComponentType>
