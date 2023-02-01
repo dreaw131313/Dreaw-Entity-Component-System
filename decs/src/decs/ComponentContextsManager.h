@@ -50,10 +50,8 @@ namespace decs
 		}
 
 		template<typename ComponentType>
-		ComponentContext<ComponentType>* GetOrCreateComponentContext()
+		ComponentContext<ComponentType>* GetOrCreateComponentContext(const TypeID& id)
 		{
-			constexpr TypeID id = Type<ComponentType>::ID();
-
 			auto& componentContext = m_Contexts[id];
 			if (componentContext == nullptr)
 			{

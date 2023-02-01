@@ -3,27 +3,10 @@
 #include "decs/decs.h"
 #include "decs/ComponentContainers/StableContainer.h"
 
-
-template<typename T>
-class StableComponent
+void Print(std::string message)
 {
-
-};
-
-template<typename T>
-struct is_stable_component
-{
-	static constexpr bool value = false;
-};
-
-template<typename T>
-struct is_stable_component<StableComponent<T>>
-{
-	static constexpr bool value = true;
-};
-
-
-
+	std::cout << message << "\n";
+}
 
 class Position
 {
@@ -44,22 +27,30 @@ public:
 
 int main()
 {
-	std::cout << decs::is_stable_component<decs::Stable<float>>::value << "\n";
-	std::cout << decs::is_stable_component<Position>::value << "\n";
+	std::cout << sizeof(decs::EntityData) << std::endl;
 
 	decs::Container container;
 
 	auto e = container.CreateEntity();
-	e.AddComponent<Position>(1.f, 2.f);
+	Position* p1 = e.AddComponent<decs::Stable<Position>>(101.f, 202.f);
+	Position* p2 = e.AddComponent<Position>(101.f, 202.f);
+
+	e.RemoveComponent<Position>();
+	e.RemoveComponent<decs::Stable<Position>>();
 
 	decs::View<Position> view = { container };
 
 	auto lambda = [] (Position& pos)
 	{
-		std::cout << "Fuck \n";
+		std::cout << "X = " << pos.X << ", Y = " << pos.Y << "\n";
+		pos.X *= 2;
+		pos.Y *= 2;
 	};
 
 	view.ForEach(lambda);
+	view.ForEach(lambda);
+
+
 
 	return 0;
 }

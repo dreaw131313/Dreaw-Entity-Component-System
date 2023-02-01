@@ -115,8 +115,6 @@ namespace decs
 		template<typename Callable>
 		void ForEach(Callable&& func) noexcept
 		{
-			if (!IsValid()) return;
-			ValidateView();
 			ForEachBackward(func);
 		}
 
@@ -145,7 +143,7 @@ namespace decs
 			ValidateView();
 
 			Entity entityBuffor = {};
-			std::tuple<std::vector<ComponentsTypes>*...> vectorTuple = {};
+			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 			const uint64_t contextCount = m_ArchetypesContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
@@ -153,7 +151,7 @@ namespace decs
 				if (ctx.m_EntitiesCount == 0) continue;
 
 				std::vector< ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
-				CreateVectorsTuple<ComponentsTypes...>(vectorTuple, ctx);
+				CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
 				for (uint64_t idx = 0; idx < ctx.m_EntitiesCount; idx++)
 				{
@@ -163,11 +161,11 @@ namespace decs
 						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 						{
 							entityBuffor.Set(entityData.m_ID, this->m_Container);
-							func(entityBuffor, std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
+							func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 						}
 						else
 						{
-							func(std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
+							func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 						}
 					}
 				}
@@ -181,7 +179,7 @@ namespace decs
 			ValidateView();
 
 			Entity entityBuffor = {};
-			std::tuple<std::vector<ComponentsTypes>*...> vectorTuple = {};
+			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 			const uint64_t contextCount = m_ArchetypesContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
@@ -189,7 +187,7 @@ namespace decs
 				if (ctx.m_EntitiesCount == 0) continue;
 
 				std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
-				CreateVectorsTuple<ComponentsTypes...>(vectorTuple, ctx);
+				CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 				int64_t idx = ctx.m_EntitiesCount - 1;
 
 				for (; idx > -1; idx--)
@@ -200,11 +198,11 @@ namespace decs
 						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 						{
 							entityBuffor.Set(entityData.m_ID, this->m_Container);
-							func(entityBuffor, std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
+							func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 						}
 						else
 						{
-							func(std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
+							func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 						}
 					}
 				}
@@ -472,6 +470,33 @@ namespace decs
 		template<>
 		void CreateVectorsTuple<void>(
 			std::tuple<std::vector<ComponentsTypes>*...>& vectorsTuple,
+			const ArchetypeContext& context
+			) const noexcept
+		{
+
+		}
+
+
+		template<typename T = void, typename... Args>
+		void CreatePackedContainersTuple(
+			std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
+			const ArchetypeContext& context
+		) const noexcept
+		{
+			constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
+			std::get<PackedContainer<T>*>(containersTuple) = (reinterpret_cast<PackedContainer<T>*>(context.m_Containers[compIdx]));
+
+			if constexpr (sizeof...(Args) == 0) return;
+
+			CreatePackedContainersTuple<Args...>(
+				containersTuple,
+				context
+				);
+		}
+
+		template<>
+		void CreatePackedContainersTuple<void>(
+			std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
 			const ArchetypeContext& context
 			) const noexcept
 		{

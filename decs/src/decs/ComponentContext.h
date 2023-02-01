@@ -21,8 +21,6 @@ namespace decs
 
 		}
 
-		inline virtual uint64_t GetChunkCapacity() const = 0;
-
 		virtual TypeID GetComponentTypeID() const = 0;
 		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity) = 0;
 		virtual void InvokeOnDestroyComponent_S(void* component, Entity& entity) = 0;
@@ -56,11 +54,6 @@ namespace decs
 		~ComponentContext()
 		{
 
-		}
-
-		inline virtual uint64_t GetChunkCapacity() const override
-		{
-			return m_ChunkCapacity;
 		}
 
 		virtual TypeID GetComponentTypeID() const { return Type<ComponentType>::ID(); }

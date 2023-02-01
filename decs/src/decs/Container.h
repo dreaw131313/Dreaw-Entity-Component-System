@@ -293,7 +293,6 @@ namespace decs
 	private:
 		bool m_HaveOwnComponentContextManager = true;
 		ComponentContextsManager* m_ComponentContextManager = nullptr;
-		ecsMap<TypeID, StableContainerBase*> m_StableContainers;
 	public:
 		template<typename ComponentType>
 		bool SetStableComponent(const uint64_t& chunkSize)
@@ -319,7 +318,20 @@ namespace decs
 		}
 
 		template<typename ComponentType, typename ...Args>
-		ComponentType* AddComponent(EntityData& entityData, Args&&... args)
+		inline typename stable_type<ComponentType>::Type* AddComponent(EntityData& entityData, Args&&... args)
+		{
+			if constexpr (is_stable<ComponentType>::value)
+			{
+				return AddStableComponent<typename ComponentType::Type>(entityData, std::forward<Args>(args)...);
+			}
+			else
+			{
+				return AddUnstableComponent<ComponentType>(entityData, std::forward<Args>(args)...);
+			}
+		}
+
+		template<typename ComponentType, typename ...Args>
+		ComponentType* AddUnstableComponent(EntityData& entityData, Args&&... args)
 		{
 			constexpr TypeID copmonentTypeID = Type<ComponentType>::ID();
 			if (!m_CanAddComponents) return nullptr;
@@ -373,9 +385,89 @@ namespace decs
 			return nullptr;
 		}
 
-		bool RemoveComponent(Entity& e, const TypeID& componentTypeID);
+		template<typename ComponentType, typename ...Args >
+		ComponentType* AddStableComponent(EntityData& entityData, Args&&... args)
+		{
+			constexpr TypeID copmonentTypeID = Type<Stable<ComponentType>>::ID();
+
+			if (!m_CanAddComponents) return nullptr;
+
+			if (entityData.IsValidToPerformComponentOperation())
+			{
+				if (m_PerformDelayedDestruction)
+				{
+					//ComponentType* delayedToDestroyComponent = TryAddComponentDelayedToDestroy<ComponentType>(entityData);
+					//if (delayedToDestroyComponent != nullptr) { return delayedToDestroyComponent; }
+				}
+				else
+				{
+					auto currentComponent = GetStableComponentWithoutCheckingIsAlive<ComponentType>(entityData);
+					if (currentComponent != nullptr) return currentComponent;
+				}
+
+				ComponentContextBase* newComponentContext;
+				uint32_t componentContainerIndex = 0;
+				Archetype* entityNewArchetype = GetArchetypeAfterAddStableComponent<ComponentType>(
+					entityData.m_Archetype,
+					newComponentContext,
+					componentContainerIndex
+					);
+
+				// Adding component to stable component container
+				StableContainer<ComponentType>* stableContainer = GetOrCreateStableContainer<ComponentType>();
+				ComponentNodeInfo componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
+				entityData.m_StableComponentsNodes[copmonentTypeID] = { componentNodeInfo.m_ChunkIndex, componentNodeInfo.m_Index };
+
+				// Adding component pointer to packed container in archetype
+				PackedContainer<Stable<ComponentType>>* packedPointersContainer = reinterpret_cast<PackedContainer<Stable<ComponentType>>*>(entityNewArchetype->m_PackedContainers[componentContainerIndex]);
+
+				packedPointersContainer->m_Data.push_back(static_cast<ComponentType*>(componentNodeInfo.m_ComponentPtr));
+				ComponentType* componentPtr = static_cast<ComponentType*>(componentNodeInfo.m_ComponentPtr);
+
+				// Adding entity to archetype
+				uint32_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
+				entityNewArchetype->AddEntityData(entityData.m_ID, entityData.m_IsActive);
+				if (entityData.m_Archetype != nullptr)
+				{
+					entityNewArchetype->MoveEntityAfterAddComponent<ComponentType>(
+						*entityData.m_Archetype,
+						entityData.m_IndexInArchetype
+						);
+					auto result = entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
+					ValidateEntityInArchetype(result);
+				}
+				else
+				{
+					RemoveFromEmptyEntities(entityData);
+				}
+
+				entityData.m_IndexInArchetype = entityIndexBuffor;
+				entityData.m_Archetype = entityNewArchetype;
+
+				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(newComponentContext, componentPtr, entityData);
+				return componentPtr;
+			}
+			return nullptr;
+		}
+
+		template<typename ComponentType>
+		bool RemoveComponent(Entity& entity)
+		{
+			if constexpr (is_stable<ComponentType>::value)
+			{
+				return RemoveStableComponent(entity, Type<ComponentType>::ID());
+			}
+			else
+			{
+				return RemoveComponent(entity, Type<ComponentType>::ID());
+			}
+		}
 
 		bool RemoveComponent(const EntityID& e, const TypeID& componentTypeID);
+
+		bool RemoveComponent(Entity& entity, const TypeID& componentTypeID);
+
+		bool RemoveStableComponent(Entity& entity, const TypeID& componentTypeID);
 
 		template<typename ComponentType>
 		ComponentType* GetComponent(const EntityID& e) const
@@ -419,6 +511,22 @@ namespace decs
 			}
 			return nullptr;
 		}
+
+		template<typename ComponentType>
+		ComponentType* GetStableComponentWithoutCheckingIsAlive(EntityData& entityData) const
+		{
+			if (entityData.m_Archetype != nullptr)
+			{
+				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<Stable<ComponentType>>();
+				if (findTypeIndex != Limits::MaxComponentCount)
+				{
+					PackedContainer<Stable<ComponentType>>* container = static_cast<PackedContainer<Stable<ComponentType>>*>(entityData.m_Archetype->m_PackedContainers[findTypeIndex]);
+					return container->m_Data[entityData.m_IndexInArchetype];
+				}
+			}
+			return nullptr;
+		}
+
 
 		template<typename ComponentType>
 		bool HasComponent(const EntityID& e) const
@@ -466,6 +574,76 @@ namespace decs
 
 #pragma endregion
 
+#pragma region STABLE COMPONENTS
+	private:
+		ecsMap<TypeID, StableContainerBase*> m_StableContainers;
+		uint64_t m_DefaultStableComponentChunkSize = 100;
+
+	public:
+		template<typename T>
+		bool SetStableComponentChunkSize(const uint64_t& chunkSize)
+		{
+			constexpr TypeID typeID = Type<Stable<T>>::ID();
+			auto& container = m_StableContainers[typeID];
+
+			if (container == nullptr)
+			{
+				container = new StableContainer<T>(chunkSize);
+				return true;
+			}
+
+			return false;
+
+		}
+
+		template<typename T>
+		uint64_t GetStableComponentChunkSize()
+		{
+			constexpr TypeID typeID = Type<Stable<T>>::ID();
+			auto it = m_StableContainers.find(typeID);
+
+			if (it != m_StableContainers.end())
+			{
+				return it->second->GetChunkSize();
+			}
+
+			return std::numeric_limits<uint64_t>::max();
+		}
+
+	private:
+		template<typename T>
+		StableContainer<T>* GetOrCreateStableContainer()
+		{
+			constexpr TypeID typeID = Type<Stable<T>>::ID();
+			auto& container = m_StableContainers[typeID];
+
+			if (container == nullptr)
+			{
+				container = new StableContainer<T>(m_DefaultStableComponentChunkSize);
+			}
+
+			return static_cast<StableContainer<T>*>(container);
+		}
+
+		inline void DestroyStableComponents()
+		{
+			for (auto& [key, value] : m_StableContainers)
+			{
+				delete value;
+			}
+		}
+
+		inline void ClearStableComponents()
+		{
+			for (auto& [key, value] : m_StableContainers)
+			{
+				value->Clear();
+			}
+		}
+
+
+#pragma endregion
+
 #pragma region ARCHETYPES:
 	public:
 		inline void ShrinkArchetypesToFit()
@@ -491,13 +669,15 @@ namespace decs
 			uint32_t& componentContainerIndex
 		)
 		{
+			constexpr TypeID id = Type<ComponentType>::ID();
+
 			Archetype* entityNewArchetype = nullptr;
 			if (toArchetype == nullptr)
 			{
 				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype<ComponentType>();
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>();
+					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(id);
 					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<ComponentType>(
 						newComponentContext
@@ -515,7 +695,7 @@ namespace decs
 					);
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>();
+					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(id);
 					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<ComponentType>(
 						*toArchetype,
@@ -527,6 +707,56 @@ namespace decs
 					newComponentContext = entityNewArchetype->m_ComponentContexts[componentContainerIndex];
 				}
 				componentContainerIndex = entityNewArchetype->FindTypeIndex<ComponentType>();
+			}
+
+			return entityNewArchetype;
+		}
+
+		template<typename ComponentType>
+		Archetype* GetArchetypeAfterAddStableComponent(
+			Archetype* toArchetype,
+			ComponentContextBase*& newComponentContext,
+			uint32_t& componentContainerIndex
+		)
+		{
+			constexpr TypeID id = Type<Stable<ComponentType>>::ID();
+
+			Archetype* entityNewArchetype = nullptr;
+			if (toArchetype == nullptr)
+			{
+				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype<Stable<ComponentType>>();
+				if (entityNewArchetype == nullptr)
+				{
+					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(id);
+					newComponentContext = context;
+					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<Stable<ComponentType>>(
+						newComponentContext
+						);
+				}
+				else
+				{
+					newComponentContext = entityNewArchetype->m_ComponentContexts[componentContainerIndex];
+				}
+			}
+			else
+			{
+				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<Stable<ComponentType>>(
+					*toArchetype
+					);
+				if (entityNewArchetype == nullptr)
+				{
+					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(id);
+					newComponentContext = context;
+					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<Stable<ComponentType>>(
+						*toArchetype,
+						newComponentContext
+						);
+				}
+				else
+				{
+					newComponentContext = entityNewArchetype->m_ComponentContexts[componentContainerIndex];
+				}
+				componentContainerIndex = entityNewArchetype->FindTypeIndex<Stable<ComponentType>>();
 			}
 
 			return entityNewArchetype;

@@ -21,8 +21,6 @@ namespace decs
 
 		inline virtual void RemoveSwapBack(const uint64_t& index) = 0;
 		inline virtual void* EmplaceFromVoid(void* data) noexcept = 0;
-
-		inline virtual void* GetCompAsPtr(const uint64_t& index) noexcept = 0;
 	};
 
 	template<typename ComponentType>
@@ -81,18 +79,16 @@ namespace decs
 			}
 		}
 
-		inline virtual void* GetCompAsPtr(const uint64_t& index) noexcept override
+		inline ComponentType& GetAsRef(const uint64_t& index) noexcept
 		{
-			if constexpr (std::is_pointer_v<ComponentType>) return m_Data[index];
-
-			return &m_Data[index];
+			return m_Data[index];
 		}
 
 	};
 
 
 	template<typename ComponentType>
-	class PackedContainer<decs::Stable<ComponentType>>: public PackedContainerBase
+	class PackedContainer<decs::Stable<ComponentType>> : public PackedContainerBase
 	{
 	public:
 		std::vector<ComponentType*> m_Data;
@@ -130,7 +126,7 @@ namespace decs
 
 		inline virtual void* GetComponentAsVoid(const uint64_t& index)
 		{
-			return &m_Data[index];
+			return m_Data[index];
 		}
 
 		inline virtual void* EmplaceFromVoid(void* data)  noexcept override
@@ -148,11 +144,9 @@ namespace decs
 			}
 		}
 
-		inline virtual void* GetCompAsPtr(const uint64_t& index) noexcept override
+		inline ComponentType& GetAsRef(const uint64_t& index) noexcept
 		{
-			if constexpr (std::is_pointer_v<ComponentType>) return m_Data[index];
-
-			return &m_Data[index];
+			return *m_Data[index];
 		}
 
 	};

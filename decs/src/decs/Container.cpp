@@ -6,7 +6,7 @@ namespace decs
 {
 	Container::Container() :
 		m_HaveOwnEntityManager(true),
-		m_EntityManager(new EntityManager(1000)),
+		m_EntityManager(new EntityManager(10000)),
 		m_HaveOwnComponentContextManager(true),
 		m_ComponentContextManager(new ComponentContextsManager(1000, nullptr))
 	{
@@ -42,6 +42,7 @@ namespace decs
 
 	Container::~Container()
 	{
+		DestroyStableComponents();
 		if (m_HaveOwnComponentContextManager)
 		{
 			delete m_ComponentContextManager;
@@ -438,6 +439,62 @@ namespace decs
 	{
 		Entity entity(e, this);
 		return RemoveComponent(entity, componentTypeID);
+	}
+
+	bool Container::RemoveStableComponent(Entity& entity, const TypeID& componentTypeID)
+	{
+		if (!m_CanRemoveComponents || entity.m_Container != this) return false;
+
+		EntityData& entityData = *entity.m_EntityData;
+		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
+
+		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
+		if (compIdxInArch == Limits::MaxComponentCount) return false;
+
+		ComponentContextBase* componentContext = entityData.m_Archetype->m_ComponentContexts[compIdxInArch];
+		auto& container = entityData.m_Archetype->m_PackedContainers[compIdxInArch];
+
+		if (m_PerformDelayedDestruction)
+		{
+			return AddComponentToDelayedDestroy(entity.ID(), componentTypeID);
+		}
+
+		componentContext->InvokeOnDestroyComponent_S(
+			container->GetComponentAsVoid(entityData.m_IndexInArchetype),
+			entity
+		);
+
+		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
+			*entityData.m_Archetype,
+			componentTypeID
+		);
+
+		uint64_t oldArchetypeIndex = entityData.m_IndexInArchetype;
+		Archetype* oldArchetype = entityData.m_Archetype;
+		if (newEntityArchetype != nullptr)
+		{
+			uint32_t entityIndexBuffor = newEntityArchetype->EntitiesCount();
+			newEntityArchetype->AddEntityData(entityData.m_ID, entityData.m_IsActive);
+			newEntityArchetype->MoveEntityAfterRemoveComponent(
+				componentTypeID,
+				*entityData.m_Archetype,
+				entityData.m_IndexInArchetype
+			);
+
+			entityData.m_IndexInArchetype = entityIndexBuffor;
+			entityData.m_Archetype = newEntityArchetype;
+		}
+		else
+		{
+			entityData.m_Archetype = nullptr;
+			entityData.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
+			m_EmptyEntities.EmplaceBack(&entityData);
+		}
+
+		auto result = oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
+		ValidateEntityInArchetype(result);
+
+		return true;
 	}
 
 	void Container::InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData)

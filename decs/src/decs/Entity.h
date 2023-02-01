@@ -91,7 +91,7 @@ namespace decs
 		}
 
 		template<typename T>
-		inline bool TryGetComponent(T*& component) const
+		inline bool TryGetComponent(typename stable_type<T>::Type*& component) const
 		{
 			if (IsValid())
 				component = m_Container->GetComponent<T>(*m_EntityData);
@@ -102,7 +102,7 @@ namespace decs
 		}
 
 		template<typename T, typename... Args>
-		inline T* AddComponent(Args&&... args)
+		inline typename stable_type<T>::Type* AddComponent(Args&&... args)
 		{
 			if (IsValid())
 				return m_Container->AddComponent<T>(*m_EntityData, std::forward<Args>(args)...);
@@ -113,8 +113,7 @@ namespace decs
 		template<typename T>
 		inline bool RemoveComponent()
 		{
-			constexpr TypeID componentTypeID = Type<T>::ID();
-			return IsValid() && m_Container->RemoveComponent(*this, componentTypeID);
+			return IsValid() && m_Container->RemoveComponent<T>(*this);
 		}
 
 		inline uint32_t GetVersion() const

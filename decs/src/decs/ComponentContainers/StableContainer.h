@@ -144,6 +144,7 @@ namespace decs
 		std::vector<uint64_t> m_FreeSpaces;
 	};
 
+	
 	class ComponentNodeInfo
 	{
 	public:
@@ -162,7 +163,7 @@ namespace decs
 			const uint64_t& chunkIndex,
 			const uint64_t& index
 		) :
-			m_ComponentPtr(m_ComponentPtr), m_ChunkIndex(chunkIndex), m_Index(index)
+			m_ComponentPtr(componentPtr), m_ChunkIndex(chunkIndex), m_Index(index)
 		{
 
 		}
@@ -174,10 +175,12 @@ namespace decs
 	public:
 		virtual bool Remove(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
 		virtual ComponentNodeInfo EmplaceFromVoid(void* ptr) = 0;
+		virtual uint64_t GetChunkSize() const noexcept = 0;
+		virtual void Clear() = 0;
 	};
 
 	template<typename DataType>
-	class StableContainer : StableContainerBase
+	class StableContainer : public StableContainerBase
 	{
 		using ChunkType = Chunk<DataType>;
 
@@ -201,6 +204,11 @@ namespace decs
 					delete chunk;
 				}
 			}
+		}
+
+		virtual uint64_t GetChunkSize() const noexcept override
+		{
+			return m_ChunkCapacity;
 		}
 
 		template<typename... Args>
@@ -242,6 +250,17 @@ namespace decs
 		virtual ComponentNodeInfo EmplaceFromVoid(void* ptr)override
 		{
 			return Emplace(*static_cast<DataType*>(ptr));
+		}
+
+		virtual void Clear() override
+		{
+			for (auto& chunk : m_Chunks)
+			{
+				delete chunk;
+			}
+			m_CurrentChunk = nullptr;
+			m_Chunks.clear();
+			m_ChunksWithFreeSpace.clear();
 		}
 
 	private:
