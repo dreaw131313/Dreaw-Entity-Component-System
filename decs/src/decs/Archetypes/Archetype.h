@@ -62,15 +62,21 @@ namespace decs
 		friend class Container;
 		friend class ArchetypesMap;
 		template<typename... ComponentTypes>
-		friend 	class ViewIterator;
+		friend 	class View;
 		template<typename... ComponentTypes>
-		friend 	class ViewBatchIterator;
+		friend class BatchIterator;
+		template<typename ComponentType>
+		friend class ComponentRef;
+		friend class EntitytData;
+		friend class EntityManager;
+		friend class ComponentRefAsVoid;
+
 
 	public:
 		static constexpr uint64_t m_MinComponentsInArchetypeToPerformMapLookup = 20;
 		static constexpr uint64_t DefaultChunkSize = 1000;
 
-	public:
+	private:
 		std::vector<ArchetypeEntityData> m_EntitiesData;
 		std::vector<PackedContainerBase*> m_PackedContainers;
 
@@ -84,7 +90,6 @@ namespace decs
 
 		uint32_t m_EntitesCountToInitialize = 0;
 
-	private:
 		uint32_t m_ComponentsCount = 0; // number of components for each entity
 		uint32_t m_EntitiesCount = 0;
 		std::vector<TypeID> m_AddingOrderTypeIDs;
@@ -154,6 +159,7 @@ namespace decs
 			return it->second;
 		}
 
+	private:
 		template<typename ComponentType>
 		inline void AddTypeToAddingComponentOrder()
 		{
@@ -338,7 +344,6 @@ namespace decs
 			}
 		}
 
-	private:
 		void Reset()
 		{
 			m_EntitiesCount = 0;
