@@ -126,7 +126,6 @@ namespace decs
 
 		inline uint32_t ComponentsCount() const { return m_ComponentsCount; }
 		inline TypeID GetTypeID(const uint64_t& index) const { return m_TypeData[index].m_TypeID; }
-
 		inline uint32_t EntitiesCount() const { return m_EntitiesCount; }
 		inline uint32_t EntitesCountToInvokeCallbacks() const { return m_EntitesCountToInitialize; }
 
@@ -258,47 +257,6 @@ namespace decs
 			}
 		}
 
-		void MoveEntityAfterRemoveComponent(const TypeID& componentTypeID, Archetype& fromArchetype, const uint64_t& fromIndex)
-		{
-			uint64_t thisArchetypeIndex = 0;
-			uint64_t fromArchetypeIndex = 0;
-
-			for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++, fromArchetypeIndex++)
-			{
-				if (fromArchetype.m_TypeData[thisArchetypeIndex].m_TypeID == componentTypeID)
-				{
-					fromArchetypeIndex += 1;
-				}
-				m_TypeData[thisArchetypeIndex].m_PackedContainer->EmplaceFromVoid(
-					fromArchetype.m_TypeData[fromArchetypeIndex].m_PackedContainer->GetComponentDataAsVoid(fromIndex)
-				);
-			}
-		}
-
-		template<typename ComponentType>
-		void MoveEntityAfterAddComponent(Archetype& fromArchetype, const uint64_t& fromIndex)
-		{
-			constexpr TypeID newComponentTypeID = Type<ComponentType>::ID();
-
-			uint64_t thisArchetypeIndex = 0;
-			uint64_t fromArchetypeIndex = 0;
-
-			for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++)
-			{
-				ArchetypeTypeData& archetypeTypeData = m_TypeData[thisArchetypeIndex];
-				if (archetypeTypeData.m_TypeID == newComponentTypeID)
-				{
-					continue;
-				}
-
-				archetypeTypeData.m_PackedContainer->EmplaceFromVoid(
-					fromArchetype.m_TypeData[fromArchetypeIndex].m_PackedContainer->GetComponentDataAsVoid(fromIndex)
-				);
-
-				fromArchetypeIndex++;
-			}
-		}
-
 		template<typename ComponentType>
 		inline PackedContainer<ComponentType>* GetContainerAt(const uint64_t& index)
 		{
@@ -327,6 +285,21 @@ namespace decs
 			}
 		}
 
+		void Reset()
+		{
+			m_EntitiesCount = 0;
+			m_EntitiesData.clear();
+			for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
+			{
+				m_TypeData[idx].m_PackedContainer->Clear();
+			}
+		}
+
+		inline void ValidateEntitiesCountToInitialize()
+		{
+			m_EntitesCountToInitialize = m_EntitiesCount;
+		}
+
 		void InitEmptyFromOther(Archetype& other, ecsMap<TypeID, ComponentContextBase*>& contextsMap)
 		{
 			m_ComponentsCount = other.m_ComponentsCount;
@@ -349,20 +322,61 @@ namespace decs
 			}
 		}
 
-		void Reset()
+		/// <summary>
+		/// Moves entity components from "fromArchetype" to this archetype.
+		/// </summary>
+		/// <param name="componentTypeID"></param>
+		/// <param name="fromArchetype"></param>
+		/// <param name="fromIndex"></param>
+		void MoveEntityAfterRemoveComponent(const TypeID& componentTypeID, Archetype& fromArchetype, const uint64_t& fromIndex)
 		{
-			m_EntitiesCount = 0;
-			m_EntitiesData.clear();
-			for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
+			uint64_t thisArchetypeIndex = 0;
+			uint64_t fromArchetypeIndex = 0;
+
+			for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++, fromArchetypeIndex++)
 			{
-				m_TypeData[idx].m_PackedContainer->Clear();
+				ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
+				if (fromArchetype.m_TypeData[fromArchetypeIndex].m_TypeID == componentTypeID)
+				{
+					fromArchetypeIndex += 1;
+				}
+
+				thisTypeData.m_PackedContainer->EmplaceFromVoid(
+					fromArchetype.m_TypeData[fromArchetypeIndex].m_PackedContainer->GetComponentDataAsVoid(fromIndex)
+				);
 			}
 		}
 
-		inline void ValidateEntitiesCountToInitialize()
+		/// <summary>
+		/// Moves entity components from "fromArchetype" to this archetype.
+		/// </summary>
+		/// <typeparam name="ComponentType"></typeparam>
+		/// <param name="fromArchetype"></param>
+		/// <param name="fromIndex"></param>
+		template<typename ComponentType>
+		void MoveEntityAfterAddComponent(Archetype& fromArchetype, const uint64_t& fromIndex)
 		{
-			m_EntitesCountToInitialize = m_EntitiesCount;
+			constexpr TypeID newComponentTypeID = Type<ComponentType>::ID();
+
+			uint64_t thisArchetypeIndex = 0;
+			uint64_t fromArchetypeIndex = 0;
+
+			for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++)
+			{
+				ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
+				if (thisTypeData.m_TypeID == newComponentTypeID)
+				{
+					continue;
+				}
+
+				thisTypeData.m_PackedContainer->EmplaceFromVoid(
+					fromArchetype.m_TypeData[fromArchetypeIndex].m_PackedContainer->GetComponentDataAsVoid(fromIndex)
+				);
+
+				fromArchetypeIndex++;
+			}
 		}
+
 	};
 
 }

@@ -682,7 +682,7 @@ namespace decs
 			{
 				ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
 				archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(
-					archetypeTypeData.m_PackedContainer->GetComponentPtrAsVoid(i),
+					archetypeTypeData.m_PackedContainer->GetComponentPtrAsVoid(entityDataIdx),
 					entity
 				);
 			}

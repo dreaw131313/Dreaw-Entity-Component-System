@@ -173,6 +173,9 @@ namespace decs
 	class StableContainerBase
 	{
 	public:
+		inline virtual TypeID GetTypeID()const noexcept = 0;
+		virtual StableContainerBase* CreateOwnEmptyCopy(const uint64_t& withChunkSize) = 0;
+
 		virtual bool Remove(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
 		virtual ComponentNodeInfo EmplaceFromVoid(void* ptr) = 0;
 		virtual uint64_t GetChunkSize() const noexcept = 0;
@@ -204,6 +207,13 @@ namespace decs
 					delete chunk;
 				}
 			}
+		}
+
+		inline virtual TypeID GetTypeID()const noexcept override { return Type<Stable<DataType>>::ID(); }
+
+		virtual StableContainerBase* CreateOwnEmptyCopy(const uint64_t& withChunkSize) override
+		{
+			return new StableContainer<DataType>(withChunkSize);
 		}
 
 		virtual uint64_t GetChunkSize() const noexcept override

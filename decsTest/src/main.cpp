@@ -43,6 +43,9 @@ public:
 
 int main()
 {
+	std::cout << "EntityData size: " << sizeof(decs::EntityData) << "\n";
+	std::cout << "\n";
+
 	decs::ObserversManager observerManager;
 	decs::Container container;
 	container.SetObserversManager(&observerManager);
@@ -55,6 +58,7 @@ int main()
 	for (int i = 0; i < entitiesCount; i++)
 	{
 		auto e = container.CreateEntity();
+		e.AddComponent<float>();
 		e.AddComponent<decs::Stable<Position>>(i + 1.f, i + 2.f);
 		e.RemoveComponent<decs::Stable<Position>>();
 		e.AddComponent<decs::Stable<Position>>(i + 1.f, i + 2.f);

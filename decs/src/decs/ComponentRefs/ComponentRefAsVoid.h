@@ -10,6 +10,8 @@ namespace decs
 	class ComponentRefAsVoid final
 	{
 	public:
+		ComponentRefAsVoid() {}
+
 		ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData);
 		
 		ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData, const uint32_t& componentIndex);
@@ -38,6 +40,7 @@ namespace decs
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 		uint32_t m_ComponentIndex = Limits::MaxComponentCount;
 		PackedContainerBase* m_PackedContainer = nullptr;
+
 	private:
 		inline bool IsValid() const
 		{
