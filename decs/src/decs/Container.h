@@ -69,14 +69,14 @@ namespace decs
 
 		Container(
 			const uint64_t& enititesChunkSize,
-			const uint64_t& componentContainerChunkSize,
+			const uint64_t& stableComponentDefaultChunkSize,
 			const uint64_t& m_EmptyEntitiesChunkSize = 100
 		);
 
 		Container(
 			EntityManager* entityManager,
 			ComponentContextsManager* componentContextsManager,
-			const uint64_t& componentContainerChunkSize,
+			const uint64_t& stableComponentDefaultChunkSize,
 			const uint64_t& m_EmptyEntitiesChunkSize = 100
 		);
 

@@ -8,20 +8,21 @@ namespace decs
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(10000)),
 		m_HaveOwnComponentContextManager(true),
-		m_ComponentContextManager(new ComponentContextsManager(1000, nullptr))
+		m_ComponentContextManager(new ComponentContextsManager(nullptr))
 	{
 
 	}
 
 	Container::Container(
 		const uint64_t& enititesChunkSize,
-		const uint64_t& componentContainerChunkSize,
+		const uint64_t& stableComponentDefaultChunkSize,
 		const uint64_t& m_EmptyEntitiesChunkSize
 	) :
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(enititesChunkSize)),
+		m_DefaultStableComponentChunkSize(stableComponentDefaultChunkSize),
 		m_HaveOwnComponentContextManager(true),
-		m_ComponentContextManager(new ComponentContextsManager(componentContainerChunkSize, nullptr)),
+		m_ComponentContextManager(new ComponentContextsManager( nullptr)),
 		m_EmptyEntities(m_EmptyEntitiesChunkSize)
 	{
 	}
@@ -29,13 +30,14 @@ namespace decs
 	Container::Container(
 		EntityManager* entityManager,
 		ComponentContextsManager* componentContextsManager,
-		const uint64_t& componentContainerChunkSize,
+		const uint64_t& stableComponentDefaultChunkSize,
 		const uint64_t& m_EmptyEntitiesChunkSize
 	) :
 		m_HaveOwnEntityManager(false),
 		m_EntityManager(entityManager),
 		m_HaveOwnComponentContextManager(false),
 		m_ComponentContextManager(componentContextsManager),
+		m_DefaultStableComponentChunkSize(stableComponentDefaultChunkSize),
 		m_EmptyEntities(m_EmptyEntitiesChunkSize)
 	{
 	}

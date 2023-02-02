@@ -16,10 +16,8 @@ namespace decs
 		}
 		
 		ComponentContextsManager(
-			const uint64_t& defaultChunkSize,
 			ObserversManager* observersManager
 			):
-			m_DefaultComponentChunkSize(defaultChunkSize),
 			m_ObserversManager(observersManager)
 		{
 
@@ -58,11 +56,11 @@ namespace decs
 				ComponentContext<ComponentType>* context;
 				if (m_ObserversManager != nullptr)
 				{
-					context = new ComponentContext<ComponentType>(m_DefaultComponentChunkSize, m_ObserversManager->GetComponentObserver<ComponentType>());
+					context = new ComponentContext<ComponentType>(m_ObserversManager->GetComponentObserver<ComponentType>());
 				}
 				else
 				{
-					context = new ComponentContext<ComponentType>(m_DefaultComponentChunkSize, nullptr);
+					context = new ComponentContext<ComponentType>(nullptr);
 				}
 				componentContext = context;
 				return context;
@@ -82,7 +80,6 @@ namespace decs
 		}
 
 	private:
-		uint64_t m_DefaultComponentChunkSize = 1000;
 		ecsMap<TypeID, ComponentContextBase*> m_Contexts;
 		ObserversManager* m_ObserversManager = nullptr;
 

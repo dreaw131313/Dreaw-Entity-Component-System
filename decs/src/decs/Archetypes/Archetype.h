@@ -60,21 +60,22 @@ namespace decs
 	class Archetype final
 	{
 		friend class Container;
-		friend class ArchetypesMap;
-		template<typename... ComponentTypes>
-		friend 	class View;
-		template<typename... ComponentTypes>
-		friend class BatchIterator;
-		template<typename ComponentType>
-		friend class ComponentRef;
 		friend class EntitytData;
 		friend class EntityManager;
-		friend class ComponentRefAsVoid;
+		friend class ArchetypesMap;
 
+		template<typename... ComponentTypes>
+		friend 	class View;
+
+		template<typename... ComponentTypes>
+		friend class BatchIterator;
+
+		template<typename ComponentType>
+		friend class ComponentRef;
+		friend class ComponentRefAsVoid;
 
 	public:
 		static constexpr uint64_t m_MinComponentsInArchetypeToPerformMapLookup = 20;
-		static constexpr uint64_t DefaultChunkSize = 1000;
 
 	private:
 		std::vector<ArchetypeEntityData> m_EntitiesData;

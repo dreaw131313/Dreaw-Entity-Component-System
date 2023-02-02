@@ -42,10 +42,8 @@ namespace decs
 
 	public:
 		ComponentContext(
-			const uint64_t& chunkCapacity,
 			ComponentObserver<ComponentType>* observer
 		) :
-			m_ChunkCapacity(chunkCapacity),
 			m_Observer(observer)
 		{
 
@@ -104,21 +102,9 @@ namespace decs
 
 		ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) override
 		{
-			if (observerManager != nullptr)
-			{
-				return new ComponentContext<ComponentType>(
-					m_ChunkCapacity,
-					observerManager->GetComponentObserver<ComponentType>()
-					);
-			}
-
 			return new ComponentContext<ComponentType>(
-				m_ChunkCapacity,
-				nullptr
+				observerManager != nullptr ? observerManager->GetComponentObserver<ComponentType>() : nullptr
 				);
 		}
-
-	private:
-		uint64_t m_ChunkCapacity = 1000;
 	};
 }
