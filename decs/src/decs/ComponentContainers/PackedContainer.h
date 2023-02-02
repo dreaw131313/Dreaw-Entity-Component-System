@@ -2,12 +2,31 @@
 #include "Core.h"
 #include "Containers\ChunkedVector.h"
 
+#include "StableContainer.h"
+
 namespace decs
 {
 	class PackedContainerBase
 	{
 	public:
-		inline virtual bool IsForStableComponents() = 0;
+		PackedContainerBase()
+		{
+
+		}
+
+		PackedContainerBase(StableContainerBase* stableContainer):
+			m_LinkedStableContainer(stableContainer)
+		{
+
+		}
+
+		inline virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept = 0;
+
+		inline virtual StableContainerBase* GetLinkedStableContainer()
+		{
+			return m_LinkedStableContainer;
+		}
+		inline virtual bool IsForStableComponents() const noexcept { return m_LinkedStableContainer != nullptr; }
 
 		inline virtual void PopBack() = 0;
 		inline virtual void Clear() = 0;
@@ -16,13 +35,15 @@ namespace decs
 		inline virtual uint64_t Size() = 0;
 		inline virtual void Reserve(const uint64_t& newCapacity) = 0;
 
-		inline virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept = 0;
 		inline virtual void* GetComponentPtrAsVoid(const uint64_t& index) noexcept = 0;
 
 		inline virtual void* GetComponentDataAsVoid(const uint64_t& index) noexcept = 0;
 
 		inline virtual void RemoveSwapBack(const uint64_t& index) = 0;
 		inline virtual void* EmplaceFromVoid(void* data) noexcept = 0;
+
+	private:
+		StableContainerBase* m_LinkedStableContainer = nullptr;
 	};
 
 	template<typename ComponentType>
@@ -47,7 +68,6 @@ namespace decs
 			return new PackedContainer<ComponentType>();
 		}
 
-		inline virtual bool IsForStableComponents() override { return false; }
 		inline virtual void PopBack() override
 		{
 			if (m_Data.size() > 0) { m_Data.pop_back(); }
@@ -71,7 +91,6 @@ namespace decs
 			return &m_Data[index];
 		}
 
-
 		inline virtual void* EmplaceFromVoid(void* data)  noexcept override
 		{
 			ComponentType& newElement = m_Data.emplace_back(*reinterpret_cast<ComponentType*>(data));
@@ -92,6 +111,10 @@ namespace decs
 			return m_Data[index];
 		}
 
+		inline ComponentType* GetAsPtr(const uint64_t& index) noexcept
+		{
+			return &m_Data[index];
+		}
 	};
 
 	struct StableComponentRef
@@ -129,8 +152,6 @@ namespace decs
 		{
 
 		}
-
-		inline virtual bool IsForStableComponents() override { return true; }
 
 		virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept override
 		{
@@ -180,5 +201,9 @@ namespace decs
 			return *static_cast<ComponentType*>(m_Data[index].m_ComponentPtr);
 		}
 
+		inline ComponentType* GetAsPtr(const uint64_t& index) noexcept
+		{
+			return static_cast<ComponentType*>(m_Data[index].m_ComponentPtr);
+		}
 	};
 }

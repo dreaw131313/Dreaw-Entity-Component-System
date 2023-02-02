@@ -364,7 +364,7 @@ namespace decs
 #pragma endregion
 
 #pragma region CREATING ARCHETYPES
-
+	private:
 		template<typename ComponentType>
 		Archetype* GetSingleComponentArchetype()
 		{

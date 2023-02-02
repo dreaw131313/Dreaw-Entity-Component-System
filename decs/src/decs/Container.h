@@ -201,7 +201,7 @@ namespace decs
 		{
 		public:
 			std::vector<ComponentRefAsVoid> m_PrefabComponentRefs;
-			std::vector < Archetype*> m_SpawnArchetypes;
+			std::vector <Archetype*> m_SpawnArchetypes;
 			std::vector<ComponentRefAsVoid> m_EntityComponentRefs;
 
 		public:
@@ -396,8 +396,8 @@ namespace decs
 			{
 				if (m_PerformDelayedDestruction)
 				{
-					//ComponentType* delayedToDestroyComponent = TryAddComponentDelayedToDestroy<ComponentType>(entityData);
-					//if (delayedToDestroyComponent != nullptr) { return delayedToDestroyComponent; }
+					ComponentType* delayedToDestroyComponent = TryAddComponentDelayedToDestroy<ComponentType>(entityData);
+					if (delayedToDestroyComponent != nullptr) { return delayedToDestroyComponent; }
 				}
 				else
 				{
