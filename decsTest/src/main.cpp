@@ -53,10 +53,12 @@ int main()
 	observerManager.SetComponentCreateObserver<decs::Stable<Position>>(&testStableObserver);
 	observerManager.SetComponentDestroyObserver<decs::Stable<Position>>(&testStableObserver);
 
+	std::vector<decs::Entity> createdEntities;
+
 	int entitiesCount = 2;
 	for (int i = 0; i < entitiesCount; i++)
 	{
-		auto e = container.CreateEntity();
+		auto& e = createdEntities.emplace_back(container.CreateEntity());
 		e.AddComponent<float>();
 		e.AddComponent<decs::Stable<Position>>(i + 1.f, i + 2.f);
 	}
@@ -85,6 +87,11 @@ int main()
 	for (auto& iterator : iterators)
 	{
 		iterator.ForEach(lambda);
+	}
+
+	for (auto& entity : createdEntities)
+	{
+		entity.Destroy();
 	}
 
 	return 0;

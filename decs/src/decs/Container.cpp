@@ -22,7 +22,7 @@ namespace decs
 		m_EntityManager(new EntityManager(enititesChunkSize)),
 		m_StableContainers(stableComponentDefaultChunkSize),
 		m_HaveOwnComponentContextManager(true),
-		m_ComponentContextManager(new ComponentContextsManager( nullptr)),
+		m_ComponentContextManager(new ComponentContextsManager(nullptr)),
 		m_EmptyEntities(m_EmptyEntitiesChunkSize)
 	{
 	}
@@ -117,19 +117,32 @@ namespace decs
 			if (currentArchetype != nullptr)
 			{
 				const uint32_t componentsCount = currentArchetype->ComponentsCount();
+				const uint32_t indexInArchetype = entityData.m_IndexInArchetype;
+
+				m_StableComponentDestroyData.clear();
 
 				// Invoke On destroy methods
 				for (uint64_t i = 0; i < componentsCount; i++)
 				{
 					ArchetypeTypeData& typeData = currentArchetype->m_TypeData[i];
-					typeData.m_ComponentContext->InvokeOnDestroyComponent_S(
-						typeData.m_PackedContainer->GetComponentPtrAsVoid(entityData.m_IndexInArchetype),
-						entity
-					);
+					typeData.m_ComponentContext->InvokeOnDestroyComponent_S(typeData.m_PackedContainer->GetComponentPtrAsVoid(indexInArchetype), entity);
+
+					if (typeData.m_StableContainer != nullptr)
+					{
+						StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetComponentDataAsVoid(indexInArchetype));
+						m_StableComponentDestroyData.emplace_back(typeData.m_StableContainer, compRef->m_ChunkIndex, compRef->m_ElementIndex);
+					}
+				}
+
+				uint64_t m_StableComponentsCount = m_StableComponentDestroyData.size();
+				for (uint64_t i = 0; i < m_StableComponentsCount; i++)
+				{
+					StableComponentDestroyData& destroyData = m_StableComponentDestroyData[i];
+					destroyData.m_StableContainer->Remove(destroyData.m_ChunkIndex, destroyData.m_ElementIndex);
 				}
 
 				// Remove entity from component bucket:
-				auto result = currentArchetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
+				auto result = currentArchetype->RemoveSwapBackEntity(indexInArchetype);
 				ValidateEntityInArchetype(result);
 			}
 			else
@@ -356,8 +369,8 @@ namespace decs
 		else
 		{
 			m_SpawnData.m_SpawnArchetypes.push_back(m_ArchetypesMap.FindArchetypeFromOther(
-				*prefabEntityData.m_Archetype, 
-				m_ComponentContextManager, 
+				*prefabEntityData.m_Archetype,
+				m_ComponentContextManager,
 				&m_StableContainers,
 				m_ObserversManager
 			));
@@ -511,7 +524,7 @@ namespace decs
 		StableComponentRef* componentRef = static_cast<StableComponentRef*>(container->GetComponentDataAsVoid(oldArchetypeIndex));
 		StableContainerBase* stableContainer = m_StableContainers.GetStableContainer(componentTypeID);
 		stableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_ElementIndex);
-		
+
 		auto result = oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
 		ValidateEntityInArchetype(result);
 

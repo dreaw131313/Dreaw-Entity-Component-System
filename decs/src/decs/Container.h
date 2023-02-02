@@ -146,6 +146,24 @@ namespace decs
 		EntityManager* m_EntityManager = nullptr;
 		ChunkedVector<EntityData*> m_EmptyEntities = { 100 };
 
+		struct StableComponentDestroyData
+		{
+		public:
+			StableContainerBase* m_StableContainer = nullptr;
+			uint64_t m_ChunkIndex = std::numeric_limits<uint64_t>::max();
+			uint64_t m_ElementIndex = std::numeric_limits<uint64_t>::max();
+
+		public:
+			StableComponentDestroyData() {}
+
+			StableComponentDestroyData(StableContainerBase* stableContainer, const uint64_t& chunkIndex, const uint64_t& elementIndex) :
+				m_StableContainer(stableContainer), m_ChunkIndex(chunkIndex), m_ElementIndex(elementIndex)
+			{
+			}
+		};
+
+		std::vector<StableComponentDestroyData> m_StableComponentDestroyData;
+
 	public:
 		Entity CreateEntity(const bool& isActive = true);
 
