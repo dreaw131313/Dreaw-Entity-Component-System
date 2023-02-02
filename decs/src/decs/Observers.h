@@ -42,4 +42,19 @@ namespace decs
 	public:
 		virtual void OnDestroyComponent(ComponentType& component, Entity& entity) = 0;
 	};
+
+
+	template<typename ComponentType>
+	class CreateComponentObserver<Stable<ComponentType>>
+	{
+	public:
+		virtual void OnCreateComponent(ComponentType& component, Entity& entity) = 0;
+	};
+
+	template<typename ComponentType>
+	class DestroyComponentObserver<Stable<ComponentType>>
+	{
+	public:
+		virtual void OnDestroyComponent(ComponentType& component, Entity& entity) = 0;
+	};
 }

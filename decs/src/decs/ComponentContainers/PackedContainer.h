@@ -14,7 +14,7 @@ namespace decs
 
 		}
 
-		PackedContainerBase(StableContainerBase* stableContainer):
+		PackedContainerBase(StableContainerBase* stableContainer) :
 			m_LinkedStableContainer(stableContainer)
 		{
 
@@ -111,7 +111,7 @@ namespace decs
 			return m_Data[index];
 		}
 
-		inline ComponentType* GetAsPtr(const uint64_t& index) noexcept
+		inline ComponentType* GetAsPtr(const uint64_t& index) const noexcept
 		{
 			return &m_Data[index];
 		}
@@ -201,7 +201,7 @@ namespace decs
 			return *static_cast<ComponentType*>(m_Data[index].m_ComponentPtr);
 		}
 
-		inline ComponentType* GetAsPtr(const uint64_t& index) noexcept
+		inline ComponentType* GetAsPtr(const uint64_t& index)const noexcept
 		{
 			return static_cast<ComponentType*>(m_Data[index].m_ComponentPtr);
 		}

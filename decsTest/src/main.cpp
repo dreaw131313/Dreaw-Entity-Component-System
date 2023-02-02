@@ -24,27 +24,34 @@ public:
 	}
 };
 
+class StableComponentObserverTest : 
+	public decs::CreateComponentObserver<decs::Stable<Position>>, 
+	public decs::DestroyComponentObserver<decs::Stable<Position>>
+{
+public:
+	virtual void OnCreateComponent(Position& component, decs::Entity& entity) override
+	{
+
+	}
+
+	virtual void OnDestroyComponent(Position& component, decs::Entity& entity)
+	{
+
+	}
+};
+
 
 int main()
 {
 	decs::Container container;
 
 	auto e = container.CreateEntity();
-	e.AddComponent<decs::Stable<Position>>(101.f, 202.f);
+	Position* p1 = e.AddComponent<decs::Stable<Position>>(101.f, 202.f);
 	e.AddComponent<float>(1.f);
 
-	decs::ComponentRef<decs::Stable<Position>> compRef = { e };
+	decs::View<decs::Stable<Position>, float> view = { container };
 
-	if (compRef.Get() != nullptr)
-	{
-		Print("ComponentRef works correct with stable components!");
-	}
-
-	Position* p1 = compRef.Get();
-
-	decs::View<decs::Stable<Position>> view = { container };
-
-	auto lambda = [] (Position& pos)
+	auto lambda = [] (Position& pos, float& f)
 	{
 		std::cout << "X = " << pos.X << ", Y = " << pos.Y << "\n";
 		pos.X *= 2;

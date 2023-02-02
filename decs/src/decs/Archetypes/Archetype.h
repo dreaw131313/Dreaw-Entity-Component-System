@@ -57,6 +57,27 @@ namespace decs
 		}
 	};
 
+	struct ArchetypeTypeData
+	{
+	public:
+		TypeID m_TypeID = std::numeric_limits<TypeID>::max();
+		PackedContainerBase* m_PackedContainer = nullptr;
+		ComponentContextBase* m_ComponentContext = nullptr;
+
+	public:
+		ArchetypeTypeData()
+		{
+
+		}
+
+		ArchetypeTypeData(TypeID typeID, PackedContainerBase* packedContainer, ComponentContextBase* componentContext) :
+			m_TypeID(typeID), m_PackedContainer(packedContainer), m_ComponentContext(componentContext)
+		{
+
+		}
+
+	};
+
 	class Archetype final
 	{
 		friend class Container;
@@ -79,21 +100,21 @@ namespace decs
 
 	private:
 		std::vector<ArchetypeEntityData> m_EntitiesData;
-		std::vector<PackedContainerBase*> m_PackedContainers;
 
+		//std::vector<ArchetypeTypeData> m_TypeData;
+		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
+		std::vector<TypeID> m_AddingOrderTypeIDs;
+
+		std::vector<PackedContainerBase*> m_PackedContainers;
 		std::vector<ComponentContextBase*> m_ComponentContexts;
+		std::vector<TypeID> m_TypeIDs;
 
 		ecsMap<TypeID, Archetype*> m_AddEdges;
 		ecsMap<TypeID, Archetype*> m_RemoveEdges;
 
-		std::vector<TypeID> m_TypeIDs;
-		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
-
 		uint32_t m_EntitesCountToInitialize = 0;
-
 		uint32_t m_ComponentsCount = 0; // number of components for each entity
 		uint32_t m_EntitiesCount = 0;
-		std::vector<TypeID> m_AddingOrderTypeIDs;
 
 	public:
 		Archetype()
