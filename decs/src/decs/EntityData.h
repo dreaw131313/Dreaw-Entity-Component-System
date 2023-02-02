@@ -9,22 +9,23 @@ namespace decs
 	{
 		Alive = 1,
 		InDestruction = 2,
-		DelayedToDestruction = 3
+		DelayedToDestruction = 3,
+		Destructed
 	};
 
 	class EntityData
 	{
 	public:
+		Archetype* m_Archetype = nullptr;
+		
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
-		uint32_t m_Version = std::numeric_limits<uint32_t>::max();
+		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
+		EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
+
 		bool m_IsAlive = false;
 		bool m_IsActive = false;
-		EntityDestructionState m_DestructionState = EntityDestructionState::Alive;
-		
-		Archetype* m_Archetype = nullptr;
-		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
-
 		bool m_IsUsedAsPrefab = false;
+		EntityDestructionState m_DestructionState = EntityDestructionState::Alive;
 
 	public:
 		EntityData()

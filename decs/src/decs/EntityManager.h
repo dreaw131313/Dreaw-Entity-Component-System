@@ -65,12 +65,12 @@ namespace decs
 			return m_EntityData[entity].m_IsActive;
 		}
 
-		inline uint32_t GetEntityVersion(const EntityID& entity) const
+		inline EntityVersion GetEntityVersion(const EntityID& entity) const
 		{
 			if (IsEntityAlive(entity))
 				return m_EntityData[entity].m_Version;
 
-			return std::numeric_limits<uint32_t>::max();
+			return std::numeric_limits<EntityVersion>::max();
 		}
 
 		inline uint32_t ComponentsCount(const EntityID& entity) const

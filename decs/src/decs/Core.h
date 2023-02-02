@@ -36,7 +36,8 @@ namespace decs
 	//using ecsSet = ska::flat_hash_set<Key>;
 	using ecsSet = std::unordered_set<Key>;
 
-	using EntityID = uint64_t;
+	using EntityID = uint32_t;
+	using EntityVersion = uint32_t;
 	using TypeID = uint64_t;
 
 	namespace Limits
