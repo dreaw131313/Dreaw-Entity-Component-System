@@ -20,6 +20,7 @@ namespace decs
 	public:
 		EntityID m_EntityID = std::numeric_limits<EntityID>::max();
 		TypeID m_TypeID = std::numeric_limits<TypeID>::max();
+		bool m_IsStable = false;
 
 	public:
 		DelayedComponentPair()
@@ -540,7 +541,6 @@ namespace decs
 			return nullptr;
 		}
 
-
 		template<typename ComponentType>
 		bool HasComponent(const EntityID& e) const
 		{
@@ -690,7 +690,7 @@ namespace decs
 				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype<ComponentType>();
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(id);
+					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>();
 					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<ComponentType>(
 						newComponentContext
@@ -708,18 +708,19 @@ namespace decs
 					);
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(id);
+					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>();
 					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<ComponentType>(
 						*toArchetype,
 						newComponentContext
 						);
+					componentContainerIndex = entityNewArchetype->FindTypeIndex<ComponentType>();
 				}
 				else
 				{
+					componentContainerIndex = entityNewArchetype->FindTypeIndex<ComponentType>();
 					newComponentContext = entityNewArchetype->m_TypeData[componentContainerIndex].m_ComponentContext;
 				}
-				componentContainerIndex = entityNewArchetype->FindTypeIndex<ComponentType>();
 			}
 
 			return entityNewArchetype;
@@ -740,7 +741,7 @@ namespace decs
 				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype<Stable<ComponentType>>();
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(id);
+					auto context = m_ComponentContextManager->GetOrCreateComponentContext<Stable<ComponentType>>();
 					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<Stable<ComponentType>>(
 						newComponentContext
@@ -758,18 +759,19 @@ namespace decs
 					);
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(id);
+					auto context = m_ComponentContextManager->GetOrCreateComponentContext<Stable<ComponentType>>();
 					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<Stable<ComponentType>>(
 						*toArchetype,
 						newComponentContext
 						);
+					componentContainerIndex = entityNewArchetype->FindTypeIndex<Stable<ComponentType>>();
 				}
 				else
 				{
+					componentContainerIndex = entityNewArchetype->FindTypeIndex<Stable<ComponentType>>();
 					newComponentContext = entityNewArchetype->m_TypeData[componentContainerIndex].m_ComponentContext;
 				}
-				componentContainerIndex = entityNewArchetype->FindTypeIndex<Stable<ComponentType>>();
 			}
 
 			return entityNewArchetype;

@@ -100,22 +100,14 @@ namespace decs
 
 	private:
 		std::vector<ArchetypeEntityData> m_EntitiesData;
-
 		std::vector<ArchetypeTypeData> m_TypeData;
-
-		/*std::vector<PackedContainerBase*> m_PackedContainers;
-		std::vector<ComponentContextBase*> m_ComponentContexts;
-		std::vector<TypeID> m_TypeIDs;*/
-
 		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
-
 		std::vector<TypeID> m_AddingOrderTypeIDs;
 
 		ecsMap<TypeID, Archetype*> m_AddEdges;
 		ecsMap<TypeID, Archetype*> m_RemoveEdges;
 
 		uint32_t m_EntitesCountToInitialize = 0;
-
 		uint32_t m_ComponentsCount = 0; // number of components for each entity
 		uint32_t m_EntitiesCount = 0;
 
@@ -317,23 +309,6 @@ namespace decs
 		{
 			return m_TypeData[componentIndex].m_PackedContainer->GetComponentPtrAsVoid(entityIndex);
 		}
-
-		/*template<typename ComponentType>
-		ComponentType* GetEntityComponent(const uint64_t& entityIndex, uint64_t& componentIndex)
-		{
-			return dynamic_cast<PackedContainer<ComponentType>*>(m_TypeData[index].m_PackedContainer)->m_Data[entityIndex];
-		}
-
-		template<typename ComponentType>
-		ComponentType* GetEntityComponent(const uint64_t& entityIndex)
-		{
-			const uint32_t componentIndex = FindTypeIndex<ComponentType>();
-			if (componentIndex != Limits::MaxComponentCount)
-			{
-				return dynamic_cast<PackedContainer<ComponentType>*>(m_PackedContainers[componentIndex])->m_Data[entityIndex];
-			}
-			return nullptr;
-		}*/
 
 		void ShrinkToFit()
 		{

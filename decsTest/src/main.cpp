@@ -31,7 +31,7 @@ class StableComponentObserverTest :
 public:
 	virtual void OnCreateComponent(Position& component, decs::Entity& entity) override
 	{
-
+		Print("Adding stable position");
 	}
 
 	virtual void OnDestroyComponent(Position& component, decs::Entity& entity)
@@ -43,21 +43,31 @@ public:
 
 int main()
 {
+	decs::ObserversManager observerManager;
 	decs::Container container;
+	container.SetObserversManager(&observerManager);
+
+	StableComponentObserverTest testStableObserver = {};
+	observerManager.SetComponentCreateObserver<decs::Stable<Position>>(&testStableObserver);
 
 	for (int i = 0; i < 4; i++)
 	{
 		auto e = container.CreateEntity();
 		e.AddComponent<uint8_t>(true);
+		e.AddComponent<float>(i);
+		e.AddComponent<int>(i);
+		e.RemoveComponent<float>();
+
 		e.AddComponent<decs::Stable<Position>>(i + 1.f, i + 2.f);
 
-		bool b1 = e.HasComponent<Position>();
+		/*bool b1 = e.HasComponent<Position>();
 		bool b2 = e.HasComponent<decs::Stable<Position>>();
 
 		Position* p1 = e.GetComponent<Position>();
 		Position* p2 = e.GetComponent<decs::Stable<Position>>();
-		Position* p3 = e.GetComponent<decs::Stable<Position>>();
+		Position* p3 = e.GetComponent<decs::Stable<Position>>();*/
 	}
+
 
 
 	using ViewType = decs::View<decs::Stable<Position>>;

@@ -21,7 +21,6 @@ namespace decs
 
 		}
 
-		virtual TypeID GetComponentTypeID() const = 0;
 		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity) = 0;
 		virtual void InvokeOnDestroyComponent_S(void* component, Entity& entity) = 0;
 		virtual void SetObserverManager(ObserversManager* observerManager) = 0;
@@ -54,7 +53,63 @@ namespace decs
 
 		}
 
-		virtual TypeID GetComponentTypeID() const { return Type<ComponentType>::ID(); }
+		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity)override
+		{
+			if (m_Observer != nullptr && m_Observer->m_CreateObserver != nullptr)
+			{
+				m_Observer->m_CreateObserver->OnCreateComponent(*reinterpret_cast<ComponentType*>(component), entity);
+			}
+		}
+
+		virtual void InvokeOnDestroyComponent_S(void* component, Entity& entity)override
+		{
+			if (m_Observer != nullptr && m_Observer->m_DestroyObserver != nullptr)
+			{
+				m_Observer->m_DestroyObserver->OnDestroyComponent(*reinterpret_cast<ComponentType*>(component), entity);
+			}
+		}
+
+		virtual void SetObserverManager(ObserversManager* observerManager) override
+		{
+			if (observerManager == nullptr)
+			{
+				m_Observer = nullptr;
+			}
+			else
+			{
+				m_Observer = observerManager->GetComponentObserver<ComponentType>();
+			}
+		}
+
+		ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) override
+		{
+			return new ComponentContext<ComponentType>(
+				observerManager != nullptr ? observerManager->GetComponentObserver<ComponentType>() : nullptr
+				);
+		}
+	};
+
+
+	template<typename ComponentType>
+	class ComponentContext<Stable<ComponentType>> : public ComponentContextBase
+	{
+		friend class Container;
+	public:
+		ComponentObserver<Stable<ComponentType>>* m_Observer = nullptr;
+
+	public:
+		ComponentContext(
+			ComponentObserver<Stable<ComponentType>>* observer
+		) :
+			m_Observer(observer)
+		{
+
+		}
+
+		~ComponentContext()
+		{
+
+		}
 
 		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity)override
 		{
@@ -72,22 +127,6 @@ namespace decs
 			}
 		}
 
-		void InvokeOnCreateComponent(ComponentType& component, Entity& entity)
-		{
-			if (m_Observer != nullptr && m_Observer->m_CreateObserver != nullptr)
-			{
-				m_Observer->m_CreateObserver->OnCreateComponent(component, entity);
-			}
-		}
-
-		void InvokeOnDestroyComponent(ComponentType& component, Entity& entity)
-		{
-			if (m_Observer != nullptr && m_Observer->m_DestroyObserver != nullptr)
-			{
-				m_Observer->m_DestroyObserver->OnDestroyComponent(component, entity);
-			}
-		}
-
 		virtual void SetObserverManager(ObserversManager* observerManager) override
 		{
 			if (observerManager == nullptr)
@@ -96,7 +135,7 @@ namespace decs
 			}
 			else
 			{
-				m_Observer = observerManager->GetComponentObserver<ComponentType>();
+				m_Observer = observerManager->GetComponentObserver<Stable<ComponentType>>();
 			}
 		}
 
