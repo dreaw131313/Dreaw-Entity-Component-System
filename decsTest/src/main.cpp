@@ -31,12 +31,12 @@ class StableComponentObserverTest :
 public:
 	virtual void OnCreateComponent(Position& component, decs::Entity& entity) override
 	{
-		Print("Adding stable position");
+		Print("Stable position on create");
 	}
 
 	virtual void OnDestroyComponent(Position& component, decs::Entity& entity)
 	{
-
+		Print("Stable position on destroy");
 	}
 };
 
@@ -49,25 +49,19 @@ int main()
 
 	StableComponentObserverTest testStableObserver = {};
 	observerManager.SetComponentCreateObserver<decs::Stable<Position>>(&testStableObserver);
+	observerManager.SetComponentDestroyObserver<decs::Stable<Position>>(&testStableObserver);
 
-	for (int i = 0; i < 4; i++)
+	int entitiesCount = 1;
+	for (int i = 0; i < entitiesCount; i++)
 	{
 		auto e = container.CreateEntity();
-		e.AddComponent<uint8_t>(true);
-		e.AddComponent<float>(i);
-		e.AddComponent<int>(i);
-		e.RemoveComponent<float>();
-
 		e.AddComponent<decs::Stable<Position>>(i + 1.f, i + 2.f);
-
-		/*bool b1 = e.HasComponent<Position>();
-		bool b2 = e.HasComponent<decs::Stable<Position>>();
-
-		Position* p1 = e.GetComponent<Position>();
-		Position* p2 = e.GetComponent<decs::Stable<Position>>();
-		Position* p3 = e.GetComponent<decs::Stable<Position>>();*/
+		e.RemoveComponent<decs::Stable<Position>>();
+		e.AddComponent<decs::Stable<Position>>(i + 1.f, i + 2.f);
 	}
-
+	std::cout << "\n";
+	container.InvokeEntitesOnCreateListeners();
+	container.InvokeEntitesOnDestroyListeners();
 
 
 	using ViewType = decs::View<decs::Stable<Position>>;
@@ -80,6 +74,9 @@ int main()
 		pos.Y *= 2;
 	};
 
+
+	// ITERATIONS TESTS
+	std::cout << "\n";
 	view.ForEachForward(lambda);
 	std::cout << "\n";
 	view.ForEachForward(lambda);

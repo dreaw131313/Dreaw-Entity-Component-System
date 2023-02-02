@@ -305,11 +305,6 @@ namespace decs
 			return dynamic_cast<PackedContainer<ComponentType>*>(m_TypeData[index].m_PackedContainer);
 		}
 
-		inline void* GetComponentVoidPtr(const uint64_t& entityIndex, const uint64_t& componentIndex = 0)const noexcept
-		{
-			return m_TypeData[componentIndex].m_PackedContainer->GetComponentPtrAsVoid(entityIndex);
-		}
-
 		void ShrinkToFit()
 		{
 			m_EntitiesData.shrink_to_fit();

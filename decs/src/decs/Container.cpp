@@ -115,8 +115,10 @@ namespace decs
 				for (uint64_t i = 0; i < componentsCount; i++)
 				{
 					ArchetypeTypeData& typeData = currentArchetype->m_TypeData[i];
-					void* compPtr = currentArchetype->GetComponentVoidPtr(entityData.m_IndexInArchetype, i);
-					typeData.m_ComponentContext->InvokeOnDestroyComponent_S(compPtr, entity);
+					typeData.m_ComponentContext->InvokeOnDestroyComponent_S(
+						typeData.m_PackedContainer->GetComponentPtrAsVoid(entityData.m_IndexInArchetype),
+						entity
+					);
 				}
 
 				// Remove entity from component bucket:
@@ -537,8 +539,10 @@ namespace decs
 				for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 				{
 					ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
-					void* compPtr = archetype.GetComponentVoidPtr(entityDataIdx, i);
-					archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(compPtr, entity);
+					archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(
+						archetypeTypeData.m_PackedContainer->GetComponentPtrAsVoid(entityDataIdx),
+						entity
+					);
 				}
 
 				m_EntityManager->DestroyEntity(archetypeEntityData.ID());
@@ -677,8 +681,10 @@ namespace decs
 			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 			{
 				ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
-				void* compPtr = archetype.GetComponentVoidPtr(entityDataIdx, i);
-				archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(compPtr, entity);
+				archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(
+					archetypeTypeData.m_PackedContainer->GetComponentPtrAsVoid(i),
+					entity
+				);
 			}
 		}
 	}
