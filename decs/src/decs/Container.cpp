@@ -44,12 +44,19 @@ namespace decs
 
 	Container::~Container()
 	{
-		m_StableContainers.DestroyStableComponents();
+		if (m_HaveOwnEntityManager)
+		{
+			delete m_EntityManager;
+		}
+		else
+		{
+			DestroyOwnedEntities(false);
+		}
 		if (m_HaveOwnComponentContextManager)
 		{
 			delete m_ComponentContextManager;
 		}
-		if (m_HaveOwnEntityManager) delete m_EntityManager;
+		m_StableContainers.DestroyContainers();
 	}
 
 	void Container::ValidateInternalState()
@@ -171,7 +178,7 @@ namespace decs
 		}
 		m_EmptyEntities.Clear();
 
-		m_StableContainers.ClearStableComponents();
+		m_StableContainers.ClearContainers();
 	}
 
 	void Container::SetEntityActive(const EntityID& entity, const bool& isActive)
@@ -348,7 +355,12 @@ namespace decs
 		}
 		else
 		{
-			m_SpawnData.m_SpawnArchetypes.push_back(m_ArchetypesMap.FindArchetypeFromOther(*prefabEntityData.m_Archetype, m_ComponentContextManager, m_ObserversManager));
+			m_SpawnData.m_SpawnArchetypes.push_back(m_ArchetypesMap.FindArchetypeFromOther(
+				*prefabEntityData.m_Archetype, 
+				m_ComponentContextManager, 
+				&m_StableContainers,
+				m_ObserversManager
+			));
 		}
 
 		for (uint32_t i = 0; i < componentsCount; i++)

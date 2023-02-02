@@ -406,12 +406,6 @@ namespace decs
 			return false;
 		}
 
-		inline StableContainerBase* GetStableContainer(const TypeID& typeID)
-		{
-			auto it = m_Containers.find(typeID);
-			return it != m_Containers.end() ? it->second : nullptr;
-		}
-
 		template<typename T>
 		uint64_t GetStableComponentChunkSize()
 		{
@@ -424,6 +418,24 @@ namespace decs
 			}
 
 			return std::numeric_limits<uint64_t>::max();
+		}
+
+		inline StableContainerBase* GetStableContainer(const TypeID& typeID)
+		{
+			auto it = m_Containers.find(typeID);
+			return it != m_Containers.end() ? it->second : nullptr;
+		}
+
+		inline StableContainerBase* CreateStableContainerFromOther(StableContainerBase* other)
+		{
+			const TypeID id = other->GetTypeID();
+			auto& container = m_Containers[id];
+			if (container == nullptr)
+			{
+				container = other->CreateOwnEmptyCopy(m_DefaultChunkSize);
+			}
+
+			return container;
 		}
 
 		template<typename T>
@@ -440,7 +452,7 @@ namespace decs
 			return static_cast<StableContainer<T>*>(container);
 		}
 
-		inline void DestroyStableComponents()
+		inline void DestroyContainers()
 		{
 			for (auto& [key, value] : m_Containers)
 			{
@@ -448,7 +460,7 @@ namespace decs
 			}
 		}
 
-		inline void ClearStableComponents()
+		inline void ClearContainers()
 		{
 			for (auto& [key, value] : m_Containers)
 			{

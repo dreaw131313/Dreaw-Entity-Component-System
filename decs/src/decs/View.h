@@ -19,7 +19,7 @@ namespace decs
 		public:
 			Archetype* Arch = nullptr;
 			uint64_t m_EntitiesCount = 0;
-			PackedContainerBase* m_Containers[sizeof...(ComponentsTypes)];
+			PackedContainerBase* m_Containers[sizeof...(ComponentsTypes)] = { nullptr };
 
 		public:
 			inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntitiesCount(); }

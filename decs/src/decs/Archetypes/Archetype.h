@@ -64,6 +64,7 @@ namespace decs
 		TypeID m_TypeID = std::numeric_limits<TypeID>::max();
 		PackedContainerBase* m_PackedContainer = nullptr;
 		ComponentContextBase* m_ComponentContext = nullptr;
+		StableContainerBase* m_StableContainer = nullptr;
 
 	public:
 		ArchetypeTypeData()
@@ -71,8 +72,13 @@ namespace decs
 
 		}
 
-		ArchetypeTypeData(TypeID typeID, PackedContainerBase* packedContainer, ComponentContextBase* componentContext) :
-			m_TypeID(typeID), m_PackedContainer(packedContainer), m_ComponentContext(componentContext)
+		ArchetypeTypeData(
+			const TypeID& typeID,
+			PackedContainerBase* packedContainer, 
+			ComponentContextBase* componentContext,
+			StableContainerBase* stableContainer
+		) :
+			m_TypeID(typeID), m_PackedContainer(packedContainer), m_ComponentContext(componentContext), m_StableContainer(stableContainer)
 		{
 
 		}
@@ -190,7 +196,7 @@ namespace decs
 		}
 
 		template<typename ComponentType>
-		void AddTypeID(ComponentContextBase* componentContext)
+		void AddTypeID(ComponentContextBase* componentContext, StableContainerBase* stableContainer)
 		{
 			constexpr TypeID id = Type<ComponentType>::ID();
 			auto it = m_TypeIDsIndexes.find(id);
@@ -201,7 +207,8 @@ namespace decs
 				m_TypeData.emplace_back(
 					id,
 					new PackedContainer<ComponentType>(),
-					componentContext
+					componentContext,
+					stableContainer
 				);
 			}
 		}
@@ -209,7 +216,8 @@ namespace decs
 		void AddTypeID(
 			const TypeID& id, 
 			PackedContainerBase* frompackedContainer, 
-			ComponentContextBase* componentContext
+			ComponentContextBase* componentContext,
+			StableContainerBase* stableContainer
 		)
 		{
 			auto it = m_TypeIDsIndexes.find(id);
@@ -220,7 +228,8 @@ namespace decs
 				m_TypeData.emplace_back(
 					id,
 					frompackedContainer->CreateOwnEmptyCopy(),
-					componentContext
+					componentContext,
+					stableContainer
 				);
 			}
 		}
@@ -305,7 +314,7 @@ namespace decs
 			m_EntitesCountToInitialize = m_EntitiesCount;
 		}
 
-		void InitEmptyFromOther(Archetype& other, ecsMap<TypeID, ComponentContextBase*>& contextsMap)
+		void InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts, StableContainersManager* stableComponentsManager)
 		{
 			m_ComponentsCount = other.m_ComponentsCount;
 			m_TypeData.reserve(m_ComponentsCount);
@@ -320,7 +329,8 @@ namespace decs
 				m_TypeData.emplace_back(
 					otherTypeData.m_TypeID,
 					otherTypeData.m_PackedContainer->CreateOwnEmptyCopy(),
-					contextsMap[otherTypeData.m_TypeID]
+					componentContexts->GetComponentContext(otherTypeData.m_TypeID),
+					stableComponentsManager->GetStableContainer(otherTypeData.m_TypeID)
 				);
 
 				m_AddingOrderTypeIDs.push_back(other.m_AddingOrderTypeIDs[i]);

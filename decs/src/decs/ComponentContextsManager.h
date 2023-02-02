@@ -14,10 +14,10 @@ namespace decs
 		{
 
 		}
-		
+
 		ComponentContextsManager(
 			ObserversManager* observersManager
-			):
+		) :
 			m_ObserversManager(observersManager)
 		{
 
@@ -81,6 +81,11 @@ namespace decs
 			}
 		}
 
+		ComponentContextBase* GetComponentContext(const TypeID& typeID)
+		{
+			auto it = m_Contexts.find(typeID);
+			return it != m_Contexts.end() ? it->second : nullptr;
+		}
 	private:
 		ecsMap<TypeID, ComponentContextBase*> m_Contexts;
 		ObserversManager* m_ObserversManager = nullptr;

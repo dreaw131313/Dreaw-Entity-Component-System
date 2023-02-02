@@ -369,11 +369,9 @@ namespace decs
 					if (currentComponent != nullptr) return currentComponent;
 				}
 
-				ComponentContextBase* newComponentContext;
 				uint32_t componentContainerIndex = 0;
-				Archetype* entityNewArchetype = GetArchetypeAfterAddComponent<ComponentType>(
+				Archetype* entityNewArchetype = GetArchetypeAfterAddUnstableComponent<ComponentType>(
 					entityData.m_Archetype,
-					newComponentContext,
 					componentContainerIndex
 					);
 
@@ -400,7 +398,7 @@ namespace decs
 				entityData.m_IndexInArchetype = entityIndexBuffor;
 				entityData.m_Archetype = entityNewArchetype;
 
-				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(newComponentContext, createdComponent, entityData);
+				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(archetypeTypeData.m_ComponentContext, createdComponent, entityData);
 				return createdComponent;
 			}
 			return nullptr;
@@ -426,20 +424,15 @@ namespace decs
 					if (currentComponent != nullptr) return currentComponent;
 				}
 
-				ComponentContextBase* newComponentContext;
 				uint32_t componentContainerIndex = 0;
-				Archetype* entityNewArchetype = GetArchetypeAfterAddStableComponent<ComponentType>(
-					entityData.m_Archetype,
-					newComponentContext,
-					componentContainerIndex
-					);
+				Archetype* entityNewArchetype = GetArchetypeAfterAddStableComponent<ComponentType>(entityData.m_Archetype, componentContainerIndex);
+				ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
 
 				// Adding component to stable component container
-				StableContainer<ComponentType>* stableContainer = m_StableContainers.GetOrCreateStableContainer<ComponentType>();
+				StableContainer<ComponentType>* stableContainer = static_cast<StableContainer<ComponentType>*>(archetypeTypeData.m_StableContainer);
 				ComponentNodeInfo componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
 
 				// Adding component pointer to packed container in archetype
-				ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
 				PackedContainer<Stable<ComponentType>>* packedPointersContainer = reinterpret_cast<PackedContainer<Stable<ComponentType>>*>(archetypeTypeData.m_PackedContainer);
 
 				packedPointersContainer->m_Data.emplace_back(
@@ -469,7 +462,7 @@ namespace decs
 				entityData.m_IndexInArchetype = entityIndexBuffor;
 				entityData.m_Archetype = entityNewArchetype;
 
-				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(newComponentContext, componentPtr, entityData);
+				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(archetypeTypeData.m_ComponentContext, componentPtr, entityData);
 				return componentPtr;
 			}
 			return nullptr;
@@ -643,9 +636,8 @@ namespace decs
 		void DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners = true);
 
 		template<typename ComponentType>
-		Archetype* GetArchetypeAfterAddComponent(
+		Archetype* GetArchetypeAfterAddUnstableComponent(
 			Archetype* toArchetype,
-			ComponentContextBase*& newComponentContext,
 			uint32_t& componentContainerIndex
 		)
 		{
@@ -657,37 +649,25 @@ namespace decs
 				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype<ComponentType>();
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>();
-					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<ComponentType>(
-						newComponentContext
+						m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(),
+						nullptr
 						);
-				}
-				else
-				{
-					newComponentContext = entityNewArchetype->m_TypeData[componentContainerIndex].m_ComponentContext;
 				}
 			}
 			else
 			{
-				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<ComponentType>(
-					*toArchetype
-					);
+				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<ComponentType>(*toArchetype);
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>();
-					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<ComponentType>(
 						*toArchetype,
-						newComponentContext
+						m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(),
+						nullptr
 						);
-					componentContainerIndex = entityNewArchetype->FindTypeIndex<ComponentType>();
 				}
-				else
-				{
-					componentContainerIndex = entityNewArchetype->FindTypeIndex<ComponentType>();
-					newComponentContext = entityNewArchetype->m_TypeData[componentContainerIndex].m_ComponentContext;
-				}
+
+				componentContainerIndex = entityNewArchetype->FindTypeIndex<ComponentType>();
 			}
 
 			return entityNewArchetype;
@@ -696,7 +676,6 @@ namespace decs
 		template<typename ComponentType>
 		Archetype* GetArchetypeAfterAddStableComponent(
 			Archetype* toArchetype,
-			ComponentContextBase*& newComponentContext,
 			uint32_t& componentContainerIndex
 		)
 		{
@@ -708,37 +687,25 @@ namespace decs
 				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype<Stable<ComponentType>>();
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = m_ComponentContextManager->GetOrCreateComponentContext<Stable<ComponentType>>();
-					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<Stable<ComponentType>>(
-						newComponentContext
+						m_ComponentContextManager->GetOrCreateComponentContext<Stable<ComponentType>>(),
+						m_StableContainers.GetOrCreateStableContainer<ComponentType>()
 						);
-				}
-				else
-				{
-					newComponentContext = entityNewArchetype->m_TypeData[componentContainerIndex].m_ComponentContext;
 				}
 			}
 			else
 			{
-				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<Stable<ComponentType>>(
-					*toArchetype
-					);
+				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<Stable<ComponentType>>(*toArchetype);
 				if (entityNewArchetype == nullptr)
 				{
-					auto context = m_ComponentContextManager->GetOrCreateComponentContext<Stable<ComponentType>>();
-					newComponentContext = context;
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<Stable<ComponentType>>(
 						*toArchetype,
-						newComponentContext
+						m_ComponentContextManager->GetOrCreateComponentContext<Stable<ComponentType>>(),
+						m_StableContainers.GetOrCreateStableContainer<ComponentType>()
 						);
-					componentContainerIndex = entityNewArchetype->FindTypeIndex<Stable<ComponentType>>();
 				}
-				else
-				{
-					componentContainerIndex = entityNewArchetype->FindTypeIndex<Stable<ComponentType>>();
-					newComponentContext = entityNewArchetype->m_TypeData[componentContainerIndex].m_ComponentContext;
-				}
+
+				componentContainerIndex = entityNewArchetype->FindTypeIndex<Stable<ComponentType>>();
 			}
 
 			return entityNewArchetype;
