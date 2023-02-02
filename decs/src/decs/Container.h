@@ -357,7 +357,8 @@ namespace decs
 					componentContainerIndex
 					);
 
-				PackedContainer<ComponentType>* container = reinterpret_cast<PackedContainer<ComponentType>*>(entityNewArchetype->m_PackedContainers[componentContainerIndex]);
+				ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
+				PackedContainer<ComponentType>* container = reinterpret_cast<PackedContainer<ComponentType>*>(archetypeTypeData.m_PackedContainer);
 				ComponentType* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
 
 				uint32_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
@@ -418,13 +419,14 @@ namespace decs
 				ComponentNodeInfo componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
 
 				// Adding component pointer to packed container in archetype
-				PackedContainer<Stable<ComponentType>>* packedPointersContainer = reinterpret_cast<PackedContainer<Stable<ComponentType>>*>(entityNewArchetype->m_PackedContainers[componentContainerIndex]);
+				ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
+				PackedContainer<Stable<ComponentType>>* packedPointersContainer = reinterpret_cast<PackedContainer<Stable<ComponentType>>*>(archetypeTypeData.m_PackedContainer);
 
 				packedPointersContainer->m_Data.emplace_back(
-					(uint32_t)componentNodeInfo.m_ChunkIndex, 
+					(uint32_t)componentNodeInfo.m_ChunkIndex,
 					(uint32_t)componentNodeInfo.m_Index,
 					componentNodeInfo.m_ComponentPtr
-					);
+				);
 				ComponentType* componentPtr = static_cast<ComponentType*>(componentNodeInfo.m_ComponentPtr);
 
 				// Adding entity to archetype
@@ -432,7 +434,7 @@ namespace decs
 				entityNewArchetype->AddEntityData(entityData.m_ID, entityData.m_IsActive);
 				if (entityData.m_Archetype != nullptr)
 				{
-					entityNewArchetype->MoveEntityAfterAddComponent<ComponentType>(
+					entityNewArchetype->MoveEntityAfterAddComponent<Stable<ComponentType>>(
 						*entityData.m_Archetype,
 						entityData.m_IndexInArchetype
 						);
@@ -466,7 +468,6 @@ namespace decs
 			}
 		}
 
-
 		bool RemoveUnstableComponent(Entity& entity, const TypeID& componentTypeID);
 
 		bool RemoveUnstableComponent(const EntityID& e, const TypeID& componentTypeID);
@@ -476,28 +477,34 @@ namespace decs
 		bool RemoveStableComponent(const EntityID& e, const TypeID& componentTypeID);
 
 		template<typename ComponentType>
-		ComponentType* GetComponent(const EntityID& e) const
+		typename stable_type<ComponentType>::Type* GetComponent(const EntityID& e) const
 		{
 			if (e < m_EntityManager->GetEntitiesDataCount())
 			{
 				EntityData& entityData = m_EntityManager->GetEntityData(e);
-				return GetComponent(entityData);
+				return GetComponent<ComponentType>(entityData);
 			}
 
 			return nullptr;
 		}
 
 		template<typename ComponentType>
-		ComponentType* GetComponent(EntityData& entityData) const
+		typename stable_type<ComponentType>::Type* GetComponent(EntityData& entityData) const
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsValidToPerformComponentOperation())
 			{
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
 				if (findTypeIndex != Limits::MaxComponentCount)
 				{
-					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[findTypeIndex];
-
-					return &container->m_Data[entityData.m_IndexInArchetype];
+					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer;
+					if constexpr (is_stable<ComponentType>::value)
+					{
+						return (typename stable_type<ComponentType>::Type*)container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr;
+					}
+					else
+					{
+						return &container->m_Data[entityData.m_IndexInArchetype];
+					}
 				}
 			}
 			return nullptr;
@@ -511,7 +518,7 @@ namespace decs
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
 				if (findTypeIndex != Limits::MaxComponentCount)
 				{
-					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[findTypeIndex];
+					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer;
 					return &container->m_Data[entityData.m_IndexInArchetype];
 				}
 			}
@@ -526,7 +533,7 @@ namespace decs
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<Stable<ComponentType>>();
 				if (findTypeIndex != Limits::MaxComponentCount)
 				{
-					PackedContainer<Stable<ComponentType>>* container = static_cast<PackedContainer<Stable<ComponentType>>*>(entityData.m_Archetype->m_PackedContainers[findTypeIndex]);
+					PackedContainer<Stable<ComponentType>>* container = static_cast<PackedContainer<Stable<ComponentType>>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
 					return static_cast<ComponentType*>(container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr);
 				}
 			}
@@ -570,7 +577,7 @@ namespace decs
 				if (componentIndex != Limits::MaxComponentCount)
 				{
 					RemoveComponentFromDelayedToDestroy(entityData.m_ID, copmonentTypeID);
-					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_PackedContainers[componentIndex];
+					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_TypeData[componentIndex].m_PackedContainer;
 					return &container->m_Data[entityData.m_IndexInArchetype];
 				}
 			}
@@ -691,7 +698,7 @@ namespace decs
 				}
 				else
 				{
-					newComponentContext = entityNewArchetype->m_ComponentContexts[componentContainerIndex];
+					newComponentContext = entityNewArchetype->m_TypeData[componentContainerIndex].m_ComponentContext;
 				}
 			}
 			else
@@ -710,7 +717,7 @@ namespace decs
 				}
 				else
 				{
-					newComponentContext = entityNewArchetype->m_ComponentContexts[componentContainerIndex];
+					newComponentContext = entityNewArchetype->m_TypeData[componentContainerIndex].m_ComponentContext;
 				}
 				componentContainerIndex = entityNewArchetype->FindTypeIndex<ComponentType>();
 			}
@@ -741,7 +748,7 @@ namespace decs
 				}
 				else
 				{
-					newComponentContext = entityNewArchetype->m_ComponentContexts[componentContainerIndex];
+					newComponentContext = entityNewArchetype->m_TypeData[componentContainerIndex].m_ComponentContext;
 				}
 			}
 			else
@@ -760,7 +767,7 @@ namespace decs
 				}
 				else
 				{
-					newComponentContext = entityNewArchetype->m_ComponentContexts[componentContainerIndex];
+					newComponentContext = entityNewArchetype->m_TypeData[componentContainerIndex].m_ComponentContext;
 				}
 				componentContainerIndex = entityNewArchetype->FindTypeIndex<Stable<ComponentType>>();
 			}

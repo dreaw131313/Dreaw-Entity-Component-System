@@ -39,26 +39,6 @@ namespace decs
 
 		inline EntityID ID() const noexcept { return m_ID; }
 
-		template<typename ComponentType>
-		inline ComponentType* GetComponent()
-		{
-			if (m_Archetype == nullptr) return nullptr;
-			uint32_t componentIndex = m_Archetype->FindTypeIndex<ComponentType>();
-			if (componentIndex == Limits::MaxComponentCount) return nullptr;
-
-			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_Archetype->m_PackedContainers[componentIndex]);
-
-			return &packedComponent->m_Data[m_IndexInArchetype];
-		}
-
-		template<typename ComponentType>
-		inline ComponentType* GetComponent(const uint32_t& componentIndex)
-		{
-			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_Archetype->m_PackedContainers[componentIndex]);
-
-			return &packedComponent->m_Data[m_IndexInArchetype];
-		}
-
 		inline bool IsAlive() const
 		{
 			return m_IsAlive && m_DestructionState == EntityDestructionState::Alive;

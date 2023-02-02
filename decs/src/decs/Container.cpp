@@ -114,8 +114,9 @@ namespace decs
 				// Invoke On destroy methods
 				for (uint64_t i = 0; i < componentsCount; i++)
 				{
+					ArchetypeTypeData& typeData = currentArchetype->m_TypeData[i];
 					void* compPtr = currentArchetype->GetComponentVoidPtr(entityData.m_IndexInArchetype, i);
-					currentArchetype->m_ComponentContexts[i]->InvokeOnDestroyComponent_S(compPtr, entity);
+					typeData.m_ComponentContext->InvokeOnDestroyComponent_S(compPtr, entity);
 				}
 
 				// Remove entity from component bucket:
@@ -211,11 +212,10 @@ namespace decs
 
 		InvokeEntityCreationObservers(spawnedEntity);
 
-		auto& componentContexts = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_ComponentContexts;
-
+		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
 		{
-			componentContexts[idx]->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[compRefIdx].Get(), spawnedEntity);
+			typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[compRefIdx].Get(), spawnedEntity);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -257,8 +257,7 @@ namespace decs
 		Archetype* spawnArchetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
 		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntitiesCount() + spawnCount);
 
-		auto& componentContexts = spawnArchetype->m_ComponentContexts;
-
+		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
 			EntityID entityID = m_EntityManager->CreateEntity(areActive);
@@ -272,7 +271,7 @@ namespace decs
 
 			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
 			{
-				componentContexts[idx]->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[compRefIdx].Get(), spawnedEntity);
+				typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[compRefIdx].Get(), spawnedEntity);
 			}
 		}
 
@@ -312,8 +311,7 @@ namespace decs
 		Archetype* spawnArchetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
 		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntitiesCount() + spawnCount);
 
-		auto& componentContexts = spawnArchetype->m_ComponentContexts;
-
+		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
 			EntityID entityID = m_EntityManager->CreateEntity(areActive);
@@ -324,7 +322,7 @@ namespace decs
 
 			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
 			{
-				componentContexts[idx]->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[compRefIdx].Get(), spawnedEntity);
+				typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[compRefIdx].Get(), spawnedEntity);
 			}
 		}
 
@@ -352,9 +350,8 @@ namespace decs
 
 		for (uint32_t i = 0; i < componentsCount; i++)
 		{
-			TypeID typeID = prefabArchetype.ComponentsTypes()[i];
 			m_SpawnData.m_PrefabComponentRefs.emplace_back(
-				prefabArchetype.m_TypeIDs[i],
+				prefabArchetype.GetTypeID(i),
 				prefabEntityData,
 				i
 			);
@@ -373,11 +370,12 @@ namespace decs
 		spawnedEntityData.m_IndexInArchetype = archetype->EntitiesCount();
 		archetype->AddEntityData(spawnedEntityData.m_ID, spawnedEntityData.m_IsActive);
 
-		std::vector<PackedContainerBase*>& archetypeContainers = archetype->m_PackedContainers;
+		auto& typeDataVector = archetype->m_TypeData;
 		for (uint32_t i = spawnState.m_CompRefsStart; i < componentsCount; i++)
 		{
-			void* componentPtr = archetypeContainers[i]->EmplaceFromVoid(m_SpawnData.m_PrefabComponentRefs[i].Get());
-			m_SpawnData.m_EntityComponentRefs.emplace_back(archetype->m_TypeIDs[i], spawnedEntityData, i);
+			ArchetypeTypeData& currentTypeData = typeDataVector[i];
+			currentTypeData.m_PackedContainer->EmplaceFromVoid(m_SpawnData.m_PrefabComponentRefs[i].Get());
+			m_SpawnData.m_EntityComponentRefs.emplace_back(currentTypeData.m_TypeID, spawnedEntityData, i);
 		}
 	}
 
@@ -391,8 +389,9 @@ namespace decs
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
 		if (compIdxInArch == Limits::MaxComponentCount) return false;
 
-		ComponentContextBase* componentContext = entityData.m_Archetype->m_ComponentContexts[compIdxInArch];
-		auto& container = entityData.m_Archetype->m_PackedContainers[compIdxInArch];
+		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
+		ComponentContextBase* componentContext = archetypeTypeData.m_ComponentContext;
+		auto& container = archetypeTypeData.m_PackedContainer;
 
 		if (m_PerformDelayedDestruction)
 		{
@@ -453,8 +452,9 @@ namespace decs
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
 		if (compIdxInArch == Limits::MaxComponentCount) return false;
 
-		ComponentContextBase* componentContext = entityData.m_Archetype->m_ComponentContexts[compIdxInArch];
-		auto& container = entityData.m_Archetype->m_PackedContainers[compIdxInArch];
+		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
+		ComponentContextBase* componentContext = archetypeTypeData.m_ComponentContext;
+		auto& container = archetypeTypeData.m_PackedContainer;
 
 		if (m_PerformDelayedDestruction)
 		{
@@ -536,8 +536,9 @@ namespace decs
 
 				for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 				{
+					ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
 					void* compPtr = archetype.GetComponentVoidPtr(entityDataIdx, i);
-					archetype.m_ComponentContexts[i]->InvokeOnDestroyComponent_S(compPtr, entity);
+					archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(compPtr, entity);
 				}
 
 				m_EntityManager->DestroyEntity(archetypeEntityData.ID());
@@ -640,17 +641,17 @@ namespace decs
 			m_ComponentRefsToInvokeObserverCallbacks.clear();
 			for (uint32_t i = 0; i < archetypeComponentsCount; i++)
 			{
-				m_ComponentRefsToInvokeObserverCallbacks.emplace_back(archetype.m_TypeIDs[i], *entity.m_EntityData, i);
+				m_ComponentRefsToInvokeObserverCallbacks.emplace_back(archetype.m_TypeData[i].m_TypeID, *entity.m_EntityData, i);
 			}
 
 			for (uint32_t i = 0; i < archetypeComponentsCount; i++)
 			{
+				ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
 				auto& compRef = m_ComponentRefsToInvokeObserverCallbacks[i];
-				auto& compContext = archetype.m_ComponentContexts[i];
 
 				if (compRef)
 				{
-					compContext->InvokeOnCreateComponent_S(compRef.Get(), entity);
+					archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent_S(compRef.Get(), entity);
 				}
 			}
 		}
@@ -675,8 +676,9 @@ namespace decs
 
 			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 			{
+				ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
 				void* compPtr = archetype.GetComponentVoidPtr(entityDataIdx, i);
-				archetype.m_ComponentContexts[i]->InvokeOnDestroyComponent_S(compPtr, entity);
+				archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(compPtr, entity);
 			}
 		}
 	}

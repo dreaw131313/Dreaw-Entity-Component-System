@@ -46,7 +46,7 @@ namespace decs
 
 		inline void SetComponentFromValidData()
 		{
-			m_PackedContainer = m_Archetype->m_PackedContainers[m_ComponentIndex];
+			m_PackedContainer = m_Archetype->m_TypeData[m_ComponentIndex].m_PackedContainer;
 		}
 
 		inline void FetchWhenIsInvalid()

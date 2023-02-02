@@ -76,7 +76,7 @@ namespace decs
 		}
 
 		template<typename T>
-		inline T* GetComponent() const
+		inline typename stable_type<T>::Type* GetComponent() const
 		{
 			if (IsValid())
 				return m_Container->GetComponent<T>(*m_EntityData);

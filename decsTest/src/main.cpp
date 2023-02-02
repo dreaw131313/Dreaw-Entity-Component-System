@@ -24,8 +24,8 @@ public:
 	}
 };
 
-class StableComponentObserverTest : 
-	public decs::CreateComponentObserver<decs::Stable<Position>>, 
+class StableComponentObserverTest :
+	public decs::CreateComponentObserver<decs::Stable<Position>>,
 	public decs::DestroyComponentObserver<decs::Stable<Position>>
 {
 public:
@@ -45,21 +45,43 @@ int main()
 {
 	decs::Container container;
 
-	auto e = container.CreateEntity();
-	Position* p1 = e.AddComponent<decs::Stable<Position>>(101.f, 202.f);
-	e.AddComponent<float>(1.f);
-
-	decs::View<decs::Stable<Position>, float> view = { container };
-
-	auto lambda = [] (Position& pos, float& f)
+	for (int i = 0; i < 4; i++)
 	{
-		std::cout << "X = " << pos.X << ", Y = " << pos.Y << "\n";
+		auto e = container.CreateEntity();
+		e.AddComponent<uint8_t>(true);
+		e.AddComponent<decs::Stable<Position>>(i + 1.f, i + 2.f);
+
+		bool b1 = e.HasComponent<Position>();
+		bool b2 = e.HasComponent<decs::Stable<Position>>();
+
+		Position* p1 = e.GetComponent<Position>();
+		Position* p2 = e.GetComponent<decs::Stable<Position>>();
+		Position* p3 = e.GetComponent<decs::Stable<Position>>();
+	}
+
+
+	using ViewType = decs::View<decs::Stable<Position>>;
+	ViewType view = { container };
+
+	auto lambda = [] (decs::Entity& e, Position& pos)
+	{
+		std::cout << "Entity ID = " << e.ID() << ", X = " << pos.X << ", Y = " << pos.Y << "\n";
 		pos.X *= 2;
 		pos.Y *= 2;
 	};
 
-	view.ForEach(lambda);
-	view.ForEach(lambda);
+	view.ForEachForward(lambda);
+	std::cout << "\n";
+	view.ForEachForward(lambda);
+	std::cout << "\n";
+
+	std::vector<ViewType::BatchIterator> iterators = {};
+	view.CreateBatchIterators(iterators, 3, 2);
+
+	for (auto& iterator : iterators)
+	{
+		iterator.ForEach(lambda);
+	}
 
 	return 0;
 }
