@@ -43,12 +43,11 @@ public:
 
 int main()
 {
-	std::cout << "EntityData size: " << sizeof(decs::EntityData) << "\n";
-	std::cout << "\n";
-
 	decs::ObserversManager observerManager;
 	decs::Container container;
 	container.SetObserversManager(&observerManager);
+
+	container.SetStableComponentChunkSize<Position>(1000);
 
 	StableComponentObserverTest testStableObserver = {};
 	observerManager.SetComponentCreateObserver<decs::Stable<Position>>(&testStableObserver);
@@ -61,13 +60,10 @@ int main()
 		e.AddComponent<float>();
 		e.AddComponent<decs::Stable<Position>>(i + 1.f, i + 2.f);
 		e.RemoveComponent<decs::Stable<Position>>();
-		e.AddComponent<decs::Stable<Position>>(i + 1.f, i + 2.f);
 	}
-	std::cout << "\n";
-	container.InvokeEntitesOnCreateListeners();
-	container.InvokeEntitesOnDestroyListeners();
 
 
+	// ITERATIONS TESTS
 	using ViewType = decs::View<decs::Stable<Position>>;
 	ViewType view = { container };
 
@@ -78,8 +74,6 @@ int main()
 		pos.Y *= 2;
 	};
 
-
-	// ITERATIONS TESTS
 	std::cout << "\n";
 	view.ForEachForward(lambda);
 	std::cout << "\n";

@@ -20,7 +20,7 @@ namespace decs
 	) :
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(enititesChunkSize)),
-		m_DefaultStableComponentChunkSize(stableComponentDefaultChunkSize),
+		m_StableContainers(stableComponentDefaultChunkSize),
 		m_HaveOwnComponentContextManager(true),
 		m_ComponentContextManager(new ComponentContextsManager( nullptr)),
 		m_EmptyEntities(m_EmptyEntitiesChunkSize)
@@ -37,14 +37,14 @@ namespace decs
 		m_EntityManager(entityManager),
 		m_HaveOwnComponentContextManager(false),
 		m_ComponentContextManager(componentContextsManager),
-		m_DefaultStableComponentChunkSize(stableComponentDefaultChunkSize),
+		m_StableContainers(stableComponentDefaultChunkSize),
 		m_EmptyEntities(m_EmptyEntitiesChunkSize)
 	{
 	}
 
 	Container::~Container()
 	{
-		DestroyStableComponents();
+		m_StableContainers.DestroyStableComponents();
 		if (m_HaveOwnComponentContextManager)
 		{
 			delete m_ComponentContextManager;
@@ -171,6 +171,7 @@ namespace decs
 		}
 		m_EmptyEntities.Clear();
 
+		m_StableContainers.ClearStableComponents();
 	}
 
 	void Container::SetEntityActive(const EntityID& entity, const bool& isActive)
@@ -496,7 +497,7 @@ namespace decs
 		}
 
 		StableComponentRef* componentRef = static_cast<StableComponentRef*>(container->GetComponentDataAsVoid(oldArchetypeIndex));
-		StableContainerBase* stableContainer = this->m_StableContainers[componentTypeID];
+		StableContainerBase* stableContainer = m_StableContainers.GetStableContainer(componentTypeID);
 		stableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_ElementIndex);
 		
 		auto result = oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);

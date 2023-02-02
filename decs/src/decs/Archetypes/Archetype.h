@@ -3,6 +3,7 @@
 #include "decs\ComponentContextsManager.h"
 #include "decs\Type.h"
 #include "decs\ComponentContainers\PackedContainer.h"
+#include "decs\ComponentContainers\StableContainer.h"
 
 namespace decs
 {
@@ -205,7 +206,11 @@ namespace decs
 			}
 		}
 
-		void AddTypeID(const TypeID& id, PackedContainerBase* frompackedContainer, ComponentContextBase* componentContext)
+		void AddTypeID(
+			const TypeID& id, 
+			PackedContainerBase* frompackedContainer, 
+			ComponentContextBase* componentContext
+		)
 		{
 			auto it = m_TypeIDsIndexes.find(id);
 			if (it == m_TypeIDsIndexes.end())

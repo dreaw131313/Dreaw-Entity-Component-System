@@ -144,7 +144,7 @@ namespace decs
 		std::vector<uint64_t> m_FreeSpaces;
 	};
 
-	
+
 	class ComponentNodeInfo
 	{
 	public:
@@ -326,7 +326,7 @@ namespace decs
 			{
 				m_Chunks.pop_back();
 
-				for (int i = (int)m_Chunks.size() - 1; i > -1; i++)
+				for (int i = (int)m_Chunks.size() - 1; i > -1; i--)
 				{
 					if (m_Chunks[i] == nullptr)
 					{
@@ -376,5 +376,89 @@ namespace decs
 
 			return true;
 		}
+	};
+
+	class StableContainersManager
+	{
+	public:
+		StableContainersManager()
+		{
+
+		}
+
+		StableContainersManager(const uint64_t& defaultChunkSize) :
+			m_DefaultChunkSize(defaultChunkSize)
+		{
+
+		}
+
+		template<typename T>
+		bool SetStableComponentChunkSize(const uint64_t& chunkSize)
+		{
+			constexpr TypeID typeID = Type<Stable<T>>::ID();
+			auto& container = m_Containers[typeID];
+
+			if (container == nullptr)
+			{
+				container = new StableContainer<T>(chunkSize);
+				return true;
+			}
+			return false;
+		}
+
+		inline StableContainerBase* GetStableContainer(const TypeID& typeID)
+		{
+			auto it = m_Containers.find(typeID);
+			return it != m_Containers.end() ? it->second : nullptr;
+		}
+
+		template<typename T>
+		uint64_t GetStableComponentChunkSize()
+		{
+			constexpr TypeID typeID = Type<Stable<T>>::ID();
+			auto it = m_Containers.find(typeID);
+
+			if (it != m_Containers.end())
+			{
+				return it->second->GetChunkSize();
+			}
+
+			return std::numeric_limits<uint64_t>::max();
+		}
+
+		template<typename T>
+		StableContainer<T>* GetOrCreateStableContainer()
+		{
+			constexpr TypeID typeID = Type<Stable<T>>::ID();
+			auto& container = m_Containers[typeID];
+
+			if (container == nullptr)
+			{
+				container = new StableContainer<T>(m_DefaultChunkSize);
+			}
+
+			return static_cast<StableContainer<T>*>(container);
+		}
+
+		inline void DestroyStableComponents()
+		{
+			for (auto& [key, value] : m_Containers)
+			{
+				delete value;
+			}
+		}
+
+		inline void ClearStableComponents()
+		{
+			for (auto& [key, value] : m_Containers)
+			{
+				value->Clear();
+			}
+		}
+
+	private:
+		ecsMap<TypeID, StableContainerBase*> m_Containers;
+		uint64_t m_DefaultChunkSize = 100;
+
 	};
 }

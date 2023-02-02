@@ -14,19 +14,14 @@ namespace decs
 
 		}
 
-		PackedContainerBase(StableContainerBase* stableContainer) :
-			m_LinkedStableContainer(stableContainer)
-		{
-
-		}
-
 		inline virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept = 0;
 
-		inline virtual StableContainerBase* GetLinkedStableContainer()
+		inline virtual StableContainerBase* GetLinkedStableContainer() const
 		{
-			return m_LinkedStableContainer;
+			return nullptr;
 		}
-		inline virtual bool IsForStableComponents() const noexcept { return m_LinkedStableContainer != nullptr; }
+
+		inline virtual bool IsForStableComponents() const { return false; }
 
 		inline virtual void PopBack() = 0;
 		inline virtual void Clear() = 0;
@@ -42,8 +37,6 @@ namespace decs
 		inline virtual void RemoveSwapBack(const uint64_t& index) = 0;
 		inline virtual void* EmplaceFromVoid(void* data) noexcept = 0;
 
-	private:
-		StableContainerBase* m_LinkedStableContainer = nullptr;
 	};
 
 	template<typename ComponentType>
@@ -141,6 +134,7 @@ namespace decs
 	{
 	public:
 		std::vector<StableComponentRef> m_Data;
+		StableContainerBase* m_LinkedStableContainer = nullptr;
 
 	public:
 		PackedContainer()

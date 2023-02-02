@@ -196,7 +196,7 @@ namespace decs
 
 #pragma endregion
 
-#pragma region SPAWNING ENTIES
+#pragma region SPAWNING ENTITIES
 	private:
 		struct PrefabComponentRefData
 		{
@@ -435,7 +435,7 @@ namespace decs
 					);
 
 				// Adding component to stable component container
-				StableContainer<ComponentType>* stableContainer = GetOrCreateStableContainer<ComponentType>();
+				StableContainer<ComponentType>* stableContainer = m_StableContainers.GetOrCreateStableContainer<ComponentType>();
 				ComponentNodeInfo componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
 
 				// Adding component pointer to packed container in archetype
@@ -608,71 +608,19 @@ namespace decs
 
 #pragma region STABLE COMPONENTS
 	private:
-		ecsMap<TypeID, StableContainerBase*> m_StableContainers;
-		uint64_t m_DefaultStableComponentChunkSize = 100;
-
+		StableContainersManager m_StableContainers = { 100 };
 	public:
 		template<typename T>
 		bool SetStableComponentChunkSize(const uint64_t& chunkSize)
 		{
-			constexpr TypeID typeID = Type<Stable<T>>::ID();
-			auto& container = m_StableContainers[typeID];
-
-			if (container == nullptr)
-			{
-				container = new StableContainer<T>(chunkSize);
-				return true;
-			}
-
-			return false;
-
+			return m_StableContainers.SetStableComponentChunkSize<T>(chunkSize);
 		}
 
 		template<typename T>
 		uint64_t GetStableComponentChunkSize()
 		{
-			constexpr TypeID typeID = Type<Stable<T>>::ID();
-			auto it = m_StableContainers.find(typeID);
-
-			if (it != m_StableContainers.end())
-			{
-				return it->second->GetChunkSize();
-			}
-
-			return std::numeric_limits<uint64_t>::max();
+			return m_StableContainers.GetStableComponentChunkSize<T>();
 		}
-
-	private:
-		template<typename T>
-		StableContainer<T>* GetOrCreateStableContainer()
-		{
-			constexpr TypeID typeID = Type<Stable<T>>::ID();
-			auto& container = m_StableContainers[typeID];
-
-			if (container == nullptr)
-			{
-				container = new StableContainer<T>(m_DefaultStableComponentChunkSize);
-			}
-
-			return static_cast<StableContainer<T>*>(container);
-		}
-
-		inline void DestroyStableComponents()
-		{
-			for (auto& [key, value] : m_StableContainers)
-			{
-				delete value;
-			}
-		}
-
-		inline void ClearStableComponents()
-		{
-			for (auto& [key, value] : m_StableContainers)
-			{
-				value->Clear();
-			}
-		}
-
 
 #pragma endregion
 
