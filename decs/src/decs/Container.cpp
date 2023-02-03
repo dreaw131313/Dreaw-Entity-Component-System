@@ -132,7 +132,7 @@ namespace decs
 					if (typeData.m_StableContainer != nullptr)
 					{
 						StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetComponentDataAsVoid(indexInArchetype));
-						m_StableComponentDestroyData.emplace_back(typeData.m_StableContainer, compRef->m_ChunkIndex, compRef->m_ElementIndex);
+						m_StableComponentDestroyData.emplace_back(typeData.m_StableContainer, compRef->m_ChunkIndex, compRef->m_Index);
 					}
 				}
 
@@ -362,26 +362,32 @@ namespace decs
 	)
 	{
 		Archetype& prefabArchetype = *prefabEntityData.m_Archetype;
+		Archetype* spawnedEntityArchetype = nullptr;
 		uint64_t componentsCount = prefabArchetype.ComponentsCount();
 
 		if (prefabContainer == this)
 		{
-			m_SpawnData.m_SpawnArchetypes.push_back(prefabEntityData.m_Archetype);
+			spawnedEntityArchetype = prefabEntityData.m_Archetype;
 		}
 		else
 		{
-			m_SpawnData.m_SpawnArchetypes.push_back(m_ArchetypesMap.FindArchetypeFromOther(
+			spawnedEntityArchetype = m_ArchetypesMap.FindArchetypeFromOther(
 				*prefabEntityData.m_Archetype,
 				m_ComponentContextManager,
 				&m_StableContainers,
-				m_ObserversManager
-			));
+				m_ComponentContextManager->m_ObserversManager
+			);
 		}
+		m_SpawnData.m_SpawnArchetypes.push_back(spawnedEntityArchetype);
 
 		for (uint32_t i = 0; i < componentsCount; i++)
 		{
+			ArchetypeTypeData& spawnedEntityArchetypeTypeData = spawnedEntityArchetype->m_TypeData[i];
+
 			m_SpawnData.m_PrefabComponentRefs.emplace_back(
-				prefabArchetype.GetTypeID(i),
+				spawnedEntityArchetypeTypeData.m_StableContainer != nullptr,
+				spawnedEntityArchetypeTypeData.m_StableContainer,
+				spawnedEntityArchetypeTypeData.m_TypeID,
 				prefabEntityData,
 				i
 			);
@@ -404,7 +410,17 @@ namespace decs
 		for (uint32_t i = spawnState.m_CompRefsStart; i < componentsCount; i++)
 		{
 			ArchetypeTypeData& currentTypeData = typeDataVector[i];
-			currentTypeData.m_PackedContainer->EmplaceFromVoid(m_SpawnData.m_PrefabComponentRefs[i].Get());
+			SpawnComponentRefData& spawnRefData = m_SpawnData.m_PrefabComponentRefs[i];
+
+			if (spawnRefData.m_IsStable)
+			{
+				StableComponentRef compNodeInfo = spawnRefData.m_StableContainer->EmplaceFromVoid(spawnRefData.m_ComponentRef.Get());
+				currentTypeData.m_PackedContainer->EmplaceFromVoid(&compNodeInfo);
+			}
+			else
+			{
+				currentTypeData.m_PackedContainer->EmplaceFromVoid(spawnRefData.m_ComponentRef.Get());
+			}
 			m_SpawnData.m_EntityComponentRefs.emplace_back(currentTypeData.m_TypeID, spawnedEntityData, i);
 		}
 	}
@@ -525,7 +541,7 @@ namespace decs
 
 		StableComponentRef* componentRef = static_cast<StableComponentRef*>(container->GetComponentDataAsVoid(oldArchetypeIndex));
 		StableContainerBase* stableContainer = m_StableContainers.GetStableContainer(componentTypeID);
-		stableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_ElementIndex);
+		stableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_Index);
 
 		auto result = oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
 		ValidateEntityInArchetype(result);

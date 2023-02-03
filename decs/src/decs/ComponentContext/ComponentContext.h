@@ -141,8 +141,8 @@ namespace decs
 
 		ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) override
 		{
-			return new ComponentContext<ComponentType>(
-				observerManager != nullptr ? observerManager->GetComponentObserver<ComponentType>() : nullptr
+			return new ComponentContext<Stable<ComponentType>>(
+				observerManager != nullptr ? observerManager->GetComponentObserver<Stable<ComponentType>>() : nullptr
 				);
 		}
 	};

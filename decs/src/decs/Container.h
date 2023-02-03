@@ -245,7 +245,7 @@ namespace decs
 		struct SpawnData
 		{
 		public:
-			std::vector<ComponentRefAsVoid> m_PrefabComponentRefs; // bool - true is stable, false unstable
+			std::vector<SpawnComponentRefData> m_PrefabComponentRefs; // bool - true is stable, false unstable
 			std::vector <Archetype*> m_SpawnArchetypes;
 			std::vector<ComponentRefAsVoid> m_EntityComponentRefs;
 
@@ -455,15 +455,15 @@ namespace decs
 
 				// Adding component to stable component container
 				StableContainer<ComponentType>* stableContainer = static_cast<StableContainer<ComponentType>*>(archetypeTypeData.m_StableContainer);
-				ComponentNodeInfo componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
+				StableComponentRef componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
 
 				// Adding component pointer to packed container in archetype
 				PackedContainer<Stable<ComponentType>>* packedPointersContainer = reinterpret_cast<PackedContainer<Stable<ComponentType>>*>(archetypeTypeData.m_PackedContainer);
 
 				packedPointersContainer->m_Data.emplace_back(
-					(uint32_t)componentNodeInfo.m_ChunkIndex,
-					(uint32_t)componentNodeInfo.m_Index,
-					componentNodeInfo.m_ComponentPtr
+					componentNodeInfo.m_ComponentPtr,
+					componentNodeInfo.m_ChunkIndex,
+					componentNodeInfo.m_Index
 				);
 				ComponentType* componentPtr = static_cast<ComponentType*>(componentNodeInfo.m_ComponentPtr);
 
@@ -740,7 +740,6 @@ namespace decs
 
 #pragma region OBSERVERS
 	private:
-		ObserversManager* m_ObserversManager = nullptr;
 		std::vector<ComponentRefAsVoid> m_ComponentRefsToInvokeObserverCallbacks;
 
 	public:
@@ -753,33 +752,33 @@ namespace decs
 	private:
 		inline void InvokeEntityCreationObservers(Entity& entity)
 		{
-			if (m_ObserversManager != nullptr)
+			if (m_ComponentContextManager->m_ObserversManager != nullptr)
 			{
-				m_ObserversManager->InvokeEntityCreationObservers(entity);
+				m_ComponentContextManager->m_ObserversManager->InvokeEntityCreationObservers(entity);
 			}
 		}
 
 		inline void InvokeEntityDestructionObservers(Entity& entity)
 		{
-			if (m_ObserversManager != nullptr)
+			if (m_ComponentContextManager->m_ObserversManager != nullptr)
 			{
-				m_ObserversManager->InvokeEntityDestructionObservers(entity);
+				m_ComponentContextManager->m_ObserversManager->InvokeEntityDestructionObservers(entity);
 			}
 		}
 
 		inline void InvokeEntityActivationObservers(Entity& entity)
 		{
-			if (m_ObserversManager != nullptr)
+			if (m_ComponentContextManager->m_ObserversManager != nullptr)
 			{
-				m_ObserversManager->InvokeEntityActivationObservers(entity);
+				m_ComponentContextManager->m_ObserversManager->InvokeEntityActivationObservers(entity);
 			}
 		}
 
 		inline void InvokeEntityDeactivationObservers(Entity& entity)
 		{
-			if (m_ObserversManager != nullptr)
+			if (m_ComponentContextManager->m_ObserversManager != nullptr)
 			{
-				m_ObserversManager->InvokeEntityDeactivationObservers(entity);
+				m_ComponentContextManager->m_ObserversManager->InvokeEntityDeactivationObservers(entity);
 			}
 		}
 

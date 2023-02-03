@@ -43,6 +43,7 @@ public:
 
 int main()
 {
+	decs::Container prefabsContainer;
 	decs::ObserversManager observerManager;
 	decs::Container container;
 	container.SetObserversManager(&observerManager);
@@ -53,15 +54,13 @@ int main()
 	observerManager.SetComponentCreateObserver<decs::Stable<Position>>(&testStableObserver);
 	observerManager.SetComponentDestroyObserver<decs::Stable<Position>>(&testStableObserver);
 
-	std::vector<decs::Entity> createdEntities;
-
 	int entitiesCount = 2;
-	for (int i = 0; i < entitiesCount; i++)
-	{
-		auto& e = createdEntities.emplace_back(container.CreateEntity());
-		e.AddComponent<float>();
-		e.AddComponent<decs::Stable<Position>>(i + 1.f, i + 2.f);
-	}
+	auto prefabEntity = prefabsContainer.CreateEntity();
+	prefabEntity.AddComponent<float>(1.f);
+	prefabEntity.AddComponent<decs::Stable<Position>>(1.f, 2.f);
+	prefabEntity.AddComponent<int>(1);
+
+	container.Spawn(prefabEntity, 10, true);
 
 
 	// ITERATIONS TESTS
@@ -89,10 +88,8 @@ int main()
 		iterator.ForEach(lambda);
 	}
 
-	for (auto& entity : createdEntities)
-	{
-		entity.Destroy();
-	}
+	std::cout << "\n";
+	container.DestroyOwnedEntities();
 
 	return 0;
 }

@@ -145,7 +145,7 @@ namespace decs
 	};
 
 
-	class ComponentNodeInfo
+	class StableComponentRef
 	{
 	public:
 		uint64_t m_ChunkIndex = std::numeric_limits<uint64_t>::max();
@@ -153,12 +153,12 @@ namespace decs
 		void* m_ComponentPtr = nullptr;
 
 	public:
-		ComponentNodeInfo()
+		StableComponentRef()
 		{
 
 		}
 
-		ComponentNodeInfo(
+		StableComponentRef(
 			void* componentPtr,
 			const uint64_t& chunkIndex,
 			const uint64_t& index
@@ -177,7 +177,7 @@ namespace decs
 		virtual StableContainerBase* CreateOwnEmptyCopy(const uint64_t& withChunkSize) = 0;
 
 		virtual bool Remove(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
-		virtual ComponentNodeInfo EmplaceFromVoid(void* ptr) = 0;
+		virtual StableComponentRef EmplaceFromVoid(void* ptr) = 0;
 		virtual uint64_t GetChunkSize() const noexcept = 0;
 		virtual void Clear() = 0;
 	};
@@ -222,7 +222,7 @@ namespace decs
 		}
 
 		template<typename... Args>
-		ComponentNodeInfo Emplace(Args&&... args)
+		StableComponentRef Emplace(Args&&... args)
 		{
 			ChunkType* chunk = GetCurrentChunk();
 			auto result = chunk->Emplace(std::forward<Args>(args)...);
@@ -232,7 +232,7 @@ namespace decs
 				RemoveChunkFromFreeSpaces(chunk);
 			}
 
-			return ComponentNodeInfo(result.Data, chunk->m_Index, result.Index);
+			return StableComponentRef(result.Data, chunk->m_Index, result.Index);
 		}
 
 		bool Remove(const uint64_t& chunkIndex, const uint64_t& elementIndex) override
@@ -257,7 +257,7 @@ namespace decs
 			return false;
 		}
 
-		virtual ComponentNodeInfo EmplaceFromVoid(void* ptr)override
+		virtual StableComponentRef EmplaceFromVoid(void* ptr)override
 		{
 			return Emplace(*static_cast<DataType*>(ptr));
 		}

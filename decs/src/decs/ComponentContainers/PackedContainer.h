@@ -1,7 +1,6 @@
 #pragma once
 #include "Core.h"
 #include "Containers\ChunkedVector.h"
-
 #include "StableContainer.h"
 
 namespace decs
@@ -15,13 +14,6 @@ namespace decs
 		}
 
 		inline virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept = 0;
-
-		inline virtual StableContainerBase* GetLinkedStableContainer() const
-		{
-			return nullptr;
-		}
-
-		inline virtual bool IsForStableComponents() const { return false; }
 
 		inline virtual void PopBack() = 0;
 		inline virtual void Clear() = 0;
@@ -110,31 +102,11 @@ namespace decs
 		}
 	};
 
-	struct StableComponentRef
-	{
-	public:
-		uint32_t m_ChunkIndex = std::numeric_limits<uint32_t>::max();
-		uint32_t m_ElementIndex = std::numeric_limits<uint32_t>::max();
-		void* m_ComponentPtr = nullptr;
-
-		StableComponentRef()
-		{
-
-		}
-
-		StableComponentRef(const uint32_t& chunkIndex, const uint32_t& elementIndex, void* componentPtr) :
-			m_ChunkIndex(chunkIndex), m_ElementIndex(elementIndex), m_ComponentPtr(componentPtr)
-		{
-
-		}
-	};
-
 	template<typename ComponentType>
 	class PackedContainer<decs::Stable<ComponentType>> : public PackedContainerBase
 	{
 	public:
 		std::vector<StableComponentRef> m_Data;
-		StableContainerBase* m_LinkedStableContainer = nullptr;
 
 	public:
 		PackedContainer()
