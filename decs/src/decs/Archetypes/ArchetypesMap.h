@@ -323,7 +323,7 @@ namespace decs
 			return archetype;
 		}
 
-		Archetype* FindArchetypeFromOther(
+		Archetype* GetOrCreateArchetypeFromOther(
 			Archetype& fromArchetype,
 			ComponentContextsManager* componentContextsManager,
 			StableContainersManager* stableContainersManager,

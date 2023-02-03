@@ -8,99 +8,80 @@ void Print(std::string message)
 	std::cout << message << "\n";
 }
 
-class Position
+class A
 {
-public:
-	float X = 0, Y = 0;
-
-	Position()
-	{
-
-	}
-
-	Position(float x, float y) :X(x), Y(y)
-	{
-
-	}
+	float X = 0;
 };
-
-class StableComponentObserverTest :
-	public decs::CreateComponentObserver<decs::Stable<Position>>,
-	public decs::DestroyComponentObserver<decs::Stable<Position>>
+class B
 {
-public:
-	virtual void OnCreateComponent(Position& component, decs::Entity& entity) override
-	{
-		Print("Stable position on create");
-	}
-
-	virtual void OnDestroyComponent(Position& component, decs::Entity& entity)
-	{
-		Print("Stable position on destroy");
-	}
+	float X = 0;
+};
+class C
+{
+	float X = 0;
+};
+class D
+{
+	float X = 0;
+};
+class E
+{
+	float X = 0;
+};
+class F
+{
+	float X = 0;
+};
+class G
+{
+	float X = 0;
+};
+class H
+{
+	float X = 0;
+};
+class I
+{
+	float X = 0;
 };
 
 
 int main()
 {
-	std::cout << "Entity Data size: " << sizeof(decs::EntityData) << "\n";
-	std::cout << "\n";
+	decs::Container container = {};
 
-	decs::Container prefabsContainer;
-	decs::ObserversManager observerManager;
-	decs::Container container;
-	container.SetObserversManager(&observerManager);
+	auto entity1 = container.CreateEntity();
+	entity1.AddComponent<A>();
+	entity1.AddComponent<B>();
+	entity1.AddComponent<C>();
+	entity1.AddComponent<D>();
+	entity1.AddComponent<E>();
 
-	container.SetStableComponentChunkSize<Position>(1000);
+	auto entity2 = container.CreateEntity();
+	entity1.AddComponent<G>();
+	entity1.AddComponent<H>();
+	entity1.AddComponent<A>();
+	entity1.AddComponent<B>();
+	entity1.AddComponent<C>();
+	entity1.AddComponent<D>();
+	entity1.AddComponent<E>();
 
-	StableComponentObserverTest testStableObserver = {};
-	observerManager.SetComponentCreateObserver<decs::Stable<Position>>(&testStableObserver);
-	observerManager.SetComponentDestroyObserver<decs::Stable<Position>>(&testStableObserver);
-
-	auto prefabEntity = prefabsContainer.CreateEntity();
-	prefabEntity.AddComponent<float>(1.f);
-	prefabEntity.AddComponent<decs::Stable<Position>>(1.f, 2.f);
-	Position* p = prefabEntity.AddComponent<decs::Stable<Position>>(10.f, 20.f);
-	prefabEntity.AddComponent<int>(1);
-
-
-	std::vector<decs::Entity> entities;
-	container.Spawn(prefabEntity, entities, 10, true);
-
-
-	// ITERATIONS TESTS
-	using ViewType = decs::View<decs::Stable<Position>>;
+	using ViewType = decs::View<A, B, C, D, E>;
 	ViewType view = { container };
 
-	auto lambda = [] (const decs::Entity& e, Position& pos)
+
+	uint64_t iterationCount = 0;
+	auto lambda = [&] (A& a, B& b, C& c, D& d, E& e)
 	{
-		pos.X *= e.ID() + 1;
-		pos.Y *= e.ID() + 1;
-		std::cout << "Entity ID = " << e.ID() << ", X = " << pos.X << ", Y = " << pos.Y << "\n";
+		iterationCount += 1;
 	};
 
-	std::cout << "\n";
 	view.ForEachForward(lambda);
-	std::cout << "\n";
-	view.ForEachForward(lambda);
-	std::cout << "\n";
 
-	std::vector<ViewType::BatchIterator> iterators = {};
-	view.CreateBatchIterators(iterators, 3, 2);
+	std::cout << "Iterated entites count: " << iterationCount << "\n";
 
-	for (auto& iterator : iterators)
-	{
-		iterator.ForEach(lambda);
-	}
 
-	std::cout << "\n";
 
-	for (auto& entity : entities)
-	{
-		entity.Destroy();
-	}
-
-	container.DestroyOwnedEntities();
 
 	return 0;
 }
