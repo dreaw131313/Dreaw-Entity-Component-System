@@ -84,13 +84,13 @@ decs::Container container = {};
 // this view can iterate over all entities which contains components passed as template parameters
 decs::View<Component1, decs::Stable<Component2>> view = { container }; 
 
-view.ForEach([&](Component1& c1, Component2& c2)
+view.ForEach([](Component1& c1, Component2& c2)
 {
 	// doing stuff with components
 });
 
- // in this function first paramter of lambda must be decs::Entity
-view.ForEachWithEntity([&](decs::Entity& e, Component1& c1, Component2& c2)
+// if during iteration entity reference is needed, decs::Entity can be placed as first parameter of passed callable to ForEach function 
+view.ForEach([](decs::Entity& e, Component1& c1, Component2& c2)
 {
 	// doing stuff with components and entity
 });
