@@ -114,12 +114,12 @@ Creating view with this methods can look like:
 decs::View<Component1, decs::Stable<Component2>, Component3> view = { container };
 view.Without<Component4,Component5>().WithAnyFrom<Component6, Component7>().With<Component8, Component9>();
 
-view.ForEach([&](Component1& c1, Component2& c2, Component3& c3)
+view.ForEach([](Component1& c1, Component2& c2, Component3& c3)
 {
 	// doing stuff with components
 });
 
-view.ForEachWithEntity([&](decs::Entity& e, Component1& c1, Component2& c2, Component3& c3)
+view.ForEach([](decs::Entity& e, Component1& c1, Component2& c2, Component3& c3)
 {
 	// doing stuff with components and entity
 });
