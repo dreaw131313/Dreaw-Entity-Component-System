@@ -9,9 +9,11 @@
 To start using decs, copy the **decs** folder and include the header file **decs.h**.
 
 ### Creating and storing entities and components
-All entites and components are stored in class decs::Container which is giving access for method for creating and destroying entities and components.<br/>
+All entites and components are stored in class decs::Container which is giving access for method for creating and destroying entities.<br/>
 Component classes do not need to inherit from any class. Base types like int, float etc. can also be componenets.<br/>
-Component stored in **decs::Container** have **stable memory adress**.<br/>
+
+By default components stored in **decs::Container** do not have **stable memory adress**, but it can be enforced by using template **decs::Stable< ComponentType >** instead of only **ComponentType**.<br/>
+
 ```cpp
 class Component1
 {
@@ -39,8 +41,9 @@ int main()
 	decs::Entity entity1 = container.CreateEntity();
 	// using entity member function :
 	Component1* c1 = entity1.AddComponent<Component1>(1.f,2.f);
-	Component2* c2 = entity1.AddComponent<Component2>(3.f,4.f);
-	entity1.RemoveComponent<Component2>();
+	Component2* c2 = entity1.AddComponent<decs::Stable<Component2>>(3.f,4.f);
+	entity1.RemoveComponent<Component1>();
+	entity1.RemoveComponent<decs::Stable<Component2>>();
 	entity1.Destroy()
 	
 	return 0;
@@ -79,7 +82,7 @@ bool isActive = entity.IsActive();
 decs::Container container = {}; 
 
 // this view can iterate over all entities which contains components passed as template parameters
-decs::View<Component1, Component2> view = { container }; 
+decs::View<Component1, decs::Stable<Component2>> view = { container }; 
 
 view.ForEach([&](Component1& c1, Component2& c2)
 {
@@ -108,7 +111,7 @@ View& With(); // Entities in view will have all components from ComponentTypes p
 
 Creating view with this methods can look like:
 ```cpp
-decs::View<Component1, Component2, Component3> view = { container };
+decs::View<Component1, decs::Stable<Component2>, Component3> view = { container };
 view.Without<Component4,Component5>().WithAnyFrom<Component6, Component7>().With<Component8, Component9>();
 
 view.ForEach([&](Component1& c1, Component2& c2, Component3& c3)
