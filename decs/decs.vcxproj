@@ -140,7 +140,6 @@
     <ClInclude Include="src\decs\ComponentContext\ComponentContextsManager.h" />
     <ClInclude Include="src\decs\ComponentRefs\ComponentRef.h" />
     <ClInclude Include="src\decs\ComponentRefs\ComponentRefAsVoid.h" />
-    <ClInclude Include="src\decs\CustomApplay.h" />
     <ClInclude Include="src\decs\EntityManager.h" />
     <ClInclude Include="src\decs\ComponentContainers\StableContainer.h" />
     <ClInclude Include="src\decs\ComponentContext\ComponentContext.h" />
