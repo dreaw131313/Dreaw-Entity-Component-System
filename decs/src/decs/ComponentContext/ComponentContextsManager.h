@@ -1,6 +1,5 @@
 #pragma once
 #include "decs\Core.h"
-#include "decs\Enums.h"
 #include "ComponentContext.h"
 
 namespace decs

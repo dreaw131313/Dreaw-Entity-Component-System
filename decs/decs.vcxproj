@@ -150,7 +150,6 @@
     <ClInclude Include="src\decs\decs.h" />
     <ClInclude Include="src\decs\Entity.h" />
     <ClInclude Include="src\decs\EntityData.h" />
-    <ClInclude Include="src\decs\Enums.h" />
     <ClInclude Include="src\decs\Observers\Observers.h" />
     <ClInclude Include="src\decs\Observers\ObserversManager.h" />
     <ClInclude Include="src\decs\traits.h" />

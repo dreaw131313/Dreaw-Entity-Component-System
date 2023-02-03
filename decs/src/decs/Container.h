@@ -1,6 +1,5 @@
 #pragma once
 #include "Core.h"
-#include "Enums.h"
 #include "Type.h"
 
 #include "Archetypes\ArchetypesMap.h"

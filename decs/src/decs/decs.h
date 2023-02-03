@@ -3,7 +3,6 @@
 #include "Entity.h"
 #include "EntityManager.h"
 #include "Container.h"
-#include "Enums.h"
 #include "View.h"
 #include "Observers\Observers.h"
 #include "Observers\ObserversManager.h"

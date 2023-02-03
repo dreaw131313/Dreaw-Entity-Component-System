@@ -1,11 +1,8 @@
 #pragma once
 #include "Core.h"
-#include "Enums.h"
 #include "Type.h"
 #include "Entity.h"
 #include "Container.h"
-#include <algorithm>
-#include "Containers\ChunkedVector.h"
 
 namespace decs
 {
@@ -115,24 +112,6 @@ namespace decs
 		inline void ForEach(Callable&& func) noexcept
 		{
 			ForEachBackward(func);
-		}
-
-		template<typename Callable>
-		void ForEach(Callable&& func, const IterationType& iterationType) noexcept
-		{
-			switch (iterationType)
-			{
-				case IterationType::Forward:
-				{
-					ForEachForward(func);
-					break;
-				}
-				case IterationType::Backward:
-				{
-					ForEachBackward(func);
-					break;
-				}
-			}
 		}
 
 		template<typename Callable>
