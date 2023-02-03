@@ -67,6 +67,10 @@ namespace decs
 		friend class View;
 		friend class Entity;
 
+	private:
+		static constexpr uint64_t m_DefaultEntitiesChunkSize = 1000;
+		static constexpr uint64_t m_DefaultEmptyEntitiesChunkSize = 100;
+
 	public:
 		Container();
 
@@ -146,7 +150,7 @@ namespace decs
 	private:
 		bool m_HaveOwnEntityManager = false;
 		EntityManager* m_EntityManager = nullptr;
-		ChunkedVector<EntityData*> m_EmptyEntities = { 100 };
+		ChunkedVector<EntityData*> m_EmptyEntities = { m_DefaultEmptyEntitiesChunkSize };
 
 		struct StableComponentDestroyData
 		{

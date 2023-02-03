@@ -6,7 +6,7 @@ namespace decs
 {
 	Container::Container() :
 		m_HaveOwnEntityManager(true),
-		m_EntityManager(new EntityManager(10000)),
+		m_EntityManager(new EntityManager(m_DefaultEntitiesChunkSize)),
 		m_HaveOwnComponentContextManager(true),
 		m_ComponentContextManager(new ComponentContextsManager(nullptr))
 	{
@@ -33,10 +33,10 @@ namespace decs
 		const uint64_t& stableComponentDefaultChunkSize,
 		const uint64_t& m_EmptyEntitiesChunkSize
 	) :
-		m_HaveOwnEntityManager(false),
-		m_EntityManager(entityManager),
-		m_HaveOwnComponentContextManager(false),
-		m_ComponentContextManager(componentContextsManager),
+		m_HaveOwnEntityManager(entityManager == nullptr),
+		m_EntityManager(entityManager == nullptr ? new EntityManager(m_DefaultEntitiesChunkSize) : entityManager),
+		m_HaveOwnComponentContextManager(componentContextsManager == nullptr),
+		m_ComponentContextManager(componentContextsManager == nullptr? new ComponentContextsManager(nullptr) : componentContextsManager),
 		m_StableContainers(stableComponentDefaultChunkSize),
 		m_EmptyEntities(m_EmptyEntitiesChunkSize)
 	{
