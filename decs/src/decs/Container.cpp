@@ -73,6 +73,8 @@ namespace decs
 		m_ComponentRefsToInvokeObserverCallbacks.clear();
 		m_DelayedEntitiesToDestroy.clear();
 		m_DelayedComponentsToDestroy.clear();
+
+		m_EmptyEntities.Clear();
 	}
 
 	Entity Container::CreateEntity(const bool& isActive)
