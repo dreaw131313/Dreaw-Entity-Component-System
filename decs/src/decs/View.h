@@ -216,12 +216,7 @@ namespace decs
 		inline uint64_t GetMinComponentsCount() const
 		{
 			uint64_t includesCount = sizeof...(ComponentsTypes);
-
-			if (m_WithAnyOf.size() > 0)
-			{
-				includesCount += 1;
-			}
-
+			if (m_WithAnyOf.size() > 0) includesCount += 1;
 			return sizeof...(ComponentsTypes) + m_WithAll.size();
 		}
 
