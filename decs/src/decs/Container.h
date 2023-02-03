@@ -31,9 +31,10 @@ namespace decs
 
 		DelayedComponentPair(
 			const EntityID& entityID,
-			const TypeID& typeID
+			const TypeID& typeID,
+			const bool& isStable 
 		) :
-			m_EntityID(entityID), m_TypeID(typeID)
+			m_EntityID(entityID), m_TypeID(typeID), m_IsStable(isStable)
 		{
 
 		}
@@ -385,7 +386,7 @@ namespace decs
 			{
 				if (m_PerformDelayedDestruction)
 				{
-					ComponentType* delayedToDestroyComponent = TryAddComponentDelayedToDestroy<ComponentType>(entityData);
+					ComponentType* delayedToDestroyComponent = TryAddUnstableComponentDelayedToDestroy<ComponentType>(entityData);
 					if (delayedToDestroyComponent != nullptr) { return delayedToDestroyComponent; }
 				}
 				else
@@ -440,7 +441,7 @@ namespace decs
 			{
 				if (m_PerformDelayedDestruction)
 				{
-					ComponentType* delayedToDestroyComponent = TryAddComponentDelayedToDestroy<ComponentType>(entityData);
+					ComponentType* delayedToDestroyComponent = TryAddStableComponentDelayedToDestroy<ComponentType>(entityData);
 					if (delayedToDestroyComponent != nullptr) { return delayedToDestroyComponent; }
 				}
 				else
@@ -603,7 +604,7 @@ namespace decs
 		void InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData);
 
 		template<typename ComponentType>
-		ComponentType* TryAddComponentDelayedToDestroy(
+		ComponentType* TryAddUnstableComponentDelayedToDestroy(
 			EntityData& entityData
 		)
 		{
@@ -613,9 +614,28 @@ namespace decs
 				uint32_t componentIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
 				if (componentIndex != Limits::MaxComponentCount)
 				{
-					RemoveComponentFromDelayedToDestroy(entityData.m_ID, copmonentTypeID);
+					RemoveComponentFromDelayedToDestroy(entityData.m_ID, copmonentTypeID, false);
 					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_TypeData[componentIndex].m_PackedContainer;
 					return &container->m_Data[entityData.m_IndexInArchetype];
+				}
+			}
+
+			return nullptr;
+		}
+
+		template<typename ComponentType>
+		ComponentType* TryAddStableComponentDelayedToDestroy(
+			EntityData& entityData
+		)
+		{
+			constexpr TypeID copmonentTypeID = Type<Stable<ComponentType>>::ID();
+			if (entityData.m_Archetype != nullptr)
+			{
+				uint32_t componentIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
+				if (componentIndex != Limits::MaxComponentCount)
+				{
+					RemoveComponentFromDelayedToDestroy(entityData.m_ID, copmonentTypeID, true);
+					return static_cast<ComponentType*>(entityData.m_Archetype->m_TypeData[componentIndex].m_PackedContainer->GetComponentPtrAsVoid(entityData.m_IndexInArchetype));
 				}
 			}
 
@@ -804,15 +824,15 @@ namespace decs
 
 		void AddEntityToDelayedDestroy(const EntityID& entityID);
 
-		inline bool AddComponentToDelayedDestroy(const EntityID& entityID, const TypeID typeID)
+		inline bool AddComponentToDelayedDestroy(const EntityID& entityID, const TypeID typeID, const bool& isStable)
 		{
-			auto pair = m_DelayedComponentsToDestroy.insert({ entityID, typeID });
+			auto pair = m_DelayedComponentsToDestroy.insert({ entityID, typeID, isStable });
 			return pair.second;
 		}
 
-		inline bool RemoveComponentFromDelayedToDestroy(const EntityID& entityID, const TypeID& typeID)
+		inline bool RemoveComponentFromDelayedToDestroy(const EntityID& entityID, const TypeID& typeID, const bool& isStable)
 		{
-			return m_DelayedComponentsToDestroy.erase({ entityID, typeID });
+			return m_DelayedComponentsToDestroy.erase({ entityID, typeID, isStable });
 		}
 #pragma endregion
 	};

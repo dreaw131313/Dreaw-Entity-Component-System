@@ -441,7 +441,7 @@ namespace decs
 
 		if (m_PerformDelayedDestruction)
 		{
-			return AddComponentToDelayedDestroy(entity.ID(), componentTypeID);
+			return AddComponentToDelayedDestroy(entity.ID(), componentTypeID, false);
 		}
 
 		componentContext->InvokeOnDestroyComponent_S(
@@ -504,7 +504,7 @@ namespace decs
 
 		if (m_PerformDelayedDestruction)
 		{
-			return AddComponentToDelayedDestroy(entity.ID(), componentTypeID);
+			return AddComponentToDelayedDestroy(entity.ID(), componentTypeID, true);
 		}
 
 		componentContext->InvokeOnDestroyComponent_S(
@@ -748,7 +748,14 @@ namespace decs
 	{
 		for (auto& data : m_DelayedComponentsToDestroy)
 		{
-			//RemoveComponent(data.m_EntityID, data.m_TypeID);
+			if (data.m_IsStable)
+			{
+				RemoveStableComponent(data.m_EntityID, data.m_TypeID);
+			}
+			else
+			{
+				RemoveUnstableComponent(data.m_EntityID, data.m_TypeID);
+			}
 		}
 		m_DelayedComponentsToDestroy.clear();
 	}
