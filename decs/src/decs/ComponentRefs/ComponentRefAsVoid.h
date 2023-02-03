@@ -10,6 +10,8 @@ namespace decs
 	class ComponentRefAsVoid final
 	{
 	public:
+		ComponentRefAsVoid() {}
+
 		ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData);
 		
 		ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData, const uint32_t& componentIndex);
@@ -24,7 +26,7 @@ namespace decs
 			}
 			if (m_PackedContainer != nullptr)
 			{
-				return m_PackedContainer->GetComponentAsVoid(m_IndexInArchetype);
+				return m_PackedContainer->GetComponentPtrAsVoid(m_IndexInArchetype);
 			}
 			return nullptr;
 		}
@@ -47,7 +49,7 @@ namespace decs
 
 		inline void SetComponentFromValidData()
 		{
-			m_PackedContainer = m_Archetype->m_PackedContainers[m_ComponentIndex];
+			m_PackedContainer = m_Archetype->m_TypeData[m_ComponentIndex].m_PackedContainer;
 		}
 
 		inline void FetchWhenIsInvalid()

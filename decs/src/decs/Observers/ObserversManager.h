@@ -1,6 +1,6 @@
 #pragma once
-#include "Core.h"
-#include "Type.h"
+#include "decs\Core.h"
+#include "decs\Type.h"
 
 #include "Observers.h"
 

@@ -24,9 +24,6 @@
     <ClInclude Include="src\decs\Archetypes\Archetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\ComponentContext.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decs\Container.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -40,9 +37,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\EntityData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\Observers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Type.h">
@@ -60,16 +54,7 @@
     <ClInclude Include="src\decs\EntityManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\CustomApplay.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\ObserversManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decs\ComponentRefs\ComponentRef.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\ComponentContextsManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Enums.h">
@@ -81,15 +66,33 @@
     <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\decs\ComponentContainers\PackedContainer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\ComponentContainers\StableContainer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\ComponentContext\ComponentContext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\ComponentContext\ComponentContextsManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\Observers\Observers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\Observers\ObserversManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\traits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\decs\Container.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\decs\EntityManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\decs\PackedComponentContainer.h">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp">

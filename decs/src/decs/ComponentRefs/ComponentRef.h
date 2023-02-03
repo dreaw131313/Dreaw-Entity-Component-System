@@ -36,15 +36,15 @@ namespace decs
 			}
 		}
 
-		inline ComponentType* Get()
+		inline typename stable_type<ComponentType>::Type* Get()
 		{
 			if (!IsValid())
 			{
 				FetchWhenIsInvalid();
 			}
-			if (m_ComponentsVector != nullptr)
+			if (m_PackedContainer != nullptr)
 			{
-				return &m_ComponentsVector->operator[](m_IndexInArchetype);
+				return m_PackedContainer->GetAsPtr(m_IndexInArchetype);
 			}
 			return nullptr;
 		}
@@ -56,7 +56,7 @@ namespace decs
 		Archetype* m_Archetype = nullptr;
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 		uint32_t m_ComponentIndex = Limits::MaxComponentCount;
-		std::vector<ComponentType>* m_ComponentsVector = nullptr;
+		PackedContainer<ComponentType>* m_PackedContainer = nullptr;
 
 	private:
 		inline bool IsValid() const
@@ -66,7 +66,7 @@ namespace decs
 
 		inline void SetComponentFromValidData()
 		{
-			m_ComponentsVector = &((PackedContainer<ComponentType>*)m_Archetype->m_PackedContainers[m_ComponentIndex])->m_Data;
+			m_PackedContainer = dynamic_cast<PackedContainer<ComponentType>*>(m_Archetype->m_PackedContainers[m_ComponentIndex]);
 		}
 
 		inline void FetchWhenIsInvalid()
@@ -80,7 +80,7 @@ namespace decs
 
 			if (m_Archetype == nullptr || m_ComponentIndex == Limits::MaxComponentCount)
 			{
-				m_ComponentsVector = nullptr;
+				m_PackedContainer = nullptr;
 			}
 			else
 			{
@@ -95,7 +95,7 @@ namespace decs
 
 			if (m_Archetype == nullptr || m_ComponentIndex == Limits::MaxComponentCount)
 			{
-				m_ComponentsVector = nullptr;
+				m_PackedContainer = nullptr;
 			}
 			else
 			{

@@ -1,8 +1,9 @@
 #pragma once
-#include "Core.h"
-#include "ComponentContextsManager.h"
-#include "Type.h"
-#include "PackedComponentContainer.h"
+#include "decs\Core.h"
+#include "decs\ComponentContext\ComponentContextsManager.h"
+#include "decs\Type.h"
+#include "decs\ComponentContainers\PackedContainer.h"
+#include "decs\ComponentContainers\StableContainer.h"
 
 namespace decs
 {
@@ -57,37 +58,65 @@ namespace decs
 		}
 	};
 
+	struct ArchetypeTypeData
+	{
+	public:
+		TypeID m_TypeID = std::numeric_limits<TypeID>::max();
+		PackedContainerBase* m_PackedContainer = nullptr;
+		ComponentContextBase* m_ComponentContext = nullptr;
+		StableContainerBase* m_StableContainer = nullptr;
+
+	public:
+		ArchetypeTypeData()
+		{
+
+		}
+
+		ArchetypeTypeData(
+			const TypeID& typeID,
+			PackedContainerBase* packedContainer, 
+			ComponentContextBase* componentContext,
+			StableContainerBase* stableContainer
+		) :
+			m_TypeID(typeID), m_PackedContainer(packedContainer), m_ComponentContext(componentContext), m_StableContainer(stableContainer)
+		{
+
+		}
+
+	};
+
 	class Archetype final
 	{
 		friend class Container;
+		friend class EntitytData;
+		friend class EntityManager;
 		friend class ArchetypesMap;
+
 		template<typename... ComponentTypes>
-		friend 	class ViewIterator;
+		friend 	class View;
+
 		template<typename... ComponentTypes>
-		friend 	class ViewBatchIterator;
+		friend class BatchIterator;
+
+		template<typename ComponentType>
+		friend class ComponentRef;
+		friend class ComponentRefAsVoid;
 
 	public:
 		static constexpr uint64_t m_MinComponentsInArchetypeToPerformMapLookup = 20;
-		static constexpr uint64_t DefaultChunkSize = 1000;
 
-	public:
+	private:
 		std::vector<ArchetypeEntityData> m_EntitiesData;
-		std::vector<PackedContainerBase*> m_PackedContainers;
-
-		std::vector<ComponentContextBase*> m_ComponentContexts;
+		std::vector<ArchetypeTypeData> m_TypeData;
+		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
+		std::vector<TypeID> m_AddingOrderTypeIDs;
 
 		ecsMap<TypeID, Archetype*> m_AddEdges;
 		ecsMap<TypeID, Archetype*> m_RemoveEdges;
 
-		std::vector<TypeID> m_TypeIDs;
-		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
-
 		uint32_t m_EntitesCountToInitialize = 0;
-
-	private:
 		uint32_t m_ComponentsCount = 0; // number of components for each entity
 		uint32_t m_EntitiesCount = 0;
-		std::vector<TypeID> m_AddingOrderTypeIDs;
 
 	public:
 		Archetype()
@@ -96,14 +125,14 @@ namespace decs
 
 		~Archetype()
 		{
-			for (auto& container : m_PackedContainers)
+			for (auto& data : m_TypeData)
 			{
-				delete container;
+				delete data.m_PackedContainer;
 			}
 		}
 
 		inline uint32_t ComponentsCount() const { return m_ComponentsCount; }
-		inline const TypeID* const ComponentsTypes() const { return m_TypeIDs.data(); }
+		inline TypeID GetTypeID(const uint64_t& index) const { return m_TypeData[index].m_TypeID; }
 		inline uint32_t EntitiesCount() const { return m_EntitiesCount; }
 		inline uint32_t EntitesCountToInvokeCallbacks() const { return m_EntitesCountToInitialize; }
 
@@ -123,7 +152,7 @@ namespace decs
 			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint32_t i = 0; i < m_ComponentsCount; i++)
-					if (m_TypeIDs[i] == typeID) return i;
+					if (m_TypeData[i].m_TypeID == typeID) return i;
 
 				return Limits::MaxComponentCount;
 			}
@@ -142,7 +171,7 @@ namespace decs
 			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint32_t i = 0; i < m_ComponentsCount; i++)
-					if (m_TypeIDs[i] == typeID) return i;
+					if (m_TypeData[i].m_TypeID == typeID) return i;
 
 				return Limits::MaxComponentCount;
 			}
@@ -154,6 +183,7 @@ namespace decs
 			return it->second;
 		}
 
+	private:
 		template<typename ComponentType>
 		inline void AddTypeToAddingComponentOrder()
 		{
@@ -166,30 +196,41 @@ namespace decs
 		}
 
 		template<typename ComponentType>
-		void AddTypeID(ComponentContextBase* componentContext)
+		void AddTypeID(ComponentContextBase* componentContext, StableContainerBase* stableContainer)
 		{
 			constexpr TypeID id = Type<ComponentType>::ID();
 			auto it = m_TypeIDsIndexes.find(id);
 			if (it == m_TypeIDsIndexes.end())
 			{
 				m_ComponentsCount += 1;
-				m_TypeIDsIndexes[id] = (uint32_t)m_TypeIDs.size();
-				m_TypeIDs.push_back(id);
-				m_ComponentContexts.push_back(componentContext);
-				m_PackedContainers.push_back(new PackedContainer<ComponentType>(componentContext->GetChunkCapacity()));
+				m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
+				m_TypeData.emplace_back(
+					id,
+					new PackedContainer<ComponentType>(),
+					componentContext,
+					stableContainer
+				);
 			}
 		}
 
-		void AddTypeID(const TypeID& id, PackedContainerBase* frompackedContainer, ComponentContextBase* componentContext)
+		void AddTypeID(
+			const TypeID& id, 
+			PackedContainerBase* frompackedContainer, 
+			ComponentContextBase* componentContext,
+			StableContainerBase* stableContainer
+		)
 		{
 			auto it = m_TypeIDsIndexes.find(id);
 			if (it == m_TypeIDsIndexes.end())
 			{
 				m_ComponentsCount += 1;
-				m_TypeIDsIndexes[id] = (uint32_t)m_TypeIDs.size();
-				m_TypeIDs.push_back(id);
-				m_ComponentContexts.push_back(componentContext);
-				m_PackedContainers.push_back(frompackedContainer->CreateOwnEmptyCopy());
+				m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
+				m_TypeData.emplace_back(
+					id,
+					frompackedContainer->CreateOwnEmptyCopy(),
+					componentContext,
+					stableContainer
+				);
 			}
 		}
 
@@ -209,7 +250,7 @@ namespace decs
 
 				for (uint64_t i = 0; i < m_ComponentsCount; i++)
 				{
-					m_PackedContainers[i]->PopBack();
+					m_TypeData[i].m_PackedContainer->PopBack();
 				}
 
 				m_EntitiesCount -= 1;
@@ -222,7 +263,7 @@ namespace decs
 
 				for (uint64_t i = 0; i < m_ComponentsCount; i++)
 				{
-					m_PackedContainers[i]->RemoveSwapBack(index);
+					m_TypeData[i].m_PackedContainer->RemoveSwapBack(index);
 				}
 
 				m_EntitiesCount -= 1;
@@ -230,6 +271,78 @@ namespace decs
 			}
 		}
 
+		template<typename ComponentType>
+		inline PackedContainer<ComponentType>* GetContainerAt(const uint64_t& index)
+		{
+			return dynamic_cast<PackedContainer<ComponentType>*>(m_TypeData[index].m_PackedContainer);
+		}
+
+		void ShrinkToFit()
+		{
+			m_EntitiesData.shrink_to_fit();
+			for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
+			{
+				m_TypeData[idx].m_PackedContainer->ShrinkToFit();
+			}
+		}
+
+		void ReserveSpaceInArchetype(const uint64_t& desiredCapacity)
+		{
+			if (m_EntitiesData.capacity() < desiredCapacity)
+			{
+				m_EntitiesData.reserve(desiredCapacity);
+
+				for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
+				{
+					m_TypeData[idx].m_PackedContainer->Reserve(desiredCapacity);
+				}
+			}
+		}
+
+		void Reset()
+		{
+			m_EntitiesCount = 0;
+			m_EntitiesData.clear();
+			for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
+			{
+				m_TypeData[idx].m_PackedContainer->Clear();
+			}
+		}
+
+		inline void ValidateEntitiesCountToInitialize()
+		{
+			m_EntitesCountToInitialize = m_EntitiesCount;
+		}
+
+		void InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts, StableContainersManager* stableComponentsManager)
+		{
+			m_ComponentsCount = other.m_ComponentsCount;
+			m_TypeData.reserve(m_ComponentsCount);
+			m_AddingOrderTypeIDs.reserve(m_ComponentsCount);
+
+			for (uint32_t i = 0; i < m_ComponentsCount; i++)
+			{
+				ArchetypeTypeData& otherTypeData = other.m_TypeData[i];
+				otherTypeData.m_TypeID;
+				m_TypeIDsIndexes[otherTypeData.m_TypeID] = i;
+
+				m_TypeData.emplace_back(
+					otherTypeData.m_TypeID,
+					otherTypeData.m_PackedContainer->CreateOwnEmptyCopy(),
+					componentContexts->GetComponentContext(otherTypeData.m_TypeID),
+					stableComponentsManager->GetStableContainer(otherTypeData.m_TypeID)
+				);
+
+				m_AddingOrderTypeIDs.push_back(other.m_AddingOrderTypeIDs[i]);
+			}
+		}
+
+		/// <summary>
+		/// Moves entity components from "fromArchetype" to this archetype.
+		/// </summary>
+		/// <param name="componentTypeID"></param>
+		/// <param name="fromArchetype"></param>
+		/// <param name="fromIndex"></param>
 		void MoveEntityAfterRemoveComponent(const TypeID& componentTypeID, Archetype& fromArchetype, const uint64_t& fromIndex)
 		{
 			uint64_t thisArchetypeIndex = 0;
@@ -237,16 +350,24 @@ namespace decs
 
 			for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++, fromArchetypeIndex++)
 			{
-				if (fromArchetype.m_TypeIDs[thisArchetypeIndex] == componentTypeID)
+				ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
+				if (fromArchetype.m_TypeData[fromArchetypeIndex].m_TypeID == componentTypeID)
 				{
 					fromArchetypeIndex += 1;
 				}
-				m_PackedContainers[thisArchetypeIndex]->EmplaceFromVoid(
-					fromArchetype.m_PackedContainers[fromArchetypeIndex]->GetComponentAsVoid(fromIndex)
+
+				thisTypeData.m_PackedContainer->EmplaceFromVoid(
+					fromArchetype.m_TypeData[fromArchetypeIndex].m_PackedContainer->GetComponentDataAsVoid(fromIndex)
 				);
 			}
 		}
 
+		/// <summary>
+		/// Moves entity components from "fromArchetype" to this archetype.
+		/// </summary>
+		/// <typeparam name="ComponentType"></typeparam>
+		/// <param name="fromArchetype"></param>
+		/// <param name="fromIndex"></param>
 		template<typename ComponentType>
 		void MoveEntityAfterAddComponent(Archetype& fromArchetype, const uint64_t& fromIndex)
 		{
@@ -257,102 +378,20 @@ namespace decs
 
 			for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++)
 			{
-				if (m_TypeIDs[thisArchetypeIndex] == newComponentTypeID)
+				ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
+				if (thisTypeData.m_TypeID == newComponentTypeID)
 				{
 					continue;
 				}
 
-				m_PackedContainers[thisArchetypeIndex]->EmplaceFromVoid(
-					fromArchetype.m_PackedContainers[fromArchetypeIndex]->GetComponentAsVoid(fromIndex)
+				thisTypeData.m_PackedContainer->EmplaceFromVoid(
+					fromArchetype.m_TypeData[fromArchetypeIndex].m_PackedContainer->GetComponentDataAsVoid(fromIndex)
 				);
 
 				fromArchetypeIndex++;
 			}
 		}
 
-		template<typename ComponentType>
-		inline PackedContainer<ComponentType>* GetContainerAt(const uint64_t& index)
-		{
-			return dynamic_cast<PackedContainer<ComponentType>*>(m_PackedContainers[index]);
-		}
-
-		inline void* GetComponentVoidPtr(const uint64_t& entityIndex, const uint64_t& componentIndex = 0)const noexcept
-		{
-			return m_PackedContainers[componentIndex]->GetComponentAsVoid(entityIndex);
-		}
-
-		template<typename ComponentType>
-		ComponentType* GetEntityComponent(const uint64_t& entityIndex, uint64_t& componentIndex)
-		{
-			return dynamic_cast<PackedContainer<ComponentType>*>(m_PackedContainers[componentIndex])->m_Data[entityIndex];
-		}
-
-		template<typename ComponentType>
-		ComponentType* GetEntityComponent(const uint64_t& entityIndex)
-		{
-			const uint32_t componentIndex = FindTypeIndex<ComponentType>();
-			if (componentIndex != Limits::MaxComponentCount)
-			{
-				return dynamic_cast<PackedContainer<ComponentType>*>(m_PackedContainers[componentIndex])->m_Data[entityIndex];
-			}
-			return nullptr;
-		}
-
-		void ShrinkToFit()
-		{
-			m_EntitiesData.shrink_to_fit();
-			for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
-			{
-				m_PackedContainers[idx]->ShrinkToFit();
-			}
-		}
-
-		void ReserveSpaceInArchetype(const uint64_t& desiredCapacity)
-		{
-			if (m_EntitiesData.capacity() < desiredCapacity)
-			{
-				m_EntitiesData.reserve(desiredCapacity);
-				for (auto& packedComponent : m_PackedContainers)
-				{
-					packedComponent->Reserve(desiredCapacity);
-				}
-			}
-		}
-
-		void InitEmptyFromOther(const Archetype& other, ecsMap<TypeID, ComponentContextBase*>& contextsMap)
-		{
-			m_ComponentsCount = other.m_ComponentsCount;
-			m_PackedContainers.reserve(m_ComponentsCount);
-			m_ComponentContexts.reserve(m_ComponentsCount);
-			m_TypeIDs.reserve(m_ComponentsCount);
-			m_AddingOrderTypeIDs.reserve(m_ComponentsCount);
-
-			for (uint32_t i = 0; i < m_ComponentsCount; i++)
-			{
-				TypeID id = other.m_TypeIDs[i];
-				m_TypeIDs.push_back(id);
-				m_TypeIDsIndexes[id] = i;
-				m_PackedContainers.push_back(other.m_PackedContainers[i]->CreateOwnEmptyCopy());
-				m_ComponentContexts.push_back(contextsMap[id]);
-				m_AddingOrderTypeIDs.push_back(other.m_AddingOrderTypeIDs[i]);
-			}
-		}
-
-	private:
-		void Reset()
-		{
-			m_EntitiesCount = 0;
-			m_EntitiesData.clear();
-			for (uint64_t compIdx = 0; compIdx < m_ComponentsCount; compIdx++)
-			{
-				m_PackedContainers[compIdx]->Clear();
-			}
-		}
-
-		inline void ValidateEntitiesCountToInitialize()
-		{
-			m_EntitesCountToInitialize = m_EntitiesCount;
-		}
 	};
 
 }

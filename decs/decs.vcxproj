@@ -136,13 +136,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h" />
+    <ClInclude Include="src\decs\ComponentContainers\PackedContainer.h" />
+    <ClInclude Include="src\decs\ComponentContainers\StableContainer.h" />
+    <ClInclude Include="src\decs\ComponentContext\ComponentContext.h" />
+    <ClInclude Include="src\decs\ComponentContext\ComponentContextsManager.h" />
     <ClInclude Include="src\decs\ComponentRefs\ComponentRefAsVoid.h" />
-    <ClInclude Include="src\decs\ComponentContextsManager.h" />
     <ClInclude Include="src\decs\ComponentRefs\ComponentRef.h" />
-    <ClInclude Include="src\decs\CustomApplay.h" />
     <ClInclude Include="src\decs\EntityManager.h" />
     <ClInclude Include="src\decs\Archetypes\Archetype.h" />
-    <ClInclude Include="src\decs\ComponentContext.h" />
     <ClInclude Include="src\decs\Container.h" />
     <ClInclude Include="src\decs\Containers\ChunkedVector.h" />
     <ClInclude Include="src\decs\Core.h" />
@@ -150,8 +151,9 @@
     <ClInclude Include="src\decs\Entity.h" />
     <ClInclude Include="src\decs\EntityData.h" />
     <ClInclude Include="src\decs\Enums.h" />
-    <ClInclude Include="src\decs\Observers.h" />
-    <ClInclude Include="src\decs\ObserversManager.h" />
+    <ClInclude Include="src\decs\Observers\Observers.h" />
+    <ClInclude Include="src\decs\Observers\ObserversManager.h" />
+    <ClInclude Include="src\decs\traits.h" />
     <ClInclude Include="src\decs\Type.h" />
     <ClInclude Include="src\decs\View.h" />
     <ClInclude Include="src\decs\ThirdParty\skarupke\bytell_hash_map.hpp" />
@@ -162,7 +164,6 @@
     <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp" />
     <ClCompile Include="src\decs\Container.cpp" />
     <ClCompile Include="src\decs\EntityManager.cpp" />
-    <ClCompile Include="src\decs\PackedComponentContainer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

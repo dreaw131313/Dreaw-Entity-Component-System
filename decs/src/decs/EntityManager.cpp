@@ -36,7 +36,7 @@ namespace decs
 		else
 		{
 			m_enitiesDataCount += 1;
-			EntityData& entityData = m_EntityData.EmplaceBack(m_EntityData.Size(), isActive);
+			EntityData& entityData = m_EntityData.EmplaceBack((EntityID)m_EntityData.Size(), isActive);
 			return entityData.m_ID;
 		}
 	}

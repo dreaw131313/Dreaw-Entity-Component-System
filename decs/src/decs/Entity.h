@@ -76,7 +76,7 @@ namespace decs
 		}
 
 		template<typename T>
-		inline T* GetComponent() const
+		inline typename stable_type<T>::Type* GetComponent() const
 		{
 			if (IsValid())
 				return m_Container->GetComponent<T>(*m_EntityData);
@@ -91,7 +91,7 @@ namespace decs
 		}
 
 		template<typename T>
-		inline bool TryGetComponent(T*& component) const
+		inline bool TryGetComponent(typename stable_type<T>::Type*& component) const
 		{
 			if (IsValid())
 				component = m_Container->GetComponent<T>(*m_EntityData);
@@ -102,7 +102,7 @@ namespace decs
 		}
 
 		template<typename T, typename... Args>
-		inline T* AddComponent(Args&&... args)
+		inline typename stable_type<T>::Type* AddComponent(Args&&... args)
 		{
 			if (IsValid())
 				return m_Container->AddComponent<T>(*m_EntityData, std::forward<Args>(args)...);
@@ -113,11 +113,10 @@ namespace decs
 		template<typename T>
 		inline bool RemoveComponent()
 		{
-			constexpr TypeID componentTypeID = Type<T>::ID();
-			return IsValid() && m_Container->RemoveComponent(*this, componentTypeID);
+			return IsValid() && m_Container->RemoveComponent<T>(*this);
 		}
 
-		inline uint32_t GetVersion() const
+		inline EntityVersion GetVersion() const
 		{
 			return m_Version;
 		}
@@ -133,7 +132,7 @@ namespace decs
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
 		Container* m_Container = nullptr;
 		EntityData* m_EntityData = nullptr;
-		uint32_t m_Version = std::numeric_limits<uint32_t>::max();
+		EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
 
 	private:
 		void Set(const EntityID& id, Container* container)
@@ -157,7 +156,7 @@ namespace decs
 			m_ID = std::numeric_limits<EntityID>::max();
 			m_Container = nullptr;
 			m_EntityData = nullptr;
-			m_Version = std::numeric_limits<uint32_t>::max();
+			m_Version = std::numeric_limits<EntityVersion>::max();
 		}
 
 		inline bool IsValid() const

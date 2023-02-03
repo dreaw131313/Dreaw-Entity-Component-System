@@ -4,7 +4,6 @@
 #include "Type.h"
 #include "Entity.h"
 #include "Container.h"
-#include "decs/CustomApplay.h"
 #include <algorithm>
 #include "Containers\ChunkedVector.h"
 
@@ -14,18 +13,16 @@ namespace decs
 	class View
 	{
 	private:
-#pragma region ARCHETYPE CONTEXT
 		struct ArchetypeContext
 		{
 		public:
 			Archetype* Arch = nullptr;
 			uint64_t m_EntitiesCount = 0;
-			PackedContainerBase* m_Containers[sizeof...(ComponentsTypes)];
+			PackedContainerBase* m_Containers[sizeof...(ComponentsTypes)] = { nullptr };
 
 		public:
 			inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntitiesCount(); }
 		};
-#pragma endregion
 
 	public:
 		View()
@@ -90,9 +87,9 @@ namespace decs
 			}
 
 			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.m_Archetypes.Size();
-			if (m_ArchetypesCount_Dirty != containerArchetypesCount)
+			if (m_ArchetypesCountDirty != containerArchetypesCount)
 			{
-				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCount_Dirty;
+				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
 				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
 
 				ArchetypesMap& map = m_Container->m_ArchetypesMap;
@@ -107,18 +104,16 @@ namespace decs
 				else
 				{
 					// checking only new archetypes:
-					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCount_Dirty, minComponentsCountInArchetype);
+					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, minComponentsCountInArchetype);
 				}
 
-				m_ArchetypesCount_Dirty = containerArchetypesCount;
+				m_ArchetypesCountDirty = containerArchetypesCount;
 			}
 		}
 
 		template<typename Callable>
-		void ForEach(Callable&& func) noexcept
+		inline void ForEach(Callable&& func) noexcept
 		{
-			if (!IsValid()) return;
-			ValidateView();
 			ForEachBackward(func);
 		}
 
@@ -147,7 +142,7 @@ namespace decs
 			ValidateView();
 
 			Entity entityBuffor = {};
-			std::tuple<std::vector<ComponentsTypes>*...> vectorTuple = {};
+			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 			const uint64_t contextCount = m_ArchetypesContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
@@ -155,21 +150,21 @@ namespace decs
 				if (ctx.m_EntitiesCount == 0) continue;
 
 				std::vector< ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
-				CreateVectorsTuple<ComponentsTypes...>(vectorTuple, ctx);
+				CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
 				for (uint64_t idx = 0; idx < ctx.m_EntitiesCount; idx++)
 				{
 					const auto& entityData = entitiesData[idx];
 					if (entityData.IsActive())
 					{
-						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+						if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
 						{
 							entityBuffor.Set(entityData.m_ID, this->m_Container);
-							func(entityBuffor, std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
+							func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 						}
 						else
 						{
-							func(std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
+							func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 						}
 					}
 				}
@@ -177,13 +172,13 @@ namespace decs
 		}
 
 		template<typename Callable>
-		void ForEachBackward(Callable&& func)  noexcept
+		void ForEachBackward(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
 			ValidateView();
 
 			Entity entityBuffor = {};
-			std::tuple<std::vector<ComponentsTypes>*...> vectorTuple = {};
+			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 			const uint64_t contextCount = m_ArchetypesContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
@@ -191,7 +186,7 @@ namespace decs
 				if (ctx.m_EntitiesCount == 0) continue;
 
 				std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
-				CreateVectorsTuple<ComponentsTypes...>(vectorTuple, ctx);
+				CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 				int64_t idx = ctx.m_EntitiesCount - 1;
 
 				for (; idx > -1; idx--)
@@ -199,14 +194,14 @@ namespace decs
 					const auto& entityData = entitiesData[idx];
 					if (entityData.IsActive())
 					{
-						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+						if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
 						{
 							entityBuffor.Set(entityData.m_ID, this->m_Container);
-							func(entityBuffor, std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
+							func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 						}
 						else
 						{
-							func(std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
+							func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 						}
 					}
 				}
@@ -226,7 +221,7 @@ namespace decs
 		ecsSet<Archetype*> m_ContainedArchetypes;
 
 		// cache value to check if view should be updated:
-		uint64_t m_ArchetypesCount_Dirty = 0;
+		uint64_t m_ArchetypesCountDirty = 0;
 
 	private:
 		inline void ValidateView()
@@ -255,7 +250,7 @@ namespace decs
 		{
 			m_ArchetypesContexts.clear();
 			m_ContainedArchetypes.clear();
-			m_ArchetypesCount_Dirty = std::numeric_limits<uint64_t>::max();
+			m_ArchetypesCountDirty = std::numeric_limits<uint64_t>::max();
 		}
 
 		inline bool ContainArchetype(Archetype* arch) { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
@@ -319,7 +314,7 @@ namespace decs
 							return false;
 						}
 
-						auto& packedContainer = archetype.m_PackedContainers[typeIDIndex];
+						auto& packedContainer = archetype.m_TypeData[typeIDIndex].m_PackedContainer;
 						context.m_Containers[typeIdx] = packedContainer;
 					}
 					m_ContainedArchetypes.insert(&archetype);
@@ -429,7 +424,7 @@ namespace decs
 							return false;
 						}
 
-						auto& packedContainer = archetype.m_PackedContainers[typeIDIndex];
+						auto& packedContainer = archetype.m_TypeData[typeIDIndex].m_PackedContainer;
 						context.m_Containers[typeIdx] = packedContainer;
 					}
 					m_ContainedArchetypes.insert(&archetype);
@@ -455,31 +450,30 @@ namespace decs
 		}
 
 		template<typename T = void, typename... Args>
-		void CreateVectorsTuple(
-			std::tuple<std::vector<ComponentsTypes>*...>& vectorsTuple,
+		void CreatePackedContainersTuple(
+			std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
 			const ArchetypeContext& context
 		) const noexcept
 		{
 			constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
-			std::get<std::vector<T>*>(vectorsTuple) = &(reinterpret_cast<PackedContainer<T>*>(context.m_Containers[compIdx])->m_Data);
+			std::get<PackedContainer<T>*>(containersTuple) = (reinterpret_cast<PackedContainer<T>*>(context.m_Containers[compIdx]));
 
 			if constexpr (sizeof...(Args) == 0) return;
 
-			CreateVectorsTuple<Args...>(
-				vectorsTuple,
+			CreatePackedContainersTuple<Args...>(
+				containersTuple,
 				context
 				);
 		}
 
 		template<>
-		void CreateVectorsTuple<void>(
-			std::tuple<std::vector<ComponentsTypes>*...>& vectorsTuple,
+		void CreatePackedContainersTuple<void>(
+			std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
 			const ArchetypeContext& context
 			) const noexcept
 		{
 
 		}
-
 
 #pragma region BATCH ITERATOR
 	public:
@@ -518,7 +512,7 @@ namespace decs
 				if (!m_IsValid) return;
 
 				Entity entityBuffor = {};
-				std::tuple<std::vector<ComponentsTypes>*...> vectorTuple = {};
+				std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 
 				uint64_t contextIndex = m_FirstArchetypeIndex;
 				uint64_t contextCount = m_LastArchetypeIndex + 1;
@@ -531,7 +525,7 @@ namespace decs
 					if (ctx.m_EntitiesCount == 0) continue;
 
 					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
-					CreateVectorsTuple<ComponentsTypes...>(vectorTuple, ctx);
+					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
 					uint64_t iterationIndex;
 					uint64_t iterationsCount;
@@ -552,14 +546,14 @@ namespace decs
 						const auto& entityData = entitiesData[idx];
 						if (entityData.IsActive())
 						{
-							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+							if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
 							{
 								entityBuffor.Set(entityData.m_ID, container);
-								func(entityBuffor, std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
+								func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 							}
 							else
 							{
-								func(std::get<std::vector<ComponentsTypes>*>(vectorTuple)->operator[](idx)...);
+								func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 							}
 						}
 					}
@@ -568,31 +562,30 @@ namespace decs
 
 		private:
 			template<typename T = void, typename... Args>
-			void CreateVectorsTuple(
-				std::tuple<std::vector<ComponentsTypes>*...>& vectorsTuple,
+			void CreatePackedContainersTuple(
+				std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
 				const ArchetypeContext& context
 			) const noexcept
 			{
 				constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
-				std::get<std::vector<T>*>(vectorsTuple) = &(reinterpret_cast<PackedContainer<T>*>(context.m_Containers[compIdx])->m_Data);
+				std::get<PackedContainer<T>*>(containersTuple) = (reinterpret_cast<PackedContainer<T>*>(context.m_Containers[compIdx]));
 
 				if constexpr (sizeof...(Args) == 0) return;
 
-				CreateVectorsTuple<Args...>(
-					vectorsTuple,
+				CreatePackedContainersTuple<Args...>(
+					containersTuple,
 					context
 					);
 			}
 
 			template<>
-			void CreateVectorsTuple<void>(
-				std::tuple<std::vector<ComponentsTypes>*...>& vectorsTuple,
+			void CreatePackedContainersTuple<void>(
+				std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
 				const ArchetypeContext& context
 				) const noexcept
 			{
 
 			}
-
 		protected:
 			ViewType* m_View = nullptr;
 			bool m_IsValid = false;

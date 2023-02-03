@@ -39,6 +39,11 @@ namespace decs
 			return Type_Base<T, TypeID>::ID();
 		}
 
+		static std::string StringToHash()
+		{
+			return FULL_FUNCTION_NAME;
+		}
+
 		/*static TypeID ID()
 		{
 			return reinterpret_cast<TypeID>(m_TypeInfo);

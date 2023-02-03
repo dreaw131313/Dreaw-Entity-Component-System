@@ -13,6 +13,8 @@
 #include "ThirdParty/skarupke/bytell_hash_map.hpp"
 #include "ThirdParty/skarupke/unordered_map.hpp"
 
+#include "traits.h"
+
 namespace decs
 {
 #if defined _MSC_VER
@@ -34,7 +36,8 @@ namespace decs
 	//using ecsSet = ska::flat_hash_set<Key>;
 	using ecsSet = std::unordered_set<Key>;
 
-	using EntityID = uint64_t;
+	using EntityID = uint32_t;
+	using EntityVersion = uint32_t;
 	using TypeID = uint64_t;
 
 	namespace Limits

@@ -1,6 +1,6 @@
 #pragma once
-#include "Core.h"
-#include "Enums.h"
+#include "decs\Core.h"
+#include "decs\Enums.h"
 #include "ComponentContext.h"
 
 namespace decs
@@ -14,12 +14,10 @@ namespace decs
 		{
 
 		}
-		
+
 		ComponentContextsManager(
-			const uint64_t& defaultChunkSize,
 			ObserversManager* observersManager
-			):
-			m_DefaultComponentChunkSize(defaultChunkSize),
+		) :
 			m_ObserversManager(observersManager)
 		{
 
@@ -60,11 +58,11 @@ namespace decs
 				ComponentContext<ComponentType>* context;
 				if (m_ObserversManager != nullptr)
 				{
-					context = new ComponentContext<ComponentType>(m_DefaultComponentChunkSize, m_ObserversManager->GetComponentObserver<ComponentType>());
+					context = new ComponentContext<ComponentType>(m_ObserversManager->GetComponentObserver<ComponentType>());
 				}
 				else
 				{
-					context = new ComponentContext<ComponentType>(m_DefaultComponentChunkSize, nullptr);
+					context = new ComponentContext<ComponentType>(nullptr);
 				}
 				componentContext = context;
 				return context;
@@ -83,8 +81,12 @@ namespace decs
 			}
 		}
 
+		ComponentContextBase* GetComponentContext(const TypeID& typeID)
+		{
+			auto it = m_Contexts.find(typeID);
+			return it != m_Contexts.end() ? it->second : nullptr;
+		}
 	private:
-		uint64_t m_DefaultComponentChunkSize = 1000;
 		ecsMap<TypeID, ComponentContextBase*> m_Contexts;
 		ObserversManager* m_ObserversManager = nullptr;
 

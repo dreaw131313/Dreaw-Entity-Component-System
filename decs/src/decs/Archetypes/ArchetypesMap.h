@@ -1,9 +1,10 @@
 #pragma once
-#include "Core.h"
+#include "decs\Core.h"
+#include "decs\Type.h"
+#include "decs\ComponentContext\ComponentContextsManager.h"
+#include "decs\ComponentContainers\PackedContainer.h"
+
 #include "Archetype.h"
-#include "ComponentContextsManager.h"
-#include "Type.h"
-#include "PackedComponentContainer.h"
 
 namespace decs
 {
@@ -183,7 +184,7 @@ namespace decs
 
 						for (uint64_t typeIdx = 0; typeIdx < archetype.ComponentsCount(); typeIdx++)
 						{
-							TypeID typeID = archetype.ComponentsTypes()[typeIdx];
+							TypeID typeID = archetype.GetTypeID(typeIdx);
 
 							auto it = testArchetype.m_TypeIDsIndexes.find(typeID);
 
@@ -237,7 +238,7 @@ namespace decs
 
 						for (uint64_t typeIdx = 0; typeIdx < testArchetype.ComponentsCount(); typeIdx++)
 						{
-							TypeID typeID = testArchetype.ComponentsTypes()[typeIdx];
+							TypeID typeID = testArchetype.GetTypeID(typeIdx);
 							auto it = archetype.m_TypeIDsIndexes.find(typeID);
 							if (it == archetype.m_TypeIDsIndexes.end())
 							{
@@ -277,7 +278,7 @@ namespace decs
 		{
 			if (bTryAddToSingleComponentsMap && archetype.ComponentsCount() == 1)
 			{
-				m_SingleComponentArchetypes[archetype.ComponentsTypes()[0]] = &archetype;
+				m_SingleComponentArchetypes[archetype.GetTypeID(0)] = &archetype;
 			}
 
 			if (archetype.ComponentsCount() > m_ArchetypesGroupedByComponentsCount.size())
@@ -325,6 +326,7 @@ namespace decs
 		Archetype* FindArchetypeFromOther(
 			Archetype& fromArchetype,
 			ComponentContextsManager* componentContextsManager,
+			StableContainersManager* stableContainersManager,
 			ObserversManager* observerManager
 		)
 		{
@@ -336,14 +338,25 @@ namespace decs
 				// take care that componentContextsManager have the same component contexts that component contextManager which have "fromArchetype" archetype
 				for (uint64_t i = 0; i < fromArchetype.ComponentsCount(); i++)
 				{
-					auto& context = componentContextsManager->m_Contexts[fromArchetype.m_TypeIDs[i]];
+					ArchetypeTypeData& fromArchetypeTypeData = fromArchetype.m_TypeData[i];
+
+					auto& context = componentContextsManager->m_Contexts[fromArchetypeTypeData.m_TypeID];
 					if (context == nullptr)
 					{
-						context = fromArchetype.m_ComponentContexts[i]->CreateOwnEmptyCopy(observerManager);
+						context = fromArchetypeTypeData.m_ComponentContext->CreateOwnEmptyCopy(observerManager);
+					}
+
+					if (fromArchetypeTypeData.m_StableContainer != nullptr)
+					{
+						StableContainerBase* stableContainer = stableContainersManager->GetStableContainer(fromArchetypeTypeData.m_TypeID);
+						if (stableContainer == nullptr)
+						{
+							stableContainersManager->CreateStableContainerFromOther(fromArchetypeTypeData.m_StableContainer);
+						}
 					}
 				}
 
-				archetype->InitEmptyFromOther(fromArchetype, componentContextsManager->m_Contexts);
+				archetype->InitEmptyFromOther(fromArchetype, componentContextsManager, stableContainersManager);
 				AddArchetypeToCorrectContainers(*archetype, true);
 
 				Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
@@ -363,7 +376,7 @@ namespace decs
 #pragma endregion
 
 #pragma region CREATING ARCHETYPES
-
+	private:
 		template<typename ComponentType>
 		Archetype* GetSingleComponentArchetype()
 		{
@@ -374,13 +387,13 @@ namespace decs
 		}
 
 		template<typename ComponentType>
-		Archetype* CreateSingleComponentArchetype(ComponentContextBase* componentContext)
+		Archetype* CreateSingleComponentArchetype(ComponentContextBase* componentContext, StableContainerBase* stableContainer)
 		{
 			constexpr uint64_t typeID = Type<ComponentType>::ID();
 			auto& archetype = m_SingleComponentArchetypes[typeID];
 			if (archetype != nullptr) return archetype;
 			archetype = &m_Archetypes.EmplaceBack();
-			archetype->AddTypeID<ComponentType>(componentContext);
+			archetype->AddTypeID<ComponentType>(componentContext, stableContainer);
 			AddArchetypeToCorrectContainers(*archetype, false);
 			MakeArchetypeEdges(*archetype);
 			archetype->AddTypeToAddingComponentOrder<ComponentType>();
@@ -394,7 +407,9 @@ namespace decs
 			auto& archetype = m_SingleComponentArchetypes[typeID];
 			if (archetype != nullptr) return archetype;
 			archetype = &m_Archetypes.EmplaceBack();
-			archetype->AddTypeID(typeID, from.m_PackedContainers[typeIndex], from.m_ComponentContexts[typeIndex]);
+
+			ArchetypeTypeData& fromTypeData = from.m_TypeData[typeIndex];
+			archetype->AddTypeID(typeID, fromTypeData.m_PackedContainer, fromTypeData.m_ComponentContext, fromTypeData.m_StableContainer);
 			AddArchetypeToCorrectContainers(*archetype, false);
 			MakeArchetypeEdges(*archetype);
 			archetype->AddTypeToAddingComponentOrder(typeID);
@@ -412,7 +427,7 @@ namespace decs
 		}
 
 		template<typename T>
-		inline Archetype* CreateArchetypeAfterAddComponent(Archetype& toArchetype, ComponentContextBase* componentContext)
+		inline Archetype* CreateArchetypeAfterAddComponent(Archetype& toArchetype, ComponentContextBase* componentContext, StableContainerBase* stableContainer)
 		{
 			constexpr TypeID addedComponentTypeID = Type<T>::ID();
 			auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
@@ -426,19 +441,20 @@ namespace decs
 
 			for (uint32_t i = 0; i < toArchetype.ComponentsCount(); i++)
 			{
-				TypeID currentTypeID = toArchetype.m_TypeIDs[i];
+				ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[i];
+				TypeID currentTypeID = toTypeData.m_TypeID;
 				if (!isNewComponentTypeAdded && currentTypeID > addedComponentTypeID)
 				{
 					isNewComponentTypeAdded = true;
-					newArchetype.AddTypeID<T>(componentContext);
+					newArchetype.AddTypeID<T>(componentContext, stableContainer);
 				}
 
-				newArchetype.AddTypeID(currentTypeID, toArchetype.m_PackedContainers[i], toArchetype.m_ComponentContexts[i]);
+				newArchetype.AddTypeID(currentTypeID, toTypeData.m_PackedContainer, toTypeData.m_ComponentContext, toTypeData.m_StableContainer);
 				newArchetype.AddTypeToAddingComponentOrder(toArchetype.m_AddingOrderTypeIDs[i]);
 			}
 			if (!isNewComponentTypeAdded)
 			{
-				newArchetype.AddTypeID<T>(componentContext);
+				newArchetype.AddTypeID<T>(componentContext, stableContainer);
 			}
 
 			newArchetype.AddTypeToAddingComponentOrder<T>();
@@ -468,27 +484,37 @@ namespace decs
 
 			for (uint32_t i = 0; i < toArchetype.ComponentsCount(); i++)
 			{
-				TypeID currentTypeID = toArchetype.m_TypeIDs[i];
+				const ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[i];
+				TypeID currentTypeID = toTypeData.m_TypeID;
 				if (!isNewComponentTypeAdded && currentTypeID > addedComponentTypeID)
 				{
+					ArchetypeTypeData& otherTypeData = archetypeToGetContainer.m_TypeData[componentIndexToAdd];
 					isNewComponentTypeAdded = true;
 					newArchetype.AddTypeID(
 						addedComponentTypeID,
-						archetypeToGetContainer.m_PackedContainers[componentIndexToAdd],
-						archetypeToGetContainer.m_ComponentContexts[componentIndexToAdd]
+						otherTypeData.m_PackedContainer,
+						otherTypeData.m_ComponentContext,
+						otherTypeData.m_StableContainer
 					);
 				}
 
-				newArchetype.AddTypeID(currentTypeID, toArchetype.m_PackedContainers[i], toArchetype.m_ComponentContexts[i]);
+				newArchetype.AddTypeID(
+					currentTypeID, 
+					toTypeData.m_PackedContainer, 
+					toTypeData.m_ComponentContext,
+					toTypeData.m_StableContainer
+					);
 				newArchetype.AddTypeToAddingComponentOrder(toArchetype.m_AddingOrderTypeIDs[i]);
 			}
 
 			if (!isNewComponentTypeAdded)
 			{
+				ArchetypeTypeData& otherTypeData = archetypeToGetContainer.m_TypeData[componentIndexToAdd];
 				newArchetype.AddTypeID(
 					addedComponentTypeID,
-					archetypeToGetContainer.m_PackedContainers[componentIndexToAdd],
-					archetypeToGetContainer.m_ComponentContexts[componentIndexToAdd]
+					otherTypeData.m_PackedContainer,
+					otherTypeData.m_ComponentContext,
+					otherTypeData.m_StableContainer
 				);
 			}
 
@@ -501,7 +527,7 @@ namespace decs
 
 		Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, const TypeID& removedComponentTypeID)
 		{
-			if (fromArchetype.ComponentsCount() == 1 && fromArchetype.m_TypeIDs[0] == removedComponentTypeID)
+			if (fromArchetype.ComponentsCount() == 1 && fromArchetype.GetTypeID(0) == removedComponentTypeID)
 			{
 				return nullptr;
 			}
@@ -515,11 +541,16 @@ namespace decs
 			Archetype& newArchetype = m_Archetypes.EmplaceBack();
 			for (uint32_t i = 0; i < fromArchetype.ComponentsCount(); i++)
 			{
-
-				TypeID typeID = fromArchetype.ComponentsTypes()[i];
+				const ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[i];
+				TypeID typeID = fromArchetypeData.m_TypeID;
 				if (typeID != removedComponentTypeID)
 				{
-					newArchetype.AddTypeID(typeID, fromArchetype.m_PackedContainers[i], fromArchetype.m_ComponentContexts[i]);
+					newArchetype.AddTypeID(
+						typeID, 
+						fromArchetypeData.m_PackedContainer, 
+						fromArchetypeData.m_ComponentContext, 
+						fromArchetypeData.m_StableContainer
+						);
 				}
 				if (fromArchetype.m_AddingOrderTypeIDs[i] != removedComponentTypeID)
 				{

@@ -1,6 +1,6 @@
 #pragma once
-#include "Type.h"
-#include "ObserversManager.h"
+#include "decs\Type.h"
+#include "decs\Observers\ObserversManager.h"
 
 namespace decs
 {
@@ -21,9 +21,6 @@ namespace decs
 
 		}
 
-		inline virtual uint64_t GetChunkCapacity() const = 0;
-
-		virtual TypeID GetComponentTypeID() const = 0;
 		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity) = 0;
 		virtual void InvokeOnDestroyComponent_S(void* component, Entity& entity) = 0;
 		virtual void SetObserverManager(ObserversManager* observerManager) = 0;
@@ -44,10 +41,8 @@ namespace decs
 
 	public:
 		ComponentContext(
-			const uint64_t& chunkCapacity,
 			ComponentObserver<ComponentType>* observer
 		) :
-			m_ChunkCapacity(chunkCapacity),
 			m_Observer(observer)
 		{
 
@@ -57,13 +52,6 @@ namespace decs
 		{
 
 		}
-
-		inline virtual uint64_t GetChunkCapacity() const override
-		{
-			return m_ChunkCapacity;
-		}
-
-		virtual TypeID GetComponentTypeID() const { return Type<ComponentType>::ID(); }
 
 		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity)override
 		{
@@ -81,22 +69,6 @@ namespace decs
 			}
 		}
 
-		void InvokeOnCreateComponent(ComponentType& component, Entity& entity)
-		{
-			if (m_Observer != nullptr && m_Observer->m_CreateObserver != nullptr)
-			{
-				m_Observer->m_CreateObserver->OnCreateComponent(component, entity);
-			}
-		}
-
-		void InvokeOnDestroyComponent(ComponentType& component, Entity& entity)
-		{
-			if (m_Observer != nullptr && m_Observer->m_DestroyObserver != nullptr)
-			{
-				m_Observer->m_DestroyObserver->OnDestroyComponent(component, entity);
-			}
-		}
-
 		virtual void SetObserverManager(ObserversManager* observerManager) override
 		{
 			if (observerManager == nullptr)
@@ -111,21 +83,67 @@ namespace decs
 
 		ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) override
 		{
-			if (observerManager != nullptr)
-			{
-				return new ComponentContext<ComponentType>(
-					m_ChunkCapacity,
-					observerManager->GetComponentObserver<ComponentType>()
-					);
-			}
-
 			return new ComponentContext<ComponentType>(
-				m_ChunkCapacity,
-				nullptr
+				observerManager != nullptr ? observerManager->GetComponentObserver<ComponentType>() : nullptr
 				);
 		}
+	};
 
-	private:
-		uint64_t m_ChunkCapacity = 1000;
+
+	template<typename ComponentType>
+	class ComponentContext<Stable<ComponentType>> : public ComponentContextBase
+	{
+		friend class Container;
+	public:
+		ComponentObserver<Stable<ComponentType>>* m_Observer = nullptr;
+
+	public:
+		ComponentContext(
+			ComponentObserver<Stable<ComponentType>>* observer
+		) :
+			m_Observer(observer)
+		{
+
+		}
+
+		~ComponentContext()
+		{
+
+		}
+
+		virtual void InvokeOnCreateComponent_S(void* component, Entity& entity)override
+		{
+			if (m_Observer != nullptr && m_Observer->m_CreateObserver != nullptr)
+			{
+				m_Observer->m_CreateObserver->OnCreateComponent(*reinterpret_cast<ComponentType*>(component), entity);
+			}
+		}
+
+		virtual void InvokeOnDestroyComponent_S(void* component, Entity& entity)override
+		{
+			if (m_Observer != nullptr && m_Observer->m_DestroyObserver != nullptr)
+			{
+				m_Observer->m_DestroyObserver->OnDestroyComponent(*reinterpret_cast<ComponentType*>(component), entity);
+			}
+		}
+
+		virtual void SetObserverManager(ObserversManager* observerManager) override
+		{
+			if (observerManager == nullptr)
+			{
+				m_Observer = nullptr;
+			}
+			else
+			{
+				m_Observer = observerManager->GetComponentObserver<Stable<ComponentType>>();
+			}
+		}
+
+		ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) override
+		{
+			return new ComponentContext<Stable<ComponentType>>(
+				observerManager != nullptr ? observerManager->GetComponentObserver<Stable<ComponentType>>() : nullptr
+				);
+		}
 	};
 }

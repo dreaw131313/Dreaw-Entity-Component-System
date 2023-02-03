@@ -1,6 +1,7 @@
 #pragma once
 #include "Core.h"
 #include "Archetypes\Archetype.h"
+#include "ComponentContainers\StableContainer.h"
 
 namespace decs
 {
@@ -8,22 +9,23 @@ namespace decs
 	{
 		Alive = 1,
 		InDestruction = 2,
-		DelayedToDestruction = 3
+		DelayedToDestruction = 3,
+		Destructed
 	};
 
 	class EntityData
 	{
 	public:
+		Archetype* m_Archetype = nullptr;
+		
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
-		uint32_t m_Version = std::numeric_limits<uint32_t>::max();
+		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
+		EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
+
 		bool m_IsAlive = false;
 		bool m_IsActive = false;
-		EntityDestructionState m_DestructionState = EntityDestructionState::Alive;
-		
-		Archetype* m_Archetype = nullptr;
-		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
-
 		bool m_IsUsedAsPrefab = false;
+		EntityDestructionState m_DestructionState = EntityDestructionState::Alive;
 
 	public:
 		EntityData()
@@ -37,26 +39,6 @@ namespace decs
 		}
 
 		inline EntityID ID() const noexcept { return m_ID; }
-
-		template<typename ComponentType>
-		inline ComponentType* GetComponent()
-		{
-			if (m_Archetype == nullptr) return nullptr;
-			uint32_t componentIndex = m_Archetype->FindTypeIndex<ComponentType>();
-			if (componentIndex == Limits::MaxComponentCount) return nullptr;
-
-			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_Archetype->m_PackedContainers[componentIndex]);
-
-			return &packedComponent->m_Data[m_IndexInArchetype];
-		}
-
-		template<typename ComponentType>
-		inline ComponentType* GetComponent(const uint32_t& componentIndex)
-		{
-			PackedContainer<ComponentType>* packedComponent = reinterpret_cast<PackedContainer<ComponentType>*>(m_Archetype->m_PackedContainers[componentIndex]);
-
-			return &packedComponent->m_Data[m_IndexInArchetype];
-		}
 
 		inline bool IsAlive() const
 		{
@@ -99,7 +81,7 @@ namespace decs
 
 		inline bool CanBeDestructed() const
 		{
-			return m_IsAlive && m_DestructionState != EntityDestructionState::InDestruction;
+			return m_IsAlive && m_DestructionState != EntityDestructionState::InDestruction && !m_IsUsedAsPrefab;
 		}
 
 		inline bool IsDelayedToDestruction() const
