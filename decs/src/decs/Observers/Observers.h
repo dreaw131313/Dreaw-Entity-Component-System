@@ -1,5 +1,5 @@
 #pragma once
-#include "Core.h"
+#include "decs\Core.h"
 
 namespace decs
 {

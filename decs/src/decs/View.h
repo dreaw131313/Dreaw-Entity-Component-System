@@ -88,9 +88,9 @@ namespace decs
 			}
 
 			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.m_Archetypes.Size();
-			if (m_ArchetypesCount_Dirty != containerArchetypesCount)
+			if (m_ArchetypesCountDirty != containerArchetypesCount)
 			{
-				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCount_Dirty;
+				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
 				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
 
 				ArchetypesMap& map = m_Container->m_ArchetypesMap;
@@ -105,15 +105,15 @@ namespace decs
 				else
 				{
 					// checking only new archetypes:
-					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCount_Dirty, minComponentsCountInArchetype);
+					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, minComponentsCountInArchetype);
 				}
 
-				m_ArchetypesCount_Dirty = containerArchetypesCount;
+				m_ArchetypesCountDirty = containerArchetypesCount;
 			}
 		}
 
 		template<typename Callable>
-		void ForEach(Callable&& func) noexcept
+		inline void ForEach(Callable&& func) noexcept
 		{
 			ForEachBackward(func);
 		}
@@ -173,7 +173,7 @@ namespace decs
 		}
 
 		template<typename Callable>
-		void ForEachBackward(Callable&& func)  noexcept
+		void ForEachBackward(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
 			ValidateView();
@@ -222,7 +222,7 @@ namespace decs
 		ecsSet<Archetype*> m_ContainedArchetypes;
 
 		// cache value to check if view should be updated:
-		uint64_t m_ArchetypesCount_Dirty = 0;
+		uint64_t m_ArchetypesCountDirty = 0;
 
 	private:
 		inline void ValidateView()
@@ -251,7 +251,7 @@ namespace decs
 		{
 			m_ArchetypesContexts.clear();
 			m_ContainedArchetypes.clear();
-			m_ArchetypesCount_Dirty = std::numeric_limits<uint64_t>::max();
+			m_ArchetypesCountDirty = std::numeric_limits<uint64_t>::max();
 		}
 
 		inline bool ContainArchetype(Archetype* arch) { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }

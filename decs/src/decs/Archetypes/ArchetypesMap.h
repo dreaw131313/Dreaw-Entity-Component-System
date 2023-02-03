@@ -1,7 +1,7 @@
 #pragma once
 #include "decs\Core.h"
-#include "decs\ComponentContextsManager.h"
 #include "decs\Type.h"
+#include "decs\ComponentContext\ComponentContextsManager.h"
 #include "decs\ComponentContainers\PackedContainer.h"
 
 #include "Archetype.h"

@@ -1,6 +1,6 @@
 #pragma once
-#include "Type.h"
-#include "ObserversManager.h"
+#include "decs\Type.h"
+#include "decs\Observers\ObserversManager.h"
 
 namespace decs
 {

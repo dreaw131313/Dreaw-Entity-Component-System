@@ -5,10 +5,11 @@
 
 #include "Archetypes\ArchetypesMap.h"
 #include "EntityManager.h"
-#include "ComponentContextsManager.h"
-#include "Observers.h"
+#include "ComponentContext\ComponentContextsManager.h"
 
-#include "ObserversManager.h"
+#include "Observers\Observers.h"
+#include "Observers\ObserversManager.h"
+
 #include "decs\ComponentContainers\PackedContainer.h"
 #include "decs\ComponentContainers\StableContainer.h"
 #include "ComponentRefs\ComponentRefAsVoid.h"
