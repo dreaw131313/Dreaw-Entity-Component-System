@@ -217,20 +217,26 @@ namespace decs
 
 #pragma region SPAWNING ENTITIES
 	private:
-		struct PrefabComponentRefData
+		struct SpawnComponentRefData
 		{
 		public:
+			bool m_IsStable = false;
 			StableContainerBase* m_StableContainer = nullptr;
 			ComponentRefAsVoid m_ComponentRef;
 
 		public:
-			PrefabComponentRefData()
+			SpawnComponentRefData()
 			{
 
 			}
 
-			PrefabComponentRefData(StableContainerBase* stableContainer, ComponentRefAsVoid componentRef) :
-				m_StableContainer(stableContainer), m_ComponentRef(componentRef)
+			template<typename... Args>
+			SpawnComponentRefData(
+				const bool& isStable,
+				StableContainerBase* stableContainer,
+				Args&&... args
+			) :
+				m_IsStable(isStable), m_StableContainer(stableContainer), m_ComponentRef(std::forward<Args>(args)...)
 			{
 
 			}
