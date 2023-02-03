@@ -43,6 +43,9 @@ public:
 
 int main()
 {
+	std::cout << "Entity Data size: " << sizeof(decs::EntityData) << "\n";
+	std::cout << "\n";
+
 	decs::Container prefabsContainer;
 	decs::ObserversManager observerManager;
 	decs::Container container;

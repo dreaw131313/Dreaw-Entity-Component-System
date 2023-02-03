@@ -189,12 +189,12 @@ namespace decs
 
 		inline ComponentType& GetAsRef(const uint64_t& index) noexcept
 		{
-			return *static_cast<ComponentType*>(m_ComponentPointers[index]);
+			return *m_ComponentPointers[index];
 		}
 
 		inline ComponentType* GetAsPtr(const uint64_t& index)const noexcept
 		{
-			return static_cast<ComponentType*>(m_ComponentPointers[index]);
+			return m_ComponentPointers[index];
 		}
 
 		inline StableComponentRef& EmplaceBack(ComponentType* componentPtr, const uint64_t& chunkIndex, const uint64_t& elementIndex)
