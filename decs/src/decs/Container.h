@@ -461,8 +461,8 @@ namespace decs
 				// Adding component pointer to packed container in archetype
 				PackedContainer<Stable<ComponentType>>* packedPointersContainer = reinterpret_cast<PackedContainer<Stable<ComponentType>>*>(archetypeTypeData.m_PackedContainer);
 
-				packedPointersContainer->m_Data.emplace_back(
-					componentNodeInfo.m_ComponentPtr,
+				packedPointersContainer->EmplaceBack(
+					static_cast<ComponentType*>(componentNodeInfo.m_ComponentPtr),
 					componentNodeInfo.m_ChunkIndex,
 					componentNodeInfo.m_Index
 				);
@@ -573,7 +573,7 @@ namespace decs
 				if (findTypeIndex != Limits::MaxComponentCount)
 				{
 					PackedContainer<Stable<ComponentType>>* container = static_cast<PackedContainer<Stable<ComponentType>>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
-					return static_cast<ComponentType*>(container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr);
+					return container->GetAsPtr(entityData.m_IndexInArchetype);
 				}
 			}
 			return nullptr;

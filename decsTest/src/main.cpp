@@ -67,11 +67,11 @@ int main()
 	using ViewType = decs::View<decs::Stable<Position>>;
 	ViewType view = { container };
 
-	auto lambda = [] (decs::Entity& e, Position& pos)
+	auto lambda = [] (const decs::Entity& e, Position& pos)
 	{
 		std::cout << "Entity ID = " << e.ID() << ", X = " << pos.X << ", Y = " << pos.Y << "\n";
-		pos.X *= 2;
-		pos.Y *= 2;
+		pos.X *= e.ID();
+		pos.Y *= e.ID();
 	};
 
 	std::cout << "\n";
