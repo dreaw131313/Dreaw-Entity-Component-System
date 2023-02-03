@@ -165,6 +165,9 @@
     <ClCompile Include="src\decs\Container.cpp" />
     <ClCompile Include="src\decs\EntityManager.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="src\decs\ThirdParty\skarupke\License.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
