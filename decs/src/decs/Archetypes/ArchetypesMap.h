@@ -107,6 +107,13 @@ namespace decs
 
 		}
 
+		ArchetypesMap(const uint64_t& archetypesVectorChunkSize, const uint64_t& archetypeGroupsVectorChunkSize):
+			m_Archetypes(archetypesVectorChunkSize),
+			m_ArchetrypesGroupsByOneTypeVector(archetypeGroupsVectorChunkSize)
+		{
+
+		}
+
 		~ArchetypesMap()
 		{
 		}
@@ -192,9 +199,11 @@ namespace decs
 		}
 
 	private:
-		ChunkedVector<Archetype> m_Archetypes;
+		ChunkedVector<Archetype> m_Archetypes = { 100 };
 		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes;
 		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount;
+
+		ChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeVector = { 100 };
 		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType;
 
 		// UTILITY
@@ -392,7 +401,10 @@ namespace decs
 		inline ArchetypesGroupByOneType* GetArchetypesGroup(const TypeID& id)
 		{
 			ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
-			if (group == nullptr) group = new ArchetypesGroupByOneType(id);
+			if (group == nullptr)
+			{
+				group = &m_ArchetrypesGroupsByOneTypeVector.EmplaceBack(id);
+			}
 			return group;
 		}
 
