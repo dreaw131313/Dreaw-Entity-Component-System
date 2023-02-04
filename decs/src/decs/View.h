@@ -449,6 +449,10 @@ namespace decs
 
 		}
 
+		// FETCHING ARCHETYPE
+
+
+
 #pragma region BATCH ITERATOR
 	public:
 		class BatchIterator

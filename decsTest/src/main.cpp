@@ -48,6 +48,15 @@ class I
 
 int main()
 {
+	std::cout << "A: " << decs::Type<A>::ID() << "\n";
+	std::cout << "B: " << decs::Type<B>::ID() << "\n";
+	std::cout << "C: " << decs::Type<C>::ID() << "\n";
+	std::cout << "D: " << decs::Type<D>::ID() << "\n";
+	std::cout << "E: " << decs::Type<E>::ID() << "\n";
+	std::cout << "F: " << decs::Type<F>::ID() << "\n";
+	std::cout << "G: " << decs::Type<G>::ID() << "\n";
+	std::cout << "H: " << decs::Type<H>::ID() << "\n";
+
 	decs::Container container = {};
 
 	auto entity1 = container.CreateEntity();
@@ -58,13 +67,14 @@ int main()
 	entity1.AddComponent<E>();
 
 	auto entity2 = container.CreateEntity();
-	entity1.AddComponent<G>();
-	entity1.AddComponent<H>();
-	entity1.AddComponent<A>();
-	entity1.AddComponent<B>();
-	entity1.AddComponent<C>();
-	entity1.AddComponent<D>();
-	entity1.AddComponent<E>();
+	entity2.AddComponent<G>();
+	entity2.AddComponent<H>();
+	entity2.AddComponent<A>();
+	entity2.AddComponent<B>();
+	entity2.AddComponent<C>();
+	entity2.AddComponent<D>();
+	entity2.AddComponent<E>();
+
 
 	using ViewType = decs::View<A, B, C, D, E>;
 	ViewType view = { container };

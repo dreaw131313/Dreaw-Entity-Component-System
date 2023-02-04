@@ -59,6 +59,42 @@ namespace decs
 		}
 	};
 
+	class ArchetypesWithOneSameType
+	{
+	public:
+		ArchetypesWithOneSameType(TypeID mainTypeID) :
+			m_MainTypeID(mainTypeID)
+		{
+
+		}
+
+		inline uint64_t ArchetypesCount() const { return m_ArchetypesCount; }
+		inline uint32_t MaxComponentsCount() const { return (uint32_t)m_Archetypes.size(); }
+
+		void AddArchetype(Archetype* archetype)
+		{
+			m_ArchetypesCount += 1;
+			uint64_t archetypesCount = archetype->ComponentsCount();
+			if (archetypesCount > m_Archetypes.size())
+			{
+				m_Archetypes.resize(archetypesCount);
+			}
+
+			m_Archetypes[archetypesCount - 1].push_back(archetype);
+		}
+
+		const std::vector<Archetype*>& GetArchetypesWithComponentsCount(const uint64_t& componentsCount) const
+		{
+			return m_Archetypes[componentsCount - 1];
+		}
+
+	private:
+		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
+		std::vector<std::vector<Archetype*>> m_Archetypes;
+		uint64_t m_ArchetypesCount = 0;
+
+	};
+
 	class ArchetypesMap
 	{
 		friend class Container;
@@ -159,9 +195,10 @@ namespace decs
 		ChunkedVector<Archetype> m_Archetypes;
 		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes;
 		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount;
+		ecsMap<TypeID, ArchetypesWithOneSameType*> m_ArchetypesGroupedByOneType;
 
+		// UTILITY
 	private:
-#pragma region UTILITY
 		void MakeArchetypeEdges(Archetype& archetype)
 		{
 			// edges with archetypes with less components:
@@ -287,6 +324,8 @@ namespace decs
 			}
 
 			m_ArchetypesGroupedByComponentsCount[archetype.ComponentsCount() - 1].push_back(&archetype);
+
+			AddArchetypeToGroups(&archetype);
 		}
 
 		Archetype* GetSingleComponentArchetype(const TypeID& typeID)
@@ -359,12 +398,12 @@ namespace decs
 				archetype->InitEmptyFromOther(fromArchetype, componentContextsManager, stableContainersManager);
 				AddArchetypeToCorrectContainers(*archetype, true);
 
-				Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
+				/*Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
 
 				for (uint64_t i = 1; i < archetype->ComponentsCount() - 1; i++)
 				{
 					archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
-				}
+				}*/
 
 				MakeArchetypeEdges(*archetype);
 			}
@@ -372,10 +411,25 @@ namespace decs
 			return archetype;
 		}
 
+		inline ArchetypesWithOneSameType* GetArchetypesGroup(const TypeID& id)
+		{
+			ArchetypesWithOneSameType*& group = m_ArchetypesGroupedByOneType[id];
+			if (group == nullptr) group = new ArchetypesWithOneSameType(id);
+			return group;
+		}
 
-#pragma endregion
+		void AddArchetypeToGroups(Archetype* arch)
+		{
+			uint64_t componentsCount = arch->ComponentsCount();
+			for (uint64_t i = 0; i < componentsCount; i++)
+			{
+				const TypeID& id = arch->GetTypeID(i);
+				ArchetypesWithOneSameType* group = GetArchetypesGroup(id);
+				group->AddArchetype(arch);
+			}
+		}
 
-#pragma region CREATING ARCHETYPES
+		// CREATING ARCHETYPES
 	private:
 		template<typename ComponentType>
 		Archetype* GetSingleComponentArchetype()
@@ -499,11 +553,11 @@ namespace decs
 				}
 
 				newArchetype.AddTypeID(
-					currentTypeID, 
-					toTypeData.m_PackedContainer, 
+					currentTypeID,
+					toTypeData.m_PackedContainer,
 					toTypeData.m_ComponentContext,
 					toTypeData.m_StableContainer
-					);
+				);
 				newArchetype.AddTypeToAddingComponentOrder(toArchetype.m_AddingOrderTypeIDs[i]);
 			}
 
@@ -546,11 +600,11 @@ namespace decs
 				if (typeID != removedComponentTypeID)
 				{
 					newArchetype.AddTypeID(
-						typeID, 
-						fromArchetypeData.m_PackedContainer, 
-						fromArchetypeData.m_ComponentContext, 
+						typeID,
+						fromArchetypeData.m_PackedContainer,
+						fromArchetypeData.m_ComponentContext,
 						fromArchetypeData.m_StableContainer
-						);
+					);
 				}
 				if (fromArchetype.m_AddingOrderTypeIDs[i] != removedComponentTypeID)
 				{
@@ -569,7 +623,31 @@ namespace decs
 		{
 			return GetArchetypeAfterRemoveComponent(fromArchetype, Type<T>::ID());
 		}
-#pragma endregion
+
+
+		// CREATING ARCHETYPES BRANCHES:
+
+		void TryCreateBranchesBetweenArchetypes(Archetype& first, Archetype& second)
+		{
+			// smaller archetype is archetype with less number of components
+			Archetype* smallerArch;
+			Archetype* biggerArch;
+
+			if (first.ComponentsCount() == second.ComponentsCount())
+			{
+				return;
+			}
+			else if (first.ComponentsCount() < second.ComponentsCount())
+			{
+				smallerArch = &first;
+				biggerArch = &second;
+			}
+			else
+			{
+				smallerArch = &second;
+				biggerArch = &first;
+			}
+		}
 
 	};
 }
