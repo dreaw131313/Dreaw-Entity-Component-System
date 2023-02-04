@@ -96,7 +96,8 @@ namespace decs
 				if (newArchetypesCount > m_ArchetypesContexts.size())
 				{
 					// performing normal finding of archetypes
-					NormalArchetypesFetching(map, maxComponentsInArchetype, minComponentsCountInArchetype);
+					auto group = GetBestArchetypesGroup();
+					FetchArchetypesFromArchetypesGroup(group);
 				}
 				else
 				{
@@ -229,7 +230,32 @@ namespace decs
 
 		inline bool ContainArchetype(Archetype* arch) { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
 
-		bool TryAddArchetype(Archetype& archetype, const bool& tryAddNeighbours)
+		// FETCHING ARCHETYPE
+
+		ArchetypesGroupByOneType* GetBestArchetypesGroup()
+		{
+			auto& groupsMap = m_Container->m_ArchetypesMap.m_ArchetypesGroupedByOneType;
+
+			uint64_t bestArchetypesCount = std::numeric_limits<uint64_t>::max();
+			ArchetypesGroupByOneType* bestGroup = nullptr;
+
+			for (uint64_t i = 0; i < m_Includes.Size(); i++)
+			{
+				auto it = groupsMap.find(m_Includes[i]);
+				if (it != groupsMap.end())
+				{
+					uint64_t bufforGroupArchetypesCount = it->second->ArchetypesCount();
+					if (bufforGroupArchetypesCount < bestArchetypesCount)
+					{
+						bestGroup = it->second;
+					}
+				}
+			}
+
+			return bestGroup;
+		}
+
+		void TryAddArchetypeFromGroup(Archetype& archetype)
 		{
 			if (!ContainArchetype(&archetype) && archetype.ComponentsCount())
 			{
@@ -240,7 +266,7 @@ namespace decs
 					{
 						if (archetype.ContainType(m_Without[i]))
 						{
-							return false;
+							return;
 						}
 					}
 				}
@@ -258,7 +284,7 @@ namespace decs
 							break;
 						}
 					}
-					if (!containRequiredAny) return false;
+					if (!containRequiredAny) return;
 				}
 
 				// required all
@@ -269,11 +295,10 @@ namespace decs
 					{
 						if (!archetype.ContainType(m_WithAll[i]))
 						{
-							return false;
+							return;
 						}
 					}
 				}
-
 
 				// includes
 				{
@@ -285,7 +310,7 @@ namespace decs
 						if (typeIDIndex == Limits::MaxComponentCount)
 						{
 							m_ArchetypesContexts.pop_back();
-							return false;
+							return;
 						}
 
 						auto& packedContainer = archetype.m_TypeData[typeIDIndex].m_PackedContainer;
@@ -295,50 +320,25 @@ namespace decs
 					context.Arch = &archetype;
 				}
 			}
-
-			if (tryAddNeighbours)
-			{
-				for (auto& [key, edge] : archetype.m_AddEdges)
-				{
-					if (edge != nullptr)
-					{
-						TryAddArchetype(*edge, tryAddNeighbours);
-					}
-				}
-			}
-
-			return true;
 		}
 
-		void NormalArchetypesFetching(
-			ArchetypesMap& map,
-			const uint64_t& maxComponentsInArchetype,
-			const uint64_t& minComponentsCountInArchetype
-		)
+		void FetchArchetypesFromArchetypesGroup(ArchetypesGroupByOneType* group)
 		{
-			uint64_t addedArchetypes = 0;
-			uint64_t archetypesVectorIndex = minComponentsCountInArchetype - 1;
+			if (group == nullptr) return;
+			uint64_t minComponentsCount = GetMinComponentsCount();
+			uint64_t maxComponentCountsInGroup = group->MaxComponentsCount();
 
-			while (addedArchetypes == 0 && archetypesVectorIndex < maxComponentsInArchetype)
+			for (uint64_t i = minComponentsCount; i <= maxComponentCountsInGroup; i++)
 			{
-				std::vector<Archetype*>& archetypesToTest = map.m_ArchetypesGroupedByComponentsCount[archetypesVectorIndex];
-
-				uint64_t archsCount = archetypesToTest.size();
-				for (uint64_t i = 0; i < archetypesToTest.size(); i++)
+				std::vector<Archetype*>& archetypesToCheck = group->GetArchetypesWithComponentsCount(i);
+				for (auto& archetype : archetypesToCheck)
 				{
-					Archetype* archetype = archetypesToTest[i];
-
-					if (TryAddArchetype(*archetype, true))
-					{
-						addedArchetypes++;
-					}
+					TryAddArchetypeFromGroup(*archetype);
 				}
-
-				archetypesVectorIndex++;
 			}
 		}
 
-		bool TryAddArchetypeWithoutNeighbours(Archetype& archetype, const uint64_t minComponentsCountInArchetype)
+		bool TryAddNewArchetype(Archetype& archetype, const uint64_t minComponentsCountInArchetype)
 		{
 			if (archetype.ComponentsCount() < minComponentsCountInArchetype) return false;
 
@@ -419,7 +419,7 @@ namespace decs
 			uint64_t archetypesCount = map.m_Archetypes.Size();
 			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
 			{
-				TryAddArchetypeWithoutNeighbours(archetypes[i], minComponentsCountInArchetype);
+				TryAddNewArchetype(archetypes[i], minComponentsCountInArchetype);
 			}
 		}
 
@@ -448,10 +448,6 @@ namespace decs
 		{
 
 		}
-
-		// FETCHING ARCHETYPE
-
-
 
 #pragma region BATCH ITERATOR
 	public:

@@ -59,10 +59,10 @@ namespace decs
 		}
 	};
 
-	class ArchetypesWithOneSameType
+	class ArchetypesGroupByOneType
 	{
 	public:
-		ArchetypesWithOneSameType(TypeID mainTypeID) :
+		ArchetypesGroupByOneType(TypeID mainTypeID) :
 			m_MainTypeID(mainTypeID)
 		{
 
@@ -83,7 +83,7 @@ namespace decs
 			m_Archetypes[archetypesCount - 1].push_back(archetype);
 		}
 
-		const std::vector<Archetype*>& GetArchetypesWithComponentsCount(const uint64_t& componentsCount) const
+		std::vector<Archetype*>& GetArchetypesWithComponentsCount(const uint64_t& componentsCount)
 		{
 			return m_Archetypes[componentsCount - 1];
 		}
@@ -195,7 +195,7 @@ namespace decs
 		ChunkedVector<Archetype> m_Archetypes;
 		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes;
 		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount;
-		ecsMap<TypeID, ArchetypesWithOneSameType*> m_ArchetypesGroupedByOneType;
+		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType;
 
 		// UTILITY
 	private:
@@ -246,11 +246,6 @@ namespace decs
 							archetype.m_RemoveEdges[notFindedType] = &testArchetype;
 						}
 					}
-
-					if (archetype.m_RemoveEdges.size() == 0)
-					{
-						GetArchetypeAfterRemoveComponent(archetype, archetype.m_AddingOrderTypeIDs[archetype.ComponentsCount() - 1]);
-					}
 				}
 			}
 
@@ -299,15 +294,6 @@ namespace decs
 						}
 					}
 				}
-			}
-		}
-
-		void CreateRemoveEdgesForArchetype(Archetype& archetype)
-		{
-			Archetype* buffor = &archetype;
-			while (buffor->ComponentsCount() > 1 && buffor->m_RemoveEdges.size() == 0)
-			{
-				buffor = GetArchetypeAfterRemoveComponent(*buffor, buffor->m_AddingOrderTypeIDs[archetype.ComponentsCount() - 1]);
 			}
 		}
 
@@ -397,24 +383,16 @@ namespace decs
 
 				archetype->InitEmptyFromOther(fromArchetype, componentContextsManager, stableContainersManager);
 				AddArchetypeToCorrectContainers(*archetype, true);
-
-				/*Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
-
-				for (uint64_t i = 1; i < archetype->ComponentsCount() - 1; i++)
-				{
-					archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
-				}*/
-
 				MakeArchetypeEdges(*archetype);
 			}
 
 			return archetype;
 		}
 
-		inline ArchetypesWithOneSameType* GetArchetypesGroup(const TypeID& id)
+		inline ArchetypesGroupByOneType* GetArchetypesGroup(const TypeID& id)
 		{
-			ArchetypesWithOneSameType*& group = m_ArchetypesGroupedByOneType[id];
-			if (group == nullptr) group = new ArchetypesWithOneSameType(id);
+			ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
+			if (group == nullptr) group = new ArchetypesGroupByOneType(id);
 			return group;
 		}
 
@@ -424,7 +402,7 @@ namespace decs
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
 				const TypeID& id = arch->GetTypeID(i);
-				ArchetypesWithOneSameType* group = GetArchetypesGroup(id);
+				ArchetypesGroupByOneType* group = GetArchetypesGroup(id);
 				group->AddArchetype(arch);
 			}
 		}
@@ -623,31 +601,5 @@ namespace decs
 		{
 			return GetArchetypeAfterRemoveComponent(fromArchetype, Type<T>::ID());
 		}
-
-
-		// CREATING ARCHETYPES BRANCHES:
-
-		void TryCreateBranchesBetweenArchetypes(Archetype& first, Archetype& second)
-		{
-			// smaller archetype is archetype with less number of components
-			Archetype* smallerArch;
-			Archetype* biggerArch;
-
-			if (first.ComponentsCount() == second.ComponentsCount())
-			{
-				return;
-			}
-			else if (first.ComponentsCount() < second.ComponentsCount())
-			{
-				smallerArch = &first;
-				biggerArch = &second;
-			}
-			else
-			{
-				smallerArch = &second;
-				biggerArch = &first;
-			}
-		}
-
 	};
 }
