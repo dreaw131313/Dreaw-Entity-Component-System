@@ -92,7 +92,6 @@ namespace decs
 		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
 		std::vector<std::vector<Archetype*>> m_Archetypes;
 		uint64_t m_ArchetypesCount = 0;
-
 	};
 
 	class ArchetypesMap
