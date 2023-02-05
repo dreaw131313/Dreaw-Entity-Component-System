@@ -46,6 +46,7 @@ int main()
 	};
 
 	view.ForEachForward(lambda);
+	view.ForEachBackward(lambda);
 
 	std::cout << "Iterated entites count: " << iterationCount << "\n";
 

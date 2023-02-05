@@ -20,11 +20,8 @@ namespace decs
 
 		}
 
-		MultiQuery(
-			const uint64_t& containerContextChunkSize
-		) :
-			m_ContainerContexts(containerContextChunkSize)
-
+		MultiQuery(const uint64_t& containerContextsChunkSize) :
+			m_ContainerContexts(containerContextsChunkSize)
 		{
 
 		}

@@ -435,17 +435,14 @@ namespace decs
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
 		if (compIdxInArch == Limits::MaxComponentCount) return false;
 
-		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
-		ComponentContextBase* componentContext = archetypeTypeData.m_ComponentContext;
-		auto& container = archetypeTypeData.m_PackedContainer;
-
 		if (m_PerformDelayedDestruction)
 		{
 			return AddComponentToDelayedDestroy(entity.ID(), componentTypeID, false);
 		}
 
-		componentContext->InvokeOnDestroyComponent_S(
-			container->GetComponentPtrAsVoid(entityData.m_IndexInArchetype),
+		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
+		archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(
+			archetypeTypeData.m_PackedContainer->GetComponentPtrAsVoid(entityData.m_IndexInArchetype),
 			entity
 		);
 
@@ -498,17 +495,16 @@ namespace decs
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
 		if (compIdxInArch == Limits::MaxComponentCount) return false;
 
-		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
-		ComponentContextBase* componentContext = archetypeTypeData.m_ComponentContext;
-		auto& container = archetypeTypeData.m_PackedContainer;
-
 		if (m_PerformDelayedDestruction)
 		{
 			return AddComponentToDelayedDestroy(entity.ID(), componentTypeID, true);
 		}
 
-		componentContext->InvokeOnDestroyComponent_S(
-			container->GetComponentPtrAsVoid(entityData.m_IndexInArchetype),
+		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
+		auto& packedContainer = archetypeTypeData.m_PackedContainer;
+
+		archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(
+			packedContainer->GetComponentPtrAsVoid(entityData.m_IndexInArchetype),
 			entity
 		);
 
@@ -539,9 +535,8 @@ namespace decs
 			m_EmptyEntities.EmplaceBack(&entityData);
 		}
 
-		StableComponentRef* componentRef = static_cast<StableComponentRef*>(container->GetComponentDataAsVoid(oldArchetypeIndex));
-		StableContainerBase* stableContainer = m_StableContainers.GetStableContainer(componentTypeID);
-		stableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_Index);
+		StableComponentRef* componentRef = static_cast<StableComponentRef*>(packedContainer->GetComponentDataAsVoid(oldArchetypeIndex));
+		archetypeTypeData.m_StableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_Index);
 
 		auto result = oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
 		ValidateEntityInArchetype(result);

@@ -153,7 +153,7 @@ namespace decs
 			const uint64_t contextCount = m_ArchetypesContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				const ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
 				if (ctx.m_EntitiesCount == 0) continue;
 
 				std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
