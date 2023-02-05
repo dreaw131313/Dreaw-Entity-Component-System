@@ -48,6 +48,7 @@ class I
 
 int main()
 {
+	std::cout << "\n";
 	decs::Container prefabContainer = {};
 	decs::Container container = {};
 
@@ -60,13 +61,11 @@ int main()
 
 	auto entity2 = container.Spawn(entity1, 3, true);
 
-
-	using ViewType = decs::View<A, B, C, D, E>;
+	using ViewType = decs::View<E>;
 	ViewType view = { container };
 
-
 	uint64_t iterationCount = 0;
-	auto lambda = [&] (A& a, B& b, C& c, D& d, E& e)
+	auto lambda = [&] (E& e)
 	{
 		iterationCount += 1;
 	};

@@ -247,6 +247,7 @@ namespace decs
 					uint64_t bufforGroupArchetypesCount = it->second->ArchetypesCount();
 					if (bufforGroupArchetypesCount < bestArchetypesCount)
 					{
+						bestArchetypesCount = bufforGroupArchetypesCount;
 						bestGroup = it->second;
 					}
 				}
