@@ -28,8 +28,6 @@ public:
 
 int main()
 {
-	std::cout << "ecsSet size = " << sizeof(decs::ecsSet<decs::Archetype*>) << "\n";
-	std::cout << "\n";
 	decs::Container prefabContainer = {};
 	decs::Container container = {};
 

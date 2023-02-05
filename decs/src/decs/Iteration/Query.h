@@ -191,6 +191,7 @@ namespace decs
 			uint64_t minComponentsCount = GetMinComponentsCount();
 			if (m_IsDirty)
 			{
+				m_IsDirty = false;
 				for (uint64_t i = 0; i < containerContextsSize; i++)
 				{
 					ContainerContextType& containerContext = m_ContainerContexts[i];
