@@ -187,17 +187,14 @@ namespace decs
 			}
 		}
 
-		ChunkedVector(ChunkedVector&& other) noexcept
+		ChunkedVector(ChunkedVector&& other) noexcept :
+			m_ChunkCapacity(other.m_ChunkCapacity),
+			m_ChunksCount(other.m_ChunksCount),
+			m_CreatedElements(other.m_CreatedElements)
 		{
-			m_ChunkCapacity = other.m_ChunkCapacity;
-			m_ChunksCount = other.m_ChunksCount;
-			m_CreatedElements = other.m_CreatedElements;
 			m_Chunks.reserve(m_ChunksCount);
 
-			for (uint64_t i = 0; i < m_ChunksCount; i++)
-			{
-				m_Chunks.push_back(other.m_Chunks[i]);
-			}
+			m_Chunks = std::move(other.m_Chunks);
 
 			other.m_Chunks.clear();
 			other.m_ChunkCapacity = 0;
@@ -221,10 +218,7 @@ namespace decs
 				Chunk::Destroy(chunk);
 
 			m_Chunks.clear();
-			for (uint64_t i = 0; i < m_ChunksCount; i++)
-			{
-				m_Chunks.push_back(other.m_Chunks[i]);
-			}
+			m_Chunks = std::move(other.m_Chunks);
 
 			other.m_Chunks.clear();
 			other.m_ChunkCapacity = 0;

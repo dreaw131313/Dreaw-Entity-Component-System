@@ -74,5 +74,19 @@ int main()
 
 	std::cout << "Iterated entites count: " << iterationCount << "\n";
 
+	uint64_t elementsCount = 10;
+	decs::ChunkedVector<int> tVec = { 2 };
+	for (uint64_t i = 0; i < elementsCount; i++)
+	{
+		tVec.EmplaceBack(i);
+	}
+
+	decs::ChunkedVector<int> tVec2 = std::move(tVec);
+
+	for (uint64_t i = 0; i < tVec2.Size(); i++)
+	{
+		std::cout << tVec2[i] << "\n";
+	}
+
 	return 0;
 }
