@@ -260,7 +260,7 @@ namespace decs
 		{
 			if (!ContainArchetype(&archetype) && archetype.ComponentsCount())
 			{
-				// exclude test
+				// without test
 				{
 					uint64_t excludeCount = m_Without.size();
 					for (int i = 0; i < excludeCount; i++)
@@ -272,7 +272,7 @@ namespace decs
 					}
 				}
 
-				// required any
+				// with any test
 				{
 					uint64_t requiredAnyCount = m_WithAnyOf.size();
 					bool containRequiredAny = requiredAnyCount == 0;
@@ -288,7 +288,7 @@ namespace decs
 					if (!containRequiredAny) return;
 				}
 
-				// required all
+				// required all test
 				{
 					uint64_t requiredAllCount = m_WithAll.size();
 
