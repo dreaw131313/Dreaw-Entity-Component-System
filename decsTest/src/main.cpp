@@ -36,8 +36,8 @@ int main()
 
 	auto entity2 = container.Spawn(entity1, 3, true);
 
-	using ViewType = decs::View<Position>;
-	ViewType view = { container };
+	using QueryType = decs::Query<Position>;
+	QueryType view = { container };
 
 	uint64_t iterationCount = 0;
 	auto lambda = [&] (decs::Entity& e, Position& pos)
@@ -49,8 +49,8 @@ int main()
 
 	std::cout << "Iterated entites count: " << iterationCount << "\n";
 
-	using QueryType = decs::Query<Position>;
-	QueryType testQuery = {};
+	using MultiQueryType = decs::MultiQuery<Position>;
+	MultiQueryType testQuery = {};
 	testQuery.AddContainer(&container);
 	testQuery.AddContainer(&prefabContainer);
 

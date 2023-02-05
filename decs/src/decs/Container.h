@@ -63,7 +63,7 @@ namespace decs
 	class Container
 	{
 		template<typename ...Types>
-		friend class View;
+		friend class Query;
 		template<typename ...Types>
 		friend class Query;
 		template<typename, typename...>

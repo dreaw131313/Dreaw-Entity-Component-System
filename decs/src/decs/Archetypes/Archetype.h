@@ -93,9 +93,9 @@ namespace decs
 		friend class ArchetypesMap;
 
 		template<typename...>
-		friend 	class View;
-		template<typename...>
 		friend 	class Query;
+		template<typename...>
+		friend 	class MultiQuery;
 		template<typename, typename...>
 		friend class ContainerContext;
 

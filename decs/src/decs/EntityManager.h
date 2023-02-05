@@ -12,7 +12,7 @@ namespace decs
 	class EntityManager
 	{
 		template<typename ...Types>
-		friend class View;
+		friend class Query;
 	public:
 		EntityManager();
 

@@ -1,9 +1,9 @@
 #pragma once
 #include "Core.h"
-#include "IterationCore.h"
 #include "Type.h"
 #include "Entity.h"
 #include "Container.h"
+#include "IterationCore.h"
 
 namespace decs
 {
@@ -12,15 +12,32 @@ namespace decs
 	{
 	private:
 		using ArchetypeContextType = ArchetypeContext<sizeof...(ComponentsTypes)>;
-		using ContainerContextType = ContainerContext<ArchetypeContextType, ComponentsTypes...>;
 	public:
-
-		inline uint64_t GetMinComponentsCount() const
+		Query()
 		{
-			uint64_t includesCount = sizeof...(ComponentsTypes);
-			if (m_WithAnyOf.size() > 0) includesCount += 1;
-			return sizeof...(ComponentsTypes) + m_WithAll.size();
+
 		}
+
+		Query(Container& container) :
+			m_Container(&container)
+		{
+
+		}
+
+		~Query()
+		{
+
+		}
+
+		inline void SetContainer(Container& container)
+		{
+			m_IsDirty = &container != m_Container;
+			m_Container = &container;
+		}
+
+		inline Container* GetContainer() const { return m_Container; }
+
+		inline bool IsValid()const { return m_Container != nullptr; }
 
 		template<typename... ComponentsTypes>
 		Query& Without()
@@ -49,6 +66,40 @@ namespace decs
 			return *this;
 		}
 
+		void Fetch()
+		{
+			if (m_IsDirty)
+			{
+				m_IsDirty = false;
+				Invalidate();
+			}
+
+			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.ArchetypesCount();
+			if (m_ArchetypesCountDirty != containerArchetypesCount)
+			{
+				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
+				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
+
+				ArchetypesMap& map = m_Container->m_ArchetypesMap;
+				uint64_t maxComponentsInArchetype = map.MaxNumberOfTypesInArchetype();
+				if (maxComponentsInArchetype < minComponentsCountInArchetype) return;
+
+				if (newArchetypesCount > m_ArchetypesContexts.size())
+				{
+					// performing normal finding of archetypes
+					auto group = GetBestArchetypesGroup();
+					FetchArchetypesFromArchetypesGroup(group);
+				}
+				else
+				{
+					// checking only new archetypes:
+					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, minComponentsCountInArchetype);
+				}
+
+				m_ArchetypesCountDirty = containerArchetypesCount;
+			}
+		}
+
 		template<typename Callable>
 		inline void ForEach(Callable&& func) noexcept
 		{
@@ -58,46 +109,33 @@ namespace decs
 		template<typename Callable>
 		void ForEachForward(Callable&& func) noexcept
 		{
-			Fetch();
+			if (!IsValid()) return;
+			ValidateQuery();
 
-			uint64_t containerContextChunksCount = m_ContainerContexts.ChunksCount();
-			decs::Entity entityBuffor = {};
+			Entity entityBuffor = {};
 			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
-
-			for (uint64_t chunkIdx = 0; chunkIdx < containerContextChunksCount; chunkIdx++)
+			const uint64_t contextCount = m_ArchetypesContexts.size();
+			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				auto chunk = m_ContainerContexts.GetChunk(chunkIdx);
-				const uint64_t chunkSize = m_ContainerContexts.GetChunkSize(chunkIdx);
+				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
+				if (ctx.m_EntitiesCount == 0) continue;
 
-				for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++)
+				std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+				CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+				for (uint64_t idx = 0; idx < ctx.m_EntitiesCount; idx++)
 				{
-					ContainerContextType& containerContext = chunk[elementIndex];
-					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
-					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
-
-					for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+					const auto& entityData = entitiesData[idx];
+					if (entityData.IsActive())
 					{
-						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-						if (ctx.m_EntitiesCount == 0) continue;
-
-						std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
-						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
-
-						for (uint64_t idx = 0; idx < ctx.m_EntitiesCount; idx++)
+						if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
 						{
-							const auto& entityData = entitiesData[idx];
-							if (entityData.IsActive())
-							{
-								if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
-								{
-									entityBuffor.Set(entityData.m_ID, containerContext.m_Container);
-									func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
-								}
-								else
-								{
-									func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
-								}
-							}
+							entityBuffor.Set(entityData.m_ID, this->m_Container);
+							func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+						}
+						else
+						{
+							func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 						}
 					}
 				}
@@ -107,133 +145,209 @@ namespace decs
 		template<typename Callable>
 		void ForEachBackward(Callable&& func) noexcept
 		{
-			Fetch();
+			if (!IsValid()) return;
+			ValidateQuery();
 
-			uint64_t containerContextChunksCount = m_ContainerContexts.ChunksCount();
-			decs::Entity entityBuffor = {};
+			Entity entityBuffor = {};
 			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
-
-			for (uint64_t chunkIdx = 0; chunkIdx < containerContextChunksCount; chunkIdx++)
+			const uint64_t contextCount = m_ArchetypesContexts.size();
+			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				auto chunk = m_ContainerContexts.GetChunk(chunkIdx);
-				const uint64_t chunkSize = m_ContainerContexts.GetChunkSize(chunkIdx);
+				const ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				if (ctx.m_EntitiesCount == 0) continue;
 
-				for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++)
+				std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+				CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+				int64_t idx = ctx.m_EntitiesCount - 1;
+
+				for (; idx > -1; idx--)
 				{
-					ContainerContextType& containerContext = chunk[elementIndex];
-					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
-					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
-
-					for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+					const auto& entityData = entitiesData[idx];
+					if (entityData.IsActive())
 					{
-						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-						if (ctx.m_EntitiesCount == 0) continue;
-
-						std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
-						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
-
-						for (int64_t idx = (int64_t)ctx.m_EntitiesCount - 1; idx > -1; idx--)
+						if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
 						{
-							const auto& entityData = entitiesData[idx];
-							if (entityData.IsActive())
-							{
-								if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
-								{
-									entityBuffor.Set(entityData.m_ID, containerContext.m_Container);
-									func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
-								}
-								else
-								{
-									func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
-								}
-							}
+							entityBuffor.Set(entityData.m_ID, this->m_Container);
+							func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+						}
+						else
+						{
+							func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 						}
 					}
 				}
 			}
 		}
 
-		bool AddContainer(Container* container)
-		{
-			auto& contextIndex = m_ContainerContextsIndexes[container];
-			if (contextIndex >= m_ContainerContexts.Size() || m_ContainerContexts[contextIndex].m_Container != container)
-			{
-				contextIndex = m_ContainerContexts.Size();
-				m_ContainerContexts.EmplaceBack(container);
-				return true;
-			}
-			return false;
-		}
-
-		bool RemoveContainer(Container* container)
-		{
-			auto it = m_ContainerContextsIndexes.find(container);
-			if (it != m_ContainerContextsIndexes.end())
-			{
-				const uint64_t index = it->second;
-				m_ContainerContexts.RemoveSwapBack(index);
-
-				if (index < m_ContainerContexts.Size())
-				{
-					ContainerContextType& context = m_ContainerContexts[index];
-					m_ContainerContextsIndexes[context.m_Container] = index;
-				}
-				m_ContainerContextsIndexes.erase(it);
-
-				return true;
-			}
-			return false;
-		}
-
-		void Fetch()
-		{
-			uint64_t containerContextsSize = m_ContainerContexts.Size();
-			uint64_t minComponentsCount = GetMinComponentsCount();
-			if (m_IsDirty)
-			{
-				m_IsDirty = false;
-				for (uint64_t i = 0; i < containerContextsSize; i++)
-				{
-					ContainerContextType& containerContext = m_ContainerContexts[i];
-					containerContext.Invalidate();
-					containerContext.Fetch(
-						m_Includes,
-						m_Without,
-						m_WithAnyOf,
-						m_WithAll,
-						minComponentsCount
-					);
-				}
-			}
-			else
-			{
-				for (uint64_t i = 0; i < containerContextsSize; i++)
-				{
-					m_ContainerContexts[i].Fetch(
-						m_Includes,
-						m_Without,
-						m_WithAnyOf,
-						m_WithAll,
-						minComponentsCount
-					);
-				}
-			}
-
-
-
-		}
 	private:
 		TypeGroup<ComponentsTypes...> m_Includes = {};
 		std::vector<TypeID> m_Without;
 		std::vector<TypeID> m_WithAnyOf;
 		std::vector<TypeID> m_WithAll;
 
+		Container* m_Container = nullptr;
 		bool m_IsDirty = true;
 
-		ChunkedVector<ContainerContextType> m_ContainerContexts = {};
-		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
+		std::vector<ArchetypeContextType> m_ArchetypesContexts;
+		ecsSet<Archetype*> m_ContainedArchetypes;
+
+		// cache value to check if query should be updated:
+		uint64_t m_ArchetypesCountDirty = 0;
 
 	private:
+		inline void ValidateQuery()
+		{
+			Fetch();
+			uint64_t archetypesCount = m_ArchetypesContexts.size();
+			for (uint64_t i = 0; i < archetypesCount; i++)
+			{
+				m_ArchetypesContexts[i].ValidateEntitiesCount();
+			}
+		}
+
+		inline uint64_t GetMinComponentsCount() const
+		{
+			uint64_t includesCount = sizeof...(ComponentsTypes);
+			if (m_WithAnyOf.size() > 0) includesCount += 1;
+			return sizeof...(ComponentsTypes) + m_WithAll.size();
+		}
+
+		void Invalidate()
+		{
+			m_ArchetypesContexts.clear();
+			m_ContainedArchetypes.clear();
+			m_ArchetypesCountDirty = 0;
+		}
+
+		inline bool ContainArchetype(Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
+
+		// FETCHING ARCHETYPE
+
+		ArchetypesGroupByOneType* GetBestArchetypesGroup()
+		{
+			auto& groupsMap = m_Container->m_ArchetypesMap.m_ArchetypesGroupedByOneType;
+
+			uint64_t bestArchetypesCount = std::numeric_limits<uint64_t>::max();
+			ArchetypesGroupByOneType* bestGroup = nullptr;
+
+			for (uint64_t i = 0; i < m_Includes.Size(); i++)
+			{
+				auto it = groupsMap.find(m_Includes[i]);
+				if (it != groupsMap.end())
+				{
+					uint64_t bufforGroupArchetypesCount = it->second->ArchetypesCount();
+					if (bufforGroupArchetypesCount < bestArchetypesCount)
+					{
+						bestArchetypesCount = bufforGroupArchetypesCount;
+						bestGroup = it->second;
+					}
+				}
+			}
+
+			return bestGroup;
+		}
+
+		void TryAddArchetypeFromGroup(Archetype& archetype)
+		{
+			if (!ContainArchetype(&archetype) && archetype.ComponentsCount())
+			{
+				// without test
+				{
+					uint64_t excludeCount = m_Without.size();
+					for (int i = 0; i < excludeCount; i++)
+					{
+						if (archetype.ContainType(m_Without[i]))
+						{
+							return;
+						}
+					}
+				}
+
+				// with any test
+				{
+					uint64_t requiredAnyCount = m_WithAnyOf.size();
+					bool containRequiredAny = requiredAnyCount == 0;
+
+					for (int i = 0; i < requiredAnyCount; i++)
+					{
+						if (archetype.ContainType(m_WithAnyOf[i]))
+						{
+							containRequiredAny = true;
+							break;
+						}
+					}
+					if (!containRequiredAny) return;
+				}
+
+				// required all test
+				{
+					uint64_t requiredAllCount = m_WithAll.size();
+
+					for (int i = 0; i < requiredAllCount; i++)
+					{
+						if (!archetype.ContainType(m_WithAll[i]))
+						{
+							return;
+						}
+					}
+				}
+
+				// includes
+				{
+					ArchetypeContextType& context = m_ArchetypesContexts.emplace_back();
+
+					for (uint32_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
+					{
+						auto typeIDIndex = archetype.FindTypeIndex(m_Includes.IDs()[typeIdx]);
+						if (typeIDIndex == Limits::MaxComponentCount)
+						{
+							m_ArchetypesContexts.pop_back();
+							return;
+						}
+
+						auto& packedContainer = archetype.m_TypeData[typeIDIndex].m_PackedContainer;
+						context.m_Containers[typeIdx] = packedContainer;
+					}
+					m_ContainedArchetypes.insert(&archetype);
+					context.Arch = &archetype;
+				}
+			}
+		}
+
+		void FetchArchetypesFromArchetypesGroup(ArchetypesGroupByOneType* group)
+		{
+			if (group == nullptr) return;
+			uint64_t minComponentsCount = GetMinComponentsCount();
+			uint64_t maxComponentCountsInGroup = group->MaxComponentsCount();
+
+			for (uint64_t i = minComponentsCount; i <= maxComponentCountsInGroup; i++)
+			{
+				std::vector<Archetype*>& archetypesToCheck = group->GetArchetypesWithComponentsCount(i);
+				for (auto& archetype : archetypesToCheck)
+				{
+					TryAddArchetypeFromGroup(*archetype);
+				}
+			}
+		}
+
+		void AddingArchetypesWithCheckingOnlyNewArchetypes(
+			ArchetypesMap& map,
+			const uint64_t& startArchetypesIndex,
+			const uint64_t& minRequiredComponentsCount
+		)
+		{
+			auto& archetypes = map.m_Archetypes;
+			uint64_t archetypesCount = map.m_Archetypes.Size();
+			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
+			{
+				Archetype& arch = archetypes[i];
+				if (arch.ComponentsCount() < minRequiredComponentsCount)
+				{
+					TryAddArchetypeFromGroup(arch);
+				}
+			}
+		}
+
 		template<typename T = void, typename... Args>
 		void CreatePackedContainersTuple(
 			std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
@@ -260,5 +374,223 @@ namespace decs
 
 		}
 
+#pragma region BATCH ITERATOR
+	public:
+		class BatchIterator
+		{
+			using QueryType = Query<ComponentsTypes...>;
+
+			template<typename... Types>
+			friend class Query;
+		public:
+			BatchIterator() {}
+
+			BatchIterator(
+				QueryType& query,
+				const uint64_t& firstArchetypeIndex,
+				const uint64_t& firstIterationIndex,
+				const uint64_t& lastArchetypeIndex,
+				const uint64_t& lastIterationIndex
+			) :
+				m_IsValid(true),
+				m_Query(&query),
+				m_FirstArchetypeIndex(firstArchetypeIndex),
+				m_FirstIterationIndex(firstIterationIndex),
+				m_LastArchetypeIndex(lastArchetypeIndex),
+				m_LastIterationIndex(lastIterationIndex)
+			{
+			}
+
+			~BatchIterator() {}
+
+			inline bool IsValid() { return m_IsValid; }
+
+			template<typename Callable>
+			inline void ForEach(Callable&& func) const
+			{
+				if (!m_IsValid) return;
+
+				Entity entityBuffor = {};
+				std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
+
+				uint64_t contextIndex = m_FirstArchetypeIndex;
+				uint64_t contextCount = m_LastArchetypeIndex + 1;
+				ArchetypeContext* archetypeContexts = m_Query->m_ArchetypesContexts.data();
+				Container* container = m_Query->m_Container;
+
+				for (; contextIndex < contextCount; contextIndex++)
+				{
+					const ArchetypeContext& ctx = archetypeContexts[contextIndex];
+					if (ctx.m_EntitiesCount == 0) continue;
+
+					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+					uint64_t iterationIndex;
+					uint64_t iterationsCount;
+
+					if (contextIndex == m_FirstArchetypeIndex)
+						iterationIndex = m_FirstIterationIndex;
+					else
+						iterationIndex = 0;
+
+					if (contextIndex == m_LastArchetypeIndex)
+						iterationsCount = m_LastIterationIndex;
+					else
+						iterationsCount = ctx.m_EntitiesCount;
+
+					uint64_t idx = iterationIndex;
+					for (; idx < iterationsCount; idx++)
+					{
+						const auto& entityData = entitiesData[idx];
+						if (entityData.IsActive())
+						{
+							if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
+							{
+								entityBuffor.Set(entityData.m_ID, container);
+								func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+							}
+							else
+							{
+								func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+							}
+						}
+					}
+				}
+			}
+
+		private:
+			template<typename T = void, typename... Args>
+			void CreatePackedContainersTuple(
+				std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
+				const ArchetypeContextType& context
+			) const noexcept
+			{
+				constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
+				std::get<PackedContainer<T>*>(containersTuple) = (reinterpret_cast<PackedContainer<T>*>(context.m_Containers[compIdx]));
+
+				if constexpr (sizeof...(Args) == 0) return;
+
+				CreatePackedContainersTuple<Args...>(
+					containersTuple,
+					context
+					);
+			}
+
+			template<>
+			void CreatePackedContainersTuple<void>(
+				std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
+				const ArchetypeContextType& context
+				) const noexcept
+			{
+
+			}
+
+		protected:
+			QueryType* m_Query = nullptr;
+			bool m_IsValid = false;
+
+			uint64_t m_FirstArchetypeIndex = 0;
+			uint64_t m_FirstIterationIndex = 0;
+			uint64_t m_LastArchetypeIndex = 0;
+			uint64_t m_LastIterationIndex = 0;
+		};
+
+#pragma endregion
+
+	public:
+		void CreateBatchIterators(
+			std::vector<BatchIterator>& iterators,
+			const uint64_t& desiredBatchesCount,
+			const uint64_t& minBatchSize
+		)
+		{
+			if (!IsValid())
+			{
+				return;
+			}
+
+			Fetch();
+
+			uint64_t entitiesCount = 0;
+
+			for (ArchetypeContext& archContext : m_ArchetypesContexts)
+			{
+				archContext.ValidateEntitiesCount();
+				entitiesCount += archContext.m_EntitiesCount;
+			}
+
+			uint64_t realDesiredBatchSize = std::llround(std::ceil((float)entitiesCount / (float)desiredBatchesCount));
+			uint64_t finalBatchSize;
+
+			if (realDesiredBatchSize < minBatchSize)
+				finalBatchSize = minBatchSize;
+			else
+				finalBatchSize = realDesiredBatchSize;
+
+			// archetype iteration stuff:
+			uint64_t currentArchetypeIndex = 0;
+			uint64_t archsCount = m_ArchetypesContexts.size();
+			uint64_t currentArchEntitiesStartIndex = 0;
+
+			// iterator creating stuff:
+			uint64_t startArchetypeIndex;
+			uint64_t startIterationIndex; // first archetype start iteration index
+			// last iteration condition
+			uint64_t lastArchetypeIndex;
+			uint64_t lastIterationIndex; // last archetypoe last iterationIndex
+
+			uint64_t itNeededEntitiesCount;
+
+			while (entitiesCount > 0)
+			{
+				startArchetypeIndex = currentArchetypeIndex;
+				startIterationIndex = currentArchEntitiesStartIndex;
+				itNeededEntitiesCount = finalBatchSize;
+
+				for (; currentArchetypeIndex < archsCount;)
+				{
+					ArchetypeContext& ctx = m_ArchetypesContexts[currentArchetypeIndex];
+					if (ctx.m_EntitiesCount == 0)
+					{
+						currentArchetypeIndex += 1;
+						continue;
+					}
+					uint64_t archAvailableEntities = ctx.m_EntitiesCount - currentArchEntitiesStartIndex;
+
+					if (itNeededEntitiesCount < archAvailableEntities)
+					{
+						currentArchEntitiesStartIndex += itNeededEntitiesCount;
+						itNeededEntitiesCount = 0;
+						lastArchetypeIndex = currentArchetypeIndex;
+					}
+					else
+					{
+						itNeededEntitiesCount -= archAvailableEntities;
+						currentArchEntitiesStartIndex += archAvailableEntities;
+						lastArchetypeIndex = currentArchetypeIndex;
+						currentArchetypeIndex += 1;
+					}
+
+					if (itNeededEntitiesCount == 0)
+					{
+						break;
+					}
+				}
+
+				lastIterationIndex = currentArchEntitiesStartIndex;
+
+				BatchIterator& it = iterators.emplace_back(
+					*this,
+					startArchetypeIndex,
+					startIterationIndex,
+					lastArchetypeIndex,
+					lastIterationIndex
+				);
+
+				entitiesCount -= finalBatchSize - itNeededEntitiesCount;
+			}
+		}
 	};
+
 }
