@@ -162,6 +162,7 @@
   <ItemGroup>
     <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp" />
     <ClCompile Include="src\decs\Container.cpp" />
+    <ClCompile Include="src\decs\Query.h" />
     <ClCompile Include="src\decs\EntityManager.cpp" />
   </ItemGroup>
   <ItemGroup>

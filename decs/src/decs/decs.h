@@ -4,6 +4,7 @@
 #include "EntityManager.h"
 #include "Container.h"
 #include "View.h"
+#include "Query.h"
 #include "Observers\Observers.h"
 #include "Observers\ObserversManager.h"
 #include "ComponentRefs\ComponentRef.h"

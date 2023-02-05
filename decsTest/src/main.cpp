@@ -81,12 +81,9 @@ int main()
 		tVec.EmplaceBack(i);
 	}
 
-	decs::ChunkedVector<int> tVec2 = std::move(tVec);
-
-	for (uint64_t i = 0; i < tVec2.Size(); i++)
-	{
-		std::cout << tVec2[i] << "\n";
-	}
+	using QueryType = decs::Query<A, B>;
+	QueryType testQuery = {};
+	testQuery.With<C>().WithAnyFrom<D, E>().Without<F,G>();
 
 	return 0;
 }

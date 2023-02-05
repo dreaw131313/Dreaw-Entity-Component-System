@@ -90,7 +90,7 @@ namespace decs
 				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
 
 				ArchetypesMap& map = m_Container->m_ArchetypesMap;
-				uint64_t maxComponentsInArchetype = map.m_ArchetypesGroupedByComponentsCount.size();
+				uint64_t maxComponentsInArchetype = map.MaxNumberOfTypesInArchetype();
 				if (maxComponentsInArchetype < minComponentsCountInArchetype) return;
 
 				if (newArchetypesCount > m_ArchetypesContexts.size())
@@ -228,7 +228,7 @@ namespace decs
 			m_ArchetypesCountDirty = std::numeric_limits<uint64_t>::max();
 		}
 
-		inline bool ContainArchetype(Archetype* arch) { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
+		inline bool ContainArchetype(Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
 
 		// FETCHING ARCHETYPE
 
@@ -339,88 +339,21 @@ namespace decs
 			}
 		}
 
-		bool TryAddNewArchetype(Archetype& archetype, const uint64_t minComponentsCountInArchetype)
-		{
-			if (archetype.ComponentsCount() < minComponentsCountInArchetype) return false;
-
-			if (!ContainArchetype(&archetype) && archetype.ComponentsCount())
-			{
-				// exclude test
-				{
-					uint64_t excludeCount = m_Without.size();
-					for (int i = 0; i < excludeCount; i++)
-					{
-						if (archetype.ContainType(m_Without[i]))
-						{
-							return false;
-						}
-					}
-				}
-
-				// required any
-				{
-					uint64_t requiredAnyCount = m_WithAnyOf.size();
-					bool containRequiredAny = requiredAnyCount == 0;
-
-					for (int i = 0; i < requiredAnyCount; i++)
-					{
-						if (archetype.ContainType(m_WithAnyOf[i]))
-						{
-							containRequiredAny = true;
-							break;
-						}
-					}
-					if (!containRequiredAny) return false;
-				}
-
-				// required all
-				{
-					uint64_t requiredAllCount = m_WithAll.size();
-
-					for (int i = 0; i < requiredAllCount; i++)
-					{
-						if (!archetype.ContainType(m_WithAll[i]))
-						{
-							return false;
-						}
-					}
-				}
-
-				// includes
-				{
-					ArchetypeContext& context = m_ArchetypesContexts.emplace_back();
-
-					for (uint32_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
-					{
-						auto typeIDIndex = archetype.FindTypeIndex(m_Includes.IDs()[typeIdx]);
-						if (typeIDIndex == Limits::MaxComponentCount)
-						{
-							m_ArchetypesContexts.pop_back();
-							return false;
-						}
-
-						auto& packedContainer = archetype.m_TypeData[typeIDIndex].m_PackedContainer;
-						context.m_Containers[typeIdx] = packedContainer;
-					}
-					m_ContainedArchetypes.insert(&archetype);
-					context.Arch = &archetype;
-				}
-			}
-
-			return true;
-		}
-
 		void AddingArchetypesWithCheckingOnlyNewArchetypes(
 			ArchetypesMap& map,
 			const uint64_t& startArchetypesIndex,
-			const uint64_t& minComponentsCountInArchetype
+			const uint64_t& minRequiredComponentsCount
 		)
 		{
 			auto& archetypes = map.m_Archetypes;
 			uint64_t archetypesCount = map.m_Archetypes.Size();
 			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
 			{
-				TryAddNewArchetype(archetypes[i], minComponentsCountInArchetype);
+				Archetype& arch = archetypes[i];
+				if (arch.ComponentsCount() < minRequiredComponentsCount)
+				{
+					TryAddArchetypeFromGroup(arch);
+				}
 			}
 		}
 

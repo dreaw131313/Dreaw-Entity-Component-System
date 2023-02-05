@@ -85,7 +85,7 @@ namespace decs
 		{
 			if (m_Data.size() > 0)
 			{
-				if (m_Data.size() > 1) m_Data[index] = m_Data.back();
+				if (m_Data.size() > 1) m_Data[index] = std::move(m_Data.back());
 				m_Data.pop_back();
 			}
 		}

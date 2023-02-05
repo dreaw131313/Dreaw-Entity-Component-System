@@ -106,7 +106,7 @@ namespace decs
 
 		}
 
-		ArchetypesMap(const uint64_t& archetypesVectorChunkSize, const uint64_t& archetypeGroupsVectorChunkSize):
+		ArchetypesMap(const uint64_t& archetypesVectorChunkSize, const uint64_t& archetypeGroupsVectorChunkSize) :
 			m_Archetypes(archetypesVectorChunkSize),
 			m_ArchetrypesGroupsByOneTypeVector(archetypeGroupsVectorChunkSize)
 		{
@@ -197,6 +197,7 @@ namespace decs
 			}
 		}
 
+		inline uint64_t MaxNumberOfTypesInArchetype() const { return m_ArchetypesGroupedByComponentsCount.size(); }
 	private:
 		ChunkedVector<Archetype> m_Archetypes = { 100 };
 		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes;
