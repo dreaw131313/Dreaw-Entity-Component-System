@@ -18,7 +18,7 @@
     <ClInclude Include="src\decs\Containers\ChunkedVector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\View.h">
+    <ClInclude Include="src\decs\Iteration\View.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Archetypes\Archetype.h">
@@ -84,6 +84,9 @@
     <ClInclude Include="src\decs\traits.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\decs\Iteration\IterationCore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\decs\Container.cpp">
@@ -95,7 +98,7 @@
     <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decs\Query.h">
+    <ClCompile Include="src\decs\Iteration\Query.h">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

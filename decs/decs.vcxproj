@@ -150,11 +150,12 @@
     <ClInclude Include="src\decs\decs.h" />
     <ClInclude Include="src\decs\Entity.h" />
     <ClInclude Include="src\decs\EntityData.h" />
+    <ClInclude Include="src\decs\Iteration\IterationCore.h" />
     <ClInclude Include="src\decs\Observers\Observers.h" />
     <ClInclude Include="src\decs\Observers\ObserversManager.h" />
     <ClInclude Include="src\decs\traits.h" />
     <ClInclude Include="src\decs\Type.h" />
-    <ClInclude Include="src\decs\View.h" />
+    <ClInclude Include="src\decs\Iteration\View.h" />
     <ClInclude Include="src\decs\ThirdParty\skarupke\bytell_hash_map.hpp" />
     <ClInclude Include="src\decs\ThirdParty\skarupke\flat_hash_map.hpp" />
     <ClInclude Include="src\decs\ThirdParty\skarupke\unordered_map.hpp" />
@@ -162,7 +163,7 @@
   <ItemGroup>
     <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp" />
     <ClCompile Include="src\decs\Container.cpp" />
-    <ClCompile Include="src\decs\Query.h" />
+    <ClCompile Include="src\decs\Iteration\Query.h" />
     <ClCompile Include="src\decs\EntityManager.cpp" />
   </ItemGroup>
   <ItemGroup>

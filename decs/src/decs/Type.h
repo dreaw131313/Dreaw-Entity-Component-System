@@ -89,7 +89,7 @@ namespace decs
 		TypeID operator[](const uint64_t index) const { return m_TypesIDs[index]; }
 
 		inline const TypeID* IDs() const { return m_TypesIDs; }
-		constexpr uint64_t Size() { return sizeof...(Args); }
+		constexpr uint64_t Size() const { return sizeof...(Args); }
 
 	private:
 		TypeID m_TypesIDs[sizeof...(Args)];

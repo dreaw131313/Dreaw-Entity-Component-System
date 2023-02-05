@@ -99,6 +99,10 @@ namespace decs
 		friend class Container;
 		template<typename ...Types>
 		friend class View;
+		template<typename ...Types>
+		friend class Query;
+		template<typename, typename...>
+		friend class ContainerContext;
 
 	public:
 		ArchetypesMap()

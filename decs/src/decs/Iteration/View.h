@@ -3,6 +3,7 @@
 #include "Type.h"
 #include "Entity.h"
 #include "Container.h"
+#include "IterationCore.h"
 
 namespace decs
 {
@@ -10,17 +11,7 @@ namespace decs
 	class View
 	{
 	private:
-		struct ArchetypeContext
-		{
-		public:
-			Archetype* Arch = nullptr;
-			uint64_t m_EntitiesCount = 0;
-			PackedContainerBase* m_Containers[sizeof...(ComponentsTypes)] = { nullptr };
-
-		public:
-			inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntitiesCount(); }
-		};
-
+		using ArchetypeContextType = ArchetypeContext<sizeof...(ComponentsTypes)>;
 	public:
 		View()
 		{
@@ -83,7 +74,7 @@ namespace decs
 				Invalidate();
 			}
 
-			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.m_Archetypes.Size();
+			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.ArchetypesCount();
 			if (m_ArchetypesCountDirty != containerArchetypesCount)
 			{
 				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
@@ -126,10 +117,10 @@ namespace decs
 			const uint64_t contextCount = m_ArchetypesContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				const ArchetypeContext& ctx = m_ArchetypesContexts[contextIndex];
+				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
 				if (ctx.m_EntitiesCount == 0) continue;
 
-				std::vector< ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+				std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
 				CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
 				for (uint64_t idx = 0; idx < ctx.m_EntitiesCount; idx++)
@@ -197,7 +188,7 @@ namespace decs
 		Container* m_Container = nullptr;
 		bool m_IsDirty = true;
 
-		std::vector<ArchetypeContext> m_ArchetypesContexts;
+		std::vector<ArchetypeContextType> m_ArchetypesContexts;
 		ecsSet<Archetype*> m_ContainedArchetypes;
 
 		// cache value to check if view should be updated:
@@ -225,7 +216,7 @@ namespace decs
 		{
 			m_ArchetypesContexts.clear();
 			m_ContainedArchetypes.clear();
-			m_ArchetypesCountDirty = std::numeric_limits<uint64_t>::max();
+			m_ArchetypesCountDirty = 0;
 		}
 
 		inline bool ContainArchetype(Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
@@ -303,7 +294,7 @@ namespace decs
 
 				// includes
 				{
-					ArchetypeContext& context = m_ArchetypesContexts.emplace_back();
+					ArchetypeContextType& context = m_ArchetypesContexts.emplace_back();
 
 					for (uint32_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
 					{
@@ -360,7 +351,7 @@ namespace decs
 		template<typename T = void, typename... Args>
 		void CreatePackedContainersTuple(
 			std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
-			const ArchetypeContext& context
+			const ArchetypeContextType& context
 		) const noexcept
 		{
 			constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
@@ -377,7 +368,7 @@ namespace decs
 		template<>
 		void CreatePackedContainersTuple<void>(
 			std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
-			const ArchetypeContext& context
+			const ArchetypeContextType& context
 			) const noexcept
 		{
 
@@ -472,7 +463,7 @@ namespace decs
 			template<typename T = void, typename... Args>
 			void CreatePackedContainersTuple(
 				std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
-				const ArchetypeContext& context
+				const ArchetypeContextType& context
 			) const noexcept
 			{
 				constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
@@ -489,11 +480,12 @@ namespace decs
 			template<>
 			void CreatePackedContainersTuple<void>(
 				std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
-				const ArchetypeContext& context
+				const ArchetypeContextType& context
 				) const noexcept
 			{
 
 			}
+
 		protected:
 			ViewType* m_View = nullptr;
 			bool m_IsValid = false;
@@ -502,7 +494,6 @@ namespace decs
 			uint64_t m_FirstIterationIndex = 0;
 			uint64_t m_LastArchetypeIndex = 0;
 			uint64_t m_LastIterationIndex = 0;
-
 		};
 
 #pragma endregion

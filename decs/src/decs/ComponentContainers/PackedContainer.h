@@ -28,7 +28,6 @@ namespace decs
 
 		inline virtual void RemoveSwapBack(const uint64_t& index) = 0;
 		inline virtual void EmplaceFromVoid(void* data) noexcept = 0;
-
 	};
 
 	template<typename ComponentType>

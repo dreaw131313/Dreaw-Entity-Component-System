@@ -1,6 +1,7 @@
 #pragma once
 #include "decs\Core.h"
 #include "decs\Containers/ChunkedVector.h"
+#include "Type.h"
 
 namespace decs
 {

@@ -92,8 +92,12 @@ namespace decs
 		friend class EntityManager;
 		friend class ArchetypesMap;
 
-		template<typename... ComponentTypes>
+		template<typename...>
 		friend 	class View;
+		template<typename...>
+		friend 	class Query;
+		template<typename, typename...>
+		friend class ContainerContext;
 
 		template<typename... ComponentTypes>
 		friend class BatchIterator;

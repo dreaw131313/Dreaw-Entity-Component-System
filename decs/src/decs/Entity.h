@@ -9,8 +9,10 @@ namespace decs
 
 	class Entity final
 	{
-		template<typename ...Types>
+		template<typename ...>
 		friend class View;
+		template<typename ...>
+		friend class Query;
 		friend class Container;
 		template<typename ComponentType>
 		friend class ComponentRef;

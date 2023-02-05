@@ -31,7 +31,7 @@ namespace decs
 		DelayedComponentPair(
 			const EntityID& entityID,
 			const TypeID& typeID,
-			const bool& isStable 
+			const bool& isStable
 		) :
 			m_EntityID(entityID), m_TypeID(typeID), m_IsStable(isStable)
 		{
@@ -64,6 +64,10 @@ namespace decs
 	{
 		template<typename ...Types>
 		friend class View;
+		template<typename ...Types>
+		friend class Query;
+		template<typename, typename...>
+		friend class ContainerContext;
 		friend class Entity;
 
 	private:

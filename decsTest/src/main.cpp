@@ -8,82 +8,69 @@ void Print(std::string message)
 	std::cout << message << "\n";
 }
 
-class A
+class Position
 {
+public:
 	float X = 0;
-};
-class B
-{
-	float X = 0;
-};
-class C
-{
-	float X = 0;
-};
-class D
-{
-	float X = 0;
-};
-class E
-{
-	float X = 0;
-};
-class F
-{
-	float X = 0;
-};
-class G
-{
-	float X = 0;
-};
-class H
-{
-	float X = 0;
-};
-class I
-{
-	float X = 0;
+	float Y = 0;
+
+public:
+	Position()
+	{
+
+	}
+	Position(float x, float y) : X(x), Y(y)
+	{
+
+	}
 };
 
 
 int main()
 {
+	std::cout << "ecsSet size = " << sizeof(decs::ecsSet<decs::Archetype*>) << "\n";
 	std::cout << "\n";
 	decs::Container prefabContainer = {};
 	decs::Container container = {};
 
 	auto entity1 = prefabContainer.CreateEntity();
-	entity1.AddComponent<A>();
-	entity1.AddComponent<B>();
-	entity1.AddComponent<C>();
-	entity1.AddComponent<D>();
-	entity1.AddComponent<E>();
+	entity1.AddComponent<Position>();
 
 	auto entity2 = container.Spawn(entity1, 3, true);
 
-	using ViewType = decs::View<E>;
+	using ViewType = decs::View<Position>;
 	ViewType view = { container };
 
 	uint64_t iterationCount = 0;
-	auto lambda = [&] (E& e)
+	auto lambda = [&] (decs::Entity& e, Position& pos)
 	{
-		iterationCount += 1;
+		Print(std::to_string(e.ID()));
 	};
 
 	view.ForEachForward(lambda);
 
 	std::cout << "Iterated entites count: " << iterationCount << "\n";
 
-	uint64_t elementsCount = 10;
-	decs::ChunkedVector<int> tVec = { 2 };
-	for (uint64_t i = 0; i < elementsCount; i++)
-	{
-		tVec.EmplaceBack(i);
-	}
-
-	using QueryType = decs::Query<A, B>;
+	using QueryType = decs::Query<Position>;
 	QueryType testQuery = {};
-	testQuery.With<C>().WithAnyFrom<D, E>().Without<F,G>();
+	testQuery.AddContainer(&container);
+	testQuery.AddContainer(&prefabContainer);
+
+	auto queryLambda = [&] (decs::Entity& e, Position& pos)
+	{
+		if (e.GetContainer() == &prefabContainer)
+		{
+			std::cout << "Query lambda -> Prefab Entity ID: " << e.ID() << "\n";
+		}
+		else
+		{
+			std::cout << "Query lambda -> Entity ID: " << e.ID() << "\n";
+		}
+	};
+
+	Print("\nQuery Iterations:");
+	testQuery.ForEachForward(queryLambda);
+	testQuery.ForEachBackward(queryLambda);
 
 	return 0;
 }
