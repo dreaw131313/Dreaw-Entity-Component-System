@@ -37,8 +37,8 @@ int main()
 	auto entity1 = prefabContainer.CreateEntity();
 	entity1.AddComponent<Position>();
 
-	prefabContainer.Spawn(entity1, 4, true);
-	container.Spawn(entity1, 4, true);
+	//prefabContainer.Spawn(entity1, 3, true);
+	container.Spawn(entity1, 3, true);
 
 	using QueryType = decs::Query<Position>;
 	QueryType query = { container };

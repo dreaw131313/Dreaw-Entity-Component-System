@@ -313,30 +313,31 @@ namespace decs
 				decs::Entity entityBuffor = {};
 				std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 
-				uint64_t iteratedEntities = 0;
+				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
 				for (uint64_t chunkIdx = m_StartContainerChunkInex; chunkIdx < containerContextChunksCount; chunkIdx++)
 				{
 					auto chunk = containerContexts.GetChunk(chunkIdx);
 					const uint64_t chunkSize = containerContexts.GetChunkSize(chunkIdx);
 
-					for (uint64_t elementIndex = m_StartContainerElementIndex; elementIndex < chunkSize; elementIndex++)
+					uint64_t elementIndex = chunkIdx == m_StartContainerChunkInex ? m_StartContainerElementIndex : 0;
+					for (; elementIndex < chunkSize; elementIndex++)
 					{
 						ContainerContextType& containerContext = chunk[elementIndex];
 						auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
 						const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
 
 						uint64_t archetypeContextIdx;
-						bool isStartArchetypeContext;
+						uint64_t startEntitiyIndex;
 						if (chunkIdx == m_StartContainerChunkInex && elementIndex == m_StartContainerElementIndex)
 						{
 							archetypeContextIdx = m_StartArchetypeIndex;
-							isStartArchetypeContext = true;
+							startEntitiyIndex = m_StartEntityIndex;
 						}
 						else
 						{
 							archetypeContextIdx = 0;
-							isStartArchetypeContext = false;
+							startEntitiyIndex = 0;
 						}
 
 						for (; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
@@ -344,10 +345,24 @@ namespace decs
 							ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
 							if (ctx.m_EntitiesCount == 0) continue;
 
+							uint64_t leftEntitiesInArchetypeToIterate = ctx.m_EntitiesCount - startEntitiyIndex;
+							uint64_t entitiesCount;
+
+							if (leftEntitiesInArchetypeToIterate >= leftEntitiesToIterate)
+							{
+								entitiesCount = leftEntitiesToIterate + startEntitiyIndex;
+								leftEntitiesToIterate = 0;
+							}
+							else
+							{
+								entitiesCount = leftEntitiesInArchetypeToIterate + startEntitiyIndex;
+								leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
+							}
+
 							std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
 							CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
-							for (uint64_t idx = isStartArchetypeContext ? m_StartEntityIndex : 0; idx < ctx.m_EntitiesCount; idx++)
+							for (uint64_t idx = startEntitiyIndex; idx < entitiesCount; idx++)
 							{
 								const auto& entityData = entitiesData[idx];
 								if (entityData.IsActive())
@@ -362,11 +377,11 @@ namespace decs
 										func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 									}
 								}
-								iteratedEntities += 1;
-								if (iteratedEntities >= m_EntitiesCount)
-								{
-									return;
-								}
+							}
+
+							if (leftEntitiesToIterate == 0)
+							{
+								return;
 							}
 						}
 					}
@@ -380,7 +395,6 @@ namespace decs
 			uint64_t m_StartArchetypeIndex = 0;
 			uint64_t m_StartEntityIndex = 0;
 			uint64_t m_EntitiesCount = 0;
-
 
 		private:
 			template<typename T = void, typename... Args>
