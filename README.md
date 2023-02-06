@@ -127,7 +127,7 @@ query.ForEach([](decs::Entity& e, Component1& c1, Component2& c2, Component3& c3
 });
 ```
 
-During iteration with methods **ForEach** and **ForEachWithEntity** is possible:
+During iteration with methods **ForEach** and **ForEachBackward** is possible:
 * create new entites. 
 * adding and removing components from currently iterated entity
 * destroying currently iterated entity
@@ -137,4 +137,6 @@ Things like:
 * adding and removing component from entities different than currently iterated entity
 
 are undefined behavior.
+
+During Iteration with **ForEachForward** method entities component setups can not be changed and entities cannot be destroyed.
 
