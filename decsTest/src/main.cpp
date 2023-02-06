@@ -3,7 +3,7 @@
 #include "decs/decs.h"
 #include "decs/ComponentContainers/StableContainer.h"
 
-void Print(std::string message)
+void PrintLine(std::string message)
 {
 	std::cout << message << "\n";
 }
@@ -37,7 +37,8 @@ int main()
 	auto entity1 = prefabContainer.CreateEntity();
 	entity1.AddComponent<Position>();
 
-	auto entity2 = container.Spawn(entity1, 4, true);
+	prefabContainer.Spawn(entity1, 4, true);
+	container.Spawn(entity1, 4, true);
 
 	using QueryType = decs::Query<Position>;
 	QueryType query = { container };
@@ -45,7 +46,7 @@ int main()
 	uint64_t iterationCount = 0;
 	auto lambda = [&] (decs::Entity& e, Position& pos)
 	{
-		Print(std::to_string(e.ID()));
+		PrintLine(std::to_string(e.ID()));
 	};
 
 	query.ForEachForward(lambda);
@@ -56,8 +57,8 @@ int main()
 	std::vector<QueryType::BatchIterator> iterators;
 	query.CreateBatchIterators(iterators, 2, 3);
 
-	Print("\n");
-	Print("Query iterators:");
+	PrintLine("");
+	PrintLine("Query iterators:");
 	for (auto& it : iterators)
 	{
 		it.ForEach(lambda);
@@ -70,14 +71,25 @@ int main()
 
 	auto queryLambda = [&] (decs::Entity& e, Position& pos)
 	{
-		std::cout << "Query lambda -> Entity ID: " << e.ID() << "\n";
+		//std::cout << "Query lambda -> Entity ID: " << e.ID() << ". Container ptr:"<< e.GetContainer() << "\n";
+		std::cout << "Query lambda -> Entity ID: " << e.ID() << ". Hash:" << std::hash<decs::Entity>{}(e) << "\n";
 	};
 
-	Print("\nQuery Iterations:");
+	PrintLine("");
+	PrintLine("Multi Query itertotrs iterations:");
 	testMultiQuery.ForEachForward(queryLambda);
-	testMultiQuery.ForEachBackward(queryLambda);
 
 	std::vector<MultiQueryType::BatchIterator> multiQueryIterators;
+	testMultiQuery.CreateBatchIterators(multiQueryIterators, 3, 3);
+	PrintLine("");
+	PrintLine("Multi Query itertotrs iterations:");
+
+	for (uint64_t i = 0; i < multiQueryIterators.size(); i++)
+	{
+		auto& it = multiQueryIterators[i];
+		PrintLine("Iterator " + std::to_string(i + 1));
+		it.ForEach(queryLambda);
+	}
 
 
 	return 0;

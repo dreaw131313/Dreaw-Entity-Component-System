@@ -1,8 +1,8 @@
 #pragma once
-#include "Core.h"
-#include "ComponentContainers\PackedContainer.h"
-#include "Archetypes\Archetype.h"
-#include "Archetypes\ArchetypesMap.h"
+#include "decs\Core.h"
+#include "decs\ComponentContainers\PackedContainer.h"
+#include "decs\Archetypes\Archetype.h"
+#include "decs\Archetypes\ArchetypesMap.h"
 
 namespace decs
 {

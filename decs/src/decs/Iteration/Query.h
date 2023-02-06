@@ -1,8 +1,9 @@
 #pragma once
-#include "Core.h"
-#include "Type.h"
-#include "Entity.h"
-#include "Container.h"
+#include "decs\Core.h"
+#include "decs\Type.h"
+#include "decs\Entity.h"
+#include "decs\Container.h"
+
 #include "IterationCore.h"
 
 namespace decs
@@ -549,7 +550,7 @@ namespace decs
 				startIterationIndex = currentArchEntitiesStartIndex;
 				itNeededEntitiesCount = finalBatchSize;
 
-				for (; currentArchetypeIndex < archsCount;)
+				while (currentArchetypeIndex < archsCount)
 				{
 					ArchetypeContextType& ctx = m_ArchetypesContexts[currentArchetypeIndex];
 					if (ctx.m_EntitiesCount == 0)

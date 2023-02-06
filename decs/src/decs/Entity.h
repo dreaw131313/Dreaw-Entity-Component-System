@@ -173,6 +173,9 @@ struct std::hash<decs::Entity>
 {
 	std::size_t operator()(const decs::Entity& entity) const
 	{
-		return std::hash<uint64_t>{}(entity.ID());
+		uint64_t eIDHash = std::hash<decs::EntityID>{}(entity.ID());
+		uint64_t containerPtrHash = std::hash<decs::Container*>{}(entity.GetContainer());
+
+		return eIDHash ^ (containerPtrHash + 0x9e3779b9 + (eIDHash << 6) + (eIDHash >> 2));
 	}
 };
