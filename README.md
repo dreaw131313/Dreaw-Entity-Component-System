@@ -84,7 +84,7 @@ bool isActive = entity.IsActive();
 decs::Container container = {}; 
 
 // this query can iterate over all entities which contains components passed as template parameters
-decs::View<Component1, decs::Stable<Component2>> query = { container }; 
+decs::Query<Component1, decs::Stable<Component2>> query = { container }; 
 
 query.ForEach([](Component1& c1, Component2& c2)
 {
