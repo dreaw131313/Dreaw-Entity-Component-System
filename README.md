@@ -79,49 +79,49 @@ bool isActive = entity.IsActive();
 ```
 
 ### Iterating over entites
-**decs::View<typename... Components>** object serves to iterating over entities
+**decs::Query<typename... Components>** object serves to iterating over entities
 ```cpp
 decs::Container container = {}; 
 
-// this view can iterate over all entities which contains components passed as template parameters
-decs::View<Component1, decs::Stable<Component2>> view = { container }; 
+// this query can iterate over all entities which contains components passed as template parameters
+decs::View<Component1, decs::Stable<Component2>> query = { container }; 
 
-view.ForEach([](Component1& c1, Component2& c2)
+query.ForEach([](Component1& c1, Component2& c2)
 {
 	// doing stuff with components
 });
 
 // if during iteration entity reference is needed, decs::Entity can be placed as first parameter of passed callable to ForEach function 
-view.ForEach([](decs::Entity& e, Component1& c1, Component2& c2)
+query.ForEach([](decs::Entity& e, Component1& c1, Component2& c2)
 {
 	// doing stuff with components and entity
 });
 ```
-It is also possible to query more complex views using the member methods of the view class:
+It is also possible to query more complex query object with using the member methods of the Query class:
 ```cpp
 template<typename... ComponentsTypes>
-View& Without(); // Entities in view will not have all components from ComponetsTypes parameters list
+Query& Without(); // Entities in query will not have all components from ComponetsTypes parameters list
 ```
 ```cpp
 template<typename... ComponentsTypes>
-View& WithAnyFrom(); // Entities in view will have at least one of component from ComponentTypes parameters list
+Query& WithAnyFrom(); // Entities in query will have at least one of component from ComponentTypes parameters list
 ```
 ```cpp
 template<typename... ComponentsTypes>
-View& With(); // Entities in view will have all components from ComponentTypes parameters list
+Query& With(); // Entities in query will have all components from ComponentTypes parameters list
 ```
 
-Creating view with this methods can look like:
+Creating Query with this methods can look like:
 ```cpp
-decs::View<Component1, decs::Stable<Component2>, Component3> view = { container };
-view.Without<Component4,Component5>().WithAnyFrom<Component6, Component7>().With<Component8, Component9>();
+decs::Query<Component1, decs::Stable<Component2>, Component3> query = { container };
+query.Without<Component4, Component5>().WithAnyFrom<Component6, Component7>().With<Component8, Component9>();
 
-view.ForEach([](Component1& c1, Component2& c2, Component3& c3)
+query.ForEach([](Component1& c1, Component2& c2, Component3& c3)
 {
 	// doing stuff with components
 });
 
-view.ForEach([](decs::Entity& e, Component1& c1, Component2& c2, Component3& c3)
+query.ForEach([](decs::Entity& e, Component1& c1, Component2& c2, Component3& c3)
 {
 	// doing stuff with components and entity
 });
@@ -134,7 +134,7 @@ During iteration with methods **ForEach** and **ForEachWithEntity** is possible:
 
 Things like:
 * destroying other entites
-* adding and removing component from entities diffrent than curently iterated entity
+* adding and removing component from entities different than currently iterated entity
 
 are undefined behavior.
 
