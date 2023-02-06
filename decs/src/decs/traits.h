@@ -7,13 +7,13 @@ namespace decs
 	};
 
 	template<typename T>
-	struct stable_type
+	struct component_type
 	{
 		using Type = T;
 	};
 
 	template<typename T>
-	struct stable_type<Stable<T>>
+	struct component_type<Stable<T>>
 	{
 		using Type = T;
 	};

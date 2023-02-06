@@ -28,16 +28,19 @@ public:
 
 int main()
 {
+	std::cout << "Entity size = " << sizeof(decs::Entity) << "\n";
+	std::cout << "\n";
+
 	decs::Container prefabContainer = {};
 	decs::Container container = {};
 
 	auto entity1 = prefabContainer.CreateEntity();
 	entity1.AddComponent<Position>();
 
-	auto entity2 = container.Spawn(entity1, 3, true);
+	auto entity2 = container.Spawn(entity1, 4, true);
 
 	using QueryType = decs::Query<Position>;
-	QueryType view = { container };
+	QueryType query = { container };
 
 	uint64_t iterationCount = 0;
 	auto lambda = [&] (decs::Entity& e, Position& pos)
@@ -45,31 +48,37 @@ int main()
 		Print(std::to_string(e.ID()));
 	};
 
-	view.ForEachForward(lambda);
-	view.ForEachBackward(lambda);
+	query.ForEachForward(lambda);
+	query.ForEachBackward(lambda);
 
 	std::cout << "Iterated entites count: " << iterationCount << "\n";
 
+	std::vector<QueryType::BatchIterator> iterators;
+	query.CreateBatchIterators(iterators, 2, 3);
+
+	Print("\n");
+	Print("Query iterators:");
+	for (auto& it : iterators)
+	{
+		it.ForEach(lambda);
+	}
+
 	using MultiQueryType = decs::MultiQuery<Position>;
-	MultiQueryType testQuery = {};
-	testQuery.AddContainer(&container);
-	testQuery.AddContainer(&prefabContainer);
+	MultiQueryType testMultiQuery = {};
+	testMultiQuery.AddContainer(&container);
+	testMultiQuery.AddContainer(&prefabContainer);
 
 	auto queryLambda = [&] (decs::Entity& e, Position& pos)
 	{
-		if (e.GetContainer() == &prefabContainer)
-		{
-			std::cout << "Query lambda -> Prefab Entity ID: " << e.ID() << "\n";
-		}
-		else
-		{
-			std::cout << "Query lambda -> Entity ID: " << e.ID() << "\n";
-		}
+		std::cout << "Query lambda -> Entity ID: " << e.ID() << "\n";
 	};
 
 	Print("\nQuery Iterations:");
-	testQuery.ForEachForward(queryLambda);
-	testQuery.ForEachBackward(queryLambda);
+	testMultiQuery.ForEachForward(queryLambda);
+	testMultiQuery.ForEachBackward(queryLambda);
+
+	std::vector<MultiQueryType::BatchIterator> multiQueryIterators;
+
 
 	return 0;
 }

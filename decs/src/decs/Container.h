@@ -371,7 +371,7 @@ namespace decs
 		}
 
 		template<typename ComponentType, typename ...Args>
-		inline typename stable_type<ComponentType>::Type* AddComponent(EntityData& entityData, Args&&... args)
+		inline typename component_type<ComponentType>::Type* AddComponent(EntityData& entityData, Args&&... args)
 		{
 			if constexpr (is_stable<ComponentType>::value)
 			{
@@ -523,7 +523,7 @@ namespace decs
 		bool RemoveStableComponent(const EntityID& e, const TypeID& componentTypeID);
 
 		template<typename ComponentType>
-		typename stable_type<ComponentType>::Type* GetComponent(const EntityID& e) const
+		typename component_type<ComponentType>::Type* GetComponent(const EntityID& e) const
 		{
 			if (e < m_EntityManager->GetEntitiesDataCount())
 			{
@@ -535,7 +535,7 @@ namespace decs
 		}
 
 		template<typename ComponentType>
-		typename stable_type<ComponentType>::Type* GetComponent(EntityData& entityData) const
+		typename component_type<ComponentType>::Type* GetComponent(EntityData& entityData) const
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsValidToPerformComponentOperation())
 			{
@@ -545,7 +545,7 @@ namespace decs
 					PackedContainer<ComponentType>* container = (PackedContainer<ComponentType>*)entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer;
 					if constexpr (is_stable<ComponentType>::value)
 					{
-						return (typename stable_type<ComponentType>::Type*)container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr;
+						return (typename component_type<ComponentType>::Type*)container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr;
 					}
 					else
 					{

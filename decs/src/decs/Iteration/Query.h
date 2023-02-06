@@ -66,40 +66,6 @@ namespace decs
 			return *this;
 		}
 
-		void Fetch()
-		{
-			if (m_IsDirty)
-			{
-				m_IsDirty = false;
-				Invalidate();
-			}
-
-			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.ArchetypesCount();
-			if (m_ArchetypesCountDirty != containerArchetypesCount)
-			{
-				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
-				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
-
-				ArchetypesMap& map = m_Container->m_ArchetypesMap;
-				uint64_t maxComponentsInArchetype = map.MaxNumberOfTypesInArchetype();
-				if (maxComponentsInArchetype < minComponentsCountInArchetype) return;
-
-				if (newArchetypesCount > m_ArchetypesContexts.size())
-				{
-					// performing normal finding of archetypes
-					auto group = GetBestArchetypesGroup();
-					FetchArchetypesFromArchetypesGroup(group);
-				}
-				else
-				{
-					// checking only new archetypes:
-					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, minComponentsCountInArchetype);
-				}
-
-				m_ArchetypesCountDirty = containerArchetypesCount;
-			}
-		}
-
 		template<typename Callable>
 		inline void ForEach(Callable&& func) noexcept
 		{
@@ -128,7 +94,7 @@ namespace decs
 					const auto& entityData = entitiesData[idx];
 					if (entityData.IsActive())
 					{
-						if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
+						if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
 						{
 							entityBuffor.Set(entityData.m_ID, this->m_Container);
 							func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
@@ -165,7 +131,7 @@ namespace decs
 					const auto& entityData = entitiesData[idx];
 					if (entityData.IsActive())
 					{
-						if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
+						if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
 						{
 							entityBuffor.Set(entityData.m_ID, this->m_Container);
 							func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
@@ -176,6 +142,40 @@ namespace decs
 						}
 					}
 				}
+			}
+		}
+
+		void Fetch()
+		{
+			if (m_IsDirty)
+			{
+				m_IsDirty = false;
+				Invalidate();
+			}
+
+			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.ArchetypesCount();
+			if (m_ArchetypesCountDirty != containerArchetypesCount)
+			{
+				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
+				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
+
+				ArchetypesMap& map = m_Container->m_ArchetypesMap;
+				uint64_t maxComponentsInArchetype = map.MaxNumberOfTypesInArchetype();
+				if (maxComponentsInArchetype < minComponentsCountInArchetype) return;
+
+				if (newArchetypesCount > m_ArchetypesContexts.size())
+				{
+					// performing normal finding of archetypes
+					auto group = GetBestArchetypesGroup();
+					FetchArchetypesFromArchetypesGroup(group);
+				}
+				else
+				{
+					// checking only new archetypes:
+					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, minComponentsCountInArchetype);
+				}
+
+				m_ArchetypesCountDirty = containerArchetypesCount;
 			}
 		}
 
@@ -195,6 +195,7 @@ namespace decs
 		uint64_t m_ArchetypesCountDirty = 0;
 
 	private:
+
 		inline void ValidateQuery()
 		{
 			Fetch();
@@ -415,12 +416,12 @@ namespace decs
 
 				uint64_t contextIndex = m_FirstArchetypeIndex;
 				uint64_t contextCount = m_LastArchetypeIndex + 1;
-				ArchetypeContext* archetypeContexts = m_Query->m_ArchetypesContexts.data();
+				ArchetypeContextType* archetypeContexts = m_Query->m_ArchetypesContexts.data();
 				Container* container = m_Query->m_Container;
 
 				for (; contextIndex < contextCount; contextIndex++)
 				{
-					const ArchetypeContext& ctx = archetypeContexts[contextIndex];
+					const ArchetypeContextType& ctx = archetypeContexts[contextIndex];
 					if (ctx.m_EntitiesCount == 0) continue;
 
 					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
@@ -445,7 +446,7 @@ namespace decs
 						const auto& entityData = entitiesData[idx];
 						if (entityData.IsActive())
 						{
-							if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
+							if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
 							{
 								entityBuffor.Set(entityData.m_ID, container);
 								func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
@@ -514,7 +515,7 @@ namespace decs
 
 			uint64_t entitiesCount = 0;
 
-			for (ArchetypeContext& archContext : m_ArchetypesContexts)
+			for (ArchetypeContextType& archContext : m_ArchetypesContexts)
 			{
 				archContext.ValidateEntitiesCount();
 				entitiesCount += archContext.m_EntitiesCount;
@@ -550,7 +551,7 @@ namespace decs
 
 				for (; currentArchetypeIndex < archsCount;)
 				{
-					ArchetypeContext& ctx = m_ArchetypesContexts[currentArchetypeIndex];
+					ArchetypeContextType& ctx = m_ArchetypesContexts[currentArchetypeIndex];
 					if (ctx.m_EntitiesCount == 0)
 					{
 						currentArchetypeIndex += 1;

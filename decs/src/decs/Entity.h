@@ -78,7 +78,7 @@ namespace decs
 		}
 
 		template<typename T>
-		inline typename stable_type<T>::Type* GetComponent() const
+		inline typename component_type<T>::Type* GetComponent() const
 		{
 			if (IsValid())
 				return m_Container->GetComponent<T>(*m_EntityData);
@@ -93,7 +93,7 @@ namespace decs
 		}
 
 		template<typename T>
-		inline bool TryGetComponent(typename stable_type<T>::Type*& component) const
+		inline bool TryGetComponent(typename component_type<T>::Type*& component) const
 		{
 			if (IsValid())
 				component = m_Container->GetComponent<T>(*m_EntityData);
@@ -104,7 +104,7 @@ namespace decs
 		}
 
 		template<typename T, typename... Args>
-		inline typename stable_type<T>::Type* AddComponent(Args&&... args)
+		inline typename component_type<T>::Type* AddComponent(Args&&... args)
 		{
 			if (IsValid())
 				return m_Container->AddComponent<T>(*m_EntityData, std::forward<Args>(args)...);
@@ -131,9 +131,9 @@ namespace decs
 		}
 
 	private:
-		EntityID m_ID = std::numeric_limits<EntityID>::max();
 		Container* m_Container = nullptr;
 		EntityData* m_EntityData = nullptr;
+		EntityID m_ID = std::numeric_limits<EntityID>::max();
 		EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
 
 	private:

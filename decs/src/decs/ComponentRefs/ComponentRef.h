@@ -36,7 +36,7 @@ namespace decs
 			}
 		}
 
-		inline typename stable_type<ComponentType>::Type* Get()
+		inline typename component_type<ComponentType>::Type* Get()
 		{
 			if (!IsValid())
 			{

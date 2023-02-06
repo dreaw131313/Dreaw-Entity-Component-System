@@ -27,6 +27,7 @@ namespace decs
 		std::vector<ArchetypeContextType> m_ArchetypesContexts;
 		ecsSet<Archetype*> m_ContainedArchetypes;
 		uint64_t m_ArchetypesCountDirty = 0;
+		uint64_t m_EntitiesCount = 0;
 
 	public:
 		ContainerContext()
@@ -80,9 +81,12 @@ namespace decs
 			}
 
 			uint64_t archetypesCount = m_ArchetypesContexts.size();
+			m_EntitiesCount = 0;
 			for (uint64_t i = 0; i < archetypesCount; i++)
 			{
-				m_ArchetypesContexts[i].ValidateEntitiesCount();
+				auto& context = m_ArchetypesContexts[i];
+				context.ValidateEntitiesCount();
+				m_EntitiesCount += context.m_EntitiesCount;
 			}
 		}
 

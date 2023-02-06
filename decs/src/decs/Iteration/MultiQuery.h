@@ -99,7 +99,7 @@ namespace decs
 							const auto& entityData = entitiesData[idx];
 							if (entityData.IsActive())
 							{
-								if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
+								if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
 								{
 									entityBuffor.Set(entityData.m_ID, containerContext.m_Container);
 									func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
@@ -148,7 +148,7 @@ namespace decs
 							const auto& entityData = entitiesData[idx];
 							if (entityData.IsActive())
 							{
-								if constexpr (std::is_invocable<Callable, Entity&, typename stable_type<ComponentsTypes>::Type&...>())
+								if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
 								{
 									entityBuffor.Set(entityData.m_ID, containerContext.m_Container);
 									func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
@@ -196,10 +196,24 @@ namespace decs
 			return false;
 		}
 
+	private:
+		TypeGroup<ComponentsTypes...> m_Includes = {};
+		std::vector<TypeID> m_Without;
+		std::vector<TypeID> m_WithAnyOf;
+		std::vector<TypeID> m_WithAll;
+
+		bool m_IsDirty = true;
+
+		ChunkedVector<ContainerContextType> m_ContainerContexts = {};
+		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
+
+		uint64_t m_EntitiesCount = 0;
+	private:
 		void Fetch()
 		{
 			uint64_t containerContextsSize = m_ContainerContexts.Size();
 			uint64_t minComponentsCount = GetMinComponentsCount();
+			m_EntitiesCount = 0;
 			if (m_IsDirty)
 			{
 				m_IsDirty = false;
@@ -214,12 +228,14 @@ namespace decs
 						m_WithAll,
 						minComponentsCount
 					);
+					m_EntitiesCount += containerContext.m_EntitiesCount;
 				}
 			}
 			else
 			{
 				for (uint64_t i = 0; i < containerContextsSize; i++)
 				{
+					ContainerContextType& containerContext = m_ContainerContexts[i];
 					m_ContainerContexts[i].Fetch(
 						m_Includes,
 						m_Without,
@@ -227,24 +243,11 @@ namespace decs
 						m_WithAll,
 						minComponentsCount
 					);
+					m_EntitiesCount += containerContext.m_EntitiesCount;
 				}
 			}
-
-
-
 		}
-	private:
-		TypeGroup<ComponentsTypes...> m_Includes = {};
-		std::vector<TypeID> m_Without;
-		std::vector<TypeID> m_WithAnyOf;
-		std::vector<TypeID> m_WithAll;
 
-		bool m_IsDirty = true;
-
-		ChunkedVector<ContainerContextType> m_ContainerContexts = {};
-		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
-
-	private:
 		template<typename T = void, typename... Args>
 		void CreatePackedContainersTuple(
 			std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
@@ -271,5 +274,205 @@ namespace decs
 
 		}
 
+	public:
+		struct BatchIterator
+		{
+			using QueryType = MultiQuery<ComponentsTypes...>;
+		public:
+			BatchIterator()
+			{
+
+			}
+
+			BatchIterator(
+				const QueryType* query,
+				const uint64_t& startContainerChunkIndex,
+				const uint64_t& startContainerElementIndex,
+				const uint64_t& startArchetypeIndex,
+				const uint64_t& startEntityIndex,
+				const uint64_t& entitiesCount
+			) :
+				m_Query(query),
+				m_StartContainerChunkInex(startContainerChunkIndex),
+				m_StartContainerElementIndex(startContainerElementIndex),
+				m_StartArchetypeIndex(startArchetypeIndex),
+				m_StartEntityIndex(startEntityIndex),
+				m_EntitiesCount(entitiesCount)
+			{
+
+			}
+
+
+			template<typename Callable>
+			void ForEachForward(Callable&& func) noexcept
+			{
+				Fetch();
+
+				auto& containerContexts = m_Query->m_ContainerContexts;
+				uint64_t containerContextChunksCount = containerContexts.ChunksCount();
+				decs::Entity entityBuffor = {};
+				std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
+
+				uint64_t iteratedEntities = 0;
+
+				for (uint64_t chunkIdx = m_StartContainerChunkInex; chunkIdx < containerContextChunksCount; chunkIdx++)
+				{
+					auto chunk = containerContexts.GetChunk(chunkIdx);
+					const uint64_t chunkSize = containerContexts.GetChunkSize(chunkIdx);
+
+					for (uint64_t elementIndex = m_StartContainerElementIndex; elementIndex < chunkSize; elementIndex++)
+					{
+						ContainerContextType& containerContext = chunk[elementIndex];
+						auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+						const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+
+						for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+						{
+							ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+							if (ctx.m_EntitiesCount == 0) continue;
+
+							std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+							CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+							for (uint64_t idx = 0; idx < ctx.m_EntitiesCount; idx++)
+							{
+								const auto& entityData = entitiesData[idx];
+								if (entityData.IsActive())
+								{
+									if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
+									{
+										entityBuffor.Set(entityData.m_ID, containerContext.m_Container);
+										func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+									}
+									else
+									{
+										func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+									}
+								}
+								iteratedEntities += 1;
+								if (iteratedEntities >= m_EntitiesCount)
+								{
+									return;
+								}
+							}
+						}
+					}
+				}
+			}
+
+		private:
+			QueryType* m_Query = nullptr;
+			uint64_t m_StartContainerChunkInex = 0;
+			uint64_t m_StartContainerElementIndex = 0;
+			uint64_t m_StartArchetypeIndex = 0;
+			uint64_t m_StartEntityIndex = 0;
+			uint64_t m_EntitiesCount = 0;
+
+
+		private:
+			template<typename T = void, typename... Args>
+			void CreatePackedContainersTuple(
+				std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
+				const ArchetypeContextType& context
+			) const noexcept
+			{
+				constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
+				std::get<PackedContainer<T>*>(containersTuple) = (reinterpret_cast<PackedContainer<T>*>(context.m_Containers[compIdx]));
+
+				if constexpr (sizeof...(Args) == 0) return;
+				CreatePackedContainersTuple<Args...>(
+					containersTuple,
+					context
+					);
+			}
+
+			template<>
+			void CreatePackedContainersTuple<void>(
+				std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
+				const ArchetypeContextType& context
+				) const noexcept
+			{
+
+			}
+		};
+
+	public:
+		void CreateBatchIterators(
+			std::vector<BatchIterator>& iterators,
+			const uint64_t& desiredBatchesCount,
+			const uint64_t& minBatchSize
+		)
+		{
+			Fetch();
+
+			uint64_t entitiesCount = m_EntitiesCount;
+
+			uint64_t realDesiredBatchSize = std::llround(std::ceil((float)entitiesCount / (float)desiredBatchesCount));
+			uint64_t finalBatchSize;
+			if (realDesiredBatchSize < minBatchSize)
+				finalBatchSize = minBatchSize;
+			else
+				finalBatchSize = realDesiredBatchSize;
+
+			/*uint64_t startContainerChunkIndex = 0;
+			uint64_t startContainerElementIndex = 0;
+			uint64_t startArchetypeIndex = 0;
+			uint64_t startEntityIndex = 0;
+			uint64_t entitiesCount = 0;
+
+			while (entitiesCount > 0)
+			{
+
+
+
+
+				iterators.emplace_back(
+					this,
+					startContainerChunkIndex,
+					startContainerElementIndex,
+					startArchetypeIndex,
+					startEntityIndex,
+					entitiesCount
+				);
+			}*/
+
+			uint64_t entitiesCount = 0;
+			uint64_t startEntityIndex = 0;
+
+			uint64_t containerContextChunksCount = m_ContainerContexts.ChunksCount();
+			for (uint64_t chunkIdx = 0; chunkIdx < containerContextChunksCount; chunkIdx++)
+			{
+				auto chunk = m_ContainerContexts.GetChunk(chunkIdx);
+				const uint64_t chunkSize = m_ContainerContexts.GetChunkSize(chunkIdx);
+
+				for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++)
+				{
+					ContainerContextType& containerContext = chunk[elementIndex];
+					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+
+					for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+					{
+						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+						if (ctx.m_EntitiesCount == 0) continue;
+
+						uint64_t ctxEntitiesCount = ctx.m_EntitiesCount;
+
+
+						// add
+						iterators.emplace_back(
+							this,
+							chunkIdx,
+							elementIndex,
+							archetypeContextIdx,
+							startEntityIndex,
+							entitiesCount
+						);
+						entitiesCount = 0;
+
+					}
+				}
+			}
+		}
 	};
 }
