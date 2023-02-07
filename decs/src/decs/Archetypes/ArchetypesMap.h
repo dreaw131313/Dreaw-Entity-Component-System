@@ -202,6 +202,7 @@ namespace decs
 		}
 
 		inline uint64_t MaxNumberOfTypesInArchetype() const { return m_ArchetypesGroupedByComponentsCount.size(); }
+
 	private:
 		ChunkedVector<Archetype> m_Archetypes = { 100 };
 		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes;
@@ -337,16 +338,23 @@ namespace decs
 			return nullptr;
 		}
 
-		Archetype* FindMatchingArchetype(Archetype* archetypeToMatch)
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="archetypeToMatch"></param>
+		/// <returns>Archetype and bool that indicates if archetypes is finded with edges.</returns>
+		std::pair<Archetype*, bool> FindMatchingArchetype(Archetype* archetypeToMatch)
 		{
 			const uint64_t typesCount = archetypeToMatch->ComponentsCount();
-			if (typesCount == 0) return nullptr;
+			if (typesCount == 0) return { nullptr,false };
 
 			Archetype* finalArchetype = GetSingleComponentArchetype(archetypeToMatch->GetTypeID(0));
 			uint64_t typeIndex = 1;
 
+			bool findedWithEdges = true;
 			if (finalArchetype != nullptr)
 			{
+				auto& componentTypesInOrderOfAddition = archetypeToMatch->m_AddingOrderTypeIDs;
 				while (typeIndex < typesCount)
 				{
 					auto it = finalArchetype->m_AddEdges.find(archetypeToMatch->GetTypeID(typeIndex));
@@ -354,61 +362,69 @@ namespace decs
 					{
 						finalArchetype = it->second;
 						typeIndex += 1;
-						continue;
 					}
-					break;
+					else
+					{
+						finalArchetype = nullptr;
+						findedWithEdges = false;
+						break;
+					}
 				}
 			}
 
 			if (finalArchetype == nullptr)
 			{
 				auto it = m_ArchetypesGroupedByOneType.find(archetypeToMatch->GetTypeID(0));
-				if (it == m_ArchetypesGroupedByOneType.end()) return nullptr;
-
-				ArchetypesGroupByOneType* group = it->second;
-
-				if (group->MaxComponentsCount() < typesCount) return nullptr;
-
-				std::vector<Archetype*>& archetypes = group->GetArchetypesWithComponentsCount(typesCount);
-				uint64_t archetypesSize = archetypes.size();
-				auto& matchedArchData = archetypeToMatch->m_TypeData;
-				for (uint64_t archIdx = 0; archIdx < archetypesSize; archIdx++)
+				if (it != m_ArchetypesGroupedByOneType.end())
 				{
-					finalArchetype = archetypes[archIdx];
-					auto& typeData = finalArchetype->m_TypeData;
+					ArchetypesGroupByOneType* group = it->second;
 
-					for (uint64_t typeIdx = 0; typeIdx < typesCount; typeIdx++)
+					if (group->MaxComponentsCount() >= typesCount)
 					{
-						if (typeData[typeIdx].m_TypeID != matchedArchData[typeIdx].m_TypeID)
+						std::vector<Archetype*>& archetypes = group->GetArchetypesWithComponentsCount(typesCount);
+						uint64_t archetypesSize = archetypes.size();
+						auto& matchedArchData = archetypeToMatch->m_TypeData;
+						for (uint64_t archIdx = 0; archIdx < archetypesSize; archIdx++)
 						{
-							finalArchetype = nullptr;
-							break;
-						}
-					}
+							finalArchetype = archetypes[archIdx];
+							auto& typeData = finalArchetype->m_TypeData;
 
-					if (finalArchetype != nullptr)
-					{
-						return finalArchetype;
+							for (uint64_t typeIdx = 0; typeIdx < typesCount; typeIdx++)
+							{
+								if (typeData[typeIdx].m_TypeID != matchedArchData[typeIdx].m_TypeID)
+								{
+									finalArchetype = nullptr;
+									break;
+								}
+							}
+
+							if (finalArchetype != nullptr)
+							{
+								break;
+							}
+						}
 					}
 				}
 			}
 
-			return finalArchetype;
+			return { finalArchetype,findedWithEdges };
 		}
 
-		Archetype* GetOrCreateArchetypeFromOther(
+		Archetype* GetOrCreateMatchedArchetype(
 			Archetype& fromArchetype,
 			ComponentContextsManager* componentContextsManager,
 			StableContainersManager* stableContainersManager,
 			ObserversManager* observerManager
 		)
 		{
-			Archetype* archetype = FindMatchingArchetype(&fromArchetype);
+			auto pair = FindMatchingArchetype(&fromArchetype);
+			Archetype* archetype = pair.first;
+
 			if (archetype == nullptr)
 			{
 				archetype = &m_Archetypes.EmplaceBack();
 
-				// take care that componentContextsManager have the same component contexts that component contextManager which have "fromArchetype" archetype
+				// take care that componentContextsManager have the same component contexts that component contextManager which have "fromArchetype" archetype and stableContainersManager have correct stable components containers
 				for (uint64_t i = 0; i < fromArchetype.ComponentsCount(); i++)
 				{
 					ArchetypeTypeData& fromArchetypeTypeData = fromArchetype.m_TypeData[i];
@@ -439,6 +455,14 @@ namespace decs
 				}
 
 				MakeArchetypeEdges(*archetype);
+			}
+			else if (!pair.second)
+			{
+				Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
+				for (uint64_t i = 1; i < archetype->ComponentsCount() - 1; i++)
+				{
+					archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
+				}
 			}
 
 			return archetype;

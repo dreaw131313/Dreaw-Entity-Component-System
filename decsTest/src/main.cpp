@@ -40,6 +40,7 @@ int main()
 	entity1.AddComponent<float>();
 
 	//prefabContainer.Spawn(entity1, 3, true);
+	container.Spawn(entity1, 1, true);
 	container.Spawn(entity1, 3, true);
 	auto e2 = container.CreateEntity();
 	e2.AddComponent<Position>();

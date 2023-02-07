@@ -371,7 +371,7 @@ namespace decs
 		}
 		else
 		{
-			spawnedEntityArchetype = m_ArchetypesMap.GetOrCreateArchetypeFromOther(
+			spawnedEntityArchetype = m_ArchetypesMap.GetOrCreateMatchedArchetype(
 				*prefabEntityData.m_Archetype,
 				m_ComponentContextManager,
 				&m_StableContainers,
