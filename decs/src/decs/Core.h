@@ -23,6 +23,13 @@ namespace decs
 #   define FULL_FUNCTION_NAME __PRETTY_FUNCTION__
 #endif
 
+#define USE_CONSTEXPR_TYPE_ID
+#ifdef USE_CONSTEXPR_TYPE_ID
+#define TYPE_ID_CONSTEXPR constexpr
+#else
+#define TYPE_ID_CONSTEXPR
+#endif
+
 
 	template<typename Key, typename Value>
 	//using ecsMap = ska::bytell_hash_map<Key, Value>;
@@ -40,13 +47,6 @@ namespace decs
 	using EntityVersion = uint32_t;
 	using TypeID = uint64_t;
 
-
-#define USE_CONSTEXPR_TYPE_ID
-#ifdef USE_CONSTEXPR_TYPE_ID
-#define TYPE_ID_CONSTEXPR constexpr
-#else
-#define TYPE_ID_CONSTEXPR
-#endif
 
 	namespace Limits
 	{
