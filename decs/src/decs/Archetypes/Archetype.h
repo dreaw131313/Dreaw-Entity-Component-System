@@ -360,7 +360,7 @@ namespace decs
 					fromArchetypeIndex += 1;
 				}
 
-				thisTypeData.m_PackedContainer->EmplaceFromVoid(
+				thisTypeData.m_PackedContainer->MoveEmplaceFromVoid(
 					fromArchetype.m_TypeData[fromArchetypeIndex].m_PackedContainer->GetComponentDataAsVoid(fromIndex)
 				);
 			}
@@ -388,7 +388,7 @@ namespace decs
 					continue;
 				}
 
-				thisTypeData.m_PackedContainer->EmplaceFromVoid(
+				thisTypeData.m_PackedContainer->MoveEmplaceFromVoid(
 					fromArchetype.m_TypeData[fromArchetypeIndex].m_PackedContainer->GetComponentDataAsVoid(fromIndex)
 				);
 

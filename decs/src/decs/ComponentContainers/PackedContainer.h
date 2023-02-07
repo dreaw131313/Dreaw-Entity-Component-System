@@ -26,8 +26,9 @@ namespace decs
 
 		inline virtual void* GetComponentDataAsVoid(const uint64_t& index) noexcept = 0;
 
-		inline virtual void RemoveSwapBack(const uint64_t& index) = 0;
+		inline virtual void RemoveSwapBack(const uint64_t& index) noexcept = 0;
 		inline virtual void EmplaceFromVoid(void* data) noexcept = 0;
+		inline virtual void MoveEmplaceFromVoid(void* data) noexcept = 0;
 	};
 
 	template<typename ComponentType>
@@ -50,6 +51,16 @@ namespace decs
 		virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept override
 		{
 			return new PackedContainer<ComponentType>();
+		}
+
+		inline ComponentType& GetAsRef(const uint64_t& index) noexcept
+		{
+			return m_Data[index];
+		}
+
+		inline ComponentType* GetAsPtr(const uint64_t& index) const noexcept
+		{
+			return &m_Data[index];
 		}
 
 		inline virtual void PopBack() override
@@ -77,10 +88,10 @@ namespace decs
 
 		inline virtual void EmplaceFromVoid(void* data)  noexcept override
 		{
-			ComponentType& newElement = m_Data.emplace_back(*reinterpret_cast<ComponentType*>(data));
+			m_Data.emplace_back(*reinterpret_cast<ComponentType*>(data));
 		}
 
-		inline virtual void RemoveSwapBack(const uint64_t& index) override
+		inline virtual void RemoveSwapBack(const uint64_t& index)noexcept override
 		{
 			if (m_Data.size() > 0)
 			{
@@ -89,14 +100,9 @@ namespace decs
 			}
 		}
 
-		inline ComponentType& GetAsRef(const uint64_t& index) noexcept
+		inline virtual void MoveEmplaceFromVoid(void* data) noexcept override
 		{
-			return m_Data[index];
-		}
-
-		inline ComponentType* GetAsPtr(const uint64_t& index) const noexcept
-		{
-			return &m_Data[index];
+			m_Data.push_back(std::move(*reinterpret_cast<ComponentType*>(data)));
 		}
 	};
 
@@ -171,7 +177,14 @@ namespace decs
 			m_ComponentPointers.push_back(static_cast<ComponentType*>(newElement->m_ComponentPtr));
 		}
 
-		inline virtual void RemoveSwapBack(const uint64_t& index) override
+		inline virtual void MoveEmplaceFromVoid(void* data) noexcept override
+		{
+			StableComponentRef* newElement = reinterpret_cast<StableComponentRef*>(data);
+			m_Data.emplace_back(newElement->m_ComponentPtr, newElement->m_ChunkIndex, newElement->m_Index);
+			m_ComponentPointers.push_back(static_cast<ComponentType*>(newElement->m_ComponentPtr));
+		}
+
+		inline virtual void RemoveSwapBack(const uint64_t& index)noexcept override
 		{
 			uint64_t dataSize = m_Data.size();
 			if (dataSize > 0)

@@ -19,9 +19,32 @@ public:
 	{
 
 	}
+
 	Position(float x, float y) : X(x), Y(y)
 	{
 
+	}
+
+	Position(const Position& other)
+	{
+		PrintLine("Position copy constructor");
+		X = other.X;
+		Y = other.Y;
+	}
+
+	Position(Position&& other) noexcept
+	{
+		PrintLine("Position move constructor");
+		X = other.X;
+		Y = other.Y;
+	}
+
+	Position& operator=(Position&& other) noexcept
+	{
+		PrintLine("Position move assigment");
+		X = other.X;
+		Y = other.Y;
+		return *this;
 	}
 };
 
@@ -35,9 +58,11 @@ int main()
 	decs::Container container = {};
 
 	auto entity1 = prefabContainer.CreateEntity();
-	entity1.AddComponent<Position>();
+	entity1.AddComponent<Position>(1.f, 2.f);
+	entity1.AddComponent<float>();
 
 	//prefabContainer.Spawn(entity1, 3, true);
+	container.Spawn(entity1, true);
 	container.Spawn(entity1, 3, true);
 
 	using QueryType = decs::Query<Position>;
