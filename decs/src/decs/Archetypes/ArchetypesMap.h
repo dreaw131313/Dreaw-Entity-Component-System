@@ -431,6 +431,13 @@ namespace decs
 
 				archetype->InitEmptyFromOther(fromArchetype, componentContextsManager, stableContainersManager);
 				AddArchetypeToCorrectContainers(*archetype, true);
+
+				Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
+				for (uint64_t i = 1; i < archetype->ComponentsCount() - 1; i++)
+				{
+					archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
+				}
+
 				MakeArchetypeEdges(*archetype);
 			}
 
