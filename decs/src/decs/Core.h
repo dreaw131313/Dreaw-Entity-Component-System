@@ -40,6 +40,8 @@ namespace decs
 	using EntityVersion = uint32_t;
 	using TypeID = uint64_t;
 
+#define TYPEID_CONSTEXPR constexpr;
+
 	namespace Limits
 	{
 		constexpr uint32_t MaxComponentCount = std::numeric_limits<uint32_t>::max();

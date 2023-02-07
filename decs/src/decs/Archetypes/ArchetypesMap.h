@@ -96,6 +96,7 @@ namespace decs
 			}
 			return nullptr;
 		}
+
 	private:
 		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
 		std::vector<std::vector<Archetype*>> m_Archetypes;
@@ -118,12 +119,7 @@ namespace decs
 
 		}
 
-		ArchetypesMap(const uint64_t& archetypesVectorChunkSize, const uint64_t& archetypeGroupsVectorChunkSize) :
-			m_Archetypes(archetypesVectorChunkSize),
-			m_ArchetrypesGroupsByOneTypeVector(archetypeGroupsVectorChunkSize)
-		{
-
-		}
+		ArchetypesMap(const uint64_t& archetypesVectorChunkSize, const uint64_t& archetypeGroupsVectorChunkSize);
 
 		~ArchetypesMap()
 		{
@@ -150,66 +146,12 @@ namespace decs
 			return emptyArchetypesCount;
 		}
 
-		void ShrinkArchetypesToFit()
-		{
-			if (ArchetypesCount() == 0)
-			{
-				return;
-			}
-
-			uint64_t chunksCount = m_Archetypes.ChunksCount();
-			for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
-			{
-				uint64_t chunkSize = m_Archetypes.GetChunkSize(chunkIdx);
-				Archetype* chunk = m_Archetypes.GetChunk(chunkIdx);
-
-				for (uint64_t idx = 0; idx < chunkSize; idx++)
-				{
-					Archetype& archetype = chunk[idx];
-					archetype.ShrinkToFit();
-				}
-			}
-		}
-
-		void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state)
-		{
-			if (ArchetypesCount() == 0)
-			{
-				return;
-			}
-
-			if (state.m_State == ArchetypesShrinkToFitState::State::Ended)
-			{
-				state.Start(m_Archetypes.Size());
-			}
-
-			int archetypesToShrink = (int)state.m_ArchetypesToShrinkInOneCall;
-
-			for (uint64_t idx = state.m_CurretnArchetypeIndex; idx < state.m_ArchetypesCountToShrink; idx++)
-			{
-				state.m_CurretnArchetypeIndex += 1;
-				Archetype& archetype = m_Archetypes[idx];
-
-				float loadFactor = archetype.GetLoadFactor();
-				if (loadFactor <= state.m_MaxArchetypeLoadFactor)
-				{
-					archetype.ShrinkToFit();
-					archetypesToShrink--;
-				}
-
-				if (archetypesToShrink <= 0)
-				{
-					break;
-				}
-			}
-
-			if (state.m_CurretnArchetypeIndex >= state.m_ArchetypesCountToShrink)
-			{
-				state.Reset();
-			}
-		}
-
 		inline uint64_t MaxNumberOfTypesInArchetype() const { return m_ArchetypesGroupedByComponentsCount.size(); }
+
+		void ShrinkArchetypesToFit();
+
+		void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state);
+
 
 	private:
 		ChunkedVector<Archetype> m_Archetypes = { 100 };
@@ -221,122 +163,11 @@ namespace decs
 
 		// UTILITY
 	private:
-		void MakeArchetypeEdges(Archetype& archetype)
-		{
-			// edges with archetypes with less components:
-			{
-				const uint64_t componentCountsMinusOne = archetype.ComponentsCount() - 1;
+		void MakeArchetypeEdges(Archetype& archetype);
 
-				if (componentCountsMinusOne > 0)
-				{
-					const uint64_t archetypeListIndex = componentCountsMinusOne - 1;
-					auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
+		void AddArchetypeToCorrectContainers(Archetype& archetype, const bool& bTryAddToSingleComponentsMap = true);
 
-					uint64_t archCount = archetypesListToCreateEdges.size();
-					for (uint64_t archIdx = 0; archIdx < archCount; archIdx++)
-					{
-						auto& testArchetype = *archetypesListToCreateEdges[archIdx];
-
-						uint64_t incorrectTests = 0;
-						TypeID notFindedType;
-						bool isArchetypeValid = true;
-
-						for (uint64_t typeIdx = 0; typeIdx < archetype.ComponentsCount(); typeIdx++)
-						{
-							TypeID typeID = archetype.GetTypeID(typeIdx);
-
-							auto it = testArchetype.m_TypeIDsIndexes.find(typeID);
-
-							if (it == testArchetype.m_TypeIDsIndexes.end())
-							{
-								incorrectTests += 1;
-								if (incorrectTests > 1)
-								{
-									isArchetypeValid = false;
-									break;
-								}
-								else
-								{
-									notFindedType = typeID;
-								}
-							}
-						}
-
-						if (isArchetypeValid)
-						{
-							testArchetype.m_AddEdges[notFindedType] = &archetype;
-							archetype.m_RemoveEdges[notFindedType] = &testArchetype;
-						}
-					}
-				}
-			}
-
-			// edges with archetype with more components:
-			{
-				const uint64_t componentCountsPlusOne = (uint64_t)archetype.ComponentsCount() + 1;
-
-				if (componentCountsPlusOne <= m_ArchetypesGroupedByComponentsCount.size())
-				{
-					const uint64_t archetypeListIndex = archetype.ComponentsCount();
-
-					auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
-					uint64_t archCount = archetypesListToCreateEdges.size();
-
-					for (uint64_t archIdx = 0; archIdx < archCount; archIdx++)
-					{
-						auto& testArchetype = *archetypesListToCreateEdges[archIdx];
-
-						uint64_t incorrectTests = 0;
-						TypeID lastIncorrectType;
-						bool isArchetypeValid = true;
-
-						for (uint64_t typeIdx = 0; typeIdx < testArchetype.ComponentsCount(); typeIdx++)
-						{
-							TypeID typeID = testArchetype.GetTypeID(typeIdx);
-							auto it = archetype.m_TypeIDsIndexes.find(typeID);
-							if (it == archetype.m_TypeIDsIndexes.end())
-							{
-								incorrectTests += 1;
-								if (incorrectTests > 1)
-								{
-									isArchetypeValid = false;
-									break;
-								}
-								else
-								{
-									lastIncorrectType = typeID;
-								}
-							}
-						}
-
-						if (isArchetypeValid)
-						{
-							testArchetype.m_RemoveEdges[lastIncorrectType] = &archetype;
-							archetype.m_AddEdges[lastIncorrectType] = &testArchetype;
-						}
-					}
-				}
-			}
-		}
-
-		void AddArchetypeToCorrectContainers(Archetype& archetype, const bool& bTryAddToSingleComponentsMap = true)
-		{
-			if (bTryAddToSingleComponentsMap && archetype.ComponentsCount() == 1)
-			{
-				m_SingleComponentArchetypes[archetype.GetTypeID(0)] = &archetype;
-			}
-
-			if (archetype.ComponentsCount() > m_ArchetypesGroupedByComponentsCount.size())
-			{
-				m_ArchetypesGroupedByComponentsCount.resize(archetype.ComponentsCount());
-			}
-
-			m_ArchetypesGroupedByComponentsCount[archetype.ComponentsCount() - 1].push_back(&archetype);
-
-			AddArchetypeToGroups(&archetype);
-		}
-
-		Archetype* GetSingleComponentArchetype(const TypeID& typeID)
+		inline Archetype* GetSingleComponentArchetype(const TypeID& typeID)
 		{
 			auto it = m_SingleComponentArchetypes.find(typeID);
 			if (it != m_SingleComponentArchetypes.end())
@@ -344,136 +175,6 @@ namespace decs
 				return it->second;
 			}
 			return nullptr;
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="archetypeToMatch"></param>
-		/// <returns>Archetype and bool that indicates if archetypes is finded with edges.</returns>
-		std::pair<Archetype*, bool> FindMatchingArchetype(Archetype* archetypeToMatch)
-		{
-			const uint64_t typesCount = archetypeToMatch->ComponentsCount();
-			if (typesCount == 0) return { nullptr,false };
-
-			Archetype* finalArchetype = GetSingleComponentArchetype(archetypeToMatch->GetTypeID(0));
-			uint64_t typeIndex = 1;
-
-			bool findedWithEdges = true;
-			if (finalArchetype != nullptr)
-			{
-				auto& componentTypesInOrderOfAddition = archetypeToMatch->m_AddingOrderTypeIDs;
-				while (typeIndex < typesCount)
-				{
-					auto it = finalArchetype->m_AddEdges.find(archetypeToMatch->GetTypeID(typeIndex));
-					if (it != finalArchetype->m_AddEdges.end() && it->second != nullptr)
-					{
-						finalArchetype = it->second;
-						typeIndex += 1;
-					}
-					else
-					{
-						finalArchetype = nullptr;
-						findedWithEdges = false;
-						break;
-					}
-				}
-			}
-
-			if (finalArchetype == nullptr)
-			{
-				auto it = m_ArchetypesGroupedByOneType.find(archetypeToMatch->GetTypeID(0));
-				if (it != m_ArchetypesGroupedByOneType.end())
-				{
-					ArchetypesGroupByOneType* group = it->second;
-
-					if (group->MaxComponentsCount() >= typesCount)
-					{
-						std::vector<Archetype*>& archetypes = group->GetArchetypesWithComponentsCount(typesCount);
-						uint64_t archetypesSize = archetypes.size();
-						auto& matchedArchData = archetypeToMatch->m_TypeData;
-						for (uint64_t archIdx = 0; archIdx < archetypesSize; archIdx++)
-						{
-							finalArchetype = archetypes[archIdx];
-							auto& typeData = finalArchetype->m_TypeData;
-
-							for (uint64_t typeIdx = 0; typeIdx < typesCount; typeIdx++)
-							{
-								if (typeData[typeIdx].m_TypeID != matchedArchData[typeIdx].m_TypeID)
-								{
-									finalArchetype = nullptr;
-									break;
-								}
-							}
-
-							if (finalArchetype != nullptr)
-							{
-								break;
-							}
-						}
-					}
-				}
-			}
-
-			return { finalArchetype,findedWithEdges };
-		}
-
-		Archetype* GetOrCreateMatchedArchetype(
-			Archetype& fromArchetype,
-			ComponentContextsManager* componentContextsManager,
-			StableContainersManager* stableContainersManager,
-			ObserversManager* observerManager
-		)
-		{
-			auto pair = FindMatchingArchetype(&fromArchetype);
-			Archetype* archetype = pair.first;
-
-			if (archetype == nullptr)
-			{
-				archetype = &m_Archetypes.EmplaceBack();
-
-				// take care that componentContextsManager have the same component contexts that component contextManager which have "fromArchetype" archetype and stableContainersManager have correct stable components containers
-				for (uint64_t i = 0; i < fromArchetype.ComponentsCount(); i++)
-				{
-					ArchetypeTypeData& fromArchetypeTypeData = fromArchetype.m_TypeData[i];
-
-					auto& context = componentContextsManager->m_Contexts[fromArchetypeTypeData.m_TypeID];
-					if (context == nullptr)
-					{
-						context = fromArchetypeTypeData.m_ComponentContext->CreateOwnEmptyCopy(observerManager);
-					}
-
-					if (fromArchetypeTypeData.m_StableContainer != nullptr)
-					{
-						StableContainerBase* stableContainer = stableContainersManager->GetStableContainer(fromArchetypeTypeData.m_TypeID);
-						if (stableContainer == nullptr)
-						{
-							stableContainersManager->CreateStableContainerFromOther(fromArchetypeTypeData.m_StableContainer);
-						}
-					}
-				}
-
-				archetype->InitEmptyFromOther(fromArchetype, componentContextsManager, stableContainersManager);
-				AddArchetypeToCorrectContainers(*archetype, true);
-
-				Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
-				for (uint64_t i = 1; i < archetype->ComponentsCount() - 1; i++)
-				{
-					archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
-				}
-
-				MakeArchetypeEdges(*archetype);
-			}
-			else if (!pair.second)
-			{
-				Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
-				for (uint64_t i = 1; i < archetype->ComponentsCount() - 1; i++)
-				{
-					archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
-				}
-			}
-
-			return archetype;
 		}
 
 		inline ArchetypesGroupByOneType* GetArchetypesGroup(const TypeID& id)
@@ -485,6 +186,20 @@ namespace decs
 			}
 			return group;
 		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="archetypeToMatch"></param>
+		/// <returns>Archetype and bool that indicates if archetypes is finded with edges.</returns>
+		std::pair<Archetype*, bool> FindMatchingArchetype(Archetype* archetypeToMatch);
+
+		Archetype* GetOrCreateMatchedArchetype(
+			Archetype& fromArchetype,
+			ComponentContextsManager* componentContextsManager,
+			StableContainersManager* stableContainersManager,
+			ObserversManager* observerManager
+		);
 
 		void AddArchetypeToGroups(Archetype* arch)
 		{
@@ -590,101 +305,9 @@ namespace decs
 			Archetype& toArchetype,
 			Archetype& archetypeToGetContainer,
 			uint64_t addedComponentIndex
-		)
-		{
-			TypeID addedComponentTypeID = archetypeToGetContainer.m_AddingOrderTypeIDs[addedComponentIndex];
-			uint64_t componentIndexToAdd = archetypeToGetContainer.FindTypeIndex(addedComponentTypeID);
+		);
 
-			auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
-			if (edge != nullptr)
-			{
-				return edge;
-			}
-
-			Archetype& newArchetype = m_Archetypes.EmplaceBack();
-			bool isNewComponentTypeAdded = false;
-
-			for (uint32_t i = 0; i < toArchetype.ComponentsCount(); i++)
-			{
-				const ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[i];
-				TypeID currentTypeID = toTypeData.m_TypeID;
-				if (!isNewComponentTypeAdded && currentTypeID > addedComponentTypeID)
-				{
-					ArchetypeTypeData& otherTypeData = archetypeToGetContainer.m_TypeData[componentIndexToAdd];
-					isNewComponentTypeAdded = true;
-					newArchetype.AddTypeID(
-						addedComponentTypeID,
-						otherTypeData.m_PackedContainer,
-						otherTypeData.m_ComponentContext,
-						otherTypeData.m_StableContainer
-					);
-				}
-
-				newArchetype.AddTypeID(
-					currentTypeID,
-					toTypeData.m_PackedContainer,
-					toTypeData.m_ComponentContext,
-					toTypeData.m_StableContainer
-				);
-				newArchetype.AddTypeToAddingComponentOrder(toArchetype.m_AddingOrderTypeIDs[i]);
-			}
-
-			if (!isNewComponentTypeAdded)
-			{
-				ArchetypeTypeData& otherTypeData = archetypeToGetContainer.m_TypeData[componentIndexToAdd];
-				newArchetype.AddTypeID(
-					addedComponentTypeID,
-					otherTypeData.m_PackedContainer,
-					otherTypeData.m_ComponentContext,
-					otherTypeData.m_StableContainer
-				);
-			}
-
-			newArchetype.AddTypeToAddingComponentOrder(addedComponentTypeID);
-			AddArchetypeToCorrectContainers(newArchetype);
-			MakeArchetypeEdges(newArchetype);
-
-			return &newArchetype;
-		}
-
-		Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, const TypeID& removedComponentTypeID)
-		{
-			if (fromArchetype.ComponentsCount() == 1 && fromArchetype.GetTypeID(0) == removedComponentTypeID)
-			{
-				return nullptr;
-			}
-
-			auto& edge = fromArchetype.m_RemoveEdges[removedComponentTypeID];
-			if (edge != nullptr)
-			{
-				return edge;
-			}
-
-			Archetype& newArchetype = m_Archetypes.EmplaceBack();
-			for (uint32_t i = 0; i < fromArchetype.ComponentsCount(); i++)
-			{
-				const ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[i];
-				TypeID typeID = fromArchetypeData.m_TypeID;
-				if (typeID != removedComponentTypeID)
-				{
-					newArchetype.AddTypeID(
-						typeID,
-						fromArchetypeData.m_PackedContainer,
-						fromArchetypeData.m_ComponentContext,
-						fromArchetypeData.m_StableContainer
-					);
-				}
-				if (fromArchetype.m_AddingOrderTypeIDs[i] != removedComponentTypeID)
-				{
-					newArchetype.m_AddingOrderTypeIDs.push_back(fromArchetype.m_AddingOrderTypeIDs[i]);
-				}
-			}
-
-			AddArchetypeToCorrectContainers(newArchetype);
-			MakeArchetypeEdges(newArchetype);
-
-			return &newArchetype;
-		}
+		Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, const TypeID& removedComponentTypeID);
 
 		template<typename T>
 		inline Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype)
