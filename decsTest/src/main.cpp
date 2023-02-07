@@ -31,6 +31,11 @@ int main()
 {
 	std::cout << "Entity size = " << sizeof(decs::Entity) << "\n";
 	std::cout << "\n";
+	std::cout << "Type ID float = \t" << decs::Type<float>::ID() << "\n";
+	std::cout << "Type ID int = \t" << decs::Type<int>::ID() << "\n";
+	std::cout << "Type ID uint64_t = \t" << decs::Type<uint64_t>::ID() << "\n";
+	std::cout << "Type ID Position = \t" << decs::Type<Position>::ID() << "\n";
+	std::cout << "\n";
 
 	decs::Container prefabContainer = {};
 	decs::Container container = {};

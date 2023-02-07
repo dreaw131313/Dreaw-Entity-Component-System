@@ -107,7 +107,6 @@ namespace decs
 		friend class ComponentRefAsVoid;
 
 	public:
-		static constexpr uint64_t m_MinComponentsInArchetypeToPerformMapLookup = 20;
 
 	private:
 		std::vector<ArchetypeEntityData> m_EntitiesData;
@@ -153,7 +152,7 @@ namespace decs
 
 		inline uint32_t FindTypeIndex(const TypeID& typeID) const
 		{
-			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
+			if (m_ComponentsCount < Limits::MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint32_t i = 0; i < m_ComponentsCount; i++)
 					if (m_TypeData[i].m_TypeID == typeID) return i;
@@ -172,7 +171,7 @@ namespace decs
 		inline uint32_t FindTypeIndex() const
 		{
 			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
-			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
+			if (m_ComponentsCount < Limits::MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint32_t i = 0; i < m_ComponentsCount; i++)
 					if (m_TypeData[i].m_TypeID == typeID) return i;
