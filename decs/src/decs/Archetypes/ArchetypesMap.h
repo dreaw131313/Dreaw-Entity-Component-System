@@ -88,6 +88,14 @@ namespace decs
 			return m_Archetypes[componentsCount - 1];
 		}
 
+		inline Archetype* GetSingleComponentArchetype() const
+		{
+			if (m_Archetypes.size() > 0 && m_Archetypes[0].size()>0)
+			{
+				return m_Archetypes[0][0];
+			}
+			return nullptr;
+		}
 	private:
 		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
 		std::vector<std::vector<Archetype*>> m_Archetypes;
