@@ -337,28 +337,63 @@ namespace decs
 			return nullptr;
 		}
 
-		Archetype* FindArchetype(TypeID* types, const uint64_t typesCount)
+		Archetype* FindMatchingArchetype(Archetype* archetypeToMatch)
 		{
+			const uint64_t typesCount = archetypeToMatch->ComponentsCount();
 			if (typesCount == 0) return nullptr;
 
-			Archetype* archetype = GetSingleComponentArchetype(types[0]);
+			Archetype* finalArchetype = GetSingleComponentArchetype(archetypeToMatch->GetTypeID(0));
 			uint64_t typeIndex = 1;
 
-			if (archetype == nullptr) return nullptr;
-
-			while (typeIndex < typesCount)
+			if (finalArchetype != nullptr)
 			{
-				auto it = archetype->m_AddEdges.find(types[typeIndex]);
-				if (it != archetype->m_AddEdges.end() && it->second != nullptr)
+				while (typeIndex < typesCount)
 				{
-					archetype = it->second;
-					typeIndex += 1;
-					continue;
+					auto it = finalArchetype->m_AddEdges.find(archetypeToMatch->GetTypeID(typeIndex));
+					if (it != finalArchetype->m_AddEdges.end() && it->second != nullptr)
+					{
+						finalArchetype = it->second;
+						typeIndex += 1;
+						continue;
+					}
+					break;
 				}
-				return nullptr;
 			}
 
-			return archetype;
+			if (finalArchetype == nullptr)
+			{
+				auto it = m_ArchetypesGroupedByOneType.find(archetypeToMatch->GetTypeID(0));
+				if (it == m_ArchetypesGroupedByOneType.end()) return nullptr;
+
+				ArchetypesGroupByOneType* group = it->second;
+
+				if (group->MaxComponentsCount() < typesCount) return nullptr;
+
+				std::vector<Archetype*>& archetypes = group->GetArchetypesWithComponentsCount(typesCount);
+				uint64_t archetypesSize = archetypes.size();
+				auto& matchedArchData = archetypeToMatch->m_TypeData;
+				for (uint64_t archIdx = 0; archIdx < archetypesSize; archIdx++)
+				{
+					finalArchetype = archetypes[archIdx];
+					auto& typeData = finalArchetype->m_TypeData;
+
+					for (uint64_t typeIdx = 0; typeIdx < typesCount; typeIdx++)
+					{
+						if (typeData[typeIdx].m_TypeID != matchedArchData[typeIdx].m_TypeID)
+						{
+							finalArchetype = nullptr;
+							break;
+						}
+					}
+
+					if (finalArchetype != nullptr)
+					{
+						return finalArchetype;
+					}
+				}
+			}
+
+			return finalArchetype;
 		}
 
 		Archetype* GetOrCreateArchetypeFromOther(
@@ -368,7 +403,7 @@ namespace decs
 			ObserversManager* observerManager
 		)
 		{
-			Archetype* archetype = FindArchetype(fromArchetype.m_AddingOrderTypeIDs.data(), fromArchetype.m_AddingOrderTypeIDs.size());
+			Archetype* archetype = FindMatchingArchetype(&fromArchetype);
 			if (archetype == nullptr)
 			{
 				archetype = &m_Archetypes.EmplaceBack();

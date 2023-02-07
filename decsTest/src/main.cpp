@@ -24,28 +24,6 @@ public:
 	{
 
 	}
-
-	Position(const Position& other)
-	{
-		PrintLine("Position copy constructor");
-		X = other.X;
-		Y = other.Y;
-	}
-
-	Position(Position&& other) noexcept
-	{
-		PrintLine("Position move constructor");
-		X = other.X;
-		Y = other.Y;
-	}
-
-	Position& operator=(Position&& other) noexcept
-	{
-		PrintLine("Position move assigment");
-		X = other.X;
-		Y = other.Y;
-		return *this;
-	}
 };
 
 
@@ -72,6 +50,7 @@ int main()
 	auto lambda = [&] (decs::Entity& e, Position& pos)
 	{
 		PrintLine(std::to_string(e.ID()));
+		PrintLine("Enityt ID: " + std::to_string(e.ID()) + " pos: " + std::to_string(pos.X) + ", " + std::to_string(pos.Y));
 	};
 
 	query.ForEachForward(lambda);
