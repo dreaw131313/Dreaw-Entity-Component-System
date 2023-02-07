@@ -97,7 +97,7 @@ query.ForEach([](decs::Entity& e, Component1& c1, Component2& c2)
 	// doing stuff with components and entity
 });
 ```
-It is also possible to query more complex query object with using the member methods of the Query class:
+It is also possible to query for more complex queries with using the member methods of the **decs::Query** class:
 ```cpp
 template<typename... ComponentsTypes>
 Query& Without(); // Entities in query will not have all components from ComponetsTypes parameters list
