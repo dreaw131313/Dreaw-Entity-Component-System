@@ -171,7 +171,7 @@ namespace decs
 		template<typename T>
 		inline uint32_t FindTypeIndex() const
 		{
-			constexpr TypeID typeID = Type<T>::ID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
 			if (m_ComponentsCount < m_MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint32_t i = 0; i < m_ComponentsCount; i++)
@@ -202,7 +202,7 @@ namespace decs
 		template<typename ComponentType>
 		void AddTypeID(ComponentContextBase* componentContext, StableContainerBase* stableContainer)
 		{
-			constexpr TypeID id = Type<ComponentType>::ID();
+			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::ID();
 			auto it = m_TypeIDsIndexes.find(id);
 			if (it == m_TypeIDsIndexes.end())
 			{
@@ -375,7 +375,7 @@ namespace decs
 		template<typename ComponentType>
 		void MoveEntityAfterAddComponent(Archetype& fromArchetype, const uint64_t& fromIndex)
 		{
-			constexpr TypeID newComponentTypeID = Type<ComponentType>::ID();
+			TYPE_ID_CONSTEXPR TypeID newComponentTypeID = Type<ComponentType>::ID();
 
 			uint64_t thisArchetypeIndex = 0;
 			uint64_t fromArchetypeIndex = 0;

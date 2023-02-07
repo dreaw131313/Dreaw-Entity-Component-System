@@ -40,7 +40,13 @@ namespace decs
 	using EntityVersion = uint32_t;
 	using TypeID = uint64_t;
 
-#define TYPEID_CONSTEXPR constexpr;
+
+#define USE_CONSTEXPR_TYPE_ID
+#ifdef USE_CONSTEXPR_TYPE_ID
+#define TYPE_ID_CONSTEXPR constexpr
+#else
+#define TYPE_ID_CONSTEXPR
+#endif
 
 	namespace Limits
 	{

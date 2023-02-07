@@ -34,27 +34,27 @@ namespace decs
 	class Type
 	{
 	public:
+
+#ifdef USE_CONSTEXPR_TYPE_ID
 		static constexpr TypeID ID()
 		{
 			return Type_Base<T, TypeID>::ID();
 		}
-
-		static std::string StringToHash()
-		{
-			return FULL_FUNCTION_NAME;
-		}
-
-		/*static TypeID ID()
+#else
+		static TypeID ID()
 		{
 			return reinterpret_cast<TypeID>(m_TypeInfo);
 		}
 
 	private:
-		static const std::type_info* m_TypeInfo;*/
+		static const std::type_info* m_TypeInfo;
+#endif
 	};
-
-	//template<typename T>
-	//const std::type_info* Type<T>::m_TypeInfo = &typeid(T);
+	
+#ifndef USE_CONSTEXPR_TYPE_ID
+	template<typename T>
+	const std::type_info* Type<T>::m_TypeInfo = &typeid(T);
+#endif
 
 
 	template<typename T = void, typename... Args>

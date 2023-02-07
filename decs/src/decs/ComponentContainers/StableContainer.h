@@ -396,7 +396,7 @@ namespace decs
 		template<typename T>
 		bool SetStableComponentChunkSize(const uint64_t& chunkSize)
 		{
-			constexpr TypeID typeID = Type<Stable<T>>::ID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::ID();
 			auto& container = m_Containers[typeID];
 
 			if (container == nullptr)
@@ -410,7 +410,7 @@ namespace decs
 		template<typename T>
 		uint64_t GetStableComponentChunkSize()
 		{
-			constexpr TypeID typeID = Type<Stable<T>>::ID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::ID();
 			auto it = m_Containers.find(typeID);
 
 			if (it != m_Containers.end())
@@ -442,7 +442,7 @@ namespace decs
 		template<typename T>
 		StableContainer<T>* GetOrCreateStableContainer()
 		{
-			constexpr TypeID typeID = Type<Stable<T>>::ID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::ID();
 			auto& container = m_Containers[typeID];
 
 			if (container == nullptr)
