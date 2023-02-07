@@ -97,7 +97,7 @@ namespace decs
 		template<typename...>
 		friend 	class MultiQuery;
 		template<typename, typename...>
-		friend class ContainerContext;
+		friend class IterationContainerContext;
 
 		template<typename... ComponentTypes>
 		friend class BatchIterator;
@@ -105,8 +105,6 @@ namespace decs
 		template<typename ComponentType>
 		friend class ComponentRef;
 		friend class ComponentRefAsVoid;
-
-	public:
 
 	private:
 		std::vector<ArchetypeEntityData> m_EntitiesData;
@@ -346,7 +344,7 @@ namespace decs
 		/// <param name="componentTypeID"></param>
 		/// <param name="fromArchetype"></param>
 		/// <param name="fromIndex"></param>
-		void MoveEntityAfterRemoveComponent(const TypeID& componentTypeID, Archetype& fromArchetype, const uint64_t& fromIndex)
+		void MoveEntityAfterRemoveComponent(const TypeID& removedComponentTypeID, Archetype& fromArchetype, const uint64_t& fromIndex)
 		{
 			uint64_t thisArchetypeIndex = 0;
 			uint64_t fromArchetypeIndex = 0;
@@ -354,7 +352,7 @@ namespace decs
 			for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++, fromArchetypeIndex++)
 			{
 				ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-				if (fromArchetype.m_TypeData[fromArchetypeIndex].m_TypeID == componentTypeID)
+				if (fromArchetype.m_TypeData[fromArchetypeIndex].m_TypeID == removedComponentTypeID)
 				{
 					fromArchetypeIndex += 1;
 				}

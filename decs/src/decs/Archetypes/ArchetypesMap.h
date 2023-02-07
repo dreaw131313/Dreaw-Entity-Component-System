@@ -111,7 +111,7 @@ namespace decs
 		template<typename ...Types>
 		friend class Query;
 		template<typename, typename...>
-		friend class ContainerContext;
+		friend class IterationContainerContext;
 
 	public:
 		ArchetypesMap()

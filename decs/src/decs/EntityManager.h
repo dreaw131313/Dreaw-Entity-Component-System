@@ -89,6 +89,7 @@ namespace decs
 		}
 
 		inline const EntityData& GetConstEntityData(const EntityID& entity) const { return m_EntityData[entity]; }
+
 	private:
 		ChunkedVector<EntityData> m_EntityData = { 1000 };
 

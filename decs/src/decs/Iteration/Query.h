@@ -12,7 +12,7 @@ namespace decs
 	class Query
 	{
 	private:
-		using ArchetypeContextType = ArchetypeContext<sizeof...(ComponentsTypes)>;
+		using ArchetypeContextType = IterationArchetypeContext<sizeof...(ComponentsTypes)>;
 	public:
 		Query()
 		{

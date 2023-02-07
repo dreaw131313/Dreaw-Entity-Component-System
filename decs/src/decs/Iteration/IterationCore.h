@@ -7,7 +7,7 @@
 namespace decs
 {
 	template<uint64_t elementsCount>
-	class ArchetypeContext
+	class IterationArchetypeContext
 	{
 	public:
 		Archetype* Arch = nullptr;
@@ -20,7 +20,7 @@ namespace decs
 
 
 	template<typename ArchetypeContextType, typename... ComponentsTypes>
-	class ContainerContext
+	class IterationContainerContext
 	{
 	public:
 		Container* m_Container = nullptr;
@@ -30,12 +30,12 @@ namespace decs
 		uint64_t m_EntitiesCount = 0;
 
 	public:
-		ContainerContext()
+		IterationContainerContext()
 		{
 
 		}
 
-		ContainerContext(Container* container) :
+		IterationContainerContext(Container* container) :
 			m_Container(container)
 		{
 
@@ -234,6 +234,5 @@ namespace decs
 				}
 			}
 		}
-
 	};
 }

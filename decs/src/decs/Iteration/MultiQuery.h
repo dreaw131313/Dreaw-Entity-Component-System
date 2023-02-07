@@ -12,8 +12,8 @@ namespace decs
 	class MultiQuery
 	{
 	private:
-		using ArchetypeContextType = ArchetypeContext<sizeof...(ComponentsTypes)>;
-		using ContainerContextType = ContainerContext<ArchetypeContextType, ComponentsTypes...>;
+		using ArchetypeContextType = IterationArchetypeContext<sizeof...(ComponentsTypes)>;
+		using ContainerContextType = IterationContainerContext<ArchetypeContextType, ComponentsTypes...>;
 
 	public:
 		MultiQuery()

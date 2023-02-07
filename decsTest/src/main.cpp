@@ -3,7 +3,7 @@
 #include "decs/decs.h"
 #include "decs/ComponentContainers/StableContainer.h"
 
-void PrintLine(std::string message)
+void PrintLine(std::string message = "")
 {
 	std::cout << message << "\n";
 }
@@ -30,23 +30,19 @@ public:
 int main()
 {
 	std::cout << "Entity size = " << sizeof(decs::Entity) << "\n";
-	std::cout << "\n";
-	std::cout << "Type ID float = \t" << decs::Type<float>::ID() << "\n";
-	std::cout << "Type ID int = \t" << decs::Type<int>::ID() << "\n";
-	std::cout << "Type ID uint64_t = \t" << decs::Type<uint64_t>::ID() << "\n";
-	std::cout << "Type ID Position = \t" << decs::Type<Position>::ID() << "\n";
-	std::cout << "\n";
-
+	
 	decs::Container prefabContainer = {};
 	decs::Container container = {};
 
-	auto entity1 = prefabContainer.CreateEntity();
-	entity1.AddComponent<Position>(1.f, 2.f);
-	entity1.AddComponent<float>();
+	container.SetStableComponentChunkSize<float>(100);
+
+	auto prefab = prefabContainer.CreateEntity();
+	prefab.AddComponent<Position>(1.f, 2.f);
+	prefab.AddComponent<float>();
 
 	//prefabContainer.Spawn(entity1, 3, true);
-	container.Spawn(entity1, 1, true);
-	container.Spawn(entity1, 3, true);
+	container.Spawn(prefab, 1, true);
+	container.Spawn(prefab, 3, true);
 	auto e2 = container.CreateEntity();
 	e2.AddComponent<Position>();
 
@@ -56,19 +52,18 @@ int main()
 	uint64_t iterationCount = 0;
 	auto lambda = [&] (decs::Entity& e, Position& pos)
 	{
-		PrintLine(std::to_string(e.ID()));
 		PrintLine("Enityt ID: " + std::to_string(e.ID()) + " pos: " + std::to_string(pos.X) + ", " + std::to_string(pos.Y));
 	};
 
+	PrintLine();
+	PrintLine("Query foreach:");
 	query.ForEachForward(lambda);
 	//query.ForEachBackward(lambda);
-
-	std::cout << "Iterated entites count: " << iterationCount << "\n";
 
 	std::vector<QueryType::BatchIterator> iterators;
 	query.CreateBatchIterators(iterators, 2, 4);
 
-	PrintLine("");
+	PrintLine();
 	PrintLine("Query iterators:");
 	for (auto& it : iterators)
 	{
@@ -87,13 +82,13 @@ int main()
 	};
 
 	PrintLine("");
-	PrintLine("Multi Query itertotrs iterations:");
+	PrintLine("Multi Query foreach:");
 	testMultiQuery.ForEachForward(queryLambda);
 
 	std::vector<MultiQueryType::BatchIterator> multiQueryIterators;
 	testMultiQuery.CreateBatchIterators(multiQueryIterators, 3, 3);
 	PrintLine("");
-	PrintLine("Multi Query itertotrs iterations:");
+	PrintLine("Multi Query itertotrs:");
 
 	for (uint64_t i = 0; i < multiQueryIterators.size(); i++)
 	{

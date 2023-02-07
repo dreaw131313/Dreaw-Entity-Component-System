@@ -65,9 +65,9 @@ namespace decs
 		template<typename ...Types>
 		friend class Query;
 		template<typename ...Types>
-		friend class Query;
+		friend class MultiQuery;
 		template<typename, typename...>
-		friend class ContainerContext;
+		friend class IterationContainerContext;
 		friend class Entity;
 
 	private:
@@ -346,19 +346,7 @@ namespace decs
 	private:
 		bool m_HaveOwnComponentContextManager = true;
 		ComponentContextsManager* m_ComponentContextManager = nullptr;
-	public:
-		template<typename ComponentType>
-		bool SetStableComponent(const uint64_t& chunkSize)
-		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::ID();
-			auto& stableContainer = m_StableContainers[id];
-			if (stableContainer != nullptr) return false;
-
-			stableContainer = new StableContainer<ComponentType>(chunkSize);
-
-			return true;
-		}
-
+	
 	private:
 		template<typename ComponentType, typename ...Args>
 		ComponentType* AddComponent(const EntityID& e, Args&&... args)
