@@ -348,7 +348,7 @@ namespace decs
 							uint64_t leftEntitiesInArchetypeToIterate = ctx.m_EntitiesCount - startEntitiyIndex;
 							uint64_t entitiesCount;
 
-							if (leftEntitiesInArchetypeToIterate >= leftEntitiesToIterate)
+							if (leftEntitiesToIterate <= leftEntitiesInArchetypeToIterate)
 							{
 								entitiesCount = leftEntitiesToIterate + startEntitiyIndex;
 								leftEntitiesToIterate = 0;
@@ -478,12 +478,13 @@ namespace decs
 								if (neededEntitiesCount <= ctxEntitiesCount)
 								{
 									entitiesCountToAddToIterator = neededEntitiesCount;
+									ctxEntitiesCount -= entitiesCountToAddToIterator;
 								}
 								else
 								{
 									entitiesCountToAddToIterator = ctxEntitiesCount;
+									ctxEntitiesCount = 0;
 								}
-								ctxEntitiesCount -= entitiesCountToAddToIterator;
 								iterator->m_EntitiesCount += entitiesCountToAddToIterator;
 								currentEntityIndex += entitiesCountToAddToIterator;
 

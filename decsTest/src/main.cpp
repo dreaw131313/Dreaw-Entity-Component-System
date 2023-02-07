@@ -40,8 +40,9 @@ int main()
 	entity1.AddComponent<float>();
 
 	//prefabContainer.Spawn(entity1, 3, true);
-	container.Spawn(entity1, true);
 	container.Spawn(entity1, 3, true);
+	auto e2 = container.CreateEntity();
+	e2.AddComponent<Position>();
 
 	using QueryType = decs::Query<Position>;
 	QueryType query = { container };
@@ -54,12 +55,12 @@ int main()
 	};
 
 	query.ForEachForward(lambda);
-	query.ForEachBackward(lambda);
+	//query.ForEachBackward(lambda);
 
 	std::cout << "Iterated entites count: " << iterationCount << "\n";
 
 	std::vector<QueryType::BatchIterator> iterators;
-	query.CreateBatchIterators(iterators, 2, 3);
+	query.CreateBatchIterators(iterators, 2, 4);
 
 	PrintLine("");
 	PrintLine("Query iterators:");
@@ -94,7 +95,6 @@ int main()
 		PrintLine("Iterator " + std::to_string(i + 1));
 		it.ForEach(queryLambda);
 	}
-
 
 	return 0;
 }

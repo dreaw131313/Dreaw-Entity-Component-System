@@ -388,18 +388,16 @@ namespace decs
 			BatchIterator() {}
 
 			BatchIterator(
-				QueryType& query,
+				QueryType* query,
 				const uint64_t& firstArchetypeIndex,
 				const uint64_t& firstIterationIndex,
-				const uint64_t& lastArchetypeIndex,
-				const uint64_t& lastIterationIndex
+				const uint64_t& entitiesCount
 			) :
 				m_IsValid(true),
-				m_Query(&query),
+				m_Query(query),
 				m_FirstArchetypeIndex(firstArchetypeIndex),
 				m_FirstIterationIndex(firstIterationIndex),
-				m_LastArchetypeIndex(lastArchetypeIndex),
-				m_LastIterationIndex(lastIterationIndex)
+				m_EntitiesCount(entitiesCount)
 			{
 			}
 
@@ -416,9 +414,11 @@ namespace decs
 				std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 
 				uint64_t contextIndex = m_FirstArchetypeIndex;
-				uint64_t contextCount = m_LastArchetypeIndex + 1;
+				uint64_t contextCount = m_Query->m_ArchetypesContexts.size();
 				ArchetypeContextType* archetypeContexts = m_Query->m_ArchetypesContexts.data();
 				Container* container = m_Query->m_Container;
+
+				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
 				for (; contextIndex < contextCount; contextIndex++)
 				{
@@ -432,14 +432,25 @@ namespace decs
 					uint64_t iterationsCount;
 
 					if (contextIndex == m_FirstArchetypeIndex)
+					{
 						iterationIndex = m_FirstIterationIndex;
+					}
 					else
+					{
 						iterationIndex = 0;
+					}
 
-					if (contextIndex == m_LastArchetypeIndex)
-						iterationsCount = m_LastIterationIndex;
+					uint64_t leftEntitiesInContext = ctx.m_EntitiesCount - iterationIndex;
+					if (leftEntitiesToIterate <= leftEntitiesInContext)
+					{
+						iterationsCount = iterationIndex + leftEntitiesToIterate;
+						leftEntitiesToIterate = 0;
+					}
 					else
-						iterationsCount = ctx.m_EntitiesCount;
+					{
+						iterationsCount = iterationIndex + leftEntitiesInContext;
+						leftEntitiesToIterate -= leftEntitiesInContext;
+					}
 
 					uint64_t idx = iterationIndex;
 					for (; idx < iterationsCount; idx++)
@@ -457,6 +468,11 @@ namespace decs
 								func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 							}
 						}
+					}
+
+					if (leftEntitiesToIterate == 0)
+					{
+						return;
 					}
 				}
 			}
@@ -494,8 +510,7 @@ namespace decs
 
 			uint64_t m_FirstArchetypeIndex = 0;
 			uint64_t m_FirstIterationIndex = 0;
-			uint64_t m_LastArchetypeIndex = 0;
-			uint64_t m_LastIterationIndex = 0;
+			uint64_t m_EntitiesCount = 0;
 		};
 
 #pragma endregion
@@ -515,7 +530,6 @@ namespace decs
 			Fetch();
 
 			uint64_t entitiesCount = 0;
-
 			for (ArchetypeContextType& archContext : m_ArchetypesContexts)
 			{
 				archContext.ValidateEntitiesCount();
@@ -530,68 +544,55 @@ namespace decs
 			else
 				finalBatchSize = realDesiredBatchSize;
 
-			// archetype iteration stuff:
-			uint64_t currentArchetypeIndex = 0;
-			uint64_t archsCount = m_ArchetypesContexts.size();
-			uint64_t currentArchEntitiesStartIndex = 0;
 
-			// iterator creating stuff:
-			uint64_t startArchetypeIndex;
-			uint64_t startIterationIndex; // first archetype start iteration index
-			// last iteration condition
-			uint64_t lastArchetypeIndex;
-			uint64_t lastIterationIndex; // last archetypoe last iterationIndex
+			BatchIterator* currentIterator = nullptr;
 
-			uint64_t itNeededEntitiesCount;
-
-			while (entitiesCount > 0)
+			uint64_t contextsCount = m_ArchetypesContexts.size();
+			for (uint64_t contextIndex = 0; contextIndex < contextsCount; contextIndex++)
 			{
-				startArchetypeIndex = currentArchetypeIndex;
-				startIterationIndex = currentArchEntitiesStartIndex;
-				itNeededEntitiesCount = finalBatchSize;
+				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
+				if (ctx.m_EntitiesCount == 0) continue;
 
-				while (currentArchetypeIndex < archsCount)
+				uint64_t ctxEntitiesCount = ctx.m_EntitiesCount;
+				uint64_t currentEntityIndex = 0;
+
+				while (ctxEntitiesCount > 0)
 				{
-					ArchetypeContextType& ctx = m_ArchetypesContexts[currentArchetypeIndex];
-					if (ctx.m_EntitiesCount == 0)
+					if (currentIterator == nullptr)
 					{
-						currentArchetypeIndex += 1;
-						continue;
+						currentIterator = &iterators.emplace_back(this, contextIndex, currentEntityIndex, 0);
 					}
-					uint64_t archAvailableEntities = ctx.m_EntitiesCount - currentArchEntitiesStartIndex;
 
-					if (itNeededEntitiesCount < archAvailableEntities)
+					uint64_t neededEntitiesCount = finalBatchSize - currentIterator->m_EntitiesCount;
+
+					if (neededEntitiesCount > 0)
 					{
-						currentArchEntitiesStartIndex += itNeededEntitiesCount;
-						itNeededEntitiesCount = 0;
-						lastArchetypeIndex = currentArchetypeIndex;
+						uint64_t entitiesCountToAddToIterator;
+						if (neededEntitiesCount<= ctxEntitiesCount)
+						{
+							entitiesCountToAddToIterator = neededEntitiesCount;
+							ctxEntitiesCount -= entitiesCountToAddToIterator;
+						}
+						else
+						{
+							entitiesCountToAddToIterator = ctxEntitiesCount;
+							ctxEntitiesCount = 0;
+						}
+						currentIterator->m_EntitiesCount += entitiesCountToAddToIterator;
+						currentEntityIndex += entitiesCountToAddToIterator;
+
+						if (currentIterator->m_EntitiesCount == finalBatchSize)
+						{
+							currentIterator = nullptr;
+						}
 					}
 					else
 					{
-						itNeededEntitiesCount -= archAvailableEntities;
-						currentArchEntitiesStartIndex += archAvailableEntities;
-						lastArchetypeIndex = currentArchetypeIndex;
-						currentArchetypeIndex += 1;
-					}
-
-					if (itNeededEntitiesCount == 0)
-					{
-						break;
+						currentIterator = nullptr;
 					}
 				}
-
-				lastIterationIndex = currentArchEntitiesStartIndex;
-
-				BatchIterator& it = iterators.emplace_back(
-					*this,
-					startArchetypeIndex,
-					startIterationIndex,
-					lastArchetypeIndex,
-					lastIterationIndex
-				);
-
-				entitiesCount -= finalBatchSize - itNeededEntitiesCount;
 			}
+
 		}
 	};
 
