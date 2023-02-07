@@ -93,6 +93,12 @@ namespace decs
 		{
 			return m_IsUsedAsPrefab;
 		}
+
+		inline uint32_t ComponentsCount()
+		{
+			if (m_Archetype == nullptr) return 0;
+			return m_Archetype->ComponentsCount();
+		}
 	};
 
 }

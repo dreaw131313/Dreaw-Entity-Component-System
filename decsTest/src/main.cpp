@@ -29,16 +29,16 @@ public:
 
 int main()
 {
-	std::cout << "Entity size = " << sizeof(decs::Entity) << "\n";
-	
+	std::cout << "Entity Data = " << sizeof(decs::EntityData) << "\n";
+
 	decs::Container prefabContainer = {};
 	decs::Container container = {};
 
 	container.SetStableComponentChunkSize<float>(100);
 
 	auto prefab = prefabContainer.CreateEntity();
-	prefab.AddComponent<Position>(1.f, 2.f);
-	prefab.AddComponent<float>();
+	prefab.AddComponent<decs::Stable<Position>>(1.f, 2.f);
+	prefab.AddComponent< decs::Stable<float>>();
 
 	//prefabContainer.Spawn(entity1, 3, true);
 	container.Spawn(prefab, 1, true);
@@ -46,7 +46,7 @@ int main()
 	auto e2 = container.CreateEntity();
 	e2.AddComponent<Position>();
 
-	using QueryType = decs::Query<Position>;
+	using QueryType = decs::Query< decs::Stable<Position>>;
 	QueryType query = { container };
 
 	uint64_t iterationCount = 0;
@@ -70,7 +70,7 @@ int main()
 		it.ForEach(lambda);
 	}
 
-	using MultiQueryType = decs::MultiQuery<Position>;
+	using MultiQueryType = decs::MultiQuery<decs::Stable<Position>>;
 	MultiQueryType testMultiQuery = {};
 	testMultiQuery.AddContainer(&container);
 	testMultiQuery.AddContainer(&prefabContainer);

@@ -126,7 +126,7 @@ namespace decs
 		inline uint32_t ComponentsCount()
 		{
 			if (IsValid())
-				return m_Container->ComponentsCount(m_ID);
+				return m_EntityData->ComponentsCount();
 			return 0;
 		}
 
