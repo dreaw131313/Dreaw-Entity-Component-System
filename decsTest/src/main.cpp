@@ -29,7 +29,7 @@ public:
 
 int main()
 {
-	std::cout << "Entity Data = " << sizeof(decs::EntityData) << "\n";
+	std::cout << "decs::Container size = " << sizeof(decs::Container) << "\n";
 
 	decs::Container prefabContainer = {};
 	decs::Container container = {};
