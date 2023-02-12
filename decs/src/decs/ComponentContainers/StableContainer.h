@@ -77,6 +77,7 @@ namespace decs
 		{
 			return m_AllocationFlags[index];
 		}
+
 		template<typename... Args>
 		ChunkAllocationResult Emplace(Args&&... args)
 		{

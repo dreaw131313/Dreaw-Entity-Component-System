@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include "decs/decs.h"
-#include "decs/ComponentContainers/StableContainer.h"
 
 void PrintLine(std::string message = "")
 {

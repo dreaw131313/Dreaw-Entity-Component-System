@@ -6,9 +6,6 @@
 
 namespace decs
 {
-	class Entity;
-	class Container;
-
 	class EntityManager
 	{
 		template<typename ...Types>

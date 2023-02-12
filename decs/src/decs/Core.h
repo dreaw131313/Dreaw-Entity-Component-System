@@ -30,7 +30,6 @@ namespace decs
 #define TYPE_ID_CONSTEXPR
 #endif
 
-
 	template<typename Key, typename Value>
 	//using ecsMap = ska::bytell_hash_map<Key, Value>;
 	//using ecsMap = ska::unordered_map<Key, Value>;
@@ -46,7 +45,6 @@ namespace decs
 	using EntityID = uint32_t;
 	using EntityVersion = uint32_t;
 	using TypeID = uint64_t;
-
 
 	namespace Limits
 	{
