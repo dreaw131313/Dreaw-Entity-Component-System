@@ -129,14 +129,14 @@ namespace decs
 #pragma endregion
 
 	public:
-		struct OperationData final
+		struct EmplaceBackData final
 		{
 		public:
 			uint64_t ChunkIndex;
 			uint64_t ElementIndex;
 			T* Data;
 		public:
-			OperationData(
+			EmplaceBackData(
 				const uint64_t& chunkIndex,
 				const uint64_t& elementIndex,
 				T* data
@@ -147,11 +147,9 @@ namespace decs
 			{
 
 			}
-			~OperationData() {}
+			~EmplaceBackData() {}
 		};
 
-		using EmplaceBackData = OperationData;
-		using SwapBackData = OperationData;
 
 	public:
 		ChunkedVector()
