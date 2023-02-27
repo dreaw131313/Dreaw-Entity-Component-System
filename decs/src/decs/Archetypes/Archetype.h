@@ -394,5 +394,4 @@ namespace decs
 		}
 
 	};
-
 }
