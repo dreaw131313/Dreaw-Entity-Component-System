@@ -79,7 +79,22 @@ bool isActive = entity.IsActive();
 ```
 
 ### Iterating over entites
-**decs::Query<typename... Components>** object serves to iterating over entities
+**decs::Query<typename... Components>** object serves to iterating over entities. It has 3 methods for iteration:
+```cpp
+// Iterates over entities in archetypes from first to last
+template<typename Callable
+Query::ForEachForward(Callable&& func);
+
+// Iterates over entities in archetypes form last to first
+template<typename Callable
+Query::ForEachBackward(Callable&& func);
+
+// It works exacly like ForEachBackward
+template<typename Callable
+Query::ForEach(Callable&& func);
+
+```
+
 ```cpp
 decs::Container container = {}; 
 
@@ -138,5 +153,5 @@ Things like:
 
 are undefined behavior.
 
-During Iteration with **ForEachForward** method entities component setups can not be changed and entities cannot be destroyed.
+During Iteration with **ForEachForward** method component setups of existing entities can not be changed and existing entities cannot be destroyed. New entities can be created, them component setup can be edited and destroy them.
 
