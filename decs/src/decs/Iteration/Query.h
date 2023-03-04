@@ -181,19 +181,18 @@ namespace decs
 		}
 
 	private:
-		TypeGroup<ComponentsTypes...> m_Includes = {};
 		std::vector<TypeID> m_Without;
 		std::vector<TypeID> m_WithAnyOf;
 		std::vector<TypeID> m_WithAll;
-
-		Container* m_Container = nullptr;
-		bool m_IsDirty = true;
-
 		std::vector<ArchetypeContextType> m_ArchetypesContexts;
 		ecsSet<Archetype*> m_ContainedArchetypes;
+		TypeGroup<ComponentsTypes...> m_Includes = {};
 
 		// cache value to check if query should be updated:
 		uint64_t m_ArchetypesCountDirty = 0;
+
+		Container* m_Container = nullptr;
+		bool m_IsDirty = true;
 
 	private:
 
