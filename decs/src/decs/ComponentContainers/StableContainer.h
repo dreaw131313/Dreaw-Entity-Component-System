@@ -146,7 +146,6 @@ namespace decs
 		std::vector<uint64_t> m_FreeSpaces;
 	};
 
-
 	class StableComponentRef
 	{
 	public:
