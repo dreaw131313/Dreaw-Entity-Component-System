@@ -35,7 +35,6 @@ namespace decs
 		}
 		else
 		{
-			m_enitiesDataCount += 1;
 			EntityData& entityData = m_EntityData.EmplaceBack((EntityID)m_EntityData.Size(), isActive);
 			return entityData.m_ID;
 		}

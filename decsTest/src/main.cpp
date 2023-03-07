@@ -29,8 +29,8 @@ public:
 
 int main()
 {
-	PrintLine(std::format("Sizoe of Query: {} bytes", sizeof(decs::Query<int>)));
-	PrintLine(std::format("Sizoe of Multi Query: {} bytes", sizeof(decs::MultiQuery<int>)));
+	PrintLine(std::format("Sizeof of Query: {} bytes", sizeof(decs::Query<int>)));
+	PrintLine(std::format("Sizeof of Multi Query: {} bytes", sizeof(decs::MultiQuery<int>)));
 	PrintLine();
 
 	std::cout << "decs::Container size = " << sizeof(decs::Container) << "\n";
