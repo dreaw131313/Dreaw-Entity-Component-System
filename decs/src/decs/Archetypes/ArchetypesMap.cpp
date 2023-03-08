@@ -3,7 +3,7 @@
 
 namespace decs
 {
-	ArchetypesMap::ArchetypesMap(const uint64_t& archetypesVectorChunkSize, const uint64_t& archetypeGroupsVectorChunkSize) :
+	ArchetypesMap::ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize) :
 		m_Archetypes(archetypesVectorChunkSize),
 		m_ArchetrypesGroupsByOneTypeVector(archetypeGroupsVectorChunkSize)
 	{
@@ -167,7 +167,7 @@ namespace decs
 		}
 	}
 
-	void ArchetypesMap::AddArchetypeToCorrectContainers(Archetype& archetype, const bool& bTryAddToSingleComponentsMap)
+	void ArchetypesMap::AddArchetypeToCorrectContainers(Archetype& archetype, bool bTryAddToSingleComponentsMap)
 	{
 		if (bTryAddToSingleComponentsMap && archetype.ComponentsCount() == 1)
 		{
@@ -366,7 +366,7 @@ namespace decs
 		return &newArchetype;
 	}
 
-	Archetype* ArchetypesMap::GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, const TypeID& removedComponentTypeID)
+	Archetype* ArchetypesMap::GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, TypeID removedComponentTypeID)
 	{
 		if (fromArchetype.ComponentsCount() == 1 && fromArchetype.GetTypeID(0) == removedComponentTypeID)
 		{

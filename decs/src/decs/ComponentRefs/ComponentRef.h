@@ -17,7 +17,7 @@ namespace decs
 
 		ComponentRef(
 			EntityData& entityData,
-			const uint32_t& componentIndex
+			uint32_t componentIndex
 		) :
 			m_EntityData(&entityData),
 			m_ComponentIndex(componentIndex)

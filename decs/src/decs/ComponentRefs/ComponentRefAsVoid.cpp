@@ -4,14 +4,14 @@
 
 namespace decs
 {
-	ComponentRefAsVoid::ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData) :
+	ComponentRefAsVoid::ComponentRefAsVoid(TypeID typeID, EntityData& entityData) :
 		m_TypeID(typeID),
 		m_EntityData(&entityData)
 	{
 		FetchWhenIsInvalid();
 	}
 
-	ComponentRefAsVoid::ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData, const uint32_t& componentIndex) :
+	ComponentRefAsVoid::ComponentRefAsVoid(TypeID typeID, EntityData& entityData, uint32_t componentIndex) :
 		m_TypeID(typeID),
 		m_EntityData(&entityData),
 		m_ComponentIndex(componentIndex)
@@ -19,7 +19,7 @@ namespace decs
 		FetchWithoutGettingComponentIndex();
 	}
 
-	ComponentRefAsVoid::ComponentRefAsVoid(const TypeID& typeID, Entity& entity) :
+	ComponentRefAsVoid::ComponentRefAsVoid(TypeID typeID, Entity& entity) :
 		m_TypeID(typeID),
 		m_EntityData(entity.m_EntityData)
 	{

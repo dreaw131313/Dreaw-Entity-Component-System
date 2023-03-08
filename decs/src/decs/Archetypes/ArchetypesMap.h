@@ -24,7 +24,7 @@ namespace decs
 
 		}
 
-		ArchetypesShrinkToFitState(const uint64_t& archetypesToShrinkInOneCall, const float& maxArchetypeLoadFactor) :
+		ArchetypesShrinkToFitState(uint64_t archetypesToShrinkInOneCall, float maxArchetypeLoadFactor) :
 			m_ArchetypesToShrinkInOneCall(archetypesToShrinkInOneCall),
 			m_MaxArchetypeLoadFactor(maxArchetypeLoadFactor)
 		{
@@ -119,7 +119,7 @@ namespace decs
 
 		}
 
-		ArchetypesMap(const uint64_t& archetypesVectorChunkSize, const uint64_t& archetypeGroupsVectorChunkSize);
+		ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize);
 
 		~ArchetypesMap()
 		{
@@ -165,9 +165,9 @@ namespace decs
 	private:
 		void MakeArchetypeEdges(Archetype& archetype);
 
-		void AddArchetypeToCorrectContainers(Archetype& archetype, const bool& bTryAddToSingleComponentsMap = true);
+		void AddArchetypeToCorrectContainers(Archetype& archetype, bool bTryAddToSingleComponentsMap = true);
 
-		inline Archetype* GetSingleComponentArchetype(const TypeID& typeID)
+		inline Archetype* GetSingleComponentArchetype(TypeID typeID)
 		{
 			auto it = m_SingleComponentArchetypes.find(typeID);
 			if (it != m_SingleComponentArchetypes.end())
@@ -177,7 +177,7 @@ namespace decs
 			return nullptr;
 		}
 
-		inline ArchetypesGroupByOneType* GetArchetypesGroup(const TypeID& id)
+		inline ArchetypesGroupByOneType* GetArchetypesGroup(TypeID id)
 		{
 			ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
 			if (group == nullptr)
@@ -307,7 +307,7 @@ namespace decs
 			uint64_t addedComponentIndex
 		);
 
-		Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, const TypeID& removedComponentTypeID);
+		Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, TypeID removedComponentTypeID);
 
 		template<typename T>
 		inline Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype)

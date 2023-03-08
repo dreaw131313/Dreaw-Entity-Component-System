@@ -16,7 +16,7 @@ namespace decs
 		AllocationResult() {}
 
 		AllocationResult(
-			const uint64_t& index,
+			uint64_t index,
 			DataType* data
 		) :
 			Index(index),
@@ -40,7 +40,7 @@ namespace decs
 		uint64_t m_IndexInFreeSpaces = 0;
 		bool m_IsInFreeSpaces = 0;
 	public:
-		Chunk(const uint64_t& capacity) :
+		Chunk(uint64_t capacity) :
 			m_Capacity(capacity),
 			m_AllocationFlags(new bool[capacity]()),
 			m_Data(static_cast<DataType*> (::operator new(capacity * sizeof(DataType))))
@@ -71,9 +71,9 @@ namespace decs
 
 		inline bool IsFull() const { return m_Capacity == m_Size; }
 
-		DataType& operator[](const uint64_t& index) const { return m_Data[index]; }
+		DataType& operator[](uint64_t index) const { return m_Data[index]; }
 
-		inline bool IsAllocatedAt(const uint64_t& index) const
+		inline bool IsAllocatedAt(uint64_t index) const
 		{
 			return m_AllocationFlags[index];
 		}
@@ -105,7 +105,7 @@ namespace decs
 			return ChunkAllocationResult(allocationIndex, data);
 		}
 
-		bool RemoveAt(const uint64_t& index)
+		bool RemoveAt(uint64_t index)
 		{
 			if (index < m_Capacity && m_AllocationFlags[index])
 			{
@@ -161,8 +161,8 @@ namespace decs
 
 		StableComponentRef(
 			void* componentPtr,
-			const uint64_t& chunkIndex,
-			const uint64_t& index
+			uint64_t chunkIndex,
+			uint64_t index
 		) :
 			m_ComponentPtr(componentPtr), m_ChunkIndex(chunkIndex), m_Index(index)
 		{
@@ -175,9 +175,9 @@ namespace decs
 	{
 	public:
 		inline virtual TypeID GetTypeID()const noexcept = 0;
-		virtual StableContainerBase* CreateOwnEmptyCopy(const uint64_t& withChunkSize) = 0;
+		virtual StableContainerBase* CreateOwnEmptyCopy(uint64_t withChunkSize) = 0;
 
-		virtual bool Remove(const uint64_t& chunkIndex, const uint64_t& elementIndex) = 0;
+		virtual bool Remove(uint64_t chunkIndex, uint64_t elementIndex) = 0;
 		virtual StableComponentRef EmplaceFromVoid(void* ptr) = 0;
 		virtual uint64_t GetChunkSize() const noexcept = 0;
 		virtual void Clear() = 0;
@@ -194,7 +194,7 @@ namespace decs
 
 		}
 
-		StableContainer(const uint64_t& chunkCapacity) :
+		StableContainer(uint64_t chunkCapacity) :
 			m_ChunkCapacity(chunkCapacity)
 		{
 		}
@@ -212,7 +212,7 @@ namespace decs
 
 		inline virtual TypeID GetTypeID()const noexcept override { return Type<Stable<DataType>>::ID(); }
 
-		virtual StableContainerBase* CreateOwnEmptyCopy(const uint64_t& withChunkSize) override
+		virtual StableContainerBase* CreateOwnEmptyCopy(uint64_t withChunkSize) override
 		{
 			return new StableContainer<DataType>(withChunkSize);
 		}
@@ -236,7 +236,7 @@ namespace decs
 			return StableComponentRef(result.Data, chunk->m_Index, result.Index);
 		}
 
-		bool Remove(const uint64_t& chunkIndex, const uint64_t& elementIndex) override
+		bool Remove(uint64_t chunkIndex, uint64_t elementIndex) override
 		{
 			if (chunkIndex < m_Chunks.size() && m_Chunks[chunkIndex] != nullptr)
 			{
@@ -387,14 +387,14 @@ namespace decs
 
 		}
 
-		StableContainersManager(const uint64_t& defaultChunkSize) :
+		StableContainersManager(uint64_t defaultChunkSize) :
 			m_DefaultChunkSize(defaultChunkSize)
 		{
 
 		}
 
 		template<typename T>
-		bool SetStableComponentChunkSize(const uint64_t& chunkSize)
+		bool SetStableComponentChunkSize(uint64_t chunkSize)
 		{
 			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::ID();
 			auto& container = m_Containers[typeID];
@@ -421,7 +421,7 @@ namespace decs
 			return std::numeric_limits<uint64_t>::max();
 		}
 
-		inline StableContainerBase* GetStableContainer(const TypeID& typeID)
+		inline StableContainerBase* GetStableContainer(TypeID typeID)
 		{
 			auto it = m_Containers.find(typeID);
 			return it != m_Containers.end() ? it->second : nullptr;

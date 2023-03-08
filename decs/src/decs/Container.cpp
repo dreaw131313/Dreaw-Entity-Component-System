@@ -14,9 +14,9 @@ namespace decs
 	}
 
 	Container::Container(
-		const uint64_t& enititesChunkSize,
-		const uint64_t& stableComponentDefaultChunkSize,
-		const uint64_t& m_EmptyEntitiesChunkSize
+		uint64_t enititesChunkSize,
+		uint64_t stableComponentDefaultChunkSize,
+		uint64_t m_EmptyEntitiesChunkSize
 	) :
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(enititesChunkSize)),
@@ -30,8 +30,8 @@ namespace decs
 	Container::Container(
 		EntityManager* entityManager,
 		ComponentContextsManager* componentContextsManager,
-		const uint64_t& stableComponentDefaultChunkSize,
-		const uint64_t& m_EmptyEntitiesChunkSize
+		uint64_t stableComponentDefaultChunkSize,
+		uint64_t m_EmptyEntitiesChunkSize
 	) :
 		m_HaveOwnEntityManager(entityManager == nullptr),
 		m_EntityManager(entityManager == nullptr ? new EntityManager(m_DefaultEntitiesChunkSize) : entityManager),
@@ -77,7 +77,7 @@ namespace decs
 		m_EmptyEntities.Clear();
 	}
 
-	Entity Container::CreateEntity(const bool& isActive)
+	Entity Container::CreateEntity(bool isActive)
 	{
 		if (m_CanCreateEntities)
 		{
@@ -159,7 +159,7 @@ namespace decs
 		return false;
 	}
 
-	void Container::DestroyOwnedEntities(const bool& invokeOnDestroyListeners)
+	void Container::DestroyOwnedEntities(bool invokeOnDestroyListeners)
 	{
 		if (m_IsDestroyingOwnedEntities) return;
 		BoolSwitch isDestroyingEntitesFlag(m_IsDestroyingOwnedEntities, true);
@@ -196,7 +196,7 @@ namespace decs
 		m_StableContainers.ClearContainers();
 	}
 
-	void Container::SetEntityActive(const EntityID& entity, const bool& isActive)
+	void Container::SetEntityActive(EntityID entity, bool isActive)
 	{
 		if (m_EntityManager->SetEntityActive(entity, isActive))
 		{
@@ -208,7 +208,7 @@ namespace decs
 		}
 	}
 
-	Entity Container::Spawn(const Entity& prefab, const bool& isActive)
+	Entity Container::Spawn(const Entity& prefab, bool isActive)
 	{
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
@@ -248,7 +248,7 @@ namespace decs
 		return spawnedEntity;
 	}
 
-	bool Container::Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive)
+	bool Container::Spawn(const Entity& prefab, uint64_t spawnCount, bool areActive)
 	{
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
@@ -305,7 +305,7 @@ namespace decs
 		return true;
 	}
 
-	bool Container::Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, const uint64_t& spawnCount, const bool& areActive)
+	bool Container::Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, uint64_t spawnCount, bool areActive)
 	{
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
@@ -425,7 +425,7 @@ namespace decs
 		}
 	}
 
-	bool Container::RemoveUnstableComponent(Entity& entity, const TypeID& componentTypeID)
+	bool Container::RemoveUnstableComponent(Entity& entity,  TypeID componentTypeID)
 	{
 		if (!m_CanRemoveComponents || entity.m_Container != this) return false;
 
@@ -479,13 +479,13 @@ namespace decs
 		return true;
 	}
 
-	bool Container::RemoveUnstableComponent(const EntityID& e, const TypeID& componentTypeID)
+	bool Container::RemoveUnstableComponent(EntityID e, TypeID componentTypeID)
 	{
 		Entity entity(e, this);
 		return RemoveUnstableComponent(entity, componentTypeID);
 	}
 
-	bool Container::RemoveStableComponent(Entity& entity, const TypeID& componentTypeID)
+	bool Container::RemoveStableComponent(Entity& entity, TypeID componentTypeID)
 	{
 		if (!m_CanRemoveComponents || entity.m_Container != this) return false;
 
@@ -544,7 +544,7 @@ namespace decs
 		return true;
 	}
 
-	bool Container::RemoveStableComponent(const EntityID& e, const TypeID& componentTypeID)
+	bool Container::RemoveStableComponent(EntityID e, TypeID componentTypeID)
 	{
 		Entity entity(e, this);
 		return RemoveStableComponent(entity, componentTypeID);
@@ -556,7 +556,7 @@ namespace decs
 		componentContext->InvokeOnCreateComponent_S(componentPtr, e);
 	}
 
-	void Container::DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners)
+	void Container::DestroyEntitesInArchetypes(Archetype& archetype, bool invokeOnDestroyListeners)
 	{
 		auto& entitesData = archetype.m_EntitiesData;
 		uint64_t archetypeComponentsCount = archetype.ComponentsCount();
@@ -760,7 +760,7 @@ namespace decs
 		m_DelayedEntitiesToDestroy.push_back(entity.ID());
 	}
 
-	void Container::AddEntityToDelayedDestroy(const EntityID& entityID)
+	void Container::AddEntityToDelayedDestroy(EntityID entityID)
 	{
 		m_DelayedEntitiesToDestroy.push_back(entityID);
 	}

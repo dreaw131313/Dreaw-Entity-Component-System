@@ -333,8 +333,8 @@ namespace decs
 
 		void AddingArchetypesWithCheckingOnlyNewArchetypes(
 			ArchetypesMap& map,
-			const uint64_t& startArchetypesIndex,
-			const uint64_t& minRequiredComponentsCount
+			uint64_t startArchetypesIndex,
+			uint64_t minRequiredComponentsCount
 		)
 		{
 			auto& archetypes = map.m_Archetypes;
@@ -363,14 +363,14 @@ namespace decs
 			CreatePackedContainersTuple<Args...>(
 				containersTuple,
 				context
-				);
+			);
 		}
 
 		template<>
 		void CreatePackedContainersTuple<void>(
 			std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
 			const ArchetypeContextType& context
-			) const noexcept
+		) const noexcept
 		{
 
 		}
@@ -491,14 +491,14 @@ namespace decs
 				CreatePackedContainersTuple<Args...>(
 					containersTuple,
 					context
-					);
+				);
 			}
 
 			template<>
 			void CreatePackedContainersTuple<void>(
 				std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
 				const ArchetypeContextType& context
-				) const noexcept
+			) const noexcept
 			{
 
 			}
@@ -517,8 +517,8 @@ namespace decs
 	public:
 		void CreateBatchIterators(
 			std::vector<BatchIterator>& iterators,
-			const uint64_t& desiredBatchesCount,
-			const uint64_t& minBatchSize
+			uint64_t desiredBatchesCount,
+			uint64_t minBatchSize
 		)
 		{
 			if (!IsValid())
@@ -567,7 +567,7 @@ namespace decs
 					if (neededEntitiesCount > 0)
 					{
 						uint64_t entitiesCountToAddToIterator;
-						if (neededEntitiesCount<= ctxEntitiesCount)
+						if (neededEntitiesCount <= ctxEntitiesCount)
 						{
 							entitiesCountToAddToIterator = neededEntitiesCount;
 							ctxEntitiesCount -= entitiesCountToAddToIterator;

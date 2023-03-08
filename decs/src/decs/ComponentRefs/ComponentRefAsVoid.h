@@ -12,11 +12,11 @@ namespace decs
 	public:
 		ComponentRefAsVoid() {}
 
-		ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData);
+		ComponentRefAsVoid(TypeID typeID, EntityData& entityData);
 		
-		ComponentRefAsVoid(const TypeID& typeID, EntityData& entityData, const uint32_t& componentIndex);
+		ComponentRefAsVoid(TypeID typeID, EntityData& entityData, uint32_t componentIndex);
 		
-		ComponentRefAsVoid(const TypeID& typeID, Entity& entity);
+		ComponentRefAsVoid(TypeID typeID, Entity& entity);
 
 		inline void* Get()
 		{

@@ -33,7 +33,7 @@ namespace decs
 
 		}
 
-		EntityData(const EntityID& id, const bool& isActive) : m_ID(id), m_Version(1), m_IsAlive(true), m_IsActive(isActive)
+		EntityData(EntityID id, bool isActive) : m_ID(id), m_Version(1), m_IsAlive(true), m_IsActive(isActive)
 		{
 
 		}

@@ -21,7 +21,7 @@ namespace decs
 
 		}
 
-		MultiQuery(const uint64_t& containerContextsChunkSize) :
+		MultiQuery(uint64_t containerContextsChunkSize) :
 			m_ContainerContexts(containerContextsChunkSize)
 		{
 
@@ -263,14 +263,14 @@ namespace decs
 			CreatePackedContainersTuple<Args...>(
 				containersTuple,
 				context
-				);
+			);
 		}
 
 		template<>
 		void CreatePackedContainersTuple<void>(
 			std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
 			const ArchetypeContextType& context
-			) const noexcept
+		) const noexcept
 		{
 
 		}
@@ -289,11 +289,11 @@ namespace decs
 
 			BatchIterator(
 				QueryType* query,
-				const uint64_t& startContainerChunkIndex,
-				const uint64_t& startContainerElementIndex,
-				const uint64_t& startArchetypeIndex,
-				const uint64_t& startEntityIndex,
-				const uint64_t& entitiesCount
+				uint64_t startContainerChunkIndex,
+				uint64_t startContainerElementIndex,
+				uint64_t startArchetypeIndex,
+				uint64_t startEntityIndex,
+				uint64_t entitiesCount
 			) :
 				m_Query(query),
 				m_StartContainerChunkInex(startContainerChunkIndex),
@@ -410,14 +410,14 @@ namespace decs
 				CreatePackedContainersTuple<Args...>(
 					containersTuple,
 					context
-					);
+				);
 			}
 
 			template<>
 			void CreatePackedContainersTuple<void>(
 				std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
 				const ArchetypeContextType& context
-				) const noexcept
+			) const noexcept
 			{
 
 			}
@@ -426,8 +426,8 @@ namespace decs
 	public:
 		void CreateBatchIterators(
 			std::vector<BatchIterator>& iterators,
-			const uint64_t& desiredBatchesCount,
-			const uint64_t& minBatchSize
+			uint64_t desiredBatchesCount,
+			uint64_t minBatchSize
 		)
 		{
 			Fetch();

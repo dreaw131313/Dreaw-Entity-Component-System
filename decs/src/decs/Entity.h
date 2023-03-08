@@ -24,7 +24,7 @@ namespace decs
 
 		}
 
-		Entity(const EntityID& id, Container* container) :
+		Entity(EntityID id, Container* container) :
 			m_ID(id),
 			m_Container(container),
 			m_EntityData(&container->m_EntityManager->GetEntityData(id)),
@@ -137,7 +137,7 @@ namespace decs
 		EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
 
 	private:
-		void Set(const EntityID& id, Container* container)
+		void Set(EntityID id, Container* container)
 		{
 			m_ID = id;
 			m_Container = container;

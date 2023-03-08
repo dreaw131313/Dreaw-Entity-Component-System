@@ -197,7 +197,7 @@ namespace decs
 			const std::vector<TypeID>& without,
 			const std::vector<TypeID>& withAnyOf,
 			const std::vector<TypeID>& withAll,
-			const uint64_t& minComponentsCount
+			uint64_t minComponentsCount
 		)
 		{
 			if (group == nullptr) return;
@@ -215,8 +215,8 @@ namespace decs
 
 		void AddingArchetypesWithCheckingOnlyNewArchetypes(
 			ArchetypesMap& map,
-			const uint64_t& startArchetypesIndex,
-			const uint64_t& minRequiredComponentsCount,
+			uint64_t startArchetypesIndex,
+			uint64_t minRequiredComponentsCount,
 			const TypeGroup<ComponentsTypes...>& includes,
 			const std::vector<TypeID>& without,
 			const std::vector<TypeID>& withAnyOf,

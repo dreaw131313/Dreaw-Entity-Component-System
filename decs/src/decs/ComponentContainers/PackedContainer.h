@@ -20,13 +20,13 @@ namespace decs
 		inline virtual void ShrinkToFit() = 0;
 		inline virtual uint64_t Capacity() = 0;
 		inline virtual uint64_t Size() = 0;
-		inline virtual void Reserve(const uint64_t& newCapacity) = 0;
+		inline virtual void Reserve(uint64_t newCapacity) = 0;
 
-		inline virtual void* GetComponentPtrAsVoid(const uint64_t& index) noexcept = 0;
+		inline virtual void* GetComponentPtrAsVoid(uint64_t index) noexcept = 0;
 
-		inline virtual void* GetComponentDataAsVoid(const uint64_t& index) noexcept = 0;
+		inline virtual void* GetComponentDataAsVoid(uint64_t index) noexcept = 0;
 
-		inline virtual void RemoveSwapBack(const uint64_t& index) noexcept = 0;
+		inline virtual void RemoveSwapBack(uint64_t index) noexcept = 0;
 		inline virtual void EmplaceFromVoid(void* data) noexcept = 0;
 		inline virtual void MoveEmplaceFromVoid(void* data) noexcept = 0;
 	};
@@ -53,12 +53,12 @@ namespace decs
 			return new PackedContainer<ComponentType>();
 		}
 
-		inline ComponentType& GetAsRef(const uint64_t& index) noexcept
+		inline ComponentType& GetAsRef(uint64_t index) noexcept
 		{
 			return m_Data[index];
 		}
 
-		inline ComponentType* GetAsPtr(const uint64_t& index) const noexcept
+		inline ComponentType* GetAsPtr(uint64_t index) const noexcept
 		{
 			return &m_Data[index];
 		}
@@ -74,14 +74,14 @@ namespace decs
 		}
 		inline virtual uint64_t Capacity() override { return m_Data.capacity(); }
 		inline virtual uint64_t Size() override { return m_Data.size(); }
-		inline virtual void Reserve(const uint64_t& newCapacity) override { m_Data.reserve(newCapacity); }
+		inline virtual void Reserve(uint64_t newCapacity) override { m_Data.reserve(newCapacity); }
 
-		inline virtual void* GetComponentPtrAsVoid(const uint64_t& index) noexcept override
+		inline virtual void* GetComponentPtrAsVoid(uint64_t index) noexcept override
 		{
 			return &m_Data[index];
 		}
 
-		inline virtual void* GetComponentDataAsVoid(const uint64_t& index) noexcept override
+		inline virtual void* GetComponentDataAsVoid(uint64_t index) noexcept override
 		{
 			return &m_Data[index];
 		}
@@ -91,7 +91,7 @@ namespace decs
 			m_Data.emplace_back(*reinterpret_cast<ComponentType*>(data));
 		}
 
-		inline virtual void RemoveSwapBack(const uint64_t& index)noexcept override
+		inline virtual void RemoveSwapBack(uint64_t index)noexcept override
 		{
 			if (m_Data.size() > 0)
 			{
@@ -154,18 +154,18 @@ namespace decs
 
 		inline virtual uint64_t Size() override { return m_Data.size(); }
 
-		inline virtual void Reserve(const uint64_t& newCapacity) override
+		inline virtual void Reserve(uint64_t newCapacity) override
 		{
 			m_Data.reserve(newCapacity);
 			m_ComponentPointers.reserve(newCapacity);
 		}
 
-		inline virtual void* GetComponentPtrAsVoid(const uint64_t& index) noexcept override
+		inline virtual void* GetComponentPtrAsVoid(uint64_t index) noexcept override
 		{
 			return m_ComponentPointers[index];
 		}
 
-		inline virtual void* GetComponentDataAsVoid(const uint64_t& index) noexcept override
+		inline virtual void* GetComponentDataAsVoid(uint64_t index) noexcept override
 		{
 			return &m_Data[index];
 		}
@@ -184,7 +184,7 @@ namespace decs
 			m_ComponentPointers.push_back(static_cast<ComponentType*>(newElement->m_ComponentPtr));
 		}
 
-		inline virtual void RemoveSwapBack(const uint64_t& index)noexcept override
+		inline virtual void RemoveSwapBack(uint64_t index)noexcept override
 		{
 			uint64_t dataSize = m_Data.size();
 			if (dataSize > 0)
@@ -199,17 +199,17 @@ namespace decs
 			}
 		}
 
-		inline ComponentType& GetAsRef(const uint64_t& index) noexcept
+		inline ComponentType& GetAsRef(uint64_t index) noexcept
 		{
 			return *m_ComponentPointers[index];
 		}
 
-		inline ComponentType* GetAsPtr(const uint64_t& index)const noexcept
+		inline ComponentType* GetAsPtr(uint64_t index)const noexcept
 		{
 			return m_ComponentPointers[index];
 		}
 
-		inline StableComponentRef& EmplaceBack(ComponentType* componentPtr, const uint64_t& chunkIndex, const uint64_t& elementIndex)
+		inline StableComponentRef& EmplaceBack(ComponentType* componentPtr, uint64_t chunkIndex, uint64_t elementIndex)
 		{
 			m_ComponentPointers.push_back(static_cast<ComponentType*>(componentPtr));
 			return m_Data.emplace_back(componentPtr, chunkIndex, elementIndex);

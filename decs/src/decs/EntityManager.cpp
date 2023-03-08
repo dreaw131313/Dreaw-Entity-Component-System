@@ -9,7 +9,7 @@ namespace decs
 	{
 	}
 
-	EntityManager::EntityManager(const uint64_t& initialEntitiesCapacity) :
+	EntityManager::EntityManager(uint64_t initialEntitiesCapacity) :
 		m_EntityData(initialEntitiesCapacity)
 	{
 		if (initialEntitiesCapacity > 0)
@@ -18,7 +18,7 @@ namespace decs
 		}
 	}
 
-	EntityID EntityManager::CreateEntity(const bool& isActive)
+	EntityID EntityManager::CreateEntity(bool isActive)
 	{
 		m_CreatedEntitiesCount += 1;
 		if (m_FreeEntitiesCount > 0)
@@ -40,7 +40,7 @@ namespace decs
 		}
 	}
 
-	bool EntityManager::DestroyEntity(const EntityID& entity)
+	bool EntityManager::DestroyEntity(EntityID entity)
 	{
 		if (entity < m_EntityData.Size())
 		{

@@ -21,7 +21,7 @@ namespace decs
 
 			}
 
-			static void Create(Chunk& chunk, const uint64_t& capacity = 100)
+			static void Create(Chunk& chunk, uint64_t capacity = 100)
 			{
 				if (capacity == 0) chunk.m_Capacity = 1;
 				else chunk.m_Capacity = capacity;
@@ -65,7 +65,7 @@ namespace decs
 				return *value;
 			}
 
-			bool RemoveSwapBack(const uint64_t& index)
+			bool RemoveSwapBack(uint64_t index)
 			{
 				uint64_t lastIndex = m_Size - 1;
 				if (index == lastIndex)
@@ -93,14 +93,14 @@ namespace decs
 				m_Data[m_Size].~T();
 			}
 
-			inline T& At(const uint64_t& index) { return m_Data[index]; }
+			inline T& At(uint64_t index) { return m_Data[index]; }
 
-			inline T& operator[](const uint64_t& index)
+			inline T& operator[](uint64_t index)
 			{
 				return m_Data[index];
 			}
 
-			inline T& operator[](const uint64_t& index) const
+			inline T& operator[](uint64_t index) const
 			{
 				return m_Data[index];
 			}
@@ -137,8 +137,8 @@ namespace decs
 			T* Data;
 		public:
 			EmplaceBackData(
-				const uint64_t& chunkIndex,
-				const uint64_t& elementIndex,
+				uint64_t chunkIndex,
+				uint64_t elementIndex,
 				T* data
 			) :
 				ChunkIndex(chunkIndex),
@@ -225,21 +225,21 @@ namespace decs
 			return *this;
 		}
 
-		inline T& operator[](const uint64_t& index) noexcept
+		inline T& operator[](uint64_t index) noexcept
 		{
 			uint64_t chunkIndex = index / m_ChunkCapacity;
 			uint64_t elementIndex = index - chunkIndex * m_ChunkCapacity;
 			return m_Chunks[chunkIndex][elementIndex];
 		}
 
-		inline T& operator[](const uint64_t& index) const noexcept
+		inline T& operator[](uint64_t index) const noexcept
 		{
 			uint64_t chunkIndex = index / m_ChunkCapacity;
 			uint64_t elementIndex = index - chunkIndex * m_ChunkCapacity;
 			return m_Chunks[chunkIndex][elementIndex];
 		}
 
-		inline T& operator()(const uint64_t& chunkIndex, const uint64_t& elementIndex)
+		inline T& operator()(uint64_t chunkIndex, const uint64_t& elementIndex)
 		{
 			return m_Chunks[chunkIndex][elementIndex];
 		}
@@ -285,7 +285,7 @@ namespace decs
 			return EmplaceBackData(m_ChunksCount - 1, elementIndex, &b.EmplaceBack(std::forward<Args>(args)...));
 		}
 
-		inline bool RemoveSwapBack(const uint64_t& index)
+		inline bool RemoveSwapBack(uint64_t index)
 		{
 			uint64_t chunkIndex = index / m_ChunkCapacity;
 			uint64_t elementIndex = index % m_ChunkCapacity;
@@ -293,7 +293,7 @@ namespace decs
 			return RemoveSwapBack(chunkIndex, elementIndex);
 		}
 
-		bool RemoveSwapBack(const uint64_t& chunkIndex, const uint64_t& elementIndex)
+		bool RemoveSwapBack(uint64_t chunkIndex, uint64_t elementIndex)
 		{
 			auto& fromChunk = m_Chunks[chunkIndex];
 			if (chunkIndex == (m_ChunksCount - 1))
@@ -357,14 +357,14 @@ namespace decs
 			}
 		}
 
-		inline bool IsPositionValid(const uint64_t& chunkIndex, const uint64_t& elementIndex)
+		inline bool IsPositionValid(uint64_t chunkIndex, uint64_t elementIndex)
 		{
-			return chunkIndex < m_ChunksCount&& elementIndex < m_Chunks[chunkIndex].Size();
+			return chunkIndex < m_ChunksCount && elementIndex < m_Chunks[chunkIndex].Size();
 		}
 
-		inline T* GetChunk(const uint64_t& index) const { return m_Chunks[index].m_Data; }
+		inline T* GetChunk(uint64_t index) const { return m_Chunks[index].m_Data; }
 
-		inline uint64_t GetChunkSize(const uint64_t& index)const { return m_Chunks[index].m_Size; }
+		inline uint64_t GetChunkSize(uint64_t index)const { return m_Chunks[index].m_Size; }
 
 	private:
 		std::vector<Chunk> m_Chunks;

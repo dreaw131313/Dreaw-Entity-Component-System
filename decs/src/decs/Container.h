@@ -29,9 +29,9 @@ namespace decs
 		}
 
 		DelayedComponentPair(
-			const EntityID& entityID,
-			const TypeID& typeID,
-			const bool& isStable
+			EntityID entityID,
+			TypeID typeID,
+			bool isStable
 		) :
 			m_EntityID(entityID), m_TypeID(typeID), m_IsStable(isStable)
 		{
@@ -78,16 +78,16 @@ namespace decs
 		Container();
 
 		Container(
-			const uint64_t& enititesChunkSize,
-			const uint64_t& stableComponentDefaultChunkSize,
-			const uint64_t& m_EmptyEntitiesChunkSize = 100
+			uint64_t enititesChunkSize,
+			uint64_t stableComponentDefaultChunkSize,
+			uint64_t m_EmptyEntitiesChunkSize = 100
 		);
 
 		Container(
 			EntityManager* entityManager,
 			ComponentContextsManager* componentContextsManager,
-			const uint64_t& stableComponentDefaultChunkSize,
-			const uint64_t& m_EmptyEntitiesChunkSize = 100
+			uint64_t stableComponentDefaultChunkSize,
+			uint64_t m_EmptyEntitiesChunkSize = 100
 		);
 
 		~Container();
@@ -174,11 +174,11 @@ namespace decs
 		std::vector<StableComponentDestroyData> m_StableComponentDestroyData;
 
 	public:
-		Entity CreateEntity(const bool& isActive = true);
+		Entity CreateEntity(bool isActive = true);
 
 		bool DestroyEntity(Entity& entity);
 
-		void DestroyOwnedEntities(const bool& invokeOnDestroyListeners = true);
+		void DestroyOwnedEntities(bool invokeOnDestroyListeners = true);
 
 		inline uint64_t GetEmptyEntitiesCount() const
 		{
@@ -186,14 +186,14 @@ namespace decs
 		}
 
 	private:
-		void SetEntityActive(const EntityID& entity, const bool& isActive);
+		void SetEntityActive(EntityID entity, bool isActive);
 
-		bool IsEntityActive(const EntityID& entity) const
+		bool IsEntityActive(EntityID entity) const
 		{
 			return m_EntityManager->IsEntityActive(entity);
 		}
 
-		inline uint32_t ComponentsCount(const EntityID& entity) const
+		inline uint32_t ComponentsCount(EntityID entity) const
 		{
 			return m_EntityManager->ComponentsCount(entity);
 		}
@@ -258,7 +258,7 @@ namespace decs
 			std::vector<ComponentRefAsVoid> m_EntityComponentRefs;
 
 		public:
-			void Reserve(const uint64_t& size)
+			void Reserve(uint64_t size)
 			{
 				m_PrefabComponentRefs.reserve(size);
 				m_EntityComponentRefs.reserve(size);
@@ -271,7 +271,7 @@ namespace decs
 				m_SpawnArchetypes.clear();
 			}
 
-			void PopBackSpawnState(const uint64_t& archetypeIdx, const uint64_t& refsStartIdx)
+			void PopBackSpawnState(uint64_t archetypeIdx, uint64_t refsStartIdx)
 			{
 				if (archetypeIdx == 0)
 				{
@@ -313,20 +313,20 @@ namespace decs
 	public:
 		Entity Spawn(
 			const Entity& prefab,
-			const bool& isActive = true
+			bool isActive = true
 		);
 
 		bool Spawn(
 			const Entity& prefab,
 			std::vector<Entity>& spawnedEntities,
-			const uint64_t& spawnCount,
-			const bool& areActive = true
+			uint64_t spawnCount,
+			bool areActive = true
 		);
 
 		bool Spawn(
 			const Entity& prefab,
-			const uint64_t& spawnCount,
-			const bool& areActive = true
+			uint64_t spawnCount,
+			bool areActive = true
 		);
 
 	private:
@@ -349,7 +349,7 @@ namespace decs
 	
 	private:
 		template<typename ComponentType, typename ...Args>
-		ComponentType* AddComponent(const EntityID& e, Args&&... args)
+		ComponentType* AddComponent(EntityID e, Args&&... args)
 		{
 			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<ComponentType>::ID();
 			if (e >= m_EntityManager->GetEntitiesDataCount()) return nullptr;
@@ -502,16 +502,16 @@ namespace decs
 			}
 		}
 
-		bool RemoveUnstableComponent(Entity& entity, const TypeID& componentTypeID);
+		bool RemoveUnstableComponent(Entity& entity, TypeID componentTypeID);
 
-		bool RemoveUnstableComponent(const EntityID& e, const TypeID& componentTypeID);
+		bool RemoveUnstableComponent(EntityID e,  TypeID componentTypeID);
 
-		bool RemoveStableComponent(Entity& entity, const TypeID& componentTypeID);
+		bool RemoveStableComponent(Entity& entity,  TypeID componentTypeID);
 
-		bool RemoveStableComponent(const EntityID& e, const TypeID& componentTypeID);
+		bool RemoveStableComponent( EntityID e,  TypeID componentTypeID);
 
 		template<typename ComponentType>
-		typename component_type<ComponentType>::Type* GetComponent(const EntityID& e) const
+		typename component_type<ComponentType>::Type* GetComponent(EntityID e) const
 		{
 			if (e < m_EntityManager->GetEntitiesDataCount())
 			{
@@ -575,7 +575,7 @@ namespace decs
 		}
 
 		template<typename ComponentType>
-		bool HasComponent(const EntityID& e) const
+		bool HasComponent(EntityID e) const
 		{
 			if (e < m_EntityManager->GetEntitiesDataCount())
 			{
@@ -644,7 +644,7 @@ namespace decs
 		StableContainersManager m_StableContainers = { 100 };
 	public:
 		template<typename T>
-		bool SetStableComponentChunkSize(const uint64_t& chunkSize)
+		bool SetStableComponentChunkSize(uint64_t chunkSize)
 		{
 			return m_StableContainers.SetStableComponentChunkSize<T>(chunkSize);
 		}
@@ -673,7 +673,7 @@ namespace decs
 		ArchetypesMap m_ArchetypesMap;
 
 	private:
-		void DestroyEntitesInArchetypes(Archetype& archetype, const bool& invokeOnDestroyListeners = true);
+		void DestroyEntitesInArchetypes(Archetype& archetype, bool invokeOnDestroyListeners = true);
 
 		template<typename ComponentType>
 		Archetype* GetArchetypeAfterAddUnstableComponent(
@@ -817,15 +817,15 @@ namespace decs
 
 		void AddEntityToDelayedDestroy(const Entity& entity);
 
-		void AddEntityToDelayedDestroy(const EntityID& entityID);
+		void AddEntityToDelayedDestroy(EntityID entityID);
 
-		inline bool AddComponentToDelayedDestroy(const EntityID& entityID, const TypeID typeID, const bool& isStable)
+		inline bool AddComponentToDelayedDestroy(EntityID entityID, TypeID typeID, bool isStable)
 		{
 			auto pair = m_DelayedComponentsToDestroy.insert({ entityID, typeID, isStable });
 			return pair.second;
 		}
 
-		inline bool RemoveComponentFromDelayedToDestroy(const EntityID& entityID, const TypeID& typeID, const bool& isStable)
+		inline bool RemoveComponentFromDelayedToDestroy(EntityID entityID, TypeID typeID, bool isStable)
 		{
 			return m_DelayedComponentsToDestroy.erase({ entityID, typeID, isStable });
 		}
