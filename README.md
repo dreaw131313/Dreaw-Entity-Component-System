@@ -161,7 +161,8 @@ During Iteration with **ForEachForward** method component setups of existing ent
 ```cpp
 void CreateBatchIterators(std::vector<BatchIterator>& iterators, uint64_t desiredBatchesCount, uint64_t minBatchSize);
 ```
-Where **desiredBatchesCount** is number of maximum batch iterators which can be created for this query, and **minBatchSize** is minimal number of enttites in each iterator. 
+* **desiredBatchesCount** - number of maximum batch iterators which can be created for this query
+* **minBatchSize** is minimal number of enttites in each iterator. 
 
 If number of entities in query is less than **desiredBatchesCount** * **minBatchSize** then function will generate smaller number of iterators witch will contain max **minBatchSize** count of entities.
 
