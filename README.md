@@ -1,5 +1,5 @@
 # Dreaw-Entity-Component-Systems
-**Dreaw-Entity-Component-Systems** in short **decs** it is simple archetype based ECS library written in **C++**.<br/>
+**Dreaw-Entity-Component-Systems** in short **decs** it is archetype based ECS library written in **C++**.<br/>
 
 ## About decs
 * Requires C++ 17
