@@ -157,3 +157,24 @@ are undefined behavior.
 
 During Iteration with **ForEachForward** method component setups of existing entities can not be changed and existing entities cannot be destroyed. New entities can be created, them component setup can be edited and destroy them.
 
+**Query** can be used for iterate from multiple threads. To be able to iterate from multiple threads, first we need create batch iterators from **Query** with method:
+```cpp
+void CreateBatchIterators(std::vector<BatchIterator>& iterators, uint64_t desiredBatchesCount, uint64_t minBatchSize);
+```
+Where **desiredBatchesCount** is number of maximum batch iterators which can be created for this query, and **minBatchSize** is minimal number of enttites in each iterator. 
+
+If number of entities in query is less than **desiredBatchesCount** * **minBatchSize** then function will generate smaller number of iterators witch will contain max **minBatchSize** count of entities.
+
+```cpp
+using QueryType = decs::Query<Component1>;
+QueryType query = { container };
+std::vector<QueryType::BatchIterator> iterators;
+query.CreateBatchIterators(iterators, 1000, 8);
+for (auto& it : iterators)
+{
+	it.ForEach(lambda); // can be called from diffrent threads
+}
+```
+During iteration over **Query::BatchIterator** with **ForEach** method, the same rules applay as when iterating with **ForEachForward** method of **Query** class.
+
+
