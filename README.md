@@ -1,15 +1,18 @@
-# Dreaw-Entity-Component-System
-**Dreaw-Entity-Component-System** in short **decs** it is simple ecs library written in **C++** which I am developing for use in my own game engine<br/>
+# Dreaw-Entity-Component-Systems
+**Dreaw-Entity-Component-Systems** in short **decs** it is simple ecs library written in **C++** which I am developing for use in my own game engine<br/>
 
-## decs requirements
+## About decs
 * Requires C++ 17
 * Mainly standard library is used, but hash maps from https://github.com/skarupke/flat_hash_map repository are also used. Which map is used can be changed in Core.h file by changing line with: ``` using ecsMap = std::unordered_map<Key, Value>; ```
+* Archetpye based ecs
+* Can store components with stable and unstable pointers
+
 
 ## How to use **decs**
 To start using decs, copy the **decs** folder to your project and include the header file **decs.h**.
 
 ### Creating and storing entities and components
-All entites and components are stored in class **decs::Container** which is giving access for method for creating and destroying entities.<br/>
+All entites and components are stored in class **decs::Container**.<br/>
 Component classes do not need to inherit from any class. Base types like int, float etc. (except bool) can also be components.<br/>
 
 By default components stored in **decs::Container** do not have **stable memory addresses**, but it can be enforced by using template **decs::Stable< ComponentType >** instead of only **ComponentType**.<br/>
