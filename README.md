@@ -1,10 +1,9 @@
 # Dreaw-Entity-Component-Systems
-**Dreaw-Entity-Component-Systems** in short **decs** it is simple ecs library written in **C++** which I am developing for use in my own game engine<br/>
+**Dreaw-Entity-Component-Systems** in short **decs** it is simple archetype based ECS library written in **C++**.<br/>
 
 ## About decs
 * Requires C++ 17
 * Mainly standard library is used, but hash maps from https://github.com/skarupke/flat_hash_map repository are also used. Which map is used can be changed in Core.h file by changing line with: ``` using ecsMap = std::unordered_map<Key, Value>; ```
-* Archetpye based ecs
 * Can store components with stable and unstable pointers
 
 
