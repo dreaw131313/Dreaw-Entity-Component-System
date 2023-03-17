@@ -135,6 +135,7 @@ namespace decs
 		}
 
 	private:
+		std::vector<uint64_t> m_FreeSpaces;
 		uint64_t m_Capacity = 0;
 		DataType* m_Data = nullptr;
 		bool* m_AllocationFlags = nullptr;
@@ -143,7 +144,6 @@ namespace decs
 		uint64_t m_Size = 0;
 
 		uint64_t m_FreeSpacesCount = 0;
-		std::vector<uint64_t> m_FreeSpaces;
 	};
 
 	class StableComponentRef
@@ -275,10 +275,10 @@ namespace decs
 		}
 
 	private:
-		uint64_t m_ChunkCapacity = 1000;
-		ChunkType* m_CurrentChunk = nullptr;
 		std::vector<ChunkType*> m_Chunks;
 		std::vector<ChunkType*> m_ChunksWithFreeSpace;
+		ChunkType* m_CurrentChunk = nullptr;
+		uint64_t m_ChunkCapacity = 1000;
 
 	private:
 		ChunkType* GetCurrentChunk()
@@ -472,6 +472,5 @@ namespace decs
 	private:
 		ecsMap<TypeID, StableContainerBase*> m_Containers;
 		uint64_t m_DefaultChunkSize = 100;
-
 	};
 }
