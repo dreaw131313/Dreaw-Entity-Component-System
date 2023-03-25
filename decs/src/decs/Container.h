@@ -363,7 +363,7 @@ namespace decs
 		{
 			if constexpr (is_stable<ComponentType>::value)
 			{
-				return AddStableComponent<typename ComponentType::Type>(entityData, std::forward<Args>(args)...);
+				return AddStableComponent<typename component_type<ComponentType>::Type>(entityData, std::forward<Args>(args)...);
 			}
 			else
 			{

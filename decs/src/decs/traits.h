@@ -3,7 +3,6 @@ namespace decs
 	template<typename T>
 	struct Stable
 	{
-		using Type = T;
 	};
 
 	template<typename T>
