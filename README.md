@@ -91,7 +91,7 @@ Query::ForEachForward(Callable&& func);
 template<typename Callable
 Query::ForEachBackward(Callable&& func);
 
-// It works exacly like ForEachBackward
+// It works exactly like ForEachBackward
 template<typename Callable
 Query::ForEach(Callable&& func);
 
