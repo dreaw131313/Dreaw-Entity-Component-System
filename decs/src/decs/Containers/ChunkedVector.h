@@ -239,7 +239,7 @@ namespace decs
 			return m_Chunks[chunkIndex][elementIndex];
 		}
 
-		inline T& operator()(uint64_t chunkIndex, const uint64_t& elementIndex)
+		inline T& operator()(uint64_t chunkIndex, uint64_t elementIndex)
 		{
 			return m_Chunks[chunkIndex][elementIndex];
 		}

@@ -8,6 +8,28 @@ void PrintLine(std::string message = "")
 	std::cout << message << "\n";
 }
 
+
+template<typename ObjectType, typename... FuncArgs>
+class MemberFunctionCaller
+{
+public:
+	MemberFunctionCaller(ObjectType* caller, void(ObjectType::* func)(FuncArgs...)) :
+		m_Caller(caller),
+		m_Func(func)
+	{
+
+	}
+
+	inline void operator()(FuncArgs... args) const
+	{
+		(m_Caller->*m_Func)(std::forward<FuncArgs>(args)...);
+	}
+
+private:
+	ObjectType* m_Caller;
+	void(ObjectType::* m_Func)(FuncArgs...);
+};
+
 class Position
 {
 public:
@@ -24,11 +46,36 @@ public:
 	{
 
 	}
+
+	void TestFunc(int& i)
+	{
+		PrintLine("Is working");
+		//i += 1;
+	}
+};
+
+class ClassWithFunctionToCall
+{
+public:
+	void FunctionWhichDoSomeThing(int& i)
+	{
+		i += 1;
+	}
 };
 
 
 int main()
 {
+	ClassWithFunctionToCall testClassWithFunction = {};
+	MemberFunctionCaller caller = { &testClassWithFunction, &ClassWithFunctionToCall::FunctionWhichDoSomeThing };
+
+	auto caller2 = MemberFunctionCaller(&testClassWithFunction, &ClassWithFunctionToCall::FunctionWhichDoSomeThing);
+	int testI = 1;
+	std::cout << testI << std::endl;
+	caller(testI);
+	std::cout << testI << std::endl;
+
+
 	PrintLine(std::format("Sizeof of Query: {} bytes", sizeof(decs::Query<int>)));
 	PrintLine(std::format("Sizeof of Multi Query: {} bytes", sizeof(decs::MultiQuery<int>)));
 	PrintLine();
@@ -61,6 +108,7 @@ int main()
 
 	PrintLine();
 	PrintLine("Query foreach:");
+
 	query.ForEachForward(lambda);
 	//query.ForEachBackward(lambda);
 
