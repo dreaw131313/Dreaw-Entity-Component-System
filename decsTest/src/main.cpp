@@ -9,25 +9,25 @@ void PrintLine(std::string message = "")
 }
 
 
-template<typename ObjectType, typename... FuncArgs>
+template<typename ObjectType, typename ReturnType,  typename... FuncArgs>
 class MemberFunctionCaller
 {
 public:
-	MemberFunctionCaller(ObjectType* caller, void(ObjectType::* func)(FuncArgs...)) :
+	MemberFunctionCaller(ObjectType* caller, ReturnType(ObjectType::* func)(FuncArgs...)) :
 		m_Caller(caller),
 		m_Func(func)
 	{
 
 	}
 
-	inline void operator()(FuncArgs... args) const
+	inline ReturnType operator()(FuncArgs... args) const
 	{
-		(m_Caller->*m_Func)(std::forward<FuncArgs>(args)...);
+		return (m_Caller->*m_Func)(std::forward<FuncArgs>(args)...);
 	}
 
 private:
 	ObjectType* m_Caller;
-	void(ObjectType::* m_Func)(FuncArgs...);
+	ReturnType(ObjectType::* m_Func)(FuncArgs...);
 };
 
 class Position
@@ -67,7 +67,7 @@ public:
 int main()
 {
 	ClassWithFunctionToCall testClassWithFunction = {};
-	MemberFunctionCaller caller = { &testClassWithFunction, &ClassWithFunctionToCall::FunctionWhichDoSomeThing };
+	MemberFunctionCaller<ClassWithFunctionToCall, void, int&> caller = { &testClassWithFunction, &ClassWithFunctionToCall::FunctionWhichDoSomeThing };
 
 	auto caller2 = MemberFunctionCaller(&testClassWithFunction, &ClassWithFunctionToCall::FunctionWhichDoSomeThing);
 	int testI = 1;
