@@ -19,9 +19,10 @@ namespace decs
 			Entity& entity
 		) :
 			m_EntityData(entity.m_EntityData)
-		{
+		{ 
 			if (m_EntityData != nullptr)
 			{
+				m_EntityVersion = entity.m_EntityData->m_Version;
 				FetchWhenIsInvalid();
 			}
 		}
@@ -55,12 +56,13 @@ namespace decs
 		EntityData* m_EntityData = nullptr;
 		Archetype* m_Archetype = nullptr;
 		PackedContainer<ComponentType>* m_PackedContainer = nullptr;
+		EntityVersion m_EntityVersion = std::numeric_limits<EntityVersion>::max();
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 
 	private:
 		inline bool IsValid() const
 		{
-			return m_EntityData->m_Archetype == m_Archetype && m_EntityData->m_IndexInArchetype == m_IndexInArchetype;
+			return m_EntityData->m_Version == m_EntityVersion && m_EntityData->m_Archetype == m_Archetype && m_EntityData->m_IndexInArchetype == m_IndexInArchetype;
 		}
 
 		inline void FetchWhenIsInvalid()

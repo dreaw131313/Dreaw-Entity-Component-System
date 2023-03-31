@@ -70,13 +70,15 @@ int main()
 		compPosRef->Y = 22.f;
 	}
 
+	std::cout << "ComponentRef<Position> size: " << sizeof(decs::ComponentRef<Position>) << " bytes" << "\n";
+
 	container.Spawn(prefab, 3, true);
 	auto e2 = container.CreateEntity();
 	e2.AddComponent<Position>();
 	e2.AddComponent<decs::Stable<float>>();
 
 
-	using QueryType = decs::Query< Position>;
+	using QueryType = decs::Query<Position>;
 	QueryType query = { container };
 
 	uint64_t iterationCount = 0;
