@@ -85,7 +85,6 @@ namespace decs
 
 		Container(
 			EntityManager* entityManager,
-			ComponentContextsManager* componentContextsManager,
 			uint64_t stableComponentDefaultChunkSize,
 			uint64_t m_EmptyEntitiesChunkSize = 100
 		);

@@ -29,14 +29,13 @@ namespace decs
 
 	Container::Container(
 		EntityManager* entityManager,
-		ComponentContextsManager* componentContextsManager,
 		uint64_t stableComponentDefaultChunkSize,
 		uint64_t m_EmptyEntitiesChunkSize
 	) :
 		m_HaveOwnEntityManager(entityManager == nullptr),
 		m_EntityManager(entityManager == nullptr ? new EntityManager(m_DefaultEntitiesChunkSize) : entityManager),
-		m_HaveOwnComponentContextManager(componentContextsManager == nullptr),
-		m_ComponentContextManager(componentContextsManager == nullptr? new ComponentContextsManager(nullptr) : componentContextsManager),
+		m_HaveOwnComponentContextManager(true),
+		m_ComponentContextManager(new ComponentContextsManager(nullptr)),
 		m_StableContainers(stableComponentDefaultChunkSize),
 		m_EmptyEntities(m_EmptyEntitiesChunkSize)
 	{
@@ -425,7 +424,7 @@ namespace decs
 		}
 	}
 
-	bool Container::RemoveUnstableComponent(Entity& entity,  TypeID componentTypeID)
+	bool Container::RemoveUnstableComponent(Entity& entity, TypeID componentTypeID)
 	{
 		if (!m_CanRemoveComponents || entity.m_Container != this) return false;
 
