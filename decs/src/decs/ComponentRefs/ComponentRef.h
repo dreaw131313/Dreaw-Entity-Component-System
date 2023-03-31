@@ -64,7 +64,7 @@ namespace decs
 	private:
 		inline bool IsValid() const
 		{
-			return m_EntityData->m_Archetype == m_Archetype ;
+			return m_EntityData->m_Archetype == m_Archetype;
 		}
 
 		inline bool IsEntityVersionValid() const
@@ -74,20 +74,16 @@ namespace decs
 
 		inline void FetchWhenIsInvalid()
 		{
-			uint32_t compIndex = Limits::MaxComponentCount;
-			if (m_Archetype != m_EntityData->m_Archetype)
-			{
-				m_Archetype = m_EntityData->m_Archetype;
-				compIndex = m_Archetype->FindTypeIndex<ComponentType>();
-			}
+			m_Archetype = m_EntityData->m_Archetype;
+			uint32_t compIndex = m_Archetype->FindTypeIndex<ComponentType>();
 
-			if (m_Archetype == nullptr || compIndex == Limits::MaxComponentCount)
+			if (m_Archetype != nullptr && compIndex != Limits::MaxComponentCount)
 			{
-				m_PackedContainer = nullptr;
+				m_PackedContainer = dynamic_cast<PackedContainer<ComponentType>*>(m_Archetype->m_TypeData[compIndex].m_PackedContainer);
 			}
 			else
 			{
-				m_PackedContainer = dynamic_cast<PackedContainer<ComponentType>*>(m_Archetype->m_TypeData[compIndex].m_PackedContainer);
+				m_PackedContainer = nullptr;
 			}
 		}
 	};
