@@ -19,7 +19,7 @@ namespace decs
 			Entity& entity
 		) :
 			m_EntityData(entity.m_EntityData)
-		{ 
+		{
 			if (m_EntityData != nullptr)
 			{
 				m_EntityVersion = entity.m_EntityData->m_Version;
@@ -34,13 +34,16 @@ namespace decs
 
 		inline typename component_type<ComponentType>::Type* Get()
 		{
-			if (!IsValid())
+			if (IsEntityVersionValid())
 			{
-				FetchWhenIsInvalid();
-			}
-			if (m_PackedContainer != nullptr)
-			{
-				return m_PackedContainer->GetAsPtr(m_IndexInArchetype);
+				if (!IsValid())
+				{
+					FetchWhenIsInvalid();
+				}
+				if (m_PackedContainer != nullptr)
+				{
+					return m_PackedContainer->GetAsPtr(m_EntityData->m_IndexInArchetype);
+				}
 			}
 			return nullptr;
 		}
@@ -57,12 +60,16 @@ namespace decs
 		Archetype* m_Archetype = nullptr;
 		PackedContainer<ComponentType>* m_PackedContainer = nullptr;
 		EntityVersion m_EntityVersion = std::numeric_limits<EntityVersion>::max();
-		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 
 	private:
 		inline bool IsValid() const
 		{
-			return m_EntityData->m_Version == m_EntityVersion && m_EntityData->m_Archetype == m_Archetype && m_EntityData->m_IndexInArchetype == m_IndexInArchetype;
+			return m_EntityData->m_Archetype == m_Archetype ;
+		}
+
+		inline bool IsEntityVersionValid() const
+		{
+			return m_EntityData->m_Version == m_EntityVersion;
 		}
 
 		inline void FetchWhenIsInvalid()
@@ -73,7 +80,6 @@ namespace decs
 				m_Archetype = m_EntityData->m_Archetype;
 				compIndex = m_Archetype->FindTypeIndex<ComponentType>();
 			}
-			m_IndexInArchetype = m_EntityData->m_IndexInArchetype;
 
 			if (m_Archetype == nullptr || compIndex == Limits::MaxComponentCount)
 			{
