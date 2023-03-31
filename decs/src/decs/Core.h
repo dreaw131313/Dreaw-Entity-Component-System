@@ -48,7 +48,7 @@ namespace decs
 
 	namespace Limits
 	{
-		constexpr uint32_t MaxComponentCount = std::numeric_limits<uint32_t>::max();
-		constexpr uint64_t MinComponentsInArchetypeToPerformMapLookup = 20;
+		inline constexpr uint32_t MaxComponentCount = std::numeric_limits<uint32_t>::max();
+		inline constexpr uint64_t MinComponentsInArchetypeToPerformMapLookup = 20;
 	}
 }

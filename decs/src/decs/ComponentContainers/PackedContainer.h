@@ -58,7 +58,7 @@ namespace decs
 			return m_Data[index];
 		}
 
-		inline ComponentType* GetAsPtr(uint64_t index) const noexcept
+		inline ComponentType* GetAsPtr(uint64_t index) 
 		{
 			return &m_Data[index];
 		}
@@ -204,7 +204,7 @@ namespace decs
 			return *m_ComponentPointers[index];
 		}
 
-		inline ComponentType* GetAsPtr(uint64_t index)const noexcept
+		inline ComponentType* GetAsPtr(uint64_t index)
 		{
 			return m_ComponentPointers[index];
 		}

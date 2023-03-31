@@ -8,28 +8,6 @@ void PrintLine(std::string message = "")
 	std::cout << message << "\n";
 }
 
-
-template<typename ObjectType, typename ReturnType,  typename... FuncArgs>
-class MemberFunctionCaller
-{
-public:
-	MemberFunctionCaller(ObjectType* caller, ReturnType(ObjectType::* func)(FuncArgs...)) :
-		m_Caller(caller),
-		m_Func(func)
-	{
-
-	}
-
-	inline ReturnType operator()(FuncArgs... args) const
-	{
-		return (m_Caller->*m_Func)(std::forward<FuncArgs>(args)...);
-	}
-
-private:
-	ObjectType* m_Caller;
-	ReturnType(ObjectType::* m_Func)(FuncArgs...);
-};
-
 class Position
 {
 public:
@@ -66,16 +44,6 @@ public:
 
 int main()
 {
-	ClassWithFunctionToCall testClassWithFunction = {};
-	MemberFunctionCaller<ClassWithFunctionToCall, void, int&> caller = { &testClassWithFunction, &ClassWithFunctionToCall::FunctionWhichDoSomeThing };
-
-	auto caller2 = MemberFunctionCaller(&testClassWithFunction, &ClassWithFunctionToCall::FunctionWhichDoSomeThing);
-	int testI = 1;
-	std::cout << testI << std::endl;
-	caller(testI);
-	std::cout << testI << std::endl;
-
-
 	PrintLine(std::format("Sizeof of Query: {} bytes", sizeof(decs::Query<int>)));
 	PrintLine(std::format("Sizeof of Multi Query: {} bytes", sizeof(decs::MultiQuery<int>)));
 	PrintLine();
@@ -89,18 +57,26 @@ int main()
 	container.SetStableComponentChunkSize<float>(100);
 
 	auto prefab = prefabContainer.CreateEntity();
-	prefab.AddComponent<decs::Stable<Position>>(1.f, 2.f);
+	prefab.AddComponent<Position>(1.f, 2.f);
 	prefab.AddComponent< decs::Stable<float>>();
 
 	//prefabContainer.Spawn(entity1, 3, true);
 	container.Spawn(prefab, 1, true);
+
+	decs::ComponentRef<Position> compPosRef = { prefab };
+	if (!compPosRef.IsNull())
+	{
+		compPosRef->X = 11.f;
+		compPosRef->Y = 22.f;
+	}
+
 	container.Spawn(prefab, 3, true);
 	auto e2 = container.CreateEntity();
 	e2.AddComponent<Position>();
+	e2.AddComponent<decs::Stable<float>>();
 
-	prefab.Destroy();
 
-	using QueryType = decs::Query< decs::Stable<Position>>;
+	using QueryType = decs::Query< Position>;
 	QueryType query = { container };
 
 	uint64_t iterationCount = 0;
@@ -125,7 +101,7 @@ int main()
 		it.ForEach(lambda);
 	}
 
-	using MultiQueryType = decs::MultiQuery<decs::Stable<Position>>;
+	using MultiQueryType = decs::MultiQuery<Position>;
 	MultiQueryType testMultiQuery = {};
 	testMultiQuery.AddContainer(&container);
 	testMultiQuery.AddContainer(&prefabContainer);

@@ -1,7 +1,7 @@
 #pragma once
-#include "decs\Core.h"
-#include "decs\Type.h"
-#include "decs\EntityData.h"
+#include "decs/Core.h"
+#include "decs/Type.h"
+#include "decs/EntityData.h"
 
 namespace decs
 {
