@@ -130,6 +130,15 @@ namespace decs
 			return 0;
 		}
 
+		inline EntityState GetEntityState() const
+		{
+			if (IsValid())
+			{
+				return m_EntityData->m_State;
+			}
+			return EntityState::Dead;
+		}
+
 	private:
 		Container* m_Container = nullptr;
 		EntityData* m_EntityData = nullptr;

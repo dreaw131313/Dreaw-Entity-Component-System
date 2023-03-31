@@ -42,9 +42,8 @@ namespace decs
 			if (entity >= m_EntityData.Size()) return false;
 
 			auto& data = m_EntityData[entity];
-			if (!data.m_IsAlive) return false;
 
-			if (data.m_IsActive != isActive)
+			if (data.IsAlive() && data.m_IsActive != isActive)
 			{
 				data.m_IsActive = isActive;
 				auto& archEntityData = data.m_Archetype->m_EntitiesData[data.m_IndexInArchetype];
@@ -57,9 +56,7 @@ namespace decs
 		inline bool IsEntityActive(EntityID entity) const
 		{
 			auto& data = m_EntityData[entity];
-			if (entity >= m_EntityData.Size()) return false;
-			if (!data.m_IsAlive) return false;
-			return m_EntityData[entity].m_IsActive;
+			return entity < m_EntityData.Size() && data.IsAlive() && data.m_IsActive;
 		}
 
 		inline EntityVersion GetEntityVersion(EntityID entity) const
@@ -73,7 +70,7 @@ namespace decs
 		inline uint32_t ComponentsCount(EntityID entity) const
 		{
 			auto& data = m_EntityData[entity];
-			if (data.m_IsAlive && data.m_Archetype != nullptr)
+			if (data.IsAlive() && data.m_Archetype != nullptr)
 			{
 				return data.m_Archetype->ComponentsCount();
 			}

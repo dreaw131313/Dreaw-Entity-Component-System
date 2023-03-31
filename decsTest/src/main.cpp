@@ -81,6 +81,7 @@ int main()
 	PrintLine();
 
 	std::cout << "decs::Container size = " << sizeof(decs::Container) << "\n";
+	std::cout << "decs::EntityData size = " << sizeof(decs::EntityData) << "\n";
 
 	decs::Container prefabContainer = {};
 	decs::Container container = {};
@@ -96,6 +97,8 @@ int main()
 	container.Spawn(prefab, 3, true);
 	auto e2 = container.CreateEntity();
 	e2.AddComponent<Position>();
+
+	prefab.Destroy();
 
 	using QueryType = decs::Query< decs::Stable<Position>>;
 	QueryType query = { container };
@@ -130,7 +133,7 @@ int main()
 	auto queryLambda = [&] (decs::Entity& e, Position& pos)
 	{
 		//std::cout << "Query lambda -> Entity ID: " << e.ID() << ". Container ptr:"<< e.GetContainer() << "\n";
-		std::cout << "Query lambda -> Entity ID: " << e.ID() << ". Hash:" << std::hash<decs::Entity>{}(e) << "\n";
+		std::cout << "Query lambda -> Entity ID: " << e.ID() << ". Hash: " << std::hash<decs::Entity>{}(e) << "\n";
 	};
 
 	PrintLine("");

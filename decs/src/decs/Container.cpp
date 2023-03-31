@@ -104,13 +104,13 @@ namespace decs
 			if (m_PerformDelayedDestruction)
 			{
 				if (entityData.IsDelayedToDestruction()) { return false; }
-				entityData.SetState(EntityDestructionState::DelayedToDestruction);
+				entityData.SetState(EntityState::DelayedToDestruction);
 				AddEntityToDelayedDestroy(entity.ID());
 				return true;
 			}
 			else
 			{
-				entityData.SetState(EntityDestructionState::InDestruction);
+				entityData.SetState(EntityState::InDestruction);
 			}
 
 			InvokeEntityDestructionObservers(entity);
@@ -184,7 +184,7 @@ namespace decs
 		{
 			EntityData& data = *m_EmptyEntities[i];
 			entity.Set(data, this);
-			data.SetState(decs::EntityDestructionState::InDestruction);
+			data.SetState(decs::EntityState::InDestruction);
 			if (invokeOnDestroyListeners)
 			{
 				InvokeEntityDestructionObservers(entity);
@@ -569,7 +569,7 @@ namespace decs
 			{
 				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
 				EntityData& data = m_EntityManager->GetEntityData(archetypeEntityData.m_ID);
-				data.SetState(decs::EntityDestructionState::InDestruction);
+				data.SetState(decs::EntityState::InDestruction);
 
 				entity.Set(archetypeEntityData.ID(), this);
 
@@ -711,7 +711,7 @@ namespace decs
 		{
 			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
 			EntityData& data = m_EntityManager->GetEntityData(archetypeEntityData.m_ID);
-			data.SetState(decs::EntityDestructionState::InDestruction);
+			data.SetState(decs::EntityState::InDestruction);
 
 			entity.Set(archetypeEntityData.ID(), this);
 

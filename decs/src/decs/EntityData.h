@@ -5,27 +5,26 @@
 
 namespace decs
 {
-	enum class EntityDestructionState : uint8_t
+	enum class EntityState : uint8_t
 	{
+		Dead = 0,
 		Alive = 1,
 		InDestruction = 2,
 		DelayedToDestruction = 3,
-		Destructed
 	};
 
 	class EntityData
 	{
 	public:
 		Archetype* m_Archetype = nullptr;
-		
+
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
-		EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
+		EntityVersion m_Version = 1;
 
-		bool m_IsAlive = false;
+		EntityState m_State = EntityState::Alive;
 		bool m_IsActive = false;
 		bool m_IsUsedAsPrefab = false;
-		EntityDestructionState m_DestructionState = EntityDestructionState::Alive;
 
 	public:
 		EntityData()
@@ -33,65 +32,66 @@ namespace decs
 
 		}
 
-		EntityData(EntityID id, bool isActive) : m_ID(id), m_Version(1), m_IsAlive(true), m_IsActive(isActive)
+		EntityData(EntityID id, bool isActive) : m_ID(id), m_IsActive(isActive)
 		{
 
 		}
 
 		inline EntityID ID() const noexcept { return m_ID; }
 
-		inline bool IsAlive() const
+		inline bool IsAlive() const noexcept
 		{
-			return m_IsAlive && m_DestructionState == EntityDestructionState::Alive;
+			return m_State == EntityState::Alive;
 		}
 
-		inline bool IsAliveAndInDestruction() const
+		inline bool IsDead() const
 		{
-			return m_IsAlive && m_DestructionState == EntityDestructionState::InDestruction;
+			return m_State != EntityState::Dead;
 		}
 
 		inline bool IsInDestruction() const
 		{
-			return m_DestructionState == EntityDestructionState::InDestruction;
+			return m_State == EntityState::InDestruction;
 		}
 
-		inline void SetState(EntityDestructionState state)
+		inline bool IsValidToPerformComponentOperation() const
 		{
-			m_DestructionState = state;
+			return m_State == decs::EntityState::Alive && !m_IsUsedAsPrefab;
+		}
+
+		inline bool CanBeDestructed() const
+		{
+			return m_State != EntityState::InDestruction && m_State != EntityState::Dead && !m_IsUsedAsPrefab;
+		}
+
+		inline bool IsDelayedToDestruction() const
+		{
+			return m_State == EntityState::DelayedToDestruction;
+		}
+
+		inline bool IsUsedAsPrefab() const
+		{
+			return m_IsUsedAsPrefab;
+		}
+		
+		inline void SetState(EntityState state)
+		{
+			m_State = state;
 
 			switch (state)
 			{
-				case EntityDestructionState::Alive:
+				case EntityState::Alive:
 				{
 					break;
 				}
-				case EntityDestructionState::InDestruction:
-				case EntityDestructionState::DelayedToDestruction:
+				case EntityState::Dead:
+				case EntityState::InDestruction:
+				case EntityState::DelayedToDestruction:
 				{
 					m_IsActive = false;
 					break;
 				}
 			}
-		}
-
-		inline bool IsValidToPerformComponentOperation() const
-		{
-			return m_IsAlive && m_DestructionState == decs::EntityDestructionState::Alive && !m_IsUsedAsPrefab;
-		}
-
-		inline bool CanBeDestructed() const
-		{
-			return m_IsAlive && m_DestructionState != EntityDestructionState::InDestruction && !m_IsUsedAsPrefab;
-		}
-
-		inline bool IsDelayedToDestruction() const
-		{
-			return m_DestructionState == EntityDestructionState::DelayedToDestruction;
-		}
-		
-		inline bool IsUsedAsPrefab() const
-		{
-			return m_IsUsedAsPrefab;
 		}
 
 		inline uint32_t ComponentsCount()

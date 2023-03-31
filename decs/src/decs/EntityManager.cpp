@@ -25,10 +25,8 @@ namespace decs
 		{
 			m_FreeEntitiesCount -= 1;
 			EntityData& entityData = m_EntityData[m_FreeEntities.back()];
-			entityData.SetState(EntityDestructionState::Alive);
+			entityData.SetState(EntityState::Alive);
 			m_FreeEntities.pop_back();
-
-			entityData.m_IsAlive = true;
 			entityData.m_IsActive = isActive;
 
 			return entityData.m_ID;
@@ -46,7 +44,7 @@ namespace decs
 		{
 			EntityData& entityData = m_EntityData[entity];
 
-			if (entityData.m_IsAlive)
+			if (!entityData.IsDead())
 			{
 				m_CreatedEntitiesCount -= 1;
 				m_FreeEntitiesCount += 1;
@@ -54,7 +52,7 @@ namespace decs
 
 				entityData.m_Archetype = nullptr;
 				entityData.m_Version += 1;
-				entityData.m_IsAlive = false;
+				entityData.SetState(EntityState::Dead);
 				return true;
 			}
 		}
@@ -64,7 +62,7 @@ namespace decs
 
 	bool EntityManager::DestroyEntity(EntityData& entityData)
 	{
-		if (entityData.m_IsAlive)
+		if (!entityData.IsDead())
 		{
 			m_CreatedEntitiesCount -= 1;
 			m_FreeEntitiesCount += 1;
@@ -72,7 +70,7 @@ namespace decs
 
 			entityData.m_Archetype = nullptr;
 			entityData.m_Version += 1;
-			entityData.m_IsAlive = false;
+			entityData.SetState(EntityState::Dead);
 			return true;
 		}
 
