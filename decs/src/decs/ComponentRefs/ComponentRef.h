@@ -47,7 +47,7 @@ namespace decs
 
 		inline operator bool() { return Get() != nullptr; }
 
-		inline component_type<ComponentType>::Type* operator->()
+		inline typename component_type<ComponentType>::Type* operator->()
 		{
 			return Get();
 		}
