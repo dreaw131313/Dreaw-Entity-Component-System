@@ -59,16 +59,16 @@ decs::Entity class is represented by ID and reference to decs::Container in whic
 
 Entites can also be spawned which is a little faster than creating them by regular method. To spawn entity you need to use one of **Spawn()** methods from decs::Container class.
 ```cpp
-Entity Spawn(const Entity& prefab, const bool& isActive = true);
+Entity Spawn(const Entity& prefab, bool isActive = true);
 
 bool Spawn(
 	const Entity& prefab, 
 	std::vector<Entity*>& spawnedEntities, 
-	const uint64_t& spawnCount, 
-	const bool& areActive = true
+	uint64_t spawnCount, 
+	bool areActive = true
 	);
 	
-bool Spawn(const Entity& prefab, const uint64_t& spawnCount, const bool& areActive = true);
+bool Spawn(const Entity& prefab, uint64_t spawnCount, bool areActive = true);
 ```
 As prefab parameter can be used entity from any decs::Container.
 
