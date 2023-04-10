@@ -205,7 +205,7 @@ namespace decs
 
 		bool m_IsDirty = true;
 
-		ChunkedVector<ContainerContextType> m_ContainerContexts = {};
+		TChunkedVector<ContainerContextType> m_ContainerContexts = {};
 		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
 
 		uint64_t m_EntitiesCount = 0;

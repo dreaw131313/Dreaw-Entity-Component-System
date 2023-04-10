@@ -4,7 +4,7 @@
 namespace decs
 {
 	template<typename T>
-	class ChunkedVector
+	class TChunkedVector
 	{
 	private:
 #pragma region Chunk class
@@ -152,24 +152,24 @@ namespace decs
 
 
 	public:
-		ChunkedVector()
+		TChunkedVector()
 		{
 			AddChunk();
 		}
 
-		~ChunkedVector()
+		~TChunkedVector()
 		{
 			for (auto& chunk : m_Chunks)
 				Chunk::Destroy(chunk);
 		}
 
-		ChunkedVector(uint64_t chunkCapacity) :
+		TChunkedVector(uint64_t chunkCapacity) :
 			m_ChunkCapacity(chunkCapacity)
 		{
 			AddChunk();
 		}
 
-		ChunkedVector(const ChunkedVector& other)
+		TChunkedVector(const TChunkedVector& other)
 		{
 			m_ChunkCapacity = other.m_ChunkCapacity;
 			m_ChunksCount = other.m_ChunksCount;
@@ -185,7 +185,7 @@ namespace decs
 			}
 		}
 
-		ChunkedVector(ChunkedVector&& other) noexcept :
+		TChunkedVector(TChunkedVector&& other) noexcept :
 			m_ChunkCapacity(other.m_ChunkCapacity),
 			m_ChunksCount(other.m_ChunksCount),
 			m_CreatedElements(other.m_CreatedElements)
@@ -200,12 +200,12 @@ namespace decs
 			other.m_CreatedElements = 0;
 		}
 
-		ChunkedVector& operator=(const ChunkedVector& other)
+		TChunkedVector& operator=(const TChunkedVector& other)
 		{
-			return *this = ChunkedVector(other);
+			return *this = TChunkedVector(other);
 		}
 
-		ChunkedVector& operator=(ChunkedVector&& other)
+		TChunkedVector& operator=(TChunkedVector&& other)
 		{
 			m_ChunkCapacity = other.m_ChunkCapacity;
 			m_ChunksCount = other.m_ChunksCount;

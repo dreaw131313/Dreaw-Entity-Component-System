@@ -150,7 +150,7 @@ namespace decs
 
 #pragma region ENTITIES:
 	private:
-		ChunkedVector<EntityData*> m_EmptyEntities = { m_DefaultEmptyEntitiesChunkSize };
+		TChunkedVector<EntityData*> m_EmptyEntities = { m_DefaultEmptyEntitiesChunkSize };
 		EntityManager* m_EntityManager = nullptr;
 		bool m_HaveOwnEntityManager = false;
 

@@ -109,7 +109,7 @@
     <ClInclude Include="src\decs\EntityManager.h" />
     <ClInclude Include="src\decs\Archetypes\Archetype.h" />
     <ClInclude Include="src\decs\Container.h" />
-    <ClInclude Include="src\decs\Containers\ChunkedVector.h" />
+    <ClInclude Include="src\decs\Containers\TChunkedVector.h" />
     <ClInclude Include="src\decs\Core.h" />
     <ClInclude Include="src\decs\decs.h" />
     <ClInclude Include="src\decs\Entity.h" />

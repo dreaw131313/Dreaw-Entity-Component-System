@@ -1,8 +1,8 @@
 #pragma once
 #include "Core.h"
 #include "EntityData.h"
-#include "Archetypes\Archetype.h"
-#include "Containers\ChunkedVector.h"
+#include "Archetypes/Archetype.h"
+#include "Containers/TChunkedVector.h"
 
 namespace decs
 {
@@ -85,7 +85,7 @@ namespace decs
 		inline const EntityData& GetConstEntityData(EntityID entity) const { return m_EntityData[entity]; }
 
 	private:
-		ChunkedVector<EntityData> m_EntityData = { 1000 };
+		TChunkedVector<EntityData> m_EntityData = { 1000 };
 		std::vector<uint64_t> m_FreeEntities;
 
 		EntityID m_CreatedEntitiesCount = 0;
