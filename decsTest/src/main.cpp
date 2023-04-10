@@ -32,15 +32,14 @@ public:
 	}
 };
 
-class ClassWithFunctionToCall
+class TestCaller
 {
 public:
-	void FunctionWhichDoSomeThing(int& i)
+	void Method(int i, float f)
 	{
-		i += 1;
+
 	}
 };
-
 
 int main()
 {

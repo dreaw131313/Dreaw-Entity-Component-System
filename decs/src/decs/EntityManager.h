@@ -21,9 +21,9 @@ namespace decs
 
 		EntityID CreateEntity(bool isActive = true);
 
-		bool DestroyEntity(EntityID entity);
+		bool DestroyEntityInternal(EntityID entity);
 
-		bool DestroyEntity(EntityData& entityData);
+		bool DestroyEntityInternal(EntityData& entityData);
 
 		inline bool IsEntityAlive(EntityID entity) const
 		{
@@ -43,11 +43,11 @@ namespace decs
 
 			auto& data = m_EntityData[entity];
 
-			if (data.IsAlive() && data.m_IsActive != isActive)
+			if (data.IsAlive() && data.m_bIsActive != isActive)
 			{
-				data.m_IsActive = isActive;
+				data.m_bIsActive = isActive;
 				auto& archEntityData = data.m_Archetype->m_EntitiesData[data.m_IndexInArchetype];
-				archEntityData.m_IsActive = isActive;
+				archEntityData.m_bIsActive = isActive;
 				return true;
 			}
 			return false;
@@ -56,7 +56,7 @@ namespace decs
 		inline bool IsEntityActive(EntityID entity) const
 		{
 			auto& data = m_EntityData[entity];
-			return entity < m_EntityData.Size() && data.IsAlive() && data.m_IsActive;
+			return entity < m_EntityData.Size() && data.IsAlive() && data.m_bIsActive;
 		}
 
 		inline EntityVersion GetEntityVersion(EntityID entity) const

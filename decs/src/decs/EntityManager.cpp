@@ -27,7 +27,7 @@ namespace decs
 			EntityData& entityData = m_EntityData[m_FreeEntities.back()];
 			entityData.SetState(EntityState::Alive);
 			m_FreeEntities.pop_back();
-			entityData.m_IsActive = isActive;
+			entityData.m_bIsActive = isActive;
 
 			return entityData.m_ID;
 		}
@@ -38,7 +38,7 @@ namespace decs
 		}
 	}
 
-	bool EntityManager::DestroyEntity(EntityID entity)
+	bool EntityManager::DestroyEntityInternal(EntityID entity)
 	{
 		if (entity < m_EntityData.Size())
 		{
@@ -60,7 +60,7 @@ namespace decs
 		return false;
 	}
 
-	bool EntityManager::DestroyEntity(EntityData& entityData)
+	bool EntityManager::DestroyEntityInternal(EntityData& entityData)
 	{
 		if (!entityData.IsDead())
 		{

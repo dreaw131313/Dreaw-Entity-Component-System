@@ -150,9 +150,9 @@ namespace decs
 
 #pragma region ENTITIES:
 	private:
-		bool m_HaveOwnEntityManager = false;
-		EntityManager* m_EntityManager = nullptr;
 		ChunkedVector<EntityData*> m_EmptyEntities = { m_DefaultEmptyEntitiesChunkSize };
+		EntityManager* m_EntityManager = nullptr;
+		bool m_HaveOwnEntityManager = false;
 
 		struct StableComponentDestroyData
 		{
@@ -185,6 +185,8 @@ namespace decs
 		}
 
 	private:
+		bool DestroyEntityInternal(Entity& entity);
+
 		void SetEntityActive(EntityID entity, bool isActive);
 
 		bool IsEntityActive(EntityID entity) const
@@ -348,16 +350,6 @@ namespace decs
 	
 	private:
 		template<typename ComponentType, typename ...Args>
-		ComponentType* AddComponent(EntityID e, Args&&... args)
-		{
-			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<ComponentType>::ID();
-			if (e >= m_EntityManager->GetEntitiesDataCount()) return nullptr;
-			EntityData& entityData = m_EntityManager->GetEntityData(e);
-
-			return AddComponent(entityData, std::forward<Args>(args)...);
-		}
-
-		template<typename ComponentType, typename ...Args>
 		inline typename component_type<ComponentType>::Type* AddComponent(EntityData& entityData, Args&&... args)
 		{
 			if constexpr (is_stable<ComponentType>::value)
@@ -400,7 +392,7 @@ namespace decs
 				ComponentType* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
 
 				uint32_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
-				entityNewArchetype->AddEntityData(entityData.m_ID, entityData.m_IsActive);
+				entityNewArchetype->AddEntityData(entityData.m_ID, entityData.m_bIsActive);
 				if (entityData.m_Archetype != nullptr)
 				{
 					entityNewArchetype->MoveEntityAfterAddComponent<ComponentType>(
@@ -424,7 +416,7 @@ namespace decs
 			return nullptr;
 		}
 
-		template<typename ComponentType, typename ...Args >
+		template<typename ComponentType, typename ...Args>
 		ComponentType* AddStableComponent(EntityData& entityData, Args&&... args)
 		{
 			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<Stable<ComponentType>>::ID();
@@ -464,7 +456,7 @@ namespace decs
 
 				// Adding entity to archetype
 				uint32_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
-				entityNewArchetype->AddEntityData(entityData.m_ID, entityData.m_IsActive);
+				entityNewArchetype->AddEntityData(entityData.m_ID, entityData.m_bIsActive);
 				if (entityData.m_Archetype != nullptr)
 				{
 					entityNewArchetype->MoveEntityAfterAddComponent<Stable<ComponentType>>(

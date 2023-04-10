@@ -57,7 +57,7 @@ namespace decs
 
 		inline bool IsActive() const
 		{
-			return IsValid() && m_EntityData->m_IsActive;
+			return IsValid() && m_EntityData->m_bIsActive;
 		}
 
 		inline void SetActive(const bool& isActive)
@@ -70,7 +70,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				m_Container->DestroyEntity(*this);
+				m_Container->DestroyEntityInternal(*this);
 				Invalidate();
 				return true;
 			}

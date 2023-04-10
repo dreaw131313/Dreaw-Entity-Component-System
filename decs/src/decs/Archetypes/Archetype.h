@@ -14,7 +14,7 @@ namespace decs
 	{
 	public:
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
-		bool m_IsActive = false;
+		bool m_bIsActive = false;
 
 	public:
 		ArchetypeEntityData()
@@ -27,13 +27,13 @@ namespace decs
 			bool isActive
 		) :
 			m_ID(id),
-			m_IsActive(isActive)
+			m_bIsActive(isActive)
 		{
 
 		}
 
 		inline EntityID ID() const noexcept { return m_ID; }
-		inline bool IsActive() const noexcept { return m_IsActive; }
+		inline bool IsActive() const noexcept { return m_bIsActive; }
 	};
 
 	struct EntityRemoveSwapBackResult

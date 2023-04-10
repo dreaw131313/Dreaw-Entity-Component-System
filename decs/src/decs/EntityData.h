@@ -23,8 +23,9 @@ namespace decs
 		EntityVersion m_Version = 1;
 
 		EntityState m_State = EntityState::Alive;
-		bool m_IsActive = false;
-		bool m_IsUsedAsPrefab = false;
+		bool m_bIsActive = false;
+		bool m_bIsUsedAsPrefab = false;
+		bool m_bCanBeDestroyed = true;
 
 	public:
 		EntityData()
@@ -32,7 +33,10 @@ namespace decs
 
 		}
 
-		EntityData(EntityID id, bool isActive) : m_ID(id), m_IsActive(isActive)
+		EntityData(EntityID id, bool bIsActive, bool bCanBeDestroyed = true) : 
+			m_ID(id), 
+			m_bIsActive(bIsActive),
+			m_bCanBeDestroyed(bCanBeDestroyed)
 		{
 
 		}
@@ -56,12 +60,12 @@ namespace decs
 
 		inline bool IsValidToPerformComponentOperation() const
 		{
-			return m_State == decs::EntityState::Alive && !m_IsUsedAsPrefab;
+			return m_State == decs::EntityState::Alive && !m_bIsUsedAsPrefab;
 		}
 
 		inline bool CanBeDestructed() const
 		{
-			return m_State != EntityState::InDestruction && m_State != EntityState::Dead && !m_IsUsedAsPrefab;
+			return m_State != EntityState::InDestruction && m_State != EntityState::Dead && !m_bIsUsedAsPrefab;
 		}
 
 		inline bool IsDelayedToDestruction() const
@@ -71,7 +75,7 @@ namespace decs
 
 		inline bool IsUsedAsPrefab() const
 		{
-			return m_IsUsedAsPrefab;
+			return m_bIsUsedAsPrefab;
 		}
 		
 		inline void SetState(EntityState state)
@@ -88,7 +92,7 @@ namespace decs
 				case EntityState::InDestruction:
 				case EntityState::DelayedToDestruction:
 				{
-					m_IsActive = false;
+					m_bIsActive = false;
 					break;
 				}
 			}
