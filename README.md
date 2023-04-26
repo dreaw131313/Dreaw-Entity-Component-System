@@ -155,7 +155,7 @@ Things like:
 
 are undefined behavior.
 
-During Iteration with **ForEachForward** method component setups of existing entities can not be changed and existing entities cannot be destroyed. New entities can be created, them component setup can be edited and destroy them.
+During Iteration with **ForEachForward** method component setups of existing entities can not be changed and existing entities cannot be destroyed. New entities can be created.
 
 **Query** can be used to iterate from multiple threads. To be able to iterate from multiple threads, first we need create batch iterators from **Query** with method:
 ```cpp
