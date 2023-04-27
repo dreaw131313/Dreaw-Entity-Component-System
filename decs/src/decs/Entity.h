@@ -53,6 +53,11 @@ namespace decs
 
 		inline Container* GetContainer() const { return m_Container; }
 
+		inline bool IsValid() const
+		{
+			return m_EntityData != nullptr && m_Version == m_EntityData->m_Version;
+		}
+
 		inline bool IsNull() const { return !IsValid() || !m_EntityData->IsAlive(); }
 
 		inline bool IsActive() const
@@ -161,10 +166,6 @@ namespace decs
 			m_Version = std::numeric_limits<EntityVersion>::max();
 		}
 
-		inline bool IsValid() const
-		{
-			return m_EntityData != nullptr && m_Version == m_EntityData->m_Version;
-		}
 	};
 }
 

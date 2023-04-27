@@ -98,15 +98,15 @@ namespace decs
 		Container& operator = (Container&& other) = delete;
 
 #pragma region Extension data
-	/*public:
-		template<typename T> 
-		T* GetExtensionData()
-		{
-			return static_cast<T*>(m_ExtensionData);
-		}
+		/*public:
+			template<typename T>
+			T* GetExtensionData()
+			{
+				return static_cast<T*>(m_ExtensionData);
+			}
 
-	private:
-		void* m_ExtensionData = nullptr;*/
+		private:
+			void* m_ExtensionData = nullptr;*/
 
 #pragma endregion 
 
@@ -339,7 +339,7 @@ namespace decs
 	private:
 		bool m_HaveOwnComponentContextManager = true;
 		ComponentContextsManager* m_ComponentContextManager = nullptr;
-	
+
 	private:
 		template<typename ComponentType, typename ...Args>
 		inline typename component_type<ComponentType>::Type* AddComponent(EntityData& entityData, Args&&... args)
@@ -365,19 +365,25 @@ namespace decs
 				if (m_PerformDelayedDestruction)
 				{
 					ComponentType* delayedToDestroyComponent = TryAddUnstableComponentDelayedToDestroy<ComponentType>(entityData);
-					if (delayedToDestroyComponent != nullptr) { return delayedToDestroyComponent; }
+					if (delayedToDestroyComponent != nullptr)
+					{
+						return delayedToDestroyComponent;
+					}
 				}
 				else
 				{
 					auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
-					if (currentComponent != nullptr) return currentComponent;
+					if (currentComponent != nullptr)
+					{
+						return currentComponent;
+					}
 				}
 
 				uint32_t componentContainerIndex = 0;
 				Archetype* entityNewArchetype = GetArchetypeAfterAddUnstableComponent<ComponentType>(
 					entityData.m_Archetype,
 					componentContainerIndex
-					);
+				);
 
 				ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
 				PackedContainer<ComponentType>* container = reinterpret_cast<PackedContainer<ComponentType>*>(archetypeTypeData.m_PackedContainer);
@@ -390,7 +396,7 @@ namespace decs
 					entityNewArchetype->MoveEntityAfterAddComponent<ComponentType>(
 						*entityData.m_Archetype,
 						entityData.m_IndexInArchetype
-						);
+					);
 					auto result = entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
 					ValidateEntityInArchetype(result);
 				}
@@ -454,7 +460,7 @@ namespace decs
 					entityNewArchetype->MoveEntityAfterAddComponent<Stable<ComponentType>>(
 						*entityData.m_Archetype,
 						entityData.m_IndexInArchetype
-						);
+					);
 					auto result = entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
 					ValidateEntityInArchetype(result);
 				}
@@ -487,7 +493,7 @@ namespace decs
 
 		bool RemoveUnstableComponent(Entity& entity, TypeID componentTypeID);
 
-		bool RemoveStableComponent(Entity& entity,  TypeID componentTypeID);
+		bool RemoveStableComponent(Entity& entity, TypeID componentTypeID);
 
 		template<typename ComponentType>
 		typename component_type<ComponentType>::Type* GetComponent(EntityID e) const
@@ -664,7 +670,7 @@ namespace decs
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<ComponentType>(
 						m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(),
 						nullptr
-						);
+					);
 				}
 			}
 			else
@@ -676,7 +682,7 @@ namespace decs
 						*toArchetype,
 						m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(),
 						nullptr
-						);
+					);
 				}
 
 				componentContainerIndex = entityNewArchetype->FindTypeIndex<ComponentType>();
@@ -702,7 +708,7 @@ namespace decs
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<Stable<ComponentType>>(
 						m_ComponentContextManager->GetOrCreateComponentContext<Stable<ComponentType>>(),
 						m_StableContainers.GetOrCreateStableContainer<ComponentType>()
-						);
+					);
 				}
 			}
 			else
@@ -714,7 +720,7 @@ namespace decs
 						*toArchetype,
 						m_ComponentContextManager->GetOrCreateComponentContext<Stable<ComponentType>>(),
 						m_StableContainers.GetOrCreateStableContainer<ComponentType>()
-						);
+					);
 				}
 
 				componentContainerIndex = entityNewArchetype->FindTypeIndex<Stable<ComponentType>>();
@@ -785,7 +791,7 @@ namespace decs
 	private:
 		void DestroyDelayedEntities();
 
-		void DestroyDelayedEntity(EntityData& entityData);
+		void DestroyDelayedEntity(Entity& entity);
 
 		void DestroyDelayedComponents();
 

@@ -728,27 +728,28 @@ namespace decs
 		Entity e = {};
 		for (EntityData* entityData : m_DelayedEntitiesToDestroy)
 		{
-			EntityData& entityDataRef = *entityData;
-			e.Set(entityDataRef, this);
-			DestroyDelayedEntity(entityDataRef);
+			e.Set(*entityData, this);
+			DestroyDelayedEntity(e);
 		}
 		m_DelayedEntitiesToDestroy.clear();
 	}
 
-	void Container::DestroyDelayedEntity(EntityData& entityData)
+	void Container::DestroyDelayedEntity(Entity& entity)
 	{
-		Archetype* currentArchetype = entityData.m_Archetype;
+		Archetype* currentArchetype = entity.m_EntityData->m_Archetype;
+		InvokeEntityDestructionObservers(entity);
 		if (currentArchetype != nullptr)
 		{
-			auto result = currentArchetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
+			InvokeEntityComponentDestructionObservers(entity);
+			auto result = currentArchetype->RemoveSwapBackEntity(entity.m_EntityData->m_IndexInArchetype);
 			ValidateEntityInArchetype(result);
 		}
 		else
 		{
-			RemoveFromEmptyEntities(entityData);
+			RemoveFromEmptyEntities(*entity.m_EntityData);
 		}
 
-		m_EntityManager->DestroyEntityInternal(entityData);
+		m_EntityManager->DestroyEntityInternal(*entity.m_EntityData);
 	}
 
 	void Container::DestroyDelayedComponents()
@@ -775,8 +776,6 @@ namespace decs
 		entity.m_EntityData->SetState(EntityState::DelayedToDestruction);
 		m_DelayedEntitiesToDestroy.push_back(entity.m_EntityData);
 
-		InvokeEntityDestructionObservers(entity);
-		InvokeEntityComponentDestructionObservers(entity);
 
 	}
 }
