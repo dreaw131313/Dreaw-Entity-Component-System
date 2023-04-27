@@ -16,6 +16,7 @@ namespace decs
 
 	class EntityData
 	{
+		friend class EntityManager;
 	public:
 		Archetype* m_Archetype = nullptr;
 
@@ -34,8 +35,8 @@ namespace decs
 
 		}
 
-		EntityData(EntityID id, bool bIsActive, bool bCanBeDestroyed = true) : 
-			m_ID(id), 
+		EntityData(EntityID id, bool bIsActive, bool bCanBeDestroyed = true) :
+			m_ID(id),
 			m_bIsActive(bIsActive),
 			m_bCanBeDestroyed(bCanBeDestroyed)
 		{
@@ -78,10 +79,20 @@ namespace decs
 		{
 			return m_bIsUsedAsPrefab;
 		}
-		
+
 		void SetState(EntityState state);
 
 		uint32_t ComponentsCount() const;
+
+		void SetActiveState(bool state);
+
+	private:
+		inline void OnDestroyByEntityManager()
+		{
+			m_Archetype = nullptr;
+			m_Version += 1;
+			m_State = EntityState::Dead;
+		}
 	};
 
 }

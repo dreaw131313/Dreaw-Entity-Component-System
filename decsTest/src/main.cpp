@@ -62,6 +62,11 @@ int main()
 	//prefabContainer.Spawn(entity1, 3, true);
 	container.Spawn(prefab, 1, true);
 
+	if (prefab.HasComponent<float>())
+	{
+		PrintLine("Prefab has stable float component");
+	}
+
 	decs::ComponentRef<Position> compPosRef = { prefab };
 	if (!compPosRef.IsNull())
 	{

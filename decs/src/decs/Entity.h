@@ -63,7 +63,7 @@ namespace decs
 		inline void SetActive(const bool& isActive)
 		{
 			if (IsValid())
-				m_Container->SetEntityActive(m_ID, isActive);
+				m_Container->SetEntityActive(*this, isActive);
 		}
 
 		inline bool Destroy()
@@ -128,15 +128,6 @@ namespace decs
 			if (IsValid())
 				return m_EntityData->ComponentsCount();
 			return 0;
-		}
-
-		inline EntityState GetEntityState() const
-		{
-			if (IsValid())
-			{
-				return m_EntityData->m_State;
-			}
-			return EntityState::Dead;
 		}
 
 	private:

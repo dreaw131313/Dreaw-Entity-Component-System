@@ -50,9 +50,7 @@ namespace decs
 				m_FreeEntitiesCount += 1;
 				m_FreeEntities.push_back(entity);
 
-				entityData.m_Archetype = nullptr;
-				entityData.m_Version += 1;
-				entityData.SetState(EntityState::Dead);
+				entityData.OnDestroyByEntityManager();
 				return true;
 			}
 		}
@@ -68,9 +66,7 @@ namespace decs
 			m_FreeEntitiesCount += 1;
 			m_FreeEntities.push_back(entityData.m_ID);
 
-			entityData.m_Archetype = nullptr;
-			entityData.m_Version += 1;
-			entityData.SetState(EntityState::Dead);
+			entityData.OnDestroyByEntityManager();
 			return true;
 		}
 

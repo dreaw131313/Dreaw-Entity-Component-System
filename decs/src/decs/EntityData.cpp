@@ -17,15 +17,10 @@ namespace decs
 					break;
 				}
 				case EntityState::Dead:
-				{
-					m_bIsActive = false;
-					break;
-				}
 				case EntityState::InDestruction:
 				case EntityState::DelayedToDestruction:
 				{
-					m_bIsActive = false;
-
+					SetActiveState(false);
 					break;
 				}
 			}
@@ -36,5 +31,15 @@ namespace decs
 	{
 		if (m_Archetype == nullptr) return 0;
 		return m_Archetype->ComponentsCount();
+	}
+
+	void EntityData::SetActiveState(bool state)
+	{
+		m_bIsActive = state;
+
+		if (m_Archetype != nullptr)
+		{
+			m_Archetype->SetEntityActiveState(m_IndexInArchetype, state);
+		}
 	}
 }

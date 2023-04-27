@@ -89,7 +89,7 @@ namespace decs
 	class Archetype final
 	{
 		friend class Container;
-		friend class EntitytData;
+		friend class EntityData;
 		friend class EntityManager;
 		friend class ArchetypesMap;
 
@@ -186,6 +186,14 @@ namespace decs
 		}
 
 	private:
+		inline void SetEntityActiveState(uint32_t index, bool isActive)
+		{
+			if (index < m_EntitiesCount)
+			{
+				m_EntitiesData[index].m_bIsActive = isActive;
+			}
+		}
+
 		template<typename ComponentType>
 		inline void AddTypeToAddingComponentOrder()
 		{

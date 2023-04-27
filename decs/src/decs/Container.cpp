@@ -176,22 +176,26 @@ namespace decs
 				RemoveFromEmptyEntities(entityData);
 			}
 
-			m_EntityManager->DestroyEntityInternal(entityID);
+			m_EntityManager->DestroyEntityInternal(entityData);
 			return true;
 		}
 
 		return false;
 	}
 
-	void Container::SetEntityActive(EntityID entity, bool isActive)
+	void Container::SetEntityActive(Entity& entity, bool isActive)
 	{
-		if (m_EntityManager->SetEntityActive(entity, isActive))
+		if (entity.m_Container == this && entity.m_EntityData->IsAlive() && entity.m_EntityData->m_bIsActive != isActive)
 		{
-			Entity e{ entity , this };
+			entity.m_EntityData->SetActiveState(isActive);
 			if (isActive)
-				InvokeEntityActivationObservers(e);
+			{
+				InvokeEntityActivationObservers(entity);
+			}
 			else
-				InvokeEntityDeactivationObservers(e);
+			{
+				InvokeEntityDeactivationObservers(entity);
+			}
 		}
 	}
 
@@ -438,7 +442,7 @@ namespace decs
 
 		if (m_PerformDelayedDestruction)
 		{
-			return AddComponentToDelayedDestroy(entity.ID(), componentTypeID, false);
+			return AddComponentToDelayedDestroy(entity.m_EntityData, componentTypeID, false);
 		}
 
 		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
@@ -480,12 +484,6 @@ namespace decs
 		return true;
 	}
 
-	bool Container::RemoveUnstableComponent(EntityID e, TypeID componentTypeID)
-	{
-		Entity entity(e, this);
-		return RemoveUnstableComponent(entity, componentTypeID);
-	}
-
 	bool Container::RemoveStableComponent(Entity& entity, TypeID componentTypeID)
 	{
 		if (!m_CanRemoveComponents || entity.m_Container != this) return false;
@@ -498,7 +496,7 @@ namespace decs
 
 		if (m_PerformDelayedDestruction)
 		{
-			return AddComponentToDelayedDestroy(entity.ID(), componentTypeID, true);
+			return AddComponentToDelayedDestroy(entity.m_EntityData, componentTypeID, true);
 		}
 
 		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
@@ -545,12 +543,6 @@ namespace decs
 		return true;
 	}
 
-	bool Container::RemoveStableComponent(EntityID e, TypeID componentTypeID)
-	{
-		Entity entity(e, this);
-		return RemoveStableComponent(entity, componentTypeID);
-	}
-
 	void Container::InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData)
 	{
 		Entity e = { entityData, this };
@@ -569,8 +561,8 @@ namespace decs
 			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
 			{
 				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-				EntityData& data = m_EntityManager->GetEntityData(archetypeEntityData.m_ID);
-				data.SetState(decs::EntityState::InDestruction);
+				EntityData& entityData = m_EntityManager->GetEntityData(archetypeEntityData.m_ID);
+				entityData.SetState(decs::EntityState::InDestruction);
 
 				entity.Set(archetypeEntityData.ID(), this);
 
@@ -585,7 +577,7 @@ namespace decs
 					);
 				}
 
-				m_EntityManager->DestroyEntityInternal(archetypeEntityData.ID());
+				m_EntityManager->DestroyEntityInternal(entityData);
 			}
 		}
 		else
@@ -678,24 +670,26 @@ namespace decs
 		{
 			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
 			entity.Set(archetypeEntityData.ID(), this);
-
-			InvokeEntityCreationObservers(entity);
-
-			// fill entity component refs, component refs are needed couse if component will be added to current entity it will chang its archetype.
-			m_ComponentRefsToInvokeObserverCallbacks.clear();
-			for (uint32_t i = 0; i < archetypeComponentsCount; i++)
+			if (entity.m_EntityData->IsAlive())
 			{
-				m_ComponentRefsToInvokeObserverCallbacks.emplace_back(archetype.m_TypeData[i].m_TypeID, *entity.m_EntityData, i);
-			}
+				InvokeEntityCreationObservers(entity);
 
-			for (uint32_t i = 0; i < archetypeComponentsCount; i++)
-			{
-				ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
-				auto& compRef = m_ComponentRefsToInvokeObserverCallbacks[i];
-
-				if (compRef)
+				// fill entity component refs, component refs are needed couse if component will be added to current entity it will chang its archetype.
+				m_ComponentRefsToInvokeObserverCallbacks.clear();
+				for (uint32_t i = 0; i < archetypeComponentsCount; i++)
 				{
-					archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent_S(compRef.Get(), entity);
+					m_ComponentRefsToInvokeObserverCallbacks.emplace_back(archetype.m_TypeData[i].m_TypeID, *entity.m_EntityData, i);
+				}
+
+				for (uint32_t i = 0; i < archetypeComponentsCount; i++)
+				{
+					ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
+					auto& compRef = m_ComponentRefsToInvokeObserverCallbacks[i];
+
+					if (compRef)
+					{
+						archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent_S(compRef.Get(), entity);
+					}
 				}
 			}
 		}
@@ -732,7 +726,7 @@ namespace decs
 	void Container::DestroyDelayedEntities()
 	{
 		Entity e = {};
-		for (EntityData* entityData: m_DelayedEntitiesToDestroy)
+		for (EntityData* entityData : m_DelayedEntitiesToDestroy)
 		{
 			EntityData& entityDataRef = *entityData;
 			e.Set(entityDataRef, this);
@@ -759,15 +753,18 @@ namespace decs
 
 	void Container::DestroyDelayedComponents()
 	{
+		Entity entity = {};
 		for (auto& data : m_DelayedComponentsToDestroy)
 		{
+			entity.Set(*data.m_EntityData, this);
+
 			if (data.m_IsStable)
 			{
-				RemoveStableComponent(data.m_EntityID, data.m_TypeID);
+				RemoveStableComponent(entity, data.m_TypeID);
 			}
 			else
 			{
-				RemoveUnstableComponent(data.m_EntityID, data.m_TypeID);
+				RemoveUnstableComponent(entity, data.m_TypeID);
 			}
 		}
 		m_DelayedComponentsToDestroy.clear();
