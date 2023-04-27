@@ -97,12 +97,30 @@ namespace decs
 		Container& operator = (const Container& other) = delete;
 		Container& operator = (Container&& other) = delete;
 
+#pragma region Extension data
+	/*public:
+		template<typename T> 
+		T* GetExtensionData()
+		{
+			return static_cast<T*>(m_ExtensionData);
+		}
+
+	private:
+		void* m_ExtensionData = nullptr;*/
+
+#pragma endregion 
+
 #pragma region UTILITY
 	public:
 		/// <summary>
 		/// Some functions change internal state of container during invocation and if error will be thrown in this functions they can leave invalid internal state of Container object. This function brings back container to valid state.
 		/// </summary>
 		void ValidateInternalState();
+
+		uint64_t GetCreatedEntitiesCount()
+		{
+			return m_EntityManager->GetCreatedEntitiesCount();
+		}
 #pragma endregion
 
 #pragma region FLAGS:
@@ -154,24 +172,6 @@ namespace decs
 		EntityManager* m_EntityManager = nullptr;
 		bool m_HaveOwnEntityManager = false;
 
-		struct StableComponentDestroyData
-		{
-		public:
-			StableContainerBase* m_StableContainer = nullptr;
-			uint64_t m_ChunkIndex = std::numeric_limits<uint64_t>::max();
-			uint64_t m_ElementIndex = std::numeric_limits<uint64_t>::max();
-
-		public:
-			StableComponentDestroyData() {}
-
-			StableComponentDestroyData(StableContainerBase* stableContainer, const uint64_t& chunkIndex, const uint64_t& elementIndex) :
-				m_StableContainer(stableContainer), m_ChunkIndex(chunkIndex), m_ElementIndex(elementIndex)
-			{
-			}
-		};
-
-		std::vector<StableComponentDestroyData> m_StableComponentDestroyData;
-
 	public:
 		Entity CreateEntity(bool isActive = true);
 
@@ -221,6 +221,8 @@ namespace decs
 				m_EntityManager->GetEntityData(swapBackResult.ID).m_IndexInArchetype = swapBackResult.Index;
 			}
 		}
+
+		void InvokeEntityComponentDestructionObservers(Entity& entity);
 
 #pragma endregion
 
@@ -796,7 +798,7 @@ namespace decs
 
 #pragma region DELAYED DESTROY:
 	private:
-		std::vector<EntityID> m_DelayedEntitiesToDestroy;
+		std::vector<EntityData*> m_DelayedEntitiesToDestroy;
 		ecsSet<DelayedComponentPair> m_DelayedComponentsToDestroy;
 
 		bool m_PerformDelayedDestruction = false;
@@ -804,11 +806,11 @@ namespace decs
 	private:
 		void DestroyDelayedEntities();
 
+		void DestroyDelayedEntity(EntityData& entityData);
+
 		void DestroyDelayedComponents();
 
-		void AddEntityToDelayedDestroy(const Entity& entity);
-
-		void AddEntityToDelayedDestroy(EntityID entityID);
+		void AddEntityToDelayedDestroy(Entity& entity);
 
 		inline bool AddComponentToDelayedDestroy(EntityID entityID, TypeID typeID, bool isStable)
 		{

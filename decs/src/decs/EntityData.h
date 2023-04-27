@@ -1,10 +1,11 @@
 #pragma once
 #include "Core.h"
-#include "Archetypes\Archetype.h"
 #include "ComponentContainers\StableContainer.h"
 
 namespace decs
 {
+	class Archetype;
+
 	enum class EntityState : uint8_t
 	{
 		Dead = 0,
@@ -50,7 +51,7 @@ namespace decs
 
 		inline bool IsDead() const
 		{
-			return m_State != EntityState::Dead;
+			return m_State == EntityState::Dead;
 		}
 
 		inline bool IsInDestruction() const
@@ -78,31 +79,9 @@ namespace decs
 			return m_bIsUsedAsPrefab;
 		}
 		
-		inline void SetState(EntityState state)
-		{
-			m_State = state;
+		void SetState(EntityState state);
 
-			switch (state)
-			{
-				case EntityState::Alive:
-				{
-					break;
-				}
-				case EntityState::Dead:
-				case EntityState::InDestruction:
-				case EntityState::DelayedToDestruction:
-				{
-					m_bIsActive = false;
-					break;
-				}
-			}
-		}
-
-		inline uint32_t ComponentsCount()
-		{
-			if (m_Archetype == nullptr) return 0;
-			return m_Archetype->ComponentsCount();
-		}
+		uint32_t ComponentsCount() const;
 	};
 
 }

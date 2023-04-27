@@ -1,9 +1,10 @@
 #pragma once
-#include "decs\Core.h"
-#include "decs\ComponentContext\ComponentContextsManager.h"
-#include "decs\Type.h"
-#include "decs\ComponentContainers\PackedContainer.h"
-#include "decs\ComponentContainers\StableContainer.h"
+#include "decs/Core.h"
+#include "decs/ComponentContext/ComponentContextsManager.h"
+#include "decs/Type.h"
+#include "decs/ComponentContainers/PackedContainer.h"
+#include "decs/ComponentContainers/StableContainer.h"
+#include "decs/EntityData.h"
 
 namespace decs
 {
@@ -251,7 +252,14 @@ namespace decs
 
 				for (uint64_t i = 0; i < m_ComponentsCount; i++)
 				{
-					m_TypeData[i].m_PackedContainer->PopBack();
+					auto& typeData = m_TypeData[i];
+					if (typeData.m_StableContainer != nullptr)
+					{
+						StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetComponentDataAsVoid(index));
+						typeData.m_StableContainer->Remove(compRef->m_ChunkIndex, compRef->m_Index);
+					}
+
+					typeData.m_PackedContainer->PopBack();
 				}
 
 				m_EntitiesCount -= 1;
@@ -264,7 +272,14 @@ namespace decs
 
 				for (uint64_t i = 0; i < m_ComponentsCount; i++)
 				{
-					m_TypeData[i].m_PackedContainer->RemoveSwapBack(index);
+					auto& typeData = m_TypeData[i];
+					if (typeData.m_StableContainer != nullptr)
+					{
+						StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetComponentDataAsVoid(index));
+						typeData.m_StableContainer->Remove(compRef->m_ChunkIndex, compRef->m_Index);
+					}
+
+					typeData.m_PackedContainer->RemoveSwapBack(index);
 				}
 
 				m_EntitiesCount -= 1;

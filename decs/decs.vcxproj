@@ -128,6 +128,7 @@
     <ClCompile Include="src\decs\Archetypes\ArchetypesMap.cpp" />
     <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp" />
     <ClCompile Include="src\decs\Container.cpp" />
+    <ClCompile Include="src\decs\EntityData.cpp" />
     <ClCompile Include="src\decs\Iteration\MultiQuery.h" />
     <ClCompile Include="src\decs\EntityManager.cpp" />
   </ItemGroup>

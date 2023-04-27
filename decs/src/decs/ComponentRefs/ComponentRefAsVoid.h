@@ -2,6 +2,7 @@
 #include "decs/Core.h"
 #include "decs/Type.h"
 #include "decs/EntityData.h"
+#include "Archetypes/Archetype.h"
 
 namespace decs
 {

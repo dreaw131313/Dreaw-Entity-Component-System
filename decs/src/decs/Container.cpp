@@ -130,8 +130,8 @@ namespace decs
 			}
 			m_EntityManager->DestroyEntityInternal(data);
 		}
-		m_EmptyEntities.Clear();
 
+		m_EmptyEntities.Clear();
 		m_StableContainers.ClearContainers();
 	}
 
@@ -149,8 +149,7 @@ namespace decs
 			if (m_PerformDelayedDestruction)
 			{
 				if (entityData.IsDelayedToDestruction()) { return false; }
-				entityData.SetState(EntityState::DelayedToDestruction);
-				AddEntityToDelayedDestroy(entity.ID());
+				AddEntityToDelayedDestroy(entity);
 				return true;
 			}
 			else
@@ -163,30 +162,10 @@ namespace decs
 			Archetype* currentArchetype = entityData.m_Archetype;
 			if (currentArchetype != nullptr)
 			{
-				const uint32_t componentsCount = currentArchetype->ComponentsCount();
 				const uint32_t indexInArchetype = entityData.m_IndexInArchetype;
 
-				m_StableComponentDestroyData.clear();
-
 				// Invoke On destroy methods
-				for (uint64_t i = 0; i < componentsCount; i++)
-				{
-					ArchetypeTypeData& typeData = currentArchetype->m_TypeData[i];
-					typeData.m_ComponentContext->InvokeOnDestroyComponent_S(typeData.m_PackedContainer->GetComponentPtrAsVoid(indexInArchetype), entity);
-
-					if (typeData.m_StableContainer != nullptr)
-					{
-						StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetComponentDataAsVoid(indexInArchetype));
-						m_StableComponentDestroyData.emplace_back(typeData.m_StableContainer, compRef->m_ChunkIndex, compRef->m_Index);
-					}
-				}
-
-				uint64_t m_StableComponentsCount = m_StableComponentDestroyData.size();
-				for (uint64_t i = 0; i < m_StableComponentsCount; i++)
-				{
-					StableComponentDestroyData& destroyData = m_StableComponentDestroyData[i];
-					destroyData.m_StableContainer->Remove(destroyData.m_ChunkIndex, destroyData.m_ElementIndex);
-				}
+				InvokeEntityComponentDestructionObservers(entity);
 
 				// Remove entity from component bucket:
 				auto result = currentArchetype->RemoveSwapBackEntity(indexInArchetype);
@@ -213,6 +192,20 @@ namespace decs
 				InvokeEntityActivationObservers(e);
 			else
 				InvokeEntityDeactivationObservers(e);
+		}
+	}
+
+	void Container::InvokeEntityComponentDestructionObservers(Entity& entity)
+	{
+		Archetype* currentArchetype = entity.m_EntityData->m_Archetype;
+		const uint32_t componentsCount = currentArchetype->ComponentsCount();
+		const uint32_t indexInArchetype = entity.m_EntityData->m_IndexInArchetype;
+
+		// Invoke On destroy methods
+		for (uint64_t i = 0; i < componentsCount; i++)
+		{
+			ArchetypeTypeData& typeData = currentArchetype->m_TypeData[i];
+			typeData.m_ComponentContext->InvokeOnDestroyComponent_S(typeData.m_PackedContainer->GetComponentPtrAsVoid(indexInArchetype), entity);
 		}
 	}
 
@@ -739,12 +732,29 @@ namespace decs
 	void Container::DestroyDelayedEntities()
 	{
 		Entity e = {};
-		for (auto& entityID : m_DelayedEntitiesToDestroy)
+		for (EntityData* entityData: m_DelayedEntitiesToDestroy)
 		{
-			e.Set(entityID, this);
-			e.Destroy();
+			EntityData& entityDataRef = *entityData;
+			e.Set(entityDataRef, this);
+			DestroyDelayedEntity(entityDataRef);
 		}
 		m_DelayedEntitiesToDestroy.clear();
+	}
+
+	void Container::DestroyDelayedEntity(EntityData& entityData)
+	{
+		Archetype* currentArchetype = entityData.m_Archetype;
+		if (currentArchetype != nullptr)
+		{
+			auto result = currentArchetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
+			ValidateEntityInArchetype(result);
+		}
+		else
+		{
+			RemoveFromEmptyEntities(entityData);
+		}
+
+		m_EntityManager->DestroyEntityInternal(entityData);
 	}
 
 	void Container::DestroyDelayedComponents()
@@ -763,14 +773,13 @@ namespace decs
 		m_DelayedComponentsToDestroy.clear();
 	}
 
-	void Container::AddEntityToDelayedDestroy(const Entity& entity)
+	void Container::AddEntityToDelayedDestroy(Entity& entity)
 	{
-		m_DelayedEntitiesToDestroy.push_back(entity.ID());
-	}
+		entity.m_EntityData->SetState(EntityState::DelayedToDestruction);
+		m_DelayedEntitiesToDestroy.push_back(entity.m_EntityData);
 
-	void Container::AddEntityToDelayedDestroy(EntityID entityID)
-	{
-		m_DelayedEntitiesToDestroy.push_back(entityID);
-	}
+		InvokeEntityDestructionObservers(entity);
+		InvokeEntityComponentDestructionObservers(entity);
 
+	}
 }
