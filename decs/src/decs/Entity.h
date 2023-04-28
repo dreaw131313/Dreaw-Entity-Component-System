@@ -112,7 +112,7 @@ namespace decs
 		inline typename component_type<T>::Type* AddComponent(Args&&... args)
 		{
 			if (IsValid())
-				return m_Container->AddComponent<T>(*m_EntityData, std::forward<Args>(args)...);
+				return m_Container->AddComponent<T>(*this, *m_EntityData, std::forward<Args>(args)...);
 
 			return nullptr;
 		}

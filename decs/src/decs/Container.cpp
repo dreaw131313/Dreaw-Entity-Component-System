@@ -543,10 +543,9 @@ namespace decs
 		return true;
 	}
 
-	void Container::InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData)
+	void Container::InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(Entity& entity, ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData)
 	{
-		Entity e = { entityData, this };
-		componentContext->InvokeOnCreateComponent_S(componentPtr, e);
+		componentContext->InvokeOnCreateComponent_S(componentPtr, entity);
 	}
 
 	void Container::DestroyEntitesInArchetypes(Archetype& archetype, bool invokeOnDestroyListeners)
@@ -670,26 +669,23 @@ namespace decs
 		{
 			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
 			entity.Set(archetypeEntityData.ID(), this);
-			if (entity.m_EntityData->IsAlive())
+			InvokeEntityCreationObservers(entity);
+
+			// fill entity component refs, component refs are needed couse if component will be added to current entity it will chang its archetype.
+			m_ComponentRefsToInvokeObserverCallbacks.clear();
+			for (uint32_t i = 0; i < archetypeComponentsCount; i++)
 			{
-				InvokeEntityCreationObservers(entity);
+				m_ComponentRefsToInvokeObserverCallbacks.emplace_back(archetype.m_TypeData[i].m_TypeID, *entity.m_EntityData, i);
+			}
 
-				// fill entity component refs, component refs are needed couse if component will be added to current entity it will chang its archetype.
-				m_ComponentRefsToInvokeObserverCallbacks.clear();
-				for (uint32_t i = 0; i < archetypeComponentsCount; i++)
+			for (uint32_t i = 0; i < archetypeComponentsCount; i++)
+			{
+				ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
+				auto& compRef = m_ComponentRefsToInvokeObserverCallbacks[i];
+
+				if (compRef)
 				{
-					m_ComponentRefsToInvokeObserverCallbacks.emplace_back(archetype.m_TypeData[i].m_TypeID, *entity.m_EntityData, i);
-				}
-
-				for (uint32_t i = 0; i < archetypeComponentsCount; i++)
-				{
-					ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
-					auto& compRef = m_ComponentRefsToInvokeObserverCallbacks[i];
-
-					if (compRef)
-					{
-						archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent_S(compRef.Get(), entity);
-					}
+					archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent_S(compRef.Get(), entity);
 				}
 			}
 		}
@@ -775,7 +771,5 @@ namespace decs
 	{
 		entity.m_EntityData->SetState(EntityState::DelayedToDestruction);
 		m_DelayedEntitiesToDestroy.push_back(entity.m_EntityData);
-
-
 	}
 }

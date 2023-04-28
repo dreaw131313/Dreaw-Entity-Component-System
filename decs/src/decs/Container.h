@@ -342,20 +342,20 @@ namespace decs
 
 	private:
 		template<typename ComponentType, typename ...Args>
-		inline typename component_type<ComponentType>::Type* AddComponent(EntityData& entityData, Args&&... args)
+		inline typename component_type<ComponentType>::Type* AddComponent(Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			if constexpr (is_stable<ComponentType>::value)
 			{
-				return AddStableComponent<typename component_type<ComponentType>::Type>(entityData, std::forward<Args>(args)...);
+				return AddStableComponent<typename component_type<ComponentType>::Type>(entity, entityData, std::forward<Args>(args)...);
 			}
 			else
 			{
-				return AddUnstableComponent<ComponentType>(entityData, std::forward<Args>(args)...);
+				return AddUnstableComponent<ComponentType>(entity, entityData, std::forward<Args>(args)...);
 			}
 		}
 
 		template<typename ComponentType, typename ...Args>
-		ComponentType* AddUnstableComponent(EntityData& entityData, Args&&... args)
+		ComponentType* AddUnstableComponent(Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<ComponentType>::ID();
 			if (!m_CanAddComponents) return nullptr;
@@ -408,14 +408,14 @@ namespace decs
 				entityData.m_IndexInArchetype = entityIndexBuffor;
 				entityData.m_Archetype = entityNewArchetype;
 
-				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(archetypeTypeData.m_ComponentContext, createdComponent, entityData);
+				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(entity, archetypeTypeData.m_ComponentContext, createdComponent, entityData);
 				return createdComponent;
 			}
 			return nullptr;
 		}
 
 		template<typename ComponentType, typename ...Args>
-		ComponentType* AddStableComponent(EntityData& entityData, Args&&... args)
+		ComponentType* AddStableComponent(Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<Stable<ComponentType>>::ID();
 
@@ -472,7 +472,7 @@ namespace decs
 				entityData.m_IndexInArchetype = entityIndexBuffor;
 				entityData.m_Archetype = entityNewArchetype;
 
-				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(archetypeTypeData.m_ComponentContext, componentPtr, entityData);
+				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(entity,archetypeTypeData.m_ComponentContext, componentPtr, entityData);
 				return componentPtr;
 			}
 			return nullptr;
@@ -574,7 +574,7 @@ namespace decs
 			return HasComponentInternal(entityData, Type<ComponentType>::ID());
 		}
 
-		void InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData);
+		void InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(Entity& entity, ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData);
 
 		template<typename ComponentType>
 		ComponentType* TryAddUnstableComponentDelayedToDestroy(
