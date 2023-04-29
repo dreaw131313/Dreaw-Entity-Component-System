@@ -216,7 +216,7 @@ namespace decs
 	void Container::ReserveEntities(uint32_t entitiesToReserve)
 	{
 		m_ReservedEntitiesCount += entitiesToReserve;
-		m_ReservedEntityData.reserve(m_ReservedEntityData.size() + entitiesToReserve);
+		m_ReservedEntityData.reserve(m_ReservedEntitiesCount);
 		m_EntityManager->CreateReservedEntityData(entitiesToReserve, m_ReservedEntityData);
 	}
 

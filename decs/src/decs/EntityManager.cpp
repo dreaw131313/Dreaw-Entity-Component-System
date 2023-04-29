@@ -93,6 +93,7 @@ namespace decs
 
 	void EntityManager::CreateEntityFromReservedEntityData(EntityData* entityData, bool bIsActive)
 	{
+		m_CreatedEntitiesCount += 1;
 		entityData->m_bIsActive = bIsActive;
 		entityData->SetState(EntityState::Alive);
 	}
@@ -100,6 +101,7 @@ namespace decs
 	void EntityManager::ReturnReservedEntityData(std::vector<EntityData*> reservedEntityData)
 	{
 		uint64_t entitiesToReturn = reservedEntityData.size();
+		m_FreeEntitiesCount += entitiesToReturn;
 		for (uint64_t idx = 0; idx < entitiesToReturn; idx++)
 		{
 			m_FreeEntities.push_back(reservedEntityData[idx]->GetID());
