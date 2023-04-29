@@ -32,15 +32,6 @@ public:
 	}
 };
 
-class TestCaller
-{
-public:
-	void Method(int i, float f)
-	{
-
-	}
-};
-
 int main()
 {
 	PrintLine(std::format("Sizeof of Query: {} bytes", sizeof(decs::Query<int>)));
@@ -60,6 +51,7 @@ int main()
 	auto prefab = prefabContainer.CreateEntity();
 	prefab.AddComponent<Position>(1.f, 2.f);
 	prefab.AddStableComponent<float>();
+
 
 	//prefabContainer.Spawn(entity1, 3, true);
 	container.Spawn(prefab, 1, true);
