@@ -75,14 +75,34 @@ namespace decs
 
 	void EntityManager::CreateReservedEntityData(uint32_t entitesToReserve, std::vector<EntityData*>& reservedEntityData)
 	{
+		for (uint32_t idx = 0; idx < entitesToReserve; idx++)
+		{
+			if (m_FreeEntities.size() > 0)
+			{
+				EntityData& data = m_EntityData[m_FreeEntities.back()];
+				m_FreeEntities.pop_back();
+				reservedEntityData.push_back(&data);
+			}
+			else
+			{
+				EntityData& data = m_EntityData.EmplaceBack((EntityID)m_EntityData.Size(), false);
+				reservedEntityData.push_back(&data);
+			}
+		}
 	}
 
-	void EntityManager::CreateEntityFromReservedEntityData(EntityData* entityData)
+	void EntityManager::CreateEntityFromReservedEntityData(EntityData* entityData, bool bIsActive)
 	{
-
+		entityData->m_bIsActive = bIsActive;
+		entityData->SetState(EntityState::Alive);
 	}
 
-	void EntityManager::ReturnReservedEntityData(std::vector<EntityData*> entityDatasToReturn, uint64_t entitytDataCount)
+	void EntityManager::ReturnReservedEntityData(std::vector<EntityData*> reservedEntityData)
 	{
+		uint64_t entitiesToReturn = reservedEntityData.size();
+		for (uint64_t idx = 0; idx < entitiesToReturn; idx++)
+		{
+			m_FreeEntities.push_back(reservedEntityData[idx]->GetID());
+		}
 	}
 }

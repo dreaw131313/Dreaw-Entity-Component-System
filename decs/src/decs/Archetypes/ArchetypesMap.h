@@ -217,7 +217,7 @@ namespace decs
 		template<typename ComponentType>
 		Archetype* GetSingleComponentArchetype()
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<ComponentType>::ID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<ComponentType>::GetID();
 			auto it = m_SingleComponentArchetypes.find(typeID);
 
 			return it != m_SingleComponentArchetypes.end() ? it->second : nullptr;
@@ -226,7 +226,7 @@ namespace decs
 		template<typename ComponentType>
 		Archetype* CreateSingleComponentArchetype(ComponentContextBase* componentContext, StableContainerBase* stableContainer)
 		{
-			TYPE_ID_CONSTEXPR uint64_t typeID = Type<ComponentType>::ID();
+			TYPE_ID_CONSTEXPR uint64_t typeID = Type<ComponentType>::GetID();
 			auto& archetype = m_SingleComponentArchetypes[typeID];
 			if (archetype != nullptr) return archetype;
 			archetype = &m_Archetypes.EmplaceBack();
@@ -256,7 +256,7 @@ namespace decs
 		template<typename T>
 		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype)
 		{
-			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::ID();
+			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::GetID();
 			auto edge = toArchetype.m_AddEdges.find(addedComponentTypeID);
 
 			if (edge == toArchetype.m_AddEdges.end()) return nullptr;
@@ -266,7 +266,7 @@ namespace decs
 		template<typename T>
 		inline Archetype* CreateArchetypeAfterAddComponent(Archetype& toArchetype, ComponentContextBase* componentContext, StableContainerBase* stableContainer)
 		{
-			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::ID();
+			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::GetID();
 			auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
 			if (edge != nullptr)
 			{
@@ -312,7 +312,7 @@ namespace decs
 		template<typename T>
 		inline Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype)
 		{
-			return GetArchetypeAfterRemoveComponent(fromArchetype, Type<T>::ID());
+			return GetArchetypeAfterRemoveComponent(fromArchetype, Type<T>::GetID());
 		}
 	};
 }

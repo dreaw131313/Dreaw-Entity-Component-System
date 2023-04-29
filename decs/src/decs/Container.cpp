@@ -80,21 +80,9 @@ namespace decs
 	{
 		if (m_CanCreateEntities)
 		{
-			EntityData* entityData = m_EntityManager->CreateEntity(isActive);
+			EntityData* entityData = CreateAliveEntityData(isActive);
 			Entity e(entityData, this);
 			AddToEmptyEntities(*e.m_EntityData);
-			InvokeEntityCreationObservers(e);
-			return e;
-		}
-		return Entity();
-	}
-
-	Entity Container::CreateEntityWithoutAddingToEmptyEntities(bool isActive)
-	{
-		if (m_CanCreateEntities)
-		{
-			EntityData* entityData = m_EntityManager->CreateEntity(isActive);
-			Entity e(entityData, this);
 			InvokeEntityCreationObservers(e);
 			return e;
 		}
@@ -151,7 +139,7 @@ namespace decs
 	{
 		if (m_CanDestroyEntities && entity.m_Container == this)
 		{
-			EntityID entityID = entity.ID();
+			EntityID entityID = entity.GetID();
 			EntityData& entityData = *entity.m_EntityData;
 			if (!entityData.CanBeDestructed())
 			{
@@ -225,17 +213,29 @@ namespace decs
 		}
 	}
 
+	void Container::ReserveEntities(uint32_t entitiesToReserve)
+	{
+		m_ReservedEntitiesCount += entitiesToReserve;
+		m_ReservedEntityData.reserve(m_ReservedEntityData.size() + entitiesToReserve);
+		m_EntityManager->CreateReservedEntityData(entitiesToReserve, m_ReservedEntityData);
+	}
+
+	void Container::FreeReservedEntities()
+	{
+		m_EntityManager->ReturnReservedEntityData(m_ReservedEntityData);
+	}
+
 	Entity Container::Spawn(const Entity& prefab, bool isActive)
 	{
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
 		Container* prefabContainer = prefab.GetContainer();
-		EntityData& prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.ID());
+		EntityData& prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.GetID());
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
 		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
 
-		EntityData* spawnedEntityData = m_EntityManager->CreateEntity(isActive);
+		EntityData* spawnedEntityData = CreateAliveEntityData(isActive);
 		Entity spawnedEntity(spawnedEntityData, this);
 
 		if (prefabArchetype == nullptr)
@@ -279,7 +279,7 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
-				EntityData* entityData = m_EntityManager->CreateEntity(areActive);
+				EntityData* entityData = CreateAliveEntityData(areActive);
 				spawnedEntity.Set(
 					entityData,
 					this
@@ -301,7 +301,7 @@ namespace decs
 		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
-			EntityData* entityData = m_EntityManager->CreateEntity(areActive);
+			EntityData* entityData = CreateAliveEntityData(areActive);
 			spawnedEntity.Set(
 				entityData,
 				this
@@ -336,7 +336,7 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
-				EntityData* entityData= m_EntityManager->CreateEntity(areActive);
+				EntityData* entityData = CreateAliveEntityData(areActive);
 				Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
 				AddToEmptyEntities(*spawnedEntity.m_EntityData);
 				InvokeEntityCreationObservers(spawnedEntity);
@@ -355,7 +355,7 @@ namespace decs
 		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
-			EntityData* entityData = m_EntityManager->CreateEntity(areActive);
+			EntityData* entityData = CreateAliveEntityData(areActive);
 			Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
 
 			CreateEntityFromSpawnData(*entityData, spawnState);
@@ -574,7 +574,7 @@ namespace decs
 				EntityData& entityData = m_EntityManager->GetEntityData(archetypeEntityData.m_ID);
 				entityData.SetState(decs::EntityState::InDestruction);
 
-				entity.Set(archetypeEntityData.ID(), this);
+				entity.Set(archetypeEntityData.GetID(), this);
 
 				InvokeEntityDestructionObservers(entity);
 
@@ -595,7 +595,7 @@ namespace decs
 			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
 			{
 				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-				m_EntityManager->DestroyEntityInternal(archetypeEntityData.ID());
+				m_EntityManager->DestroyEntityInternal(archetypeEntityData.GetID());
 			}
 		}
 
@@ -679,7 +679,7 @@ namespace decs
 		for (int64_t entityDataIdx = entityDataCount - 1; entityDataIdx > -1; entityDataIdx--)
 		{
 			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-			entity.Set(archetypeEntityData.ID(), this);
+			entity.Set(archetypeEntityData.GetID(), this);
 			InvokeEntityCreationObservers(entity);
 
 			// fill entity component refs, component refs are needed couse if component will be added to current entity it will chang its archetype.
@@ -715,7 +715,7 @@ namespace decs
 			EntityData& data = m_EntityManager->GetEntityData(archetypeEntityData.m_ID);
 			data.SetState(decs::EntityState::InDestruction);
 
-			entity.Set(archetypeEntityData.ID(), this);
+			entity.Set(archetypeEntityData.GetID(), this);
 
 			InvokeEntityDestructionObservers(entity);
 

@@ -34,7 +34,7 @@ namespace decs
 		}
 
 		Entity(EntityData* entityData, Container* container) :
-			m_ID(entityData->ID()),
+			m_ID(entityData->GetID()),
 			m_Container(container),
 			m_EntityData(entityData),
 			m_Version(entityData->m_Version)
@@ -49,7 +49,7 @@ namespace decs
 			return this->m_Container == rhs.m_Container && this->m_ID == rhs.m_ID && this->m_Version == rhs.m_Version;
 		}
 
-		inline EntityID ID() const { return m_ID; }
+		inline EntityID GetID() const { return m_ID; }
 
 		inline Container* GetContainer() const { return m_Container; }
 
@@ -182,7 +182,7 @@ struct std::hash<decs::Entity>
 {
 	std::size_t operator()(const decs::Entity& entity) const
 	{
-		uint64_t eIDHash = std::hash<decs::EntityID>{}(entity.ID());
+		uint64_t eIDHash = std::hash<decs::EntityID>{}(entity.GetID());
 		uint64_t containerPtrHash = std::hash<decs::Container*>{}(entity.GetContainer());
 
 		return eIDHash ^ (containerPtrHash + 0x9e3779b9 + (eIDHash << 6) + (eIDHash >> 2));

@@ -210,7 +210,7 @@ namespace decs
 			}
 		}
 
-		inline virtual TypeID GetTypeID()const noexcept override { return Type<Stable<DataType>>::ID(); }
+		inline virtual TypeID GetTypeID()const noexcept override { return Type<Stable<DataType>>::GetID(); }
 
 		virtual StableContainerBase* CreateOwnEmptyCopy(uint64_t withChunkSize) override
 		{
@@ -396,7 +396,7 @@ namespace decs
 		template<typename T>
 		bool SetStableComponentChunkSize(uint64_t chunkSize)
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::ID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::GetID();
 			auto& container = m_Containers[typeID];
 
 			if (container == nullptr)
@@ -410,7 +410,7 @@ namespace decs
 		template<typename T>
 		uint64_t GetStableComponentChunkSize()
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::ID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::GetID();
 			auto it = m_Containers.find(typeID);
 
 			if (it != m_Containers.end())
@@ -442,7 +442,7 @@ namespace decs
 		template<typename T>
 		StableContainer<T>* GetOrCreateStableContainer()
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::ID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::GetID();
 			auto& container = m_Containers[typeID];
 
 			if (container == nullptr)

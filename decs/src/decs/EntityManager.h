@@ -34,9 +34,9 @@ namespace decs
 
 		void CreateReservedEntityData(uint32_t entitesToReserve, std::vector<EntityData*>& reservedEntityData);
 
-		void CreateEntityFromReservedEntityData(EntityData* entityData);
+		void CreateEntityFromReservedEntityData(EntityData* entityData, bool bIsActive);
 
-		void ReturnReservedEntityData(std::vector<EntityData*> entityDatasToReturn, uint64_t entitytDataCount);
+		void ReturnReservedEntityData(std::vector<EntityData*> reservedEntityData);
 
 	private:
 		TChunkedVector<EntityData> m_EntityData = { 1000 };
@@ -44,5 +44,6 @@ namespace decs
 
 		EntityID m_CreatedEntitiesCount = 0;
 		uint64_t m_FreeEntitiesCount = 0;
+
 	};
 }

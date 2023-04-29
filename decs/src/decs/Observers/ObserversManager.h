@@ -120,7 +120,7 @@ namespace decs
 		template<typename ComponentType>
 		ComponentObserver<ComponentType>* GetComponentObserver()
 		{
-			ComponentObserverBase*& observer = m_ComponentyContainers[Type<ComponentType>::ID()];
+			ComponentObserverBase*& observer = m_ComponentyContainers[Type<ComponentType>::GetID()];
 			if (observer == nullptr)
 			{
 				observer = new ComponentObserver<ComponentType>();

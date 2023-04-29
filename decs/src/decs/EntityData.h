@@ -43,7 +43,7 @@ namespace decs
 
 		}
 
-		inline EntityID ID() const noexcept { return m_ID; }
+		inline EntityID GetID() const noexcept { return m_ID; }
 
 		inline bool IsAlive() const noexcept
 		{

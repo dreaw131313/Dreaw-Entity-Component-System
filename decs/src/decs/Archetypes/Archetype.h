@@ -33,14 +33,14 @@ namespace decs
 
 		}
 
-		inline EntityID ID() const noexcept { return m_ID; }
+		inline EntityID GetID() const noexcept { return m_ID; }
 		inline bool IsActive() const noexcept { return m_bIsActive; }
 	};
 
 	struct EntityRemoveSwapBackResult
 	{
 	public:
-		EntityID ID = std::numeric_limits<EntityID>::max();
+		EntityID GetID = std::numeric_limits<EntityID>::max();
 		uint32_t Index = std::numeric_limits<uint32_t>::max();
 
 		EntityRemoveSwapBackResult()
@@ -48,14 +48,14 @@ namespace decs
 
 		}
 
-		EntityRemoveSwapBackResult(EntityID id, uint32_t index) : ID(id), Index(index)
+		EntityRemoveSwapBackResult(EntityID id, uint32_t index) : GetID(id), Index(index)
 		{
 
 		}
 
 		inline bool IsValid() const noexcept
 		{
-			return ID != std::numeric_limits<EntityID>::max() && Index != std::numeric_limits<uint32_t>::max();
+			return GetID != std::numeric_limits<EntityID>::max() && Index != std::numeric_limits<uint32_t>::max();
 		}
 	};
 
@@ -169,7 +169,7 @@ namespace decs
 		template<typename T>
 		inline uint32_t FindTypeIndex() const
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::GetID();
 			if (m_ComponentsCount < Limits::MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint32_t i = 0; i < m_ComponentsCount; i++)
@@ -197,7 +197,7 @@ namespace decs
 		template<typename ComponentType>
 		inline void AddTypeToAddingComponentOrder()
 		{
-			m_AddingOrderTypeIDs.push_back(Type<ComponentType>::ID());
+			m_AddingOrderTypeIDs.push_back(Type<ComponentType>::GetID());
 		}
 
 		inline void AddTypeToAddingComponentOrder(TypeID id)
@@ -208,7 +208,7 @@ namespace decs
 		template<typename ComponentType>
 		void AddTypeID(ComponentContextBase* componentContext, StableContainerBase* stableContainer)
 		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::ID();
+			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::GetID();
 			auto it = m_TypeIDsIndexes.find(id);
 			if (it == m_TypeIDsIndexes.end())
 			{
@@ -395,7 +395,7 @@ namespace decs
 		template<typename ComponentType>
 		void MoveEntityAfterAddComponent(Archetype& fromArchetype, uint64_t fromIndex)
 		{
-			TYPE_ID_CONSTEXPR TypeID newComponentTypeID = Type<ComponentType>::ID();
+			TYPE_ID_CONSTEXPR TypeID newComponentTypeID = Type<ComponentType>::GetID();
 
 			uint64_t thisArchetypeIndex = 0;
 			uint64_t fromArchetypeIndex = 0;

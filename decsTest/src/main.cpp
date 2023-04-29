@@ -88,7 +88,7 @@ int main()
 	uint64_t iterationCount = 0;
 	auto lambda = [&] (decs::Entity& e, Position& pos)
 	{
-		PrintLine("Enityt ID: " + std::to_string(e.ID()) + " pos: " + std::to_string(pos.X) + ", " + std::to_string(pos.Y));
+		PrintLine("Enityt ID: " + std::to_string(e.GetID()) + " pos: " + std::to_string(pos.X) + ", " + std::to_string(pos.Y));
 	};
 
 	PrintLine();
@@ -115,7 +115,7 @@ int main()
 	auto queryLambda = [&] (decs::Entity& e, Position& pos)
 	{
 		//std::cout << "Query lambda -> Entity ID: " << e.ID() << ". Container ptr:"<< e.GetContainer() << "\n";
-		std::cout << "Query lambda -> Entity ID: " << e.ID() << ". Hash: " << std::hash<decs::Entity>{}(e) << "\n";
+		std::cout << "Query lambda -> Entity ID: " << e.GetID() << ". Hash: " << std::hash<decs::Entity>{}(e) << "\n";
 	};
 
 	PrintLine("");
