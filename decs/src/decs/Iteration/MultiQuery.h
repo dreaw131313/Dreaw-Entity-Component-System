@@ -102,7 +102,7 @@ namespace decs
 							{
 								if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
 								{
-									entityBuffor.Set(entityData.m_ID, containerContext.m_Container);
+									entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
 									func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 								}
 								else
@@ -151,7 +151,7 @@ namespace decs
 							{
 								if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
 								{
-									entityBuffor.Set(entityData.m_ID, containerContext.m_Container);
+									entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
 									func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 								}
 								else
@@ -369,7 +369,7 @@ namespace decs
 								{
 									if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
 									{
-										entityBuffor.Set(entityData.m_ID, containerContext.m_Container);
+										entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
 										func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 									}
 									else

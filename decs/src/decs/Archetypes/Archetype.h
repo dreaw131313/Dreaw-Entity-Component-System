@@ -14,7 +14,7 @@ namespace decs
 	struct ArchetypeEntityData
 	{
 	public:
-		EntityID m_ID = std::numeric_limits<EntityID>::max();
+		EntityData* m_EntityData = nullptr;
 		bool m_bIsActive = false;
 
 	public:
@@ -24,38 +24,23 @@ namespace decs
 		}
 
 		ArchetypeEntityData(
-			EntityID id,
+			EntityData* entityData,
 			bool isActive
 		) :
-			m_ID(id),
+			m_EntityData(entityData),
 			m_bIsActive(isActive)
 		{
 
 		}
 
-		inline EntityID GetID() const noexcept { return m_ID; }
-		inline bool IsActive() const noexcept { return m_bIsActive; }
-	};
-
-	struct EntityRemoveSwapBackResult
-	{
-	public:
-		EntityID GetID = std::numeric_limits<EntityID>::max();
-		uint32_t Index = std::numeric_limits<uint32_t>::max();
-
-		EntityRemoveSwapBackResult()
+		inline EntityData* GetEntityData()
 		{
-
+			return m_EntityData;
 		}
 
-		EntityRemoveSwapBackResult(EntityID id, uint32_t index) : GetID(id), Index(index)
+		inline bool IsActive() const noexcept
 		{
-
-		}
-
-		inline bool IsValid() const noexcept
-		{
-			return GetID != std::numeric_limits<EntityID>::max() && Index != std::numeric_limits<uint32_t>::max();
+			return m_bIsActive;
 		}
 	};
 
@@ -244,15 +229,15 @@ namespace decs
 			}
 		}
 
-		void AddEntityData(EntityID id, const bool& isActive)
+		void AddEntityData(EntityData* entityData, const bool& isActive)
 		{
-			m_EntitiesData.emplace_back(id, isActive);
+			m_EntitiesData.emplace_back(entityData, isActive);
 			m_EntitiesCount += 1;
 		}
 
-		EntityRemoveSwapBackResult RemoveSwapBackEntity(uint64_t index)
+		void RemoveSwapBackEntity(uint64_t index)
 		{
-			if (m_EntitiesCount == 0) return EntityRemoveSwapBackResult();
+			if (m_EntitiesCount == 0) return;
 
 			if (index == m_EntitiesCount - 1)
 			{
@@ -271,7 +256,6 @@ namespace decs
 				}
 
 				m_EntitiesCount -= 1;
-				return EntityRemoveSwapBackResult();
 			}
 			else
 			{
@@ -291,7 +275,7 @@ namespace decs
 				}
 
 				m_EntitiesCount -= 1;
-				return EntityRemoveSwapBackResult(m_EntitiesData[index].m_ID, (uint32_t)index);
+				m_EntitiesData[index].m_EntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
 			}
 		}
 

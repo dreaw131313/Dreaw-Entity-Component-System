@@ -206,14 +206,6 @@ namespace decs
 			m_EmptyEntities.PopBack();
 		}
 
-		inline void ValidateEntityInArchetype(const EntityRemoveSwapBackResult& swapBackResult)
-		{
-			if (swapBackResult.IsValid())
-			{
-				m_EntityManager->GetEntityData(swapBackResult.GetID).m_IndexInArchetype = swapBackResult.Index;
-			}
-		}
-
 		void InvokeEntityComponentDestructionObservers(Entity& entity);
 
 		inline EntityData* CreateAliveEntityData(bool bIsActive)
@@ -420,15 +412,14 @@ namespace decs
 				ComponentType* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
 
 				uint32_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
-				entityNewArchetype->AddEntityData(entityData.m_ID, entityData.m_bIsActive);
+				entityNewArchetype->AddEntityData(&entityData, entityData.m_bIsActive);
 				if (entityData.m_Archetype != nullptr)
 				{
 					entityNewArchetype->MoveEntityAfterAddComponent<ComponentType>(
 						*entityData.m_Archetype,
 						entityData.m_IndexInArchetype
 					);
-					auto result = entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
-					ValidateEntityInArchetype(result);
+					entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
 				}
 				else
 				{
@@ -484,15 +475,14 @@ namespace decs
 
 				// Adding entity to archetype
 				uint32_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
-				entityNewArchetype->AddEntityData(entityData.m_ID, entityData.m_bIsActive);
+				entityNewArchetype->AddEntityData(&entityData, entityData.m_bIsActive);
 				if (entityData.m_Archetype != nullptr)
 				{
 					entityNewArchetype->MoveEntityAfterAddComponent<Stable<ComponentType>>(
 						*entityData.m_Archetype,
 						entityData.m_IndexInArchetype
 					);
-					auto result = entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
-					ValidateEntityInArchetype(result);
+					entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
 				}
 				else
 				{

@@ -168,8 +168,7 @@ namespace decs
 				InvokeEntityComponentDestructionObservers(entity);
 
 				// Remove entity from component bucket:
-				auto result = currentArchetype->RemoveSwapBackEntity(indexInArchetype);
-				ValidateEntityInArchetype(result);
+				currentArchetype->RemoveSwapBackEntity(indexInArchetype);
 			}
 			else
 			{
@@ -420,7 +419,7 @@ namespace decs
 
 		spawnedEntityData.m_Archetype = archetype;
 		spawnedEntityData.m_IndexInArchetype = archetype->EntitiesCount();
-		archetype->AddEntityData(spawnedEntityData.m_ID, spawnedEntityData.m_bIsActive);
+		archetype->AddEntityData(&spawnedEntityData, spawnedEntityData.m_bIsActive);
 
 		auto& typeDataVector = archetype->m_TypeData;
 		for (uint32_t i = spawnState.m_CompRefsStart; i < componentsCount; i++)
@@ -472,7 +471,7 @@ namespace decs
 		if (newEntityArchetype != nullptr)
 		{
 			uint32_t entityIndexBuffor = newEntityArchetype->EntitiesCount();
-			newEntityArchetype->AddEntityData(entityData.m_ID, entityData.m_bIsActive);
+			newEntityArchetype->AddEntityData(&entityData, entityData.m_bIsActive);
 			newEntityArchetype->MoveEntityAfterRemoveComponent(
 				componentTypeID,
 				*entityData.m_Archetype,
@@ -489,8 +488,7 @@ namespace decs
 			m_EmptyEntities.EmplaceBack(&entityData);
 		}
 
-		auto result = oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
-		ValidateEntityInArchetype(result);
+		oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
 
 		return true;
 	}
@@ -528,7 +526,7 @@ namespace decs
 		if (newEntityArchetype != nullptr)
 		{
 			uint32_t entityIndexBuffor = newEntityArchetype->EntitiesCount();
-			newEntityArchetype->AddEntityData(entityData.m_ID, entityData.m_bIsActive);
+			newEntityArchetype->AddEntityData(&entityData, entityData.m_bIsActive);
 			newEntityArchetype->MoveEntityAfterRemoveComponent(
 				componentTypeID,
 				*entityData.m_Archetype,
@@ -548,8 +546,7 @@ namespace decs
 		StableComponentRef* componentRef = static_cast<StableComponentRef*>(packedContainer->GetComponentDataAsVoid(oldArchetypeIndex));
 		archetypeTypeData.m_StableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_Index);
 
-		auto result = oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
-		ValidateEntityInArchetype(result);
+		oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
 
 		return true;
 	}
@@ -571,10 +568,10 @@ namespace decs
 			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
 			{
 				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-				EntityData& entityData = m_EntityManager->GetEntityData(archetypeEntityData.m_ID);
+				EntityData& entityData = *archetypeEntityData.m_EntityData;
 				entityData.SetState(decs::EntityState::InDestruction);
 
-				entity.Set(archetypeEntityData.GetID(), this);
+				entity.Set(archetypeEntityData.m_EntityData, this);
 
 				InvokeEntityDestructionObservers(entity);
 
@@ -595,7 +592,7 @@ namespace decs
 			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
 			{
 				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-				m_EntityManager->DestroyEntityInternal(archetypeEntityData.GetID());
+				m_EntityManager->DestroyEntityInternal(*archetypeEntityData.GetEntityData());
 			}
 		}
 
@@ -679,7 +676,7 @@ namespace decs
 		for (int64_t entityDataIdx = entityDataCount - 1; entityDataIdx > -1; entityDataIdx--)
 		{
 			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-			entity.Set(archetypeEntityData.GetID(), this);
+			entity.Set(archetypeEntityData.GetEntityData(), this);
 			InvokeEntityCreationObservers(entity);
 
 			// fill entity component refs, component refs are needed couse if component will be added to current entity it will chang its archetype.
@@ -712,10 +709,10 @@ namespace decs
 		for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
 		{
 			ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-			EntityData& data = m_EntityManager->GetEntityData(archetypeEntityData.m_ID);
+			EntityData& data = *archetypeEntityData.GetEntityData();
 			data.SetState(decs::EntityState::InDestruction);
 
-			entity.Set(archetypeEntityData.GetID(), this);
+			entity.Set(archetypeEntityData.GetEntityData(), this);
 
 			InvokeEntityDestructionObservers(entity);
 
@@ -748,8 +745,7 @@ namespace decs
 		if (currentArchetype != nullptr)
 		{
 			InvokeEntityComponentDestructionObservers(entity);
-			auto result = currentArchetype->RemoveSwapBackEntity(entity.m_EntityData->m_IndexInArchetype);
-			ValidateEntityInArchetype(result);
+			currentArchetype->RemoveSwapBackEntity(entity.m_EntityData->m_IndexInArchetype);
 		}
 		else
 		{
