@@ -80,9 +80,21 @@ namespace decs
 	{
 		if (m_CanCreateEntities)
 		{
-			EntityID entityID = m_EntityManager->CreateEntity(isActive);
-			Entity e(entityID, this);
+			EntityData* entityData = m_EntityManager->CreateEntity(isActive);
+			Entity e(entityData, this);
 			AddToEmptyEntities(*e.m_EntityData);
+			InvokeEntityCreationObservers(e);
+			return e;
+		}
+		return Entity();
+	}
+
+	Entity Container::CreateEntityWithoutAddingToEmptyEntities(bool isActive)
+	{
+		if (m_CanCreateEntities)
+		{
+			EntityData* entityData = m_EntityManager->CreateEntity(isActive);
+			Entity e(entityData, this);
 			InvokeEntityCreationObservers(e);
 			return e;
 		}
@@ -223,13 +235,12 @@ namespace decs
 
 		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
 
-		EntityID entityID = m_EntityManager->CreateEntity(isActive);
-		Entity spawnedEntity(entityID, this);
-		EntityData& spawnedEntityData = *spawnedEntity.m_EntityData;
+		EntityData* spawnedEntityData = m_EntityManager->CreateEntity(isActive);
+		Entity spawnedEntity(spawnedEntityData, this);
 
 		if (prefabArchetype == nullptr)
 		{
-			AddToEmptyEntities(spawnedEntityData);
+			AddToEmptyEntities(*spawnedEntityData);
 			InvokeEntityCreationObservers(spawnedEntity);
 			return spawnedEntity;
 		}
@@ -238,7 +249,7 @@ namespace decs
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
-		CreateEntityFromSpawnData(spawnedEntityData, spawnState);
+		CreateEntityFromSpawnData(*spawnedEntityData, spawnState);
 
 		InvokeEntityCreationObservers(spawnedEntity);
 
@@ -268,9 +279,9 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
-				EntityID entityId = m_EntityManager->CreateEntity(areActive);
+				EntityData* entityData = m_EntityManager->CreateEntity(areActive);
 				spawnedEntity.Set(
-					entityId,
+					entityData,
 					this
 				);
 				AddToEmptyEntities(*spawnedEntity.m_EntityData);
@@ -290,13 +301,13 @@ namespace decs
 		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
-			EntityID entityID = m_EntityManager->CreateEntity(areActive);
+			EntityData* entityData = m_EntityManager->CreateEntity(areActive);
 			spawnedEntity.Set(
-				entityID,
+				entityData,
 				this
 			);
 
-			CreateEntityFromSpawnData(*spawnedEntity.m_EntityData, spawnState);
+			CreateEntityFromSpawnData(*entityData, spawnState);
 			InvokeEntityCreationObservers(spawnedEntity);
 
 			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
@@ -325,8 +336,8 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
-				EntityID entityID = m_EntityManager->CreateEntity(areActive);
-				Entity& spawnedEntity = spawnedEntities.emplace_back(entityID, this);
+				EntityData* entityData= m_EntityManager->CreateEntity(areActive);
+				Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
 				AddToEmptyEntities(*spawnedEntity.m_EntityData);
 				InvokeEntityCreationObservers(spawnedEntity);
 			}
@@ -344,10 +355,10 @@ namespace decs
 		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
-			EntityID entityID = m_EntityManager->CreateEntity(areActive);
-			Entity& spawnedEntity = spawnedEntities.emplace_back(entityID, this);
+			EntityData* entityData = m_EntityManager->CreateEntity(areActive);
+			Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
 
-			CreateEntityFromSpawnData(*spawnedEntity.m_EntityData, spawnState);
+			CreateEntityFromSpawnData(*entityData, spawnState);
 			InvokeEntityCreationObservers(spawnedEntity);
 
 			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)

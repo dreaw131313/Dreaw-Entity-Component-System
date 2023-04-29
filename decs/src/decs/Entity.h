@@ -33,11 +33,11 @@ namespace decs
 
 		}
 
-		Entity(EntityData& entityData, Container* container) :
-			m_ID(entityData.ID()),
+		Entity(EntityData* entityData, Container* container) :
+			m_ID(entityData->ID()),
 			m_Container(container),
-			m_EntityData(&entityData),
-			m_Version(m_EntityData->m_Version)
+			m_EntityData(entityData),
+			m_Version(entityData->m_Version)
 		{
 
 		}
@@ -156,6 +156,14 @@ namespace decs
 			m_Container = container;
 			m_EntityData = &data;
 			m_Version = data.m_Version;
+		}
+		
+		void Set(EntityData* data, Container* container)
+		{
+			m_ID = data->m_ID;
+			m_Container = container;
+			m_EntityData = data;
+			m_Version = data->m_Version;
 		}
 
 		inline void Invalidate()

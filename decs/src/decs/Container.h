@@ -175,6 +175,10 @@ namespace decs
 	public:
 		Entity CreateEntity(bool isActive = true);
 
+	private:
+		Entity CreateEntityWithoutAddingToEmptyEntities(bool isActive = true);
+
+	public:
 		bool DestroyEntity(Entity& entity);
 
 		void DestroyOwnedEntities(bool invokeOnDestroyListeners = true);
@@ -216,7 +220,16 @@ namespace decs
 
 #pragma endregion
 
-#pragma region SPAWNING ENTITIES
+#pragma region RESERVING ENTITIES:
+	public:
+		void ReserveEntities(uint32_t entitiesToReserve);
+
+	private:
+		std::vector<EntityData*> m_ReservedEntities;
+
+#pragma endregion
+
+#pragma region SPAWNING ENTITIES:
 	private:
 		struct SpawnComponentRefData
 		{
@@ -472,7 +485,7 @@ namespace decs
 				entityData.m_IndexInArchetype = entityIndexBuffor;
 				entityData.m_Archetype = entityNewArchetype;
 
-				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(entity,archetypeTypeData.m_ComponentContext, componentPtr, entityData);
+				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(entity, archetypeTypeData.m_ComponentContext, componentPtr, entityData);
 				return componentPtr;
 			}
 			return nullptr;

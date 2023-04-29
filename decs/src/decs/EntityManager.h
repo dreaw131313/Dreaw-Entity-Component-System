@@ -19,7 +19,7 @@ namespace decs
 		uint64_t GetEntitiesDataCount() const { return m_EntityData.Size(); }
 		uint64_t GetFreeEntitiesCount() const { return m_FreeEntitiesCount; }
 
-		EntityID CreateEntity(bool isActive = true);
+		EntityData* CreateEntity(bool isActive = true);
 
 		bool DestroyEntityInternal(EntityID entity);
 
@@ -31,6 +31,12 @@ namespace decs
 		}
 
 		inline const EntityData& GetEntityData(EntityID entity) const { return m_EntityData[entity]; }
+
+		void CreateReservedEntityData(uint32_t entitesToReserve, std::vector<EntityData*>& reservedEntityData);
+
+		void CreateEntityFromReservedEntityData(EntityData* entityData);
+
+		void ReturnReservedEntityData(std::vector<EntityData*> entityDatasToReturn, uint64_t entitytDataCount);
 
 	private:
 		TChunkedVector<EntityData> m_EntityData = { 1000 };

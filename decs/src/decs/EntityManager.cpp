@@ -18,7 +18,7 @@ namespace decs
 		}
 	}
 
-	EntityID EntityManager::CreateEntity(bool isActive)
+	EntityData* EntityManager::CreateEntity(bool isActive)
 	{
 		m_CreatedEntitiesCount += 1;
 		if (m_FreeEntitiesCount > 0)
@@ -29,12 +29,12 @@ namespace decs
 			m_FreeEntities.pop_back();
 			entityData.m_bIsActive = isActive;
 
-			return entityData.m_ID;
+			return &entityData;
 		}
 		else
 		{
 			EntityData& entityData = m_EntityData.EmplaceBack((EntityID)m_EntityData.Size(), isActive);
-			return entityData.m_ID;
+			return &entityData;
 		}
 	}
 
@@ -71,5 +71,18 @@ namespace decs
 		}
 
 		return false;
+	}
+
+	void EntityManager::CreateReservedEntityData(uint32_t entitesToReserve, std::vector<EntityData*>& reservedEntityData)
+	{
+	}
+
+	void EntityManager::CreateEntityFromReservedEntityData(EntityData* entityData)
+	{
+
+	}
+
+	void EntityManager::ReturnReservedEntityData(std::vector<EntityData*> entityDatasToReturn, uint64_t entitytDataCount)
+	{
 	}
 }
