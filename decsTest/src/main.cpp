@@ -49,6 +49,8 @@ int main()
 
 	std::cout << "decs::Container size = " << sizeof(decs::Container) << "\n";
 	std::cout << "decs::EntityData size = " << sizeof(decs::EntityData) << "\n";
+	std::cout << "ComponentRef<Position> size: " << sizeof(decs::ComponentRef<Position>) << " bytes" << "\n";
+	PrintLine();
 
 	decs::Container prefabContainer = {};
 	decs::Container container = {};
@@ -57,12 +59,13 @@ int main()
 
 	auto prefab = prefabContainer.CreateEntity();
 	prefab.AddComponent<Position>(1.f, 2.f);
-	prefab.AddComponent< decs::Stable<float>>();
+	prefab.AddStableComponent<float>();
 
 	//prefabContainer.Spawn(entity1, 3, true);
 	container.Spawn(prefab, 1, true);
 
-	if (prefab.HasComponent<float>())
+	float* floatCompPtr = nullptr;
+	if (prefab.HasStableComponent<float>() && prefab.TryGetStableComponent<float>(floatCompPtr))
 	{
 		PrintLine("Prefab has stable float component");
 	}
@@ -73,8 +76,6 @@ int main()
 		compPosRef->X = 11.f;
 		compPosRef->Y = 22.f;
 	}
-
-	std::cout << "ComponentRef<Position> size: " << sizeof(decs::ComponentRef<Position>) << " bytes" << "\n";
 
 	container.Spawn(prefab, 3, true);
 	auto e2 = container.CreateEntity();

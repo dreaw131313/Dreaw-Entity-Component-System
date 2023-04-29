@@ -34,7 +34,9 @@ namespace decs
 	template<typename ComponentType>
 	class PackedContainer final : public PackedContainerBase
 	{
-	public:
+		friend class Container;
+		friend class Archetype;
+	private:
 		std::vector<ComponentType> m_Data;
 
 	public:
@@ -109,6 +111,8 @@ namespace decs
 	template<typename ComponentType>
 	class PackedContainer<decs::Stable<ComponentType>> : public PackedContainerBase
 	{
+		friend class Container;
+		friend class Archetype;
 	private:
 		std::vector<StableComponentRef> m_Data;
 		std::vector<ComponentType*> m_ComponentPointers;

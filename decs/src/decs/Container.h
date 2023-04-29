@@ -15,7 +15,7 @@
 
 namespace decs
 {
-	struct DelayedComponentPair
+	struct ComponentDelayedDestroyData
 	{
 	public:
 		EntityData* m_EntityData = nullptr;
@@ -23,12 +23,12 @@ namespace decs
 		bool m_IsStable = false;
 
 	public:
-		DelayedComponentPair()
+		ComponentDelayedDestroyData()
 		{
 
 		}
 
-		DelayedComponentPair(
+		ComponentDelayedDestroyData(
 			EntityData* entityData,
 			TypeID typeID,
 			bool isStable
@@ -38,7 +38,7 @@ namespace decs
 
 		}
 
-		bool operator==(const decs::DelayedComponentPair& rhs) const
+		bool operator==(const decs::ComponentDelayedDestroyData& rhs) const
 		{
 			return m_EntityData == rhs.m_EntityData && m_TypeID == rhs.m_TypeID;
 		}
@@ -46,9 +46,9 @@ namespace decs
 }
 
 template<>
-struct ::std::hash<decs::DelayedComponentPair>
+struct ::std::hash<decs::ComponentDelayedDestroyData>
 {
-	std::size_t operator()(const decs::DelayedComponentPair& data) const
+	std::size_t operator()(const decs::ComponentDelayedDestroyData& data) const
 	{
 		uint64_t eIDHash = std::hash<decs::EntityData*>{}(data.m_EntityData);
 		uint64_t typeIdHash = std::hash<decs::TypeID>{}(data.m_TypeID);
@@ -814,7 +814,7 @@ namespace decs
 #pragma region DELAYED DESTROY:
 	private:
 		std::vector<EntityData*> m_DelayedEntitiesToDestroy;
-		ecsSet<DelayedComponentPair> m_DelayedComponentsToDestroy;
+		ecsSet<ComponentDelayedDestroyData> m_DelayedComponentsToDestroy;
 
 		bool m_PerformDelayedDestruction = false;
 
