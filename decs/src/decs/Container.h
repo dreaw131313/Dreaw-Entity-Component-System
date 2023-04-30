@@ -379,7 +379,7 @@ namespace decs
 		template<typename ComponentType, typename ...Args>
 		ComponentType* AddUnstableComponent(Entity& entity, EntityData& entityData, Args&&... args)
 		{
-			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<ComponentType>::GetID();
+			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<ComponentType>::ID();
 			if (!m_CanAddComponents) return nullptr;
 
 			if (entityData.IsValidToPerformComponentOperation())
@@ -412,22 +412,19 @@ namespace decs
 				ComponentType* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
 
 				uint32_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
-				entityNewArchetype->AddEntityData(&entityData, entityData.m_bIsActive);
 				if (entityData.m_Archetype != nullptr)
 				{
-					entityNewArchetype->MoveEntityAfterAddComponent<ComponentType>(
-						*entityData.m_Archetype,
-						entityData.m_IndexInArchetype
+					entityNewArchetype->MoveEntityComponentsAfterAddComponent<ComponentType>(
+						entityData.m_Archetype,
+						entityData.m_IndexInArchetype,
+						&entityData
 					);
-					entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
 				}
 				else
 				{
+					entityNewArchetype->AddEntityData(&entityData);
 					RemoveFromEmptyEntities(entityData);
 				}
-
-				entityData.m_IndexInArchetype = entityIndexBuffor;
-				entityData.m_Archetype = entityNewArchetype;
 
 				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(entity, archetypeTypeData.m_ComponentContext, createdComponent, entityData);
 				return createdComponent;
@@ -438,7 +435,7 @@ namespace decs
 		template<typename ComponentType, typename ...Args>
 		ComponentType* AddStableComponent(Entity& entity, EntityData& entityData, Args&&... args)
 		{
-			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<Stable<ComponentType>>::GetID();
+			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<Stable<ComponentType>>::ID();
 
 			if (!m_CanAddComponents) return nullptr;
 
@@ -447,12 +444,18 @@ namespace decs
 				if (m_PerformDelayedDestruction)
 				{
 					ComponentType* delayedToDestroyComponent = TryAddStableComponentDelayedToDestroy<ComponentType>(entityData);
-					if (delayedToDestroyComponent != nullptr) { return delayedToDestroyComponent; }
+					if (delayedToDestroyComponent != nullptr)
+					{
+						return delayedToDestroyComponent;
+					}
 				}
 				else
 				{
 					auto currentComponent = GetStableComponentWithoutCheckingIsAlive<ComponentType>(entityData);
-					if (currentComponent != nullptr) return currentComponent;
+					if (currentComponent != nullptr)
+					{
+						return currentComponent;
+					}
 				}
 
 				uint32_t componentContainerIndex = 0;
@@ -463,34 +466,27 @@ namespace decs
 				StableContainer<ComponentType>* stableContainer = static_cast<StableContainer<ComponentType>*>(archetypeTypeData.m_StableContainer);
 				StableComponentRef componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
 
+				//StableComponentRef componentNodeInfo = {};
 				// Adding component pointer to packed container in archetype
-				PackedContainer<Stable<ComponentType>>* packedPointersContainer = reinterpret_cast<PackedContainer<Stable<ComponentType>>*>(archetypeTypeData.m_PackedContainer);
+				archetypeTypeData.m_PackedContainer->EmplaceFromVoid(&componentNodeInfo);
 
-				packedPointersContainer->EmplaceBack(
-					static_cast<ComponentType*>(componentNodeInfo.m_ComponentPtr),
-					componentNodeInfo.m_ChunkIndex,
-					componentNodeInfo.m_Index
-				);
 				ComponentType* componentPtr = static_cast<ComponentType*>(componentNodeInfo.m_ComponentPtr);
 
 				// Adding entity to archetype
 				uint32_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
-				entityNewArchetype->AddEntityData(&entityData, entityData.m_bIsActive);
 				if (entityData.m_Archetype != nullptr)
 				{
-					entityNewArchetype->MoveEntityAfterAddComponent<Stable<ComponentType>>(
-						*entityData.m_Archetype,
-						entityData.m_IndexInArchetype
+					entityNewArchetype->MoveEntityComponentsAfterAddComponent<Stable<ComponentType>>(
+						entityData.m_Archetype,
+						entityData.m_IndexInArchetype,
+						&entityData
 					);
-					entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
 				}
 				else
 				{
+					entityNewArchetype->AddEntityData(&entityData);
 					RemoveFromEmptyEntities(entityData);
 				}
-
-				entityData.m_IndexInArchetype = entityIndexBuffor;
-				entityData.m_Archetype = entityNewArchetype;
 
 				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(entity, archetypeTypeData.m_ComponentContext, componentPtr, entityData);
 				return componentPtr;
@@ -503,11 +499,11 @@ namespace decs
 		{
 			if constexpr (is_stable<ComponentType>::value)
 			{
-				return RemoveStableComponent(entity, Type<ComponentType>::GetID());
+				return RemoveStableComponent(entity, Type<ComponentType>::ID());
 			}
 			else
 			{
-				return RemoveUnstableComponent(entity, Type<ComponentType>::GetID());
+				return RemoveUnstableComponent(entity, Type<ComponentType>::ID());
 			}
 		}
 
@@ -573,7 +569,7 @@ namespace decs
 				if (findTypeIndex != Limits::MaxComponentCount)
 				{
 					PackedContainer<Stable<ComponentType>>* container = static_cast<PackedContainer<Stable<ComponentType>>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
-					return container->GetAsPtr(entityData.m_IndexInArchetype);
+					return static_cast<ComponentType*>(container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr);
 				}
 			}
 			return nullptr;
@@ -591,7 +587,7 @@ namespace decs
 		template<typename ComponentType>
 		bool HasComponent(EntityData& entityData) const
 		{
-			return HasComponentInternal(entityData, Type<ComponentType>::GetID());
+			return HasComponentInternal(entityData, Type<ComponentType>::ID());
 		}
 
 		void InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(Entity& entity, ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData);
@@ -601,7 +597,7 @@ namespace decs
 			EntityData& entityData
 		)
 		{
-			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<ComponentType>::GetID();
+			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<ComponentType>::ID();
 			if (entityData.m_Archetype != nullptr)
 			{
 				uint32_t componentIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
@@ -621,7 +617,7 @@ namespace decs
 			EntityData& entityData
 		)
 		{
-			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<Stable<ComponentType>>::GetID();
+			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<Stable<ComponentType>>::ID();
 			if (entityData.m_Archetype != nullptr)
 			{
 				uint32_t componentIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
@@ -679,7 +675,7 @@ namespace decs
 			uint32_t& componentContainerIndex
 		)
 		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::GetID();
+			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::ID();
 
 			Archetype* entityNewArchetype = nullptr;
 			if (toArchetype == nullptr)
@@ -717,7 +713,7 @@ namespace decs
 			uint32_t& componentContainerIndex
 		)
 		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<Stable<ComponentType>>::GetID();
+			TYPE_ID_CONSTEXPR TypeID id = Type<Stable<ComponentType>>::ID();
 
 			Archetype* entityNewArchetype = nullptr;
 			if (toArchetype == nullptr)

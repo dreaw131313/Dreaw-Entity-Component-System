@@ -30,6 +30,15 @@ namespace decs
 #define TYPE_ID_CONSTEXPR
 #endif
 
+
+#define NON_COPYABLE(className)						\
+className(const className&) = delete;				\
+className& operator=(const className&) = delete;	\
+
+#define NON_MOVEABLE(className)				\
+className(className&&) = delete;			\
+className& operator=(className&&) = delete;	\
+
 	template<typename Key, typename Value>
 	//using ecsMap = ska::bytell_hash_map<Key, Value>;
 	//using ecsMap = ska::unordered_map<Key, Value>;

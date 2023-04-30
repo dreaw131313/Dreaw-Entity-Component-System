@@ -24,11 +24,10 @@ namespace decs
 		}
 
 		ArchetypeEntityData(
-			EntityData* entityData,
-			bool isActive
+			EntityData* entityData
 		) :
 			m_EntityData(entityData),
-			m_bIsActive(isActive)
+			m_bIsActive(entityData->m_bIsActive)
 		{
 
 		}
@@ -154,7 +153,7 @@ namespace decs
 		template<typename T>
 		inline uint32_t FindTypeIndex() const
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::GetID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
 			if (m_ComponentsCount < Limits::MinComponentsInArchetypeToPerformMapLookup)
 			{
 				for (uint32_t i = 0; i < m_ComponentsCount; i++)
@@ -182,7 +181,7 @@ namespace decs
 		template<typename ComponentType>
 		inline void AddTypeToAddingComponentOrder()
 		{
-			m_AddingOrderTypeIDs.push_back(Type<ComponentType>::GetID());
+			m_AddingOrderTypeIDs.push_back(Type<ComponentType>::ID());
 		}
 
 		inline void AddTypeToAddingComponentOrder(TypeID id)
@@ -193,7 +192,7 @@ namespace decs
 		template<typename ComponentType>
 		void AddTypeID(ComponentContextBase* componentContext, StableContainerBase* stableContainer)
 		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::GetID();
+			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::ID();
 			auto it = m_TypeIDsIndexes.find(id);
 			if (it == m_TypeIDsIndexes.end())
 			{
@@ -229,10 +228,25 @@ namespace decs
 			}
 		}
 
-		void AddEntityData(EntityData* entityData, const bool& isActive)
+		void AddEntityData(EntityData* entityData)
 		{
-			m_EntitiesData.emplace_back(entityData, isActive);
+			m_EntitiesData.emplace_back(entityData);
+
+			entityData->m_Archetype = this;
+			entityData->m_IndexInArchetype = m_EntitiesCount;
+
 			m_EntitiesCount += 1;
+		}
+
+		void RemoveSwapBackEntityData(uint64_t index)
+		{
+			if (index < (m_EntitiesCount - 1))
+			{
+				m_EntitiesData[index] = m_EntitiesData.back();
+				m_EntitiesData[index].m_EntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
+			}
+			m_EntitiesData.pop_back();
+			m_EntitiesCount -= 1;
 		}
 
 		void RemoveSwapBackEntity(uint64_t index)
@@ -351,23 +365,43 @@ namespace decs
 		/// <param name="componentTypeID"></param>
 		/// <param name="fromArchetype"></param>
 		/// <param name="fromIndex"></param>
-		void MoveEntityAfterRemoveComponent(TypeID removedComponentTypeID, Archetype& fromArchetype, uint64_t fromIndex)
+		void MoveEntityComponentsAfterRemoveComponent(
+			TypeID removedComponentTypeID, 
+			Archetype* fromArchetype,
+			uint64_t fromIndex,
+			EntityData* entityData
+		)
 		{
 			uint64_t thisArchetypeIndex = 0;
 			uint64_t fromArchetypeIndex = 0;
 
+			this->AddEntityData(entityData);
+
 			for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++, fromArchetypeIndex++)
 			{
 				ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-				if (fromArchetype.m_TypeData[fromArchetypeIndex].m_TypeID == removedComponentTypeID)
+				ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
+				if (fromArchetypeData.m_TypeID == removedComponentTypeID)
 				{
+					if (fromArchetypeData.m_StableContainer != nullptr)
+					{
+						StableComponentRef* componentRef = static_cast<StableComponentRef*>(fromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex));
+						fromArchetypeData.m_StableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_Index);
+					}
+
+					fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
+
 					fromArchetypeIndex += 1;
 				}
 
-				thisTypeData.m_PackedContainer->MoveEmplaceFromVoid(
-					fromArchetype.m_TypeData[fromArchetypeIndex].m_PackedContainer->GetComponentDataAsVoid(fromIndex)
+				ArchetypeTypeData& updatetFromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
+				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+					updatetFromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex)
 				);
+				updatetFromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
 			}
+
+			fromArchetype->RemoveSwapBackEntityData(fromIndex);
 		}
 
 		/// <summary>
@@ -377,9 +411,11 @@ namespace decs
 		/// <param name="fromArchetype"></param>
 		/// <param name="fromIndex"></param>
 		template<typename ComponentType>
-		void MoveEntityAfterAddComponent(Archetype& fromArchetype, uint64_t fromIndex)
+		void MoveEntityComponentsAfterAddComponent(Archetype* fromArchetype, uint64_t fromIndex, EntityData* entityData)
 		{
-			TYPE_ID_CONSTEXPR TypeID newComponentTypeID = Type<ComponentType>::GetID();
+			TYPE_ID_CONSTEXPR TypeID newComponentTypeID = Type<ComponentType>::ID();
+
+			this->AddEntityData(entityData);
 
 			uint64_t thisArchetypeIndex = 0;
 			uint64_t fromArchetypeIndex = 0;
@@ -392,13 +428,19 @@ namespace decs
 					continue;
 				}
 
-				thisTypeData.m_PackedContainer->MoveEmplaceFromVoid(
-					fromArchetype.m_TypeData[fromArchetypeIndex].m_PackedContainer->GetComponentDataAsVoid(fromIndex)
-				);
 
+				ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
+				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+					fromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex)
+				);
+				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
+				
 				fromArchetypeIndex++;
 			}
+
+			fromArchetype->RemoveSwapBackEntityData(fromIndex);
 		}
+
 
 	};
 }

@@ -49,7 +49,7 @@ namespace decs
 		template<typename ComponentType>
 		ComponentContext<ComponentType>* GetOrCreateComponentContext()
 		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::GetID();
+			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::ID();
 
 			auto& componentContext = m_Contexts[id];
 			if (componentContext == nullptr)

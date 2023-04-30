@@ -1,7 +1,7 @@
 #pragma once
 #include "decs/Core.h"
 #include "decs/Containers/TChunkedVector.h"
-#include "Type.h"
+#include "decs/Type.h"
 
 namespace decs
 {
@@ -41,10 +41,10 @@ namespace decs
 		bool m_IsInFreeSpaces = 0;
 	public:
 		Chunk(uint64_t capacity) :
-			m_Capacity(capacity),
-			m_AllocationFlags(new bool[capacity]()),
-			m_Data(static_cast<DataType*> (::operator new(capacity * sizeof(DataType))))
+			m_Capacity(capacity)
 		{
+			m_AllocationFlags = new bool[capacity]();
+			m_Data = (DataType*)::operator new(capacity * sizeof(DataType));
 		}
 
 		~Chunk()
@@ -64,16 +64,16 @@ namespace decs
 			delete[] m_AllocationFlags;
 		}
 
-		inline bool IsEmpty() const
+		bool IsEmpty() const
 		{
 			return m_Size == 0;
 		}
 
-		inline bool IsFull() const { return m_Capacity == m_Size; }
+		bool IsFull() const { return m_Capacity == m_Size; }
 
 		DataType& operator[](uint64_t index) const { return m_Data[index]; }
 
-		inline bool IsAllocatedAt(uint64_t index) const
+		bool IsAllocatedAt(uint64_t index) const
 		{
 			return m_AllocationFlags[index];
 		}
@@ -97,10 +97,10 @@ namespace decs
 			}
 
 			uint64_t allocationIndex = m_CurrentAllocationOffset;
-			m_CurrentAllocationOffset += 1;
 			DataType* data = new(&m_Data[allocationIndex])DataType(std::forward<Args>(args)...);
-
 			m_AllocationFlags[allocationIndex] = true;
+
+			m_CurrentAllocationOffset += 1;
 
 			return ChunkAllocationResult(allocationIndex, data);
 		}
@@ -187,6 +187,9 @@ namespace decs
 	class StableContainer : public StableContainerBase
 	{
 		using ChunkType = Chunk<DataType>;
+	private:
+		NON_COPYABLE(StableContainer);
+		NON_MOVEABLE(StableContainer);
 
 	public:
 		StableContainer()
@@ -210,7 +213,7 @@ namespace decs
 			}
 		}
 
-		inline virtual TypeID GetTypeID()const noexcept override { return Type<Stable<DataType>>::GetID(); }
+		virtual TypeID GetTypeID()const noexcept override { return Type<Stable<DataType>>::ID(); }
 
 		virtual StableContainerBase* CreateOwnEmptyCopy(uint64_t withChunkSize) override
 		{
@@ -281,7 +284,7 @@ namespace decs
 		uint64_t m_ChunkCapacity = 1000;
 
 	private:
-		ChunkType* GetCurrentChunk()
+		inline ChunkType* GetCurrentChunk()
 		{
 			if (m_CurrentChunk == nullptr || m_CurrentChunk->IsFull())
 			{
@@ -396,7 +399,7 @@ namespace decs
 		template<typename T>
 		bool SetStableComponentChunkSize(uint64_t chunkSize)
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::GetID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::ID();
 			auto& container = m_Containers[typeID];
 
 			if (container == nullptr)
@@ -410,7 +413,7 @@ namespace decs
 		template<typename T>
 		uint64_t GetStableComponentChunkSize()
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::GetID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::ID();
 			auto it = m_Containers.find(typeID);
 
 			if (it != m_Containers.end())
@@ -442,7 +445,7 @@ namespace decs
 		template<typename T>
 		StableContainer<T>* GetOrCreateStableContainer()
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::GetID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::ID();
 			auto& container = m_Containers[typeID];
 
 			if (container == nullptr)
@@ -471,6 +474,6 @@ namespace decs
 
 	private:
 		ecsMap<TypeID, StableContainerBase*> m_Containers;
-		uint64_t m_DefaultChunkSize = 100;
+		uint64_t m_DefaultChunkSize = 1000;
 	};
 }

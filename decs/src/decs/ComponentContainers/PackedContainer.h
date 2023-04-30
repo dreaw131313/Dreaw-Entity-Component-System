@@ -28,7 +28,7 @@ namespace decs
 
 		inline virtual void RemoveSwapBack(uint64_t index) noexcept = 0;
 		inline virtual void EmplaceFromVoid(void* data) noexcept = 0;
-		inline virtual void MoveEmplaceFromVoid(void* data) noexcept = 0;
+		inline virtual void MoveEmplaceBackFromVoid(void* data) noexcept = 0;
 	};
 
 	template<typename ComponentType>
@@ -60,7 +60,7 @@ namespace decs
 			return m_Data[index];
 		}
 
-		inline ComponentType* GetAsPtr(uint64_t index) 
+		inline ComponentType* GetAsPtr(uint64_t index)
 		{
 			return &m_Data[index];
 		}
@@ -102,7 +102,7 @@ namespace decs
 			}
 		}
 
-		inline virtual void MoveEmplaceFromVoid(void* data) noexcept override
+		inline virtual void MoveEmplaceBackFromVoid(void* data) noexcept override
 		{
 			m_Data.push_back(std::move(*reinterpret_cast<ComponentType*>(data)));
 		}
@@ -115,7 +115,6 @@ namespace decs
 		friend class Archetype;
 	private:
 		std::vector<StableComponentRef> m_Data;
-		std::vector<ComponentType*> m_ComponentPointers;
 
 	public:
 		PackedContainer()
@@ -138,35 +137,37 @@ namespace decs
 			if (m_Data.size() > 0)
 			{
 				m_Data.pop_back();
-				m_ComponentPointers.pop_back();
 			}
 		}
 
 		inline virtual void Clear() override
 		{
 			m_Data.clear();
-			m_ComponentPointers.clear();
 		}
 
 		inline virtual void ShrinkToFit() override
 		{
 			m_Data.shrink_to_fit();
-			m_ComponentPointers.shrink_to_fit();
 		}
 
-		inline virtual uint64_t Capacity() override { return m_Data.capacity(); }
+		inline virtual uint64_t Capacity() override
+		{
+			return m_Data.capacity();
+		}
 
-		inline virtual uint64_t Size() override { return m_Data.size(); }
+		inline virtual uint64_t Size() override
+		{
+			return m_Data.size();
+		}
 
 		inline virtual void Reserve(uint64_t newCapacity) override
 		{
 			m_Data.reserve(newCapacity);
-			m_ComponentPointers.reserve(newCapacity);
 		}
 
 		inline virtual void* GetComponentPtrAsVoid(uint64_t index) noexcept override
 		{
-			return m_ComponentPointers[index];
+			return m_Data[index].m_ComponentPtr;
 		}
 
 		inline virtual void* GetComponentDataAsVoid(uint64_t index) noexcept override
@@ -178,14 +179,12 @@ namespace decs
 		{
 			StableComponentRef* newElement = reinterpret_cast<StableComponentRef*>(data);
 			m_Data.emplace_back(newElement->m_ComponentPtr, newElement->m_ChunkIndex, newElement->m_Index);
-			m_ComponentPointers.push_back(static_cast<ComponentType*>(newElement->m_ComponentPtr));
 		}
 
-		inline virtual void MoveEmplaceFromVoid(void* data) noexcept override
+		inline virtual void MoveEmplaceBackFromVoid(void* data) noexcept override
 		{
 			StableComponentRef* newElement = reinterpret_cast<StableComponentRef*>(data);
 			m_Data.emplace_back(newElement->m_ComponentPtr, newElement->m_ChunkIndex, newElement->m_Index);
-			m_ComponentPointers.push_back(static_cast<ComponentType*>(newElement->m_ComponentPtr));
 		}
 
 		inline virtual void RemoveSwapBack(uint64_t index)noexcept override
@@ -196,26 +195,23 @@ namespace decs
 				if (dataSize > 1)
 				{
 					m_Data[index] = m_Data.back();
-					m_ComponentPointers[index] = m_ComponentPointers.back();
 				}
 				m_Data.pop_back();
-				m_ComponentPointers.pop_back();
 			}
 		}
 
 		inline ComponentType& GetAsRef(uint64_t index) noexcept
 		{
-			return *m_ComponentPointers[index];
+			return *static_cast<ComponentType*>(m_Data[index].m_ComponentPtr);
 		}
 
 		inline ComponentType* GetAsPtr(uint64_t index)
 		{
-			return m_ComponentPointers[index];
+			return static_cast<ComponentType*>(m_Data[index].m_ComponentPtr);
 		}
 
 		inline StableComponentRef& EmplaceBack(ComponentType* componentPtr, uint64_t chunkIndex, uint64_t elementIndex)
 		{
-			m_ComponentPointers.push_back(static_cast<ComponentType*>(componentPtr));
 			return m_Data.emplace_back(componentPtr, chunkIndex, elementIndex);
 		}
 	};

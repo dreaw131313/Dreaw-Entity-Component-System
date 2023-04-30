@@ -419,7 +419,7 @@ namespace decs
 
 		spawnedEntityData.m_Archetype = archetype;
 		spawnedEntityData.m_IndexInArchetype = archetype->EntitiesCount();
-		archetype->AddEntityData(&spawnedEntityData, spawnedEntityData.m_bIsActive);
+		archetype->AddEntityData(&spawnedEntityData);
 
 		auto& typeDataVector = archetype->m_TypeData;
 		for (uint32_t i = spawnState.m_CompRefsStart; i < componentsCount; i++)
@@ -471,25 +471,20 @@ namespace decs
 		if (newEntityArchetype != nullptr)
 		{
 			uint32_t entityIndexBuffor = newEntityArchetype->EntitiesCount();
-			newEntityArchetype->AddEntityData(&entityData, entityData.m_bIsActive);
-			newEntityArchetype->MoveEntityAfterRemoveComponent(
+			newEntityArchetype->MoveEntityComponentsAfterRemoveComponent(
 				componentTypeID,
-				*entityData.m_Archetype,
-				entityData.m_IndexInArchetype
+				entityData.m_Archetype,
+				entityData.m_IndexInArchetype,
+				&entityData
 			);
-
-			entityData.m_IndexInArchetype = entityIndexBuffor;
-			entityData.m_Archetype = newEntityArchetype;
 		}
 		else
 		{
+			entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
 			entityData.m_Archetype = nullptr;
 			entityData.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
 			m_EmptyEntities.EmplaceBack(&entityData);
 		}
-
-		oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
-
 		return true;
 	}
 
@@ -521,32 +516,24 @@ namespace decs
 			componentTypeID
 		);
 
-		uint64_t oldArchetypeIndex = entityData.m_IndexInArchetype;
 		Archetype* oldArchetype = entityData.m_Archetype;
 		if (newEntityArchetype != nullptr)
 		{
-			uint32_t entityIndexBuffor = newEntityArchetype->EntitiesCount();
-			newEntityArchetype->AddEntityData(&entityData, entityData.m_bIsActive);
-			newEntityArchetype->MoveEntityAfterRemoveComponent(
+			uint32_t newEntityIndex = newEntityArchetype->EntitiesCount();
+			newEntityArchetype->MoveEntityComponentsAfterRemoveComponent(
 				componentTypeID,
-				*entityData.m_Archetype,
-				entityData.m_IndexInArchetype
+				entityData.m_Archetype,
+				entityData.m_IndexInArchetype,
+				&entityData
 			);
-
-			entityData.m_IndexInArchetype = entityIndexBuffor;
-			entityData.m_Archetype = newEntityArchetype;
 		}
 		else
 		{
+			oldArchetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
 			entityData.m_Archetype = nullptr;
 			entityData.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
 			m_EmptyEntities.EmplaceBack(&entityData);
 		}
-
-		StableComponentRef* componentRef = static_cast<StableComponentRef*>(packedContainer->GetComponentDataAsVoid(oldArchetypeIndex));
-		archetypeTypeData.m_StableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_Index);
-
-		oldArchetype->RemoveSwapBackEntity(oldArchetypeIndex);
 
 		return true;
 	}

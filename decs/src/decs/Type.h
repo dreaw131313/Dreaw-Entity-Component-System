@@ -42,7 +42,7 @@ namespace decs
 		class Type_Base<T, uint32_t>
 		{
 		public:
-			static constexpr TypeID GetID()
+			static constexpr TypeID ID()
 			{
 				constexpr auto id = c_string_hash_32(FULL_FUNCTION_NAME);
 				return id;
@@ -53,7 +53,7 @@ namespace decs
 		class Type_Base<T, uint64_t>
 		{
 		public:
-			static constexpr TypeID GetID()
+			static constexpr TypeID ID()
 			{
 				constexpr auto id = c_string_hash_64(FULL_FUNCTION_NAME);
 				return id;
@@ -66,9 +66,9 @@ namespace decs
 	public:
 
 #ifdef USE_CONSTEXPR_TYPE_ID
-		static constexpr TypeID GetID()
+		static constexpr TypeID ID()
 		{
-			return Type_Base<T, TypeID>::GetID();
+			return Type_Base<T, TypeID>::ID();
 		}
 #else
 		static TypeID ID()
@@ -90,7 +90,7 @@ namespace decs
 	template<typename T = void, typename... Args>
 	void findIds(std::vector<TypeID>& ids)
 	{
-		ids.push_back(Type<T>::GetID());
+		ids.push_back(Type<T>::ID());
 		if (sizeof ... (Args) == 0)
 			return;
 		else
@@ -100,7 +100,7 @@ namespace decs
 	template<typename T = void, typename... Args>
 	void findIds(TypeID ids[], uint64_t index)
 	{
-		ids[index] = Type<T>::GetID();
+		ids[index] = Type<T>::ID();
 		if (sizeof ... (Args) == 0)
 			return;
 		else
