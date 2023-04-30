@@ -145,7 +145,6 @@ namespace decs
 	{
 		m_ComponentsCount = other.m_ComponentsCount;
 		m_TypeData.reserve(m_ComponentsCount);
-		m_AddingOrderTypeIDs.reserve(m_ComponentsCount);
 
 		for (uint32_t i = 0; i < m_ComponentsCount; i++)
 		{
@@ -159,8 +158,6 @@ namespace decs
 				componentContexts->GetComponentContext(otherTypeData.m_TypeID),
 				stableComponentsManager->GetStableContainer(otherTypeData.m_TypeID)
 			);
-
-			m_AddingOrderTypeIDs.push_back(other.m_AddingOrderTypeIDs[i]);
 		}
 	}
 

@@ -95,7 +95,6 @@ namespace decs
 		std::vector<ArchetypeEntityData> m_EntitiesData;
 		std::vector<ArchetypeTypeData> m_TypeData;
 		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
-		std::vector<TypeID> m_AddingOrderTypeIDs;
 
 		ecsMap<TypeID, Archetype*> m_AddEdges;
 		ecsMap<TypeID, Archetype*> m_RemoveEdges;
@@ -168,17 +167,6 @@ namespace decs
 			{
 				m_EntitiesData[index].m_bIsActive = isActive;
 			}
-		}
-
-		template<typename ComponentType>
-		inline void AddTypeToAddingComponentOrder()
-		{
-			m_AddingOrderTypeIDs.push_back(Type<ComponentType>::ID());
-		}
-
-		inline void AddTypeToAddingComponentOrder(TypeID id)
-		{
-			m_AddingOrderTypeIDs.push_back(id);
 		}
 
 		template<typename ComponentType>

@@ -51,6 +51,8 @@ int main()
 	auto prefab = prefabContainer.CreateEntity();
 	prefab.AddComponent<Position>(1.f, 2.f);
 	prefab.AddStableComponent<float>();
+	prefab.AddStableComponent<int>();
+	prefab.AddStableComponent<double>();
 
 	//prefabContainer.Spawn(entity1, 3, true);
 	container.Spawn(prefab, 1, true);

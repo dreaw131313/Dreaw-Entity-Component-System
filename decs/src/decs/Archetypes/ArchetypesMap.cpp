@@ -251,9 +251,9 @@ namespace decs
 	}
 
 	Archetype* ArchetypesMap::GetOrCreateMatchedArchetype(
-		Archetype& fromArchetype, 
-		ComponentContextsManager* componentContextsManager, 
-		StableContainersManager* stableContainersManager, 
+		Archetype& fromArchetype,
+		ComponentContextsManager* componentContextsManager,
+		StableContainersManager* stableContainersManager,
 		ObserversManager* observerManager
 	)
 	{
@@ -288,29 +288,30 @@ namespace decs
 			archetype->InitEmptyFromOther(fromArchetype, componentContextsManager, stableContainersManager);
 			AddArchetypeToCorrectContainers(*archetype, true);
 
-			Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
-			for (uint64_t i = 1; i < archetype->ComponentsCount() - 1; i++)
-			{
-				archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
-			}
-
-			MakeArchetypeEdges(*archetype);
+			/* {
+				Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
+				for (uint64_t i = 1; i < archetype->ComponentsCount() - 1; i++)
+				{
+					archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
+				}
+				MakeArchetypeEdges(*archetype);
+			}*/
 		}
-		else if (!pair.second)
+		/*else if (!pair.second)
 		{
 			Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
 			for (uint64_t i = 1; i < archetype->ComponentsCount() - 1; i++)
 			{
 				archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
 			}
-		}
+		}*/
 
 		return archetype;
 	}
 
 	inline Archetype* ArchetypesMap::CreateArchetypeAfterAddComponent(Archetype& toArchetype, Archetype& archetypeToGetContainer, uint64_t addedComponentIndex)
 	{
-		TypeID addedComponentTypeID = archetypeToGetContainer.m_AddingOrderTypeIDs[addedComponentIndex];
+		TypeID addedComponentTypeID = archetypeToGetContainer.m_TypeData[addedComponentIndex].m_TypeID;
 		uint64_t componentIndexToAdd = archetypeToGetContainer.FindTypeIndex(addedComponentTypeID);
 
 		auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
@@ -344,7 +345,6 @@ namespace decs
 				toTypeData.m_ComponentContext,
 				toTypeData.m_StableContainer
 			);
-			newArchetype.AddTypeToAddingComponentOrder(toArchetype.m_AddingOrderTypeIDs[i]);
 		}
 
 		if (!isNewComponentTypeAdded)
@@ -358,7 +358,6 @@ namespace decs
 			);
 		}
 
-		newArchetype.AddTypeToAddingComponentOrder(addedComponentTypeID);
 		AddArchetypeToCorrectContainers(newArchetype);
 		MakeArchetypeEdges(newArchetype);
 
@@ -391,10 +390,6 @@ namespace decs
 					fromArchetypeData.m_ComponentContext,
 					fromArchetypeData.m_StableContainer
 				);
-			}
-			if (fromArchetype.m_AddingOrderTypeIDs[i] != removedComponentTypeID)
-			{
-				newArchetype.m_AddingOrderTypeIDs.push_back(fromArchetype.m_AddingOrderTypeIDs[i]);
 			}
 		}
 

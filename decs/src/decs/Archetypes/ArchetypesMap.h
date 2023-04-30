@@ -90,7 +90,7 @@ namespace decs
 
 		inline Archetype* GetSingleComponentArchetype() const
 		{
-			if (m_Archetypes.size() > 0 && m_Archetypes[0].size()>0)
+			if (m_Archetypes.size() > 0 && m_Archetypes[0].size() > 0)
 			{
 				return m_Archetypes[0][0];
 			}
@@ -233,13 +233,12 @@ namespace decs
 			archetype->AddTypeID<ComponentType>(componentContext, stableContainer);
 			AddArchetypeToCorrectContainers(*archetype, false);
 			MakeArchetypeEdges(*archetype);
-			archetype->AddTypeToAddingComponentOrder<ComponentType>();
 			return archetype;
 		}
 
 		Archetype* CreateSingleComponentArchetype(Archetype& from)
 		{
-			uint64_t typeID = from.m_AddingOrderTypeIDs[0];
+			uint64_t typeID = from.m_TypeData[0].m_TypeID;
 			uint64_t typeIndex = from.FindTypeIndex(typeID);
 			auto& archetype = m_SingleComponentArchetypes[typeID];
 			if (archetype != nullptr) return archetype;
@@ -249,7 +248,6 @@ namespace decs
 			archetype->AddTypeID(typeID, fromTypeData.m_PackedContainer, fromTypeData.m_ComponentContext, fromTypeData.m_StableContainer);
 			AddArchetypeToCorrectContainers(*archetype, false);
 			MakeArchetypeEdges(*archetype);
-			archetype->AddTypeToAddingComponentOrder(typeID);
 			return archetype;
 		}
 
@@ -287,14 +285,13 @@ namespace decs
 				}
 
 				newArchetype.AddTypeID(currentTypeID, toTypeData.m_PackedContainer, toTypeData.m_ComponentContext, toTypeData.m_StableContainer);
-				newArchetype.AddTypeToAddingComponentOrder(toArchetype.m_AddingOrderTypeIDs[i]);
 			}
+
 			if (!isNewComponentTypeAdded)
 			{
 				newArchetype.AddTypeID<T>(componentContext, stableContainer);
 			}
 
-			newArchetype.AddTypeToAddingComponentOrder<T>();
 			AddArchetypeToCorrectContainers(newArchetype);
 			MakeArchetypeEdges(newArchetype);
 
