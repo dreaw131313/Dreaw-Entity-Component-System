@@ -417,8 +417,6 @@ namespace decs
 		Archetype* archetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
 		uint64_t componentsCount = archetype->ComponentsCount() + spawnState.m_CompRefsStart;
 
-		spawnedEntityData.m_Archetype = archetype;
-		spawnedEntityData.m_IndexInArchetype = archetype->EntitiesCount();
 		archetype->AddEntityData(&spawnedEntityData);
 
 		auto& typeDataVector = archetype->m_TypeData;

@@ -76,12 +76,13 @@ namespace decs
 
 	void Archetype::RemoveSwapBackEntity(uint64_t index)
 	{
-		if (m_EntitiesCount == 0) return;
+		if (index>= m_EntitiesCount)
+		{
+			return;
+		}
 
 		if (index == m_EntitiesCount - 1)
 		{
-			m_EntitiesData.pop_back();
-
 			for (uint64_t i = 0; i < m_ComponentsCount; i++)
 			{
 				auto& typeData = m_TypeData[i];
@@ -94,13 +95,9 @@ namespace decs
 				typeData.m_PackedContainer->PopBack();
 			}
 
-			m_EntitiesCount -= 1;
 		}
 		else
 		{
-			m_EntitiesData[index] = m_EntitiesData.back();
-			m_EntitiesData.pop_back();
-
 			for (uint64_t i = 0; i < m_ComponentsCount; i++)
 			{
 				auto& typeData = m_TypeData[i];
@@ -112,10 +109,10 @@ namespace decs
 
 				typeData.m_PackedContainer->RemoveSwapBack(index);
 			}
-
-			m_EntitiesCount -= 1;
-			m_EntitiesData[index].m_EntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
 		}
+
+		RemoveSwapBackEntityData(index);
+
 	}
 
 	void Archetype::ReserveSpaceInArchetype(uint64_t desiredCapacity)
