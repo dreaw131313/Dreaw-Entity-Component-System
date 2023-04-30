@@ -78,7 +78,7 @@ int main()
 	QueryType query = { container };
 
 	uint64_t iterationCount = 0;
-	auto lambda = [&] (decs::Entity& e, Position& pos)
+	auto lambda = [&](decs::Entity& e, Position& pos)
 	{
 		PrintLine("Enityt ID: " + std::to_string(e.GetID()) + " pos: " + std::to_string(pos.X) + ", " + std::to_string(pos.Y));
 	};
@@ -104,7 +104,7 @@ int main()
 	testMultiQuery.AddContainer(&container);
 	testMultiQuery.AddContainer(&prefabContainer);
 
-	auto queryLambda = [&] (decs::Entity& e, Position& pos)
+	auto queryLambda = [&](decs::Entity& e, Position& pos)
 	{
 		//std::cout << "Query lambda -> Entity ID: " << e.ID() << ". Container ptr:"<< e.GetContainer() << "\n";
 		std::cout << "Query lambda -> Entity ID: " << e.GetID() << ". Hash: " << std::hash<decs::Entity>{}(e) << "\n";
