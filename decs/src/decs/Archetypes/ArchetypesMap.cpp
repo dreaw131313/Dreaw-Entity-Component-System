@@ -195,7 +195,6 @@ namespace decs
 		bool findedWithEdges = true;
 		if (finalArchetype != nullptr)
 		{
-			auto& componentTypesInOrderOfAddition = archetypeToMatch->m_AddingOrderTypeIDs;
 			while (typeIndex < typesCount)
 			{
 				auto it = finalArchetype->m_AddEdges.find(archetypeToMatch->GetTypeID(typeIndex));
