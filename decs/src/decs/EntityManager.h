@@ -21,9 +21,7 @@ namespace decs
 
 		EntityData* CreateEntity(bool isActive = true);
 
-		bool DestroyEntityInternal(EntityID entity);
-
-		bool DestroyEntityInternal(EntityData& entityData);
+		bool DestroyEntity(EntityData& entityData);
 
 		inline EntityData& GetEntityData(EntityID entity)
 		{

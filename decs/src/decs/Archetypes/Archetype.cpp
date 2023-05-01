@@ -65,6 +65,11 @@ namespace decs
 
 	void Archetype::RemoveSwapBackEntityData(uint64_t index)
 	{
+		if (index >= m_EntitiesCount)
+		{
+			return;
+		}
+
 		if (index < (m_EntitiesCount - 1))
 		{
 			m_EntitiesData[index] = m_EntitiesData.back();
@@ -76,7 +81,7 @@ namespace decs
 
 	void Archetype::RemoveSwapBackEntity(uint64_t index)
 	{
-		if (index>= m_EntitiesCount)
+		if (index >= m_EntitiesCount)
 		{
 			return;
 		}

@@ -24,10 +24,15 @@ namespace decs
 		if (m_FreeEntitiesCount > 0)
 		{
 			m_FreeEntitiesCount -= 1;
-			EntityData& entityData = m_EntityData[m_FreeEntities.back()];
+
+			auto it = m_FreeEntities.begin();
+
+
+			EntityData& entityData = m_EntityData[*it];
 			entityData.SetState(EntityState::Alive);
-			m_FreeEntities.pop_back();
 			entityData.m_bIsActive = isActive;
+
+			m_FreeEntities.erase(it);
 
 			return &entityData;
 		}
@@ -38,33 +43,14 @@ namespace decs
 		}
 	}
 
-	bool EntityManager::DestroyEntityInternal(EntityID entity)
-	{
-		if (entity < m_EntityData.Size())
-		{
-			EntityData& entityData = m_EntityData[entity];
-
-			if (!entityData.IsDead())
-			{
-				m_CreatedEntitiesCount -= 1;
-				m_FreeEntitiesCount += 1;
-				m_FreeEntities.push_back(entity);
-
-				entityData.OnDestroyByEntityManager();
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	bool EntityManager::DestroyEntityInternal(EntityData& entityData)
+	bool EntityManager::DestroyEntity(EntityData& entityData)
 	{
 		if (!entityData.IsDead())
 		{
 			m_CreatedEntitiesCount -= 1;
 			m_FreeEntitiesCount += 1;
-			m_FreeEntities.push_back(entityData.m_ID);
+
+			m_FreeEntities.emplace_back(entityData.m_ID);
 
 			entityData.OnDestroyByEntityManager();
 			return true;
@@ -82,6 +68,7 @@ namespace decs
 				EntityData& data = m_EntityData[m_FreeEntities.back()];
 				m_FreeEntities.pop_back();
 				reservedEntityData.push_back(&data);
+				m_FreeEntitiesCount += 1;
 			}
 			else
 			{

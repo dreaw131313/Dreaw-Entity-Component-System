@@ -82,7 +82,7 @@ namespace decs
 		{
 			EntityData* entityData = CreateAliveEntityData(isActive);
 			Entity e(entityData, this);
-			AddToEmptyEntities(*e.m_EntityData);
+			AddToEmptyEntitiesRightAfterNewEntityCreation(*e.m_EntityData);
 			InvokeEntityCreationObservers(e);
 			return e;
 		}
@@ -128,7 +128,7 @@ namespace decs
 			{
 				InvokeEntityDestructionObservers(entity);
 			}
-			m_EntityManager->DestroyEntityInternal(data);
+			m_EntityManager->DestroyEntity(data);
 		}
 
 		m_EmptyEntities.Clear();
@@ -175,7 +175,7 @@ namespace decs
 				RemoveFromEmptyEntities(entityData);
 			}
 
-			m_EntityManager->DestroyEntityInternal(entityData);
+			m_EntityManager->DestroyEntity(entityData);
 			return true;
 		}
 
@@ -239,7 +239,7 @@ namespace decs
 
 		if (prefabArchetype == nullptr)
 		{
-			AddToEmptyEntities(*spawnedEntityData);
+			AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntityData);
 			InvokeEntityCreationObservers(spawnedEntity);
 			return spawnedEntity;
 		}
@@ -283,7 +283,7 @@ namespace decs
 					entityData,
 					this
 				);
-				AddToEmptyEntities(*spawnedEntity.m_EntityData);
+				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.m_EntityData);
 				InvokeEntityCreationObservers(spawnedEntity);
 			}
 			return true;
@@ -337,7 +337,7 @@ namespace decs
 			{
 				EntityData* entityData = CreateAliveEntityData(areActive);
 				Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
-				AddToEmptyEntities(*spawnedEntity.m_EntityData);
+				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.m_EntityData);
 				InvokeEntityCreationObservers(spawnedEntity);
 			}
 			return true;
@@ -355,6 +355,11 @@ namespace decs
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
 			EntityData* entityData = CreateAliveEntityData(areActive);
+
+			if (entityData->GetID() == prefabEntityData.GetID())
+			{
+				break;
+			}
 			Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
 
 			CreateEntityFromSpawnData(*entityData, spawnState);
@@ -468,7 +473,6 @@ namespace decs
 		Archetype* oldArchetype = entityData.m_Archetype;
 		if (newEntityArchetype != nullptr)
 		{
-			uint32_t entityIndexBuffor = newEntityArchetype->EntitiesCount();
 			newEntityArchetype->MoveEntityComponentsAfterRemoveComponent(
 				componentTypeID,
 				entityData.m_Archetype,
@@ -479,9 +483,7 @@ namespace decs
 		else
 		{
 			entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
-			entityData.m_Archetype = nullptr;
-			entityData.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
-			m_EmptyEntities.EmplaceBack(&entityData);
+			AddToEmptyEntities(entityData);
 		}
 		return true;
 	}
@@ -517,7 +519,6 @@ namespace decs
 		Archetype* oldArchetype = entityData.m_Archetype;
 		if (newEntityArchetype != nullptr)
 		{
-			uint32_t newEntityIndex = newEntityArchetype->EntitiesCount();
 			newEntityArchetype->MoveEntityComponentsAfterRemoveComponent(
 				componentTypeID,
 				entityData.m_Archetype,
@@ -528,9 +529,7 @@ namespace decs
 		else
 		{
 			oldArchetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
-			entityData.m_Archetype = nullptr;
-			entityData.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
-			m_EmptyEntities.EmplaceBack(&entityData);
+			AddToEmptyEntities(entityData);
 		}
 
 		return true;
@@ -569,7 +568,7 @@ namespace decs
 					);
 				}
 
-				m_EntityManager->DestroyEntityInternal(entityData);
+				m_EntityManager->DestroyEntity(entityData);
 			}
 		}
 		else
@@ -577,7 +576,7 @@ namespace decs
 			for (uint64_t entityDataIdx = 0; entityDataIdx < entityDataCount; entityDataIdx++)
 			{
 				ArchetypeEntityData& archetypeEntityData = entitesData[entityDataIdx];
-				m_EntityManager->DestroyEntityInternal(*archetypeEntityData.GetEntityData());
+				m_EntityManager->DestroyEntity(*archetypeEntityData.GetEntityData());
 			}
 		}
 
@@ -737,7 +736,7 @@ namespace decs
 			RemoveFromEmptyEntities(*entity.m_EntityData);
 		}
 
-		m_EntityManager->DestroyEntityInternal(*entity.m_EntityData);
+		m_EntityManager->DestroyEntity(*entity.m_EntityData);
 	}
 
 	void Container::DestroyDelayedComponents()

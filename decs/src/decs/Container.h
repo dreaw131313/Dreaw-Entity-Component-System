@@ -175,7 +175,6 @@ namespace decs
 	public:
 		Entity CreateEntity(bool isActive = true);
 
-	private:
 	public:
 		bool DestroyEntity(Entity& entity);
 
@@ -191,19 +190,40 @@ namespace decs
 
 		void SetEntityActive(Entity& entity, bool bIsActive);
 
+		inline void AddToEmptyEntitiesRightAfterNewEntityCreation(EntityData& data)
+		{
+			data.m_Archetype = nullptr;
+			data.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
+			m_EmptyEntities.EmplaceBack(&data);
+		}
+
 		inline void AddToEmptyEntities(EntityData& data)
 		{
+			if (data.m_Archetype == nullptr)
+			{
+				return;
+			}
+
+			data.m_Archetype = nullptr;
 			data.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
 			m_EmptyEntities.EmplaceBack(&data);
 		}
 
 		inline void RemoveFromEmptyEntities(EntityData& data)
 		{
+			if (data.m_Archetype != nullptr)
+			{
+				return;
+			}
+
 			if (data.m_IndexInArchetype < m_EmptyEntities.Size() - 1)
 			{
 				m_EmptyEntities[data.m_IndexInArchetype] = m_EmptyEntities.Back();
+				m_EmptyEntities.Back()->m_IndexInArchetype = data.m_IndexInArchetype;
 			}
+
 			m_EmptyEntities.PopBack();
+			data.m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 		}
 
 		void InvokeEntityComponentDestructionObservers(Entity& entity);
@@ -422,8 +442,8 @@ namespace decs
 				}
 				else
 				{
-					entityNewArchetype->AddEntityData(&entityData);
 					RemoveFromEmptyEntities(entityData);
+					entityNewArchetype->AddEntityData(&entityData);
 				}
 
 				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(entity, archetypeTypeData.m_ComponentContext, createdComponent, entityData);
@@ -484,8 +504,8 @@ namespace decs
 				}
 				else
 				{
-					entityNewArchetype->AddEntityData(&entityData);
 					RemoveFromEmptyEntities(entityData);
+					entityNewArchetype->AddEntityData(&entityData);
 				}
 
 				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(entity, archetypeTypeData.m_ComponentContext, componentPtr, entityData);
