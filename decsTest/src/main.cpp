@@ -34,10 +34,12 @@ public:
 
 int main()
 {
-	PrintLine(std::format("Sizeof of Query: {} bytes", sizeof(decs::Query<int>)));
+	PrintLine(std::format("Sizeof of Query<int>: {} bytes", sizeof(decs::Query<int>)));
+	PrintLine(std::format("Sizeof of Query<int, float>: {} bytes", sizeof(decs::Query<int, float>)));
 	PrintLine(std::format("Sizeof of Multi Query: {} bytes", sizeof(decs::MultiQuery<int>)));
 	PrintLine();
 
+	std::cout << "std::vector<int> size = " << sizeof(std::vector<int>) << " bytes" << "\n";
 	std::cout << "decs::Container size = " << sizeof(decs::Container) << " bytes" << "\n";
 	std::cout << "decs::EntityData size = " << sizeof(decs::EntityData) << " bytes" << "\n";
 	std::cout << "ComponentRef<Position> size: " << sizeof(decs::ComponentRef<Position>) << " bytes" << "\n";
@@ -50,10 +52,10 @@ int main()
 	container.SetStableComponentChunkSize<float>(100);
 
 	auto prefab = prefabContainer.CreateEntity();
-	prefab.AddComponent<Position>(1.f, 2.f);
 	prefab.AddStableComponent<float>();
 	prefab.AddStableComponent<int>();
 	prefab.AddStableComponent<double>();
+	prefab.AddComponent<Position>(1.f, 2.f);
 
 	//prefabContainer.Spawn(entity1, 3, true);
 	container.Spawn(prefab, 1, true);
@@ -72,9 +74,9 @@ int main()
 	}
 
 	container.Spawn(prefab, 3, true);
-	auto e2 = container.CreateEntity();
+	/*auto e2 = container.CreateEntity();
 	e2.AddComponent<Position>();
-	e2.AddComponent<decs::Stable<float>>();
+	e2.AddComponent<decs::Stable<float>>();*/
 
 
 	using QueryType = decs::Query<Position>;

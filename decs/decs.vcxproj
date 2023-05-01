@@ -106,6 +106,7 @@
     <ClInclude Include="src\decs\ComponentContext\ComponentContextsManager.h" />
     <ClInclude Include="src\decs\ComponentRefs\ComponentRefAsVoid.h" />
     <ClInclude Include="src\decs\ComponentRefs\ComponentRef.h" />
+    <ClInclude Include="src\decs\Containers\TConstSizeArray.h" />
     <ClInclude Include="src\decs\EntityManager.h" />
     <ClInclude Include="src\decs\Archetypes\Archetype.h" />
     <ClInclude Include="src\decs\Container.h" />

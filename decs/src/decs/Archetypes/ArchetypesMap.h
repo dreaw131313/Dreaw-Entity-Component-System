@@ -152,7 +152,6 @@ namespace decs
 
 		void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state);
 
-
 	private:
 		TChunkedVector<Archetype> m_Archetypes = { 100 };
 		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes;
