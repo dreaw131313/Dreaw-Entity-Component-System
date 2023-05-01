@@ -288,21 +288,21 @@ namespace decs
 		struct SpawnData
 		{
 		public:
-			std::vector<SpawnComponentRefData> m_PrefabComponentRefs; // bool - true is stable, false unstable
+			std::vector<SpawnComponentRefData> m_PrefabComponentRefs;
 			std::vector <Archetype*> m_SpawnArchetypes;
-			std::vector<ComponentRefAsVoid> m_EntityComponentRefs;
+			std::vector<ComponentRefAsVoid> m_SpawnedEntityComponentRefs;
 
 		public:
 			void Reserve(uint64_t size)
 			{
 				m_PrefabComponentRefs.reserve(size);
-				m_EntityComponentRefs.reserve(size);
+				m_SpawnedEntityComponentRefs.reserve(size);
 			}
 
 			void Clear()
 			{
 				m_PrefabComponentRefs.clear();
-				m_EntityComponentRefs.clear();
+				m_SpawnedEntityComponentRefs.clear();
 				m_SpawnArchetypes.clear();
 			}
 
@@ -320,9 +320,9 @@ namespace decs
 					std::advance(pIt, refsStartIdx);
 					m_PrefabComponentRefs.erase(pIt, m_PrefabComponentRefs.end());
 
-					auto eIt = m_EntityComponentRefs.begin();
+					auto eIt = m_SpawnedEntityComponentRefs.begin();
 					std::advance(eIt, refsStartIdx);
-					m_EntityComponentRefs.erase(eIt, m_EntityComponentRefs.end());
+					m_SpawnedEntityComponentRefs.erase(eIt, m_SpawnedEntityComponentRefs.end());
 				}
 			}
 		};
@@ -335,7 +335,7 @@ namespace decs
 
 		public:
 			SpawnDataState(SpawnData& spawnData) :
-				m_CompRefsStart((uint32_t)spawnData.m_EntityComponentRefs.size()),
+				m_CompRefsStart((uint32_t)spawnData.m_SpawnedEntityComponentRefs.size()),
 				m_ArchetypeIndex((uint32_t)spawnData.m_SpawnArchetypes.size())
 			{
 

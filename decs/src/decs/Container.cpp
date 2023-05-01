@@ -255,7 +255,7 @@ namespace decs
 		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
 		{
-			typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[compRefIdx].Get(), spawnedEntity);
+			typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent_S(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx].Get(), spawnedEntity);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -311,7 +311,7 @@ namespace decs
 
 			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
 			{
-				typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[compRefIdx].Get(), spawnedEntity);
+				typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent_S(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx].Get(), spawnedEntity);
 			}
 		}
 
@@ -355,11 +355,6 @@ namespace decs
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
 			EntityData* entityData = CreateAliveEntityData(areActive);
-
-			if (entityData->GetID() == prefabEntityData.GetID())
-			{
-				break;
-			}
 			Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
 
 			CreateEntityFromSpawnData(*entityData, spawnState);
@@ -367,7 +362,7 @@ namespace decs
 
 			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
 			{
-				typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent_S(m_SpawnData.m_EntityComponentRefs[compRefIdx].Get(), spawnedEntity);
+				typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent_S(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx].Get(), spawnedEntity);
 			}
 		}
 
@@ -412,6 +407,8 @@ namespace decs
 				i
 			);
 		}
+
+		m_SpawnData.m_SpawnedEntityComponentRefs.resize(m_SpawnData.m_SpawnedEntityComponentRefs.size() + componentsCount);
 	}
 
 	void Container::CreateEntityFromSpawnData(
@@ -439,7 +436,7 @@ namespace decs
 			{
 				currentTypeData.m_PackedContainer->EmplaceFromVoid(spawnRefData.m_ComponentRef.Get());
 			}
-			m_SpawnData.m_EntityComponentRefs.emplace_back(currentTypeData.m_TypeID, spawnedEntityData, i);
+			m_SpawnData.m_SpawnedEntityComponentRefs[i].Set(currentTypeData.m_TypeID, spawnedEntityData, i);
 		}
 	}
 

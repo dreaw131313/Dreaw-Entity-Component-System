@@ -29,4 +29,12 @@ namespace decs
 		}
 	}
 
+	void ComponentRefAsVoid::Set(TypeID typeID, EntityData& entityData, uint32_t componentIndex)
+	{
+		m_TypeID = typeID;
+		m_EntityData = &entityData;
+		m_ComponentIndex = componentIndex;
+		FetchWithoutGettingComponentIndex();
+	}
+
 }

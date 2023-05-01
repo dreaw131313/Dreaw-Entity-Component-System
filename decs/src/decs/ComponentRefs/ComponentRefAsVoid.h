@@ -10,6 +10,7 @@ namespace decs
 
 	class ComponentRefAsVoid final
 	{
+		friend class Container;
 	public:
 		ComponentRefAsVoid() {}
 
@@ -43,6 +44,8 @@ namespace decs
 		PackedContainerBase* m_PackedContainer = nullptr;
 
 	private:
+		void Set(TypeID typeID, EntityData& entityData, uint32_t componentIndex);
+
 		inline bool IsValid() const
 		{
 			return m_EntityData->m_Archetype == m_Archetype && m_EntityData->m_IndexInArchetype == m_IndexInArchetype;
