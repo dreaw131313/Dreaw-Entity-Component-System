@@ -26,15 +26,13 @@ namespace decs
 			m_FreeEntitiesCount -= 1;
 
 			auto it = m_FreeEntities.begin();
+			 
+			EntityData* entityData = m_FreeEntities.back();
+			m_FreeEntities.pop_back();
+			entityData->SetState(EntityState::Alive);
+			entityData->m_bIsActive = isActive;
 
-
-			EntityData& entityData = m_EntityData[*it];
-			entityData.SetState(EntityState::Alive);
-			entityData.m_bIsActive = isActive;
-
-			m_FreeEntities.erase(it);
-
-			return &entityData;
+			return entityData;
 		}
 		else
 		{
@@ -50,7 +48,7 @@ namespace decs
 			m_CreatedEntitiesCount -= 1;
 			m_FreeEntitiesCount += 1;
 
-			m_FreeEntities.emplace_back(entityData.m_ID);
+			m_FreeEntities.push_back(&entityData);
 
 			entityData.OnDestroyByEntityManager();
 			return true;
@@ -65,10 +63,10 @@ namespace decs
 		{
 			if (m_FreeEntities.size() > 0)
 			{
-				EntityData& data = m_EntityData[m_FreeEntities.back()];
+				EntityData* data = m_FreeEntities.back();
 				m_FreeEntities.pop_back();
-				reservedEntityData.push_back(&data);
-				m_FreeEntitiesCount += 1;
+				reservedEntityData.push_back(data);
+				m_FreeEntitiesCount -= 1;
 			}
 			else
 			{
@@ -91,7 +89,7 @@ namespace decs
 		m_FreeEntitiesCount += entitiesToReturn;
 		for (uint64_t idx = 0; idx < entitiesToReturn; idx++)
 		{
-			m_FreeEntities.push_back(reservedEntityData[idx]->GetID());
+			m_FreeEntities.push_back(reservedEntityData[idx]);
 		}
 	}
 }

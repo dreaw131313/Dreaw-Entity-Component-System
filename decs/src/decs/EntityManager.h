@@ -38,7 +38,7 @@ namespace decs
 
 	private:
 		TChunkedVector<EntityData> m_EntityData = { 1000 };
-		std::vector<uint64_t> m_FreeEntities;
+		std::vector<EntityData*> m_FreeEntities;
 
 		EntityID m_CreatedEntitiesCount = 0;
 		uint64_t m_FreeEntitiesCount = 0;
