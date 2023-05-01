@@ -198,6 +198,42 @@ namespace decs
 		}
 	}
 
+	void Container::AddToEmptyEntitiesRightAfterNewEntityCreation(EntityData& data)
+	{
+		data.m_Archetype = nullptr;
+		data.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
+		m_EmptyEntities.EmplaceBack(&data);
+	}
+
+	void Container::AddToEmptyEntities(EntityData& data)
+	{
+		if (data.m_Archetype == nullptr)
+		{
+			return;
+		}
+
+		data.m_Archetype = nullptr;
+		data.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
+		m_EmptyEntities.EmplaceBack(&data);
+	}
+
+	void Container::RemoveFromEmptyEntities(EntityData& data)
+	{
+		if (data.m_Archetype != nullptr)
+		{
+			return;
+		}
+
+		if (data.m_IndexInArchetype < m_EmptyEntities.Size() - 1)
+		{
+			m_EmptyEntities[data.m_IndexInArchetype] = m_EmptyEntities.Back();
+			m_EmptyEntities.Back()->m_IndexInArchetype = data.m_IndexInArchetype;
+		}
+
+		m_EmptyEntities.PopBack();
+		data.m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
+	}
+
 	void Container::InvokeEntityComponentDestructionObservers(Entity& entity)
 	{
 		Archetype* currentArchetype = entity.m_EntityData->m_Archetype;
@@ -209,6 +245,22 @@ namespace decs
 		{
 			ArchetypeTypeData& typeData = currentArchetype->m_TypeData[i];
 			typeData.m_ComponentContext->InvokeOnDestroyComponent_S(typeData.m_PackedContainer->GetComponentPtrAsVoid(indexInArchetype), entity);
+		}
+	}
+
+	EntityData* Container::CreateAliveEntityData(bool bIsActive)
+	{
+		if (m_ReservedEntitiesCount > 0)
+		{
+			m_ReservedEntitiesCount -= 1;
+			EntityData* data = m_ReservedEntityData.back();
+			m_ReservedEntityData.pop_back();
+			m_EntityManager->CreateEntityFromReservedEntityData(data, bIsActive);
+			return data;
+		}
+		else
+		{
+			return m_EntityManager->CreateEntity(bIsActive);
 		}
 	}
 

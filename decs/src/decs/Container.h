@@ -190,59 +190,15 @@ namespace decs
 
 		void SetEntityActive(Entity& entity, bool bIsActive);
 
-		inline void AddToEmptyEntitiesRightAfterNewEntityCreation(EntityData& data)
-		{
-			data.m_Archetype = nullptr;
-			data.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
-			m_EmptyEntities.EmplaceBack(&data);
-		}
+		void AddToEmptyEntitiesRightAfterNewEntityCreation(EntityData& data);
 
-		inline void AddToEmptyEntities(EntityData& data)
-		{
-			if (data.m_Archetype == nullptr)
-			{
-				return;
-			}
-
-			data.m_Archetype = nullptr;
-			data.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
-			m_EmptyEntities.EmplaceBack(&data);
-		}
-
-		inline void RemoveFromEmptyEntities(EntityData& data)
-		{
-			if (data.m_Archetype != nullptr)
-			{
-				return;
-			}
-
-			if (data.m_IndexInArchetype < m_EmptyEntities.Size() - 1)
-			{
-				m_EmptyEntities[data.m_IndexInArchetype] = m_EmptyEntities.Back();
-				m_EmptyEntities.Back()->m_IndexInArchetype = data.m_IndexInArchetype;
-			}
-
-			m_EmptyEntities.PopBack();
-			data.m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
-		}
+		void AddToEmptyEntities(EntityData& data);
+		
+		void RemoveFromEmptyEntities(EntityData& data);
 
 		void InvokeEntityComponentDestructionObservers(Entity& entity);
 
-		inline EntityData* CreateAliveEntityData(bool bIsActive)
-		{
-			if (m_ReservedEntitiesCount > 0)
-			{
-				m_ReservedEntitiesCount -= 1;
-				EntityData* data = m_ReservedEntityData.back();
-				m_ReservedEntityData.pop_back();
-				m_EntityManager->CreateEntityFromReservedEntityData(data, bIsActive);
-				return data;
-			}
-			else
-			{
-				return m_EntityManager->CreateEntity(bIsActive);
-			}
-		}
+		EntityData* CreateAliveEntityData(bool bIsActive);
 
 #pragma endregion
 
