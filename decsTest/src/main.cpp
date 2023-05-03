@@ -39,7 +39,6 @@ int main()
 	PrintLine(std::format("Sizeof of Multi Query: {} bytes", sizeof(decs::MultiQuery<int>)));
 	PrintLine();
 
-	std::cout << "std::vector<int> size = " << sizeof(std::vector<int>) << " bytes" << "\n";
 	std::cout << "decs::Container size = " << sizeof(decs::Container) << " bytes" << "\n";
 	std::cout << "decs::EntityData size = " << sizeof(decs::EntityData) << " bytes" << "\n";
 	std::cout << "ComponentRef<Position> size: " << sizeof(decs::ComponentRef<Position>) << " bytes" << "\n";
