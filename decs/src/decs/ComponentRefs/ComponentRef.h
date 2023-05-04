@@ -21,7 +21,7 @@ namespace decs
 		}
 
 		ComponentRef(
-			Entity& entity
+			const Entity& entity
 		) :
 			m_EntityData(entity.m_EntityData)
 		{
