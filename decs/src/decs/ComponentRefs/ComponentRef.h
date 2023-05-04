@@ -9,6 +9,11 @@ namespace decs
 	class ComponentRef final
 	{
 	public:
+		ComponentRef()
+		{
+
+		}
+
 		ComponentRef(EntityData& entityData) :
 			m_EntityData(&entityData)
 		{
@@ -32,11 +37,16 @@ namespace decs
 			return  Get() == nullptr;
 		}
 
+		inline bool IsValid()
+		{
+			return Get() != nullptr;
+		}
+
 		inline typename component_type<ComponentType>::Type* Get()
 		{
-			if (IsEntityVersionValid())
+			if (m_EntityData != nullptr && IsEntityVersionValid())
 			{
-				if (!IsValid())
+				if (!ShouldFetchData())
 				{
 					FetchWhenIsInvalid();
 				}
@@ -55,6 +65,14 @@ namespace decs
 			return Get();
 		}
 
+		void Invalidate()
+		{
+			m_EntityData = nullptr;
+			m_Archetype = nullptr;
+			m_PackedContainer = nullptr;
+			m_EntityVersion = std::numeric_limits<EntityVersion>::max();
+		}
+
 	private:
 		EntityData* m_EntityData = nullptr;
 		Archetype* m_Archetype = nullptr;
@@ -62,7 +80,7 @@ namespace decs
 		EntityVersion m_EntityVersion = std::numeric_limits<EntityVersion>::max();
 
 	private:
-		inline bool IsValid() const
+		inline bool ShouldFetchData() const
 		{
 			return m_EntityData->m_Archetype == m_Archetype;
 		}
