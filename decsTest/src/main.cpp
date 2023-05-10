@@ -34,6 +34,7 @@ public:
 
 int main()
 {
+
 	PrintLine(std::format("Sizeof of Query<int>: {} bytes", sizeof(decs::Query<int>)));
 	PrintLine(std::format("Sizeof of Query<int, float>: {} bytes", sizeof(decs::Query<int, float>)));
 	PrintLine(std::format("Sizeof of Multi Query: {} bytes", sizeof(decs::MultiQuery<int>)));
@@ -41,6 +42,7 @@ int main()
 
 	std::cout << "decs::Container size = " << sizeof(decs::Container) << " bytes" << "\n";
 	std::cout << "decs::EntityData size = " << sizeof(decs::EntityData) << " bytes" << "\n";
+	std::cout << "decs::Entity size = " << sizeof(decs::Entity) << " bytes" << "\n";
 	std::cout << "ComponentRef<Position> size: " << sizeof(decs::ComponentRef<Position>) << " bytes" << "\n";
 	std::cout << "Archetrype size: " << sizeof(decs::Archetype) << " bytes" << "\n";
 	PrintLine();
@@ -55,6 +57,9 @@ int main()
 	prefab.AddStableComponent<int>();
 	prefab.AddStableComponent<double>();
 	prefab.AddComponent<Position>(1.f, 2.f);
+
+
+	std::hash<decs::Entity>{}(prefab);
 
 	//prefabContainer.Spawn(entity1, 3, true);
 	container.Spawn(prefab, 1, true);

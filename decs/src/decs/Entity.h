@@ -18,6 +18,8 @@ namespace decs
 		friend class ComponentRef;
 		friend class ComponentRefAsVoid;
 
+		friend struct std::hash<decs::Entity>;
+
 	public:
 		Entity()
 		{
@@ -223,9 +225,9 @@ struct std::hash<decs::Entity>
 {
 	std::size_t operator()(const decs::Entity& entity) const
 	{
-		uint64_t eIDHash = std::hash<decs::EntityID>{}(entity.GetID());
-		uint64_t containerPtrHash = std::hash<decs::Container*>{}(entity.GetContainer());
+		uint64_t entityDataHash = std::hash<decs::EntityData*>{}(entity.m_EntityData);
+		uint64_t entityVersionHash = std::hash<decs::EntityVersion>{}(entity.GetVersion());
 
-		return eIDHash ^ (containerPtrHash + 0x9e3779b9 + (eIDHash << 6) + (eIDHash >> 2));
+		return entityDataHash ^ (entityVersionHash + 0x9e3779b9 + (entityDataHash << 6) + (entityDataHash >> 2));
 	}
 };
