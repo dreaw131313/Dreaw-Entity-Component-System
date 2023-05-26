@@ -44,7 +44,7 @@ int main()
 	std::cout << "decs::EntityData size = " << sizeof(decs::EntityData) << " bytes" << "\n";
 	std::cout << "decs::Entity size = " << sizeof(decs::Entity) << " bytes" << "\n";
 	std::cout << "ComponentRef<Position> size: " << sizeof(decs::ComponentRef<Position>) << " bytes" << "\n";
-	std::cout << "Archetrype size: " << sizeof(decs::Archetype) << " bytes" << "\n";
+	std::cout << "Archetype size: " << sizeof(decs::Archetype) << " bytes" << "\n";
 	PrintLine();
 
 	decs::Container prefabContainer = {};
