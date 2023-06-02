@@ -193,7 +193,7 @@ namespace decs
 		void AddToEmptyEntitiesRightAfterNewEntityCreation(EntityData& data);
 
 		void AddToEmptyEntities(EntityData& data);
-		
+
 		void RemoveFromEmptyEntities(EntityData& data);
 
 		void InvokeEntityComponentDestructionObservers(Entity& entity);
@@ -619,10 +619,20 @@ namespace decs
 			return m_StableContainers.SetStableComponentChunkSize<T>(chunkSize);
 		}
 
+		bool SetStableComponentChunkSize(TypeID typeID, uint64_t chunkSize)
+		{
+			return m_StableContainers.SetStableComponentChunkSize(typeID, chunkSize);
+		}
+
 		template<typename T>
 		uint64_t GetStableComponentChunkSize()
 		{
 			return m_StableContainers.GetStableComponentChunkSize<T>();
+		}
+
+		uint64_t GetStableComponentChunkSize(TypeID typeID)
+		{
+			return m_StableContainers.GetStableComponentChunkSize(typeID);
 		}
 
 #pragma endregion

@@ -402,11 +402,25 @@ namespace decs
 			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::ID();
 			auto& container = m_Containers[typeID];
 
-			if (container == nullptr)
+			if (container.second == nullptr)
 			{
-				container = new StableContainer<T>(chunkSize);
+				container.first = chunkSize;
 				return true;
 			}
+
+			return false;
+		}
+
+		bool SetStableComponentChunkSize(TypeID typeID, uint64_t chunkSize)
+		{
+			auto& container = m_Containers[typeID];
+
+			if (container.second == nullptr)
+			{
+				container.first = chunkSize;
+				return true;
+			}
+
 			return false;
 		}
 
@@ -424,43 +438,66 @@ namespace decs
 			return std::numeric_limits<uint64_t>::max();
 		}
 
+		uint64_t GetStableComponentChunkSize(TypeID typeID)
+		{
+			auto it = m_Containers.find(typeID);
+
+			if (it != m_Containers.end())
+			{
+				return it->second.first;
+			}
+
+			return std::numeric_limits<uint64_t>::max();
+		}
+
 		inline StableContainerBase* GetStableContainer(TypeID typeID)
 		{
 			auto it = m_Containers.find(typeID);
-			return it != m_Containers.end() ? it->second : nullptr;
+			return it != m_Containers.end() ? it->second.second : nullptr;
 		}
 
 		inline StableContainerBase* CreateStableContainerFromOther(StableContainerBase* other)
 		{
 			const TypeID id = other->GetTypeID();
-			auto& container = m_Containers[id];
-			if (container == nullptr)
+			auto& containerPair = m_Containers[id];
+
+			if (containerPair.first == 0)
 			{
-				container = other->CreateOwnEmptyCopy(m_DefaultChunkSize);
+				containerPair.first = m_DefaultChunkSize;
 			}
 
-			return container;
+			if (containerPair.second == nullptr)
+			{
+				containerPair.second = other->CreateOwnEmptyCopy(containerPair.first);
+			}
+
+			return containerPair.second;
 		}
 
 		template<typename T>
 		StableContainer<T>* GetOrCreateStableContainer()
 		{
 			TYPE_ID_CONSTEXPR TypeID typeID = Type<Stable<T>>::ID();
-			auto& container = m_Containers[typeID];
+			auto& containerPair = m_Containers[typeID];
 
-			if (container == nullptr)
+			if (containerPair.first == 0)
 			{
-				container = new StableContainer<T>(m_DefaultChunkSize);
+				containerPair.first = m_DefaultChunkSize;
 			}
 
-			return static_cast<StableContainer<T>*>(container);
+			if (containerPair.second == nullptr)
+			{
+				containerPair.second = new StableContainer<T>(containerPair.first);
+			}
+
+			return static_cast<StableContainer<T>*>(containerPair.second);
 		}
 
 		inline void DestroyContainers()
 		{
 			for (auto& [key, value] : m_Containers)
 			{
-				delete value;
+				delete value.second;
 			}
 		}
 
@@ -468,12 +505,12 @@ namespace decs
 		{
 			for (auto& [key, value] : m_Containers)
 			{
-				value->Clear();
+				value.second->Clear();
 			}
 		}
 
 	private:
-		ecsMap<TypeID, StableContainerBase*> m_Containers;
+		ecsMap<TypeID, std::pair<uint64_t, StableContainerBase*>> m_Containers;// pair: uint64_t is chunk size of container
 		uint64_t m_DefaultChunkSize = 1000;
 	};
 }

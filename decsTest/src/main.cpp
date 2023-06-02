@@ -62,6 +62,10 @@ int main()
 	std::hash<decs::Entity>{}(prefab);
 
 	//prefabContainer.Spawn(entity1, 3, true);
+	container.SetStableComponentChunkSize<double>(100);
+	container.SetStableComponentChunkSize<int>(100);
+	container.SetStableComponentChunkSize(decs::Type<Position>::ID(), 100);
+
 	container.Spawn(prefab, 1, true);
 
 	float* floatCompPtr = nullptr;
