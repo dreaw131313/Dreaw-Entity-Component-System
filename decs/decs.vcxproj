@@ -127,7 +127,6 @@
     <ClInclude Include="src\decs\ThirdParty\skarupke\unordered_map.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\decs\ContainerSerializer.cpp" />
     <ClCompile Include="src\decs\Archetypes\Archetype.cpp" />
     <ClCompile Include="src\decs\Archetypes\ArchetypesMap.cpp" />
     <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp" />

@@ -116,9 +116,6 @@
     <ClCompile Include="src\decs\Archetypes\Archetype.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decs\ContainerSerializer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="src\decs\ThirdParty\skarupke\License.txt" />

@@ -17,6 +17,7 @@ namespace decs
 		template<typename ComponentType>
 		friend class ComponentRef;
 		friend class ComponentRefAsVoid;
+		template<typename T>
 		friend class ContainerSerializer;
 
 		friend struct std::hash<decs::Entity>;

@@ -106,6 +106,7 @@ namespace decs
 	class ArchetypesMap
 	{
 		friend class Container;
+		template<typename T>
 		friend class ContainerSerializer;
 		template<typename ...Types>
 		friend class Query;

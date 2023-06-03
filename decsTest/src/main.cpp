@@ -32,7 +32,7 @@ public:
 	}
 };
 
-class PositionSerializer : public decs::ComponentSerializer<Position>
+class PositionSerializer : public decs::ComponentSerializer<Position, void>
 {
 public:
 	// Inherited via ComponentSerializer
@@ -42,7 +42,7 @@ public:
 	}
 };
 
-class FloatSerializer : public decs::ComponentSerializer<decs::Stable<float>>
+class FloatSerializer : public decs::ComponentSerializer<decs::Stable<float>, void>
 {
 public:
 	// Inherited via ComponentSerializer
@@ -52,7 +52,7 @@ public:
 	}
 };
 
-class IntSerializer : public decs::ComponentSerializer< decs::Stable<int>>
+class IntSerializer : public decs::ComponentSerializer< decs::Stable<int>, void>
 {
 public:
 	// Inherited via ComponentSerializer
@@ -62,7 +62,7 @@ public:
 	}
 };
 
-class DoubleSerializer : public decs::ComponentSerializer< decs::Stable<double>>
+class DoubleSerializer : public decs::ComponentSerializer< decs::Stable<double>, void>
 {
 public:
 	// Inherited via ComponentSerializer
@@ -73,7 +73,7 @@ public:
 };
 
 
-class TestSerializer : public decs::ContainerSerializer
+class TestSerializer : public decs::ContainerSerializer<void>
 {
 public:
 

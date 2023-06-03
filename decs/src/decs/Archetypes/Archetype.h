@@ -76,6 +76,7 @@ namespace decs
 		friend class EntityData;
 		friend class EntityManager;
 		friend class ArchetypesMap;
+		template<typename T>
 		friend class ContainerSerializer;
 
 		template<typename...>
