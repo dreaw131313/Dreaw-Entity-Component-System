@@ -10,13 +10,19 @@ namespace decs
 {
 	class MultiQueryBase
 	{
+	public:
+		virtual ~MultiQueryBase()
+		{
+
+		}
+
 		virtual bool AddContainer(Container* container, bool bIsEnabled = true) = 0;
 		virtual bool RemoveContainer(Container* container) = 0;
 		virtual void SetContainerEnabled(Container* container, bool isEnabled) = 0;
 	};
 
 	template<typename... ComponentsTypes>
-	class MultiQuery : MultiQueryBase
+	class MultiQuery : public MultiQueryBase
 	{
 	private:
 		using ArchetypeContextType = IterationArchetypeContext<sizeof...(ComponentsTypes)>;
@@ -351,6 +357,11 @@ namespace decs
 					for (; elementIndex < chunkSize; elementIndex++)
 					{
 						ContainerContextType& containerContext = chunk[elementIndex];
+						if (!containerContext.m_bIsEnabled)
+						{
+							continue; // Skip if container context is disabled
+						}
+
 						auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
 						const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
 
