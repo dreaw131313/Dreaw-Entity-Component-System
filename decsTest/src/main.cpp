@@ -114,8 +114,8 @@ int main()
 
 	using MultiQueryType = decs::MultiQuery<Position>;
 	MultiQueryType testMultiQuery = {};
-	testMultiQuery.AddContainer(&container);
-	testMultiQuery.AddContainer(&prefabContainer);
+	testMultiQuery.AddContainer(&container, true);
+	testMultiQuery.AddContainer(&prefabContainer, true);
 
 	auto queryLambda = [&](decs::Entity& e, Position& pos)
 	{

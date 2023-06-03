@@ -8,8 +8,15 @@
 
 namespace decs
 {
+	class MultiQueryBase
+	{
+		virtual bool AddContainer(Container* container, bool bIsEnabled = true) = 0;
+		virtual bool RemoveContainer(Container* container) = 0;
+		virtual void SetContainerEnabled(Container* container, bool isEnabled) = 0;
+	};
+
 	template<typename... ComponentsTypes>
-	class MultiQuery
+	class MultiQuery : MultiQueryBase
 	{
 	private:
 		using ArchetypeContextType = IterationArchetypeContext<sizeof...(ComponentsTypes)>;
@@ -84,6 +91,11 @@ namespace decs
 				for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++)
 				{
 					ContainerContextType& containerContext = chunk[elementIndex];
+					if (!containerContext.m_bIsEnabled)
+					{
+						continue; // Skip if container context is disabled
+					}
+
 					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
 					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
 
@@ -133,6 +145,11 @@ namespace decs
 				for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++)
 				{
 					ContainerContextType& containerContext = chunk[elementIndex];
+					if (!containerContext.m_bIsEnabled)
+					{
+						continue; // Skip if container context is disabled
+					}
+
 					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
 					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
 
@@ -165,19 +182,19 @@ namespace decs
 			}
 		}
 
-		bool AddContainer(Container* container)
+		virtual bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{
 			auto& contextIndex = m_ContainerContextsIndexes[container];
 			if (contextIndex >= m_ContainerContexts.Size() || m_ContainerContexts[contextIndex].m_Container != container)
 			{
 				contextIndex = m_ContainerContexts.Size();
-				m_ContainerContexts.EmplaceBack(container);
+				m_ContainerContexts.EmplaceBack(container, bIsEnabled);
 				return true;
 			}
 			return false;
 		}
 
-		bool RemoveContainer(Container* container)
+		virtual bool RemoveContainer(Container* container) override
 		{
 			auto it = m_ContainerContextsIndexes.find(container);
 			if (it != m_ContainerContextsIndexes.end())
@@ -195,6 +212,16 @@ namespace decs
 				return true;
 			}
 			return false;
+		}
+
+		virtual void SetContainerEnabled(Container* container, bool isEnabled) override
+		{
+			auto it = m_ContainerContextsIndexes.find(container);
+			if (it != m_ContainerContextsIndexes.end())
+			{
+				ContainerContextType& context = m_ContainerContexts[it->second];
+				context.m_bIsEnabled = isEnabled;
+			}
 		}
 
 	private:

@@ -23,11 +23,12 @@ namespace decs
 	class IterationContainerContext
 	{
 	public:
-		Container* m_Container = nullptr;
 		std::vector<ArchetypeContextType> m_ArchetypesContexts;
 		ecsSet<Archetype*> m_ContainedArchetypes;
+		Container* m_Container = nullptr;
 		uint64_t m_ArchetypesCountDirty = 0;
 		uint64_t m_EntitiesCount = 0;
+		bool m_bIsEnabled = true;
 
 	public:
 		IterationContainerContext()
@@ -35,8 +36,9 @@ namespace decs
 
 		}
 
-		IterationContainerContext(Container* container) :
-			m_Container(container)
+		IterationContainerContext(Container* container, bool bIsEnabled = true) :
+			m_Container(container),
+			m_bIsEnabled(bIsEnabled)
 		{
 
 		}
