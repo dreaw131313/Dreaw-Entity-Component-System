@@ -69,6 +69,10 @@ namespace decs
 		template<typename, typename...>
 		friend class IterationContainerContext;
 		friend class Entity;
+		friend class ContainerSerializer;
+
+		NON_COPYABLE(Container);
+		NON_MOVEABLE(Container);
 
 	private:
 		static constexpr uint64_t m_DefaultEntitiesChunkSize = 1000;
@@ -91,11 +95,6 @@ namespace decs
 
 		~Container();
 
-		Container(const Container& other) = delete;
-		Container(Container&& other) = delete;
-
-		Container& operator = (const Container& other) = delete;
-		Container& operator = (Container&& other) = delete;
 
 #pragma region Extension data
 		/*public:
@@ -387,7 +386,7 @@ namespace decs
 				PackedContainer<ComponentType>* container = reinterpret_cast<PackedContainer<ComponentType>*>(archetypeTypeData.m_PackedContainer);
 				ComponentType* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
 
-				uint32_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
+				uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
 				if (entityData.m_Archetype != nullptr)
 				{
 					entityNewArchetype->MoveEntityComponentsAfterAddComponent<ComponentType>(
@@ -449,7 +448,7 @@ namespace decs
 				ComponentType* componentPtr = static_cast<ComponentType*>(componentNodeInfo.m_ComponentPtr);
 
 				// Adding entity to archetype
-				uint32_t entityIndexBuffor = entityNewArchetype->EntitiesCount();
+				uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
 				if (entityData.m_Archetype != nullptr)
 				{
 					entityNewArchetype->MoveEntityComponentsAfterAddComponent<Stable<ComponentType>>(

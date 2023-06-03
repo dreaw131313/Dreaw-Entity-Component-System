@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "EntityManager.h"
 #include "Container.h"
+#include "ContainerSerializer.h"
 #include "Iteration\Query.h"
 #include "Iteration\MultiQuery.h"
 #include "Observers\Observers.h"

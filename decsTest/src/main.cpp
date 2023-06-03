@@ -32,6 +32,65 @@ public:
 	}
 };
 
+class PositionSerializer : public decs::ComponentSerializer<Position>
+{
+public:
+	// Inherited via ComponentSerializer
+	virtual void SerializeComponent(const Position& component, void* serializerData) override
+	{
+		PrintLine(std::format("\tPosition: X: {0}, Y: {1}", component.X, component.Y));
+	}
+};
+
+class FloatSerializer : public decs::ComponentSerializer<decs::Stable<float>>
+{
+public:
+	// Inherited via ComponentSerializer
+	virtual void SerializeComponent(const float& component, void* serializerData) override
+	{
+		PrintLine(std::format("\tFloat: {0}", component));
+	}
+};
+
+class IntSerializer : public decs::ComponentSerializer< decs::Stable<int>>
+{
+public:
+	// Inherited via ComponentSerializer
+	virtual void SerializeComponent(const int& component, void* serializerData) override
+	{
+		PrintLine(std::format("\tInt: {0}", component));
+	}
+};
+
+class DoubleSerializer : public decs::ComponentSerializer< decs::Stable<double>>
+{
+public:
+	// Inherited via ComponentSerializer
+	virtual void SerializeComponent(const double& component, void* serializerData) override
+	{
+		PrintLine(std::format("\tDouble: {0}", component));
+	}
+};
+
+
+class TestSerializer : public decs::ContainerSerializer
+{
+public:
+
+protected:
+	// Inherited via ContainerSerializer
+	virtual bool BeginEntitySerialize(const decs::Entity& entity) override
+	{
+		PrintLine(std::format("Entity ID: {0}, is active: {1}", entity.GetID(), entity.IsActive()));
+
+		return true;
+	}
+
+	virtual void EndEntitySerialize(const decs::Entity& entity) override
+	{
+	}
+};
+
 int main()
 {
 
@@ -138,6 +197,25 @@ int main()
 		PrintLine("Iterator " + std::to_string(i + 1));
 		it.ForEach(queryLambda);
 	}
+
+	// Serializer test:
+	TestSerializer serializer = {};
+	PositionSerializer positionSerializer = {};
+	FloatSerializer floatSerializer = {};
+	IntSerializer intSerializer = {};
+	DoubleSerializer doubleSerializer = {};
+
+	serializer.SetComponentSerializer<Position>(&positionSerializer);
+	serializer.SetComponentSerializer<decs::Stable<float>>(&floatSerializer);
+	serializer.SetComponentSerializer<decs::Stable<int>>(&intSerializer);
+	serializer.SetComponentSerializer<decs::Stable<double>>(&doubleSerializer);
+
+	PrintLine();
+	PrintLine("Serialization: Container");
+	serializer.Serialize(container, nullptr);
+	PrintLine();
+	PrintLine("Serialization: Prefab Container");
+	serializer.Serialize(prefabContainer, nullptr);
 
 	return 0;
 }

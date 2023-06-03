@@ -85,7 +85,7 @@ namespace decs
 		{
 			Fetch();
 
-			uint64_t containerContextChunksCount = m_ContainerContexts.ChunksCount();
+			uint64_t containerContextChunksCount = m_ContainerContexts.ChunkCount();
 			decs::Entity entityBuffor = {};
 			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 
@@ -139,7 +139,7 @@ namespace decs
 		{
 			Fetch();
 
-			uint64_t containerContextChunksCount = m_ContainerContexts.ChunksCount();
+			uint64_t containerContextChunksCount = m_ContainerContexts.ChunkCount();
 			decs::Entity entityBuffor = {};
 			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 
@@ -342,7 +342,7 @@ namespace decs
 			void ForEach(Callable&& func) noexcept
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
-				uint64_t containerContextChunksCount = containerContexts.ChunksCount();
+				uint64_t containerContextChunksCount = containerContexts.ChunkCount();
 				decs::Entity entityBuffor = {};
 				std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 
@@ -481,7 +481,7 @@ namespace decs
 
 			BatchIterator* iterator = nullptr;
 
-			uint64_t containerContextChunksCount = this->m_ContainerContexts.ChunksCount();
+			uint64_t containerContextChunksCount = this->m_ContainerContexts.ChunkCount();
 			for (uint64_t chunkIdx = 0; chunkIdx < containerContextChunksCount; chunkIdx++)
 			{
 				auto chunk = m_ContainerContexts.GetChunk(chunkIdx);

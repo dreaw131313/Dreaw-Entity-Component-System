@@ -15,7 +15,7 @@ namespace decs
 		PackedContainerBase* m_Containers[elementsCount] = { nullptr };
 
 	public:
-		inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntitiesCount(); }
+		inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntityCount(); }
 	};
 
 
@@ -128,7 +128,7 @@ namespace decs
 			const std::vector<TypeID>& withAll
 		)
 		{
-			if (!ContainArchetype(&archetype) && archetype.ComponentsCount())
+			if (!ContainArchetype(&archetype) && archetype.ComponentCount())
 			{
 				// without test
 				{
@@ -230,7 +230,7 @@ namespace decs
 			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
 			{
 				Archetype& arch = archetypes[i];
-				if (arch.ComponentsCount() < minRequiredComponentsCount)
+				if (arch.ComponentCount() < minRequiredComponentsCount)
 				{
 					TryAddArchetypeFromGroup(arch, includes, without, withAnyOf, withAll);
 				}

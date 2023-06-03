@@ -250,7 +250,7 @@ namespace decs
 
 		void TryAddArchetypeFromGroup(Archetype& archetype)
 		{
-			if (!ContainArchetype(&archetype) && archetype.ComponentsCount())
+			if (!ContainArchetype(&archetype) && archetype.ComponentCount())
 			{
 				// without test
 				{
@@ -342,7 +342,7 @@ namespace decs
 			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
 			{
 				Archetype& arch = archetypes[i];
-				if (arch.ComponentsCount() < minRequiredComponentsCount)
+				if (arch.ComponentCount() < minRequiredComponentsCount)
 				{
 					TryAddArchetypeFromGroup(arch);
 				}

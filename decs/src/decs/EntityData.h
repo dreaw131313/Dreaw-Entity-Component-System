@@ -82,7 +82,7 @@ namespace decs
 
 		void SetState(EntityState state);
 
-		uint32_t ComponentsCount() const;
+		uint32_t ComponentCount() const;
 
 		void SetActiveState(bool state);
 

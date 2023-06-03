@@ -76,6 +76,7 @@ namespace decs
 		friend class EntityData;
 		friend class EntityManager;
 		friend class ArchetypesMap;
+		friend class ContainerSerializer;
 
 		template<typename...>
 		friend 	class Query;
@@ -108,7 +109,7 @@ namespace decs
 
 		~Archetype();
 
-		inline uint32_t ComponentsCount() const
+		inline uint32_t ComponentCount() const
 		{
 			return m_ComponentsCount;
 		}
@@ -118,7 +119,7 @@ namespace decs
 			return m_TypeData[index].m_TypeID;
 		}
 
-		inline uint32_t EntitiesCount() const
+		inline uint32_t EntityCount() const
 		{
 			return m_EntitiesCount;
 		}
@@ -204,6 +205,11 @@ namespace decs
 		inline PackedContainer<ComponentType>* GetContainerAt(uint64_t index)
 		{
 			return dynamic_cast<PackedContainer<ComponentType>*>(m_TypeData[index].m_PackedContainer);
+		}
+
+		inline PackedContainerBase* GetPackedContainerAt(uint64_t index)
+		{
+			return m_TypeData[index].m_PackedContainer;
 		}
 
 		void ReserveSpaceInArchetype(uint64_t desiredCapacity);

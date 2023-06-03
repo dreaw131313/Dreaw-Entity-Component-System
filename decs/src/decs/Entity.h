@@ -17,6 +17,7 @@ namespace decs
 		template<typename ComponentType>
 		friend class ComponentRef;
 		friend class ComponentRefAsVoid;
+		friend class ContainerSerializer;
 
 		friend struct std::hash<decs::Entity>;
 
@@ -171,10 +172,10 @@ namespace decs
 			return m_Version;
 		}
 
-		inline uint32_t ComponentsCount()
+		inline uint32_t ComponentCount()
 		{
 			if (IsValid())
-				return m_EntityData->ComponentsCount();
+				return m_EntityData->ComponentCount();
 			return 0;
 		}
 

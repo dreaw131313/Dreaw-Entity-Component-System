@@ -17,7 +17,7 @@ namespace decs
 			return;
 		}
 
-		uint64_t chunksCount = m_Archetypes.ChunksCount();
+		uint64_t chunksCount = m_Archetypes.ChunkCount();
 		for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
 		{
 			uint64_t chunkSize = m_Archetypes.GetChunkSize(chunkIdx);
@@ -73,7 +73,7 @@ namespace decs
 	{
 		// edges with archetypes with less components:
 		{
-			const uint64_t componentCountsMinusOne = archetype.ComponentsCount() - 1;
+			const uint64_t componentCountsMinusOne = archetype.ComponentCount() - 1;
 
 			if (componentCountsMinusOne > 0)
 			{
@@ -89,7 +89,7 @@ namespace decs
 					TypeID notFindedType;
 					bool isArchetypeValid = true;
 
-					for (uint64_t typeIdx = 0; typeIdx < archetype.ComponentsCount(); typeIdx++)
+					for (uint64_t typeIdx = 0; typeIdx < archetype.ComponentCount(); typeIdx++)
 					{
 						TypeID typeID = archetype.GetTypeID(typeIdx);
 
@@ -121,11 +121,11 @@ namespace decs
 
 		// edges with archetype with more components:
 		{
-			const uint64_t componentCountsPlusOne = (uint64_t)archetype.ComponentsCount() + 1;
+			const uint64_t componentCountsPlusOne = (uint64_t)archetype.ComponentCount() + 1;
 
 			if (componentCountsPlusOne <= m_ArchetypesGroupedByComponentsCount.size())
 			{
-				const uint64_t archetypeListIndex = archetype.ComponentsCount();
+				const uint64_t archetypeListIndex = archetype.ComponentCount();
 
 				auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
 				uint64_t archCount = archetypesListToCreateEdges.size();
@@ -138,7 +138,7 @@ namespace decs
 					TypeID lastIncorrectType;
 					bool isArchetypeValid = true;
 
-					for (uint64_t typeIdx = 0; typeIdx < testArchetype.ComponentsCount(); typeIdx++)
+					for (uint64_t typeIdx = 0; typeIdx < testArchetype.ComponentCount(); typeIdx++)
 					{
 						TypeID typeID = testArchetype.GetTypeID(typeIdx);
 						auto it = archetype.m_TypeIDsIndexes.find(typeID);
@@ -169,24 +169,24 @@ namespace decs
 
 	void ArchetypesMap::AddArchetypeToCorrectContainers(Archetype& archetype, bool bTryAddToSingleComponentsMap)
 	{
-		if (bTryAddToSingleComponentsMap && archetype.ComponentsCount() == 1)
+		if (bTryAddToSingleComponentsMap && archetype.ComponentCount() == 1)
 		{
 			m_SingleComponentArchetypes[archetype.GetTypeID(0)] = &archetype;
 		}
 
-		if (archetype.ComponentsCount() > m_ArchetypesGroupedByComponentsCount.size())
+		if (archetype.ComponentCount() > m_ArchetypesGroupedByComponentsCount.size())
 		{
-			m_ArchetypesGroupedByComponentsCount.resize(archetype.ComponentsCount());
+			m_ArchetypesGroupedByComponentsCount.resize(archetype.ComponentCount());
 		}
 
-		m_ArchetypesGroupedByComponentsCount[archetype.ComponentsCount() - 1].push_back(&archetype);
+		m_ArchetypesGroupedByComponentsCount[archetype.ComponentCount() - 1].push_back(&archetype);
 
 		AddArchetypeToGroups(&archetype);
 	}
 
 	std::pair<Archetype*, bool> ArchetypesMap::FindMatchingArchetype(Archetype* archetypeToMatch)
 	{
-		const uint64_t typesCount = archetypeToMatch->ComponentsCount();
+		const uint64_t typesCount = archetypeToMatch->ComponentCount();
 		if (typesCount == 0) return { nullptr,false };
 
 		Archetype* finalArchetype = GetSingleComponentArchetype(archetypeToMatch->GetTypeID(0));
@@ -265,7 +265,7 @@ namespace decs
 			archetype = &m_Archetypes.EmplaceBack();
 
 			// take care that componentContextsManager have the same component contexts that component contextManager which have "fromArchetype" archetype and stableContainersManager have correct stable components containers
-			for (uint64_t i = 0; i < fromArchetype.ComponentsCount(); i++)
+			for (uint64_t i = 0; i < fromArchetype.ComponentCount(); i++)
 			{
 				ArchetypeTypeData& fromArchetypeTypeData = fromArchetype.m_TypeData[i];
 
@@ -290,7 +290,7 @@ namespace decs
 
 			/* {
 				Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
-				for (uint64_t i = 1; i < archetype->ComponentsCount() - 1; i++)
+				for (uint64_t i = 1; i < archetype->ComponentCount() - 1; i++)
 				{
 					archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
 				}
@@ -300,7 +300,7 @@ namespace decs
 		/*else if (!pair.second)
 		{
 			Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
-			for (uint64_t i = 1; i < archetype->ComponentsCount() - 1; i++)
+			for (uint64_t i = 1; i < archetype->ComponentCount() - 1; i++)
 			{
 				archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
 			}
@@ -323,7 +323,7 @@ namespace decs
 		Archetype& newArchetype = m_Archetypes.EmplaceBack();
 		bool isNewComponentTypeAdded = false;
 
-		for (uint32_t i = 0; i < toArchetype.ComponentsCount(); i++)
+		for (uint32_t i = 0; i < toArchetype.ComponentCount(); i++)
 		{
 			const ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[i];
 			TypeID currentTypeID = toTypeData.m_TypeID;
@@ -366,7 +366,7 @@ namespace decs
 
 	Archetype* ArchetypesMap::GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, TypeID removedComponentTypeID)
 	{
-		if (fromArchetype.ComponentsCount() == 1 && fromArchetype.GetTypeID(0) == removedComponentTypeID)
+		if (fromArchetype.ComponentCount() == 1 && fromArchetype.GetTypeID(0) == removedComponentTypeID)
 		{
 			return nullptr;
 		}
@@ -378,7 +378,7 @@ namespace decs
 		}
 
 		Archetype& newArchetype = m_Archetypes.EmplaceBack();
-		for (uint32_t i = 0; i < fromArchetype.ComponentsCount(); i++)
+		for (uint32_t i = 0; i < fromArchetype.ComponentCount(); i++)
 		{
 			const ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[i];
 			TypeID typeID = fromArchetypeData.m_TypeID;

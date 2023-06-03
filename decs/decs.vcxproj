@@ -99,6 +99,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\ContainerSerializer.h" />
     <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h" />
     <ClInclude Include="src\decs\ComponentContainers\PackedContainer.h" />
     <ClInclude Include="src\decs\ComponentContainers\StableContainer.h" />
@@ -126,6 +127,7 @@
     <ClInclude Include="src\decs\ThirdParty\skarupke\unordered_map.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\decs\ContainerSerializer.cpp" />
     <ClCompile Include="src\decs\Archetypes\Archetype.cpp" />
     <ClCompile Include="src\decs\Archetypes\ArchetypesMap.cpp" />
     <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp" />

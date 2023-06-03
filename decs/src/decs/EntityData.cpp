@@ -27,10 +27,10 @@ namespace decs
 		}
 	}
 
-	uint32_t EntityData::ComponentsCount() const
+	uint32_t EntityData::ComponentCount() const
 	{
 		if (m_Archetype == nullptr) return 0;
-		return m_Archetype->ComponentsCount();
+		return m_Archetype->ComponentCount();
 	}
 
 	void EntityData::SetActiveState(bool state)

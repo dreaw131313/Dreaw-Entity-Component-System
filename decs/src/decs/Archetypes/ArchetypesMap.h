@@ -74,7 +74,7 @@ namespace decs
 		void AddArchetype(Archetype* archetype)
 		{
 			m_ArchetypesCount += 1;
-			uint64_t archetypesCount = archetype->ComponentsCount();
+			uint64_t archetypesCount = archetype->ComponentCount();
 			if (archetypesCount > m_Archetypes.size())
 			{
 				m_Archetypes.resize(archetypesCount);
@@ -106,6 +106,7 @@ namespace decs
 	class ArchetypesMap
 	{
 		friend class Container;
+		friend class ContainerSerializer;
 		template<typename ...Types>
 		friend class Query;
 		template<typename ...Types>
@@ -137,7 +138,7 @@ namespace decs
 
 			for (uint64_t i = 0; i < archetypesCount; i++)
 			{
-				if (m_Archetypes[i].EntitiesCount() == 0)
+				if (m_Archetypes[i].EntityCount() == 0)
 				{
 					emptyArchetypesCount += 1;
 				}
@@ -202,7 +203,7 @@ namespace decs
 
 		void AddArchetypeToGroups(Archetype* arch)
 		{
-			uint64_t componentsCount = arch->ComponentsCount();
+			uint64_t componentsCount = arch->ComponentCount();
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
 				const TypeID& id = arch->GetTypeID(i);
@@ -273,7 +274,7 @@ namespace decs
 			Archetype& newArchetype = m_Archetypes.EmplaceBack();
 			bool isNewComponentTypeAdded = false;
 
-			for (uint32_t i = 0; i < toArchetype.ComponentsCount(); i++)
+			for (uint32_t i = 0; i < toArchetype.ComponentCount(); i++)
 			{
 				ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[i];
 				TypeID currentTypeID = toTypeData.m_TypeID;

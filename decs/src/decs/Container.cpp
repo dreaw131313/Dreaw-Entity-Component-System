@@ -237,7 +237,7 @@ namespace decs
 	void Container::InvokeEntityComponentDestructionObservers(Entity& entity)
 	{
 		Archetype* currentArchetype = entity.m_EntityData->m_Archetype;
-		const uint32_t componentsCount = currentArchetype->ComponentsCount();
+		const uint32_t componentsCount = currentArchetype->ComponentCount();
 		const uint32_t indexInArchetype = entity.m_EntityData->m_IndexInArchetype;
 
 		// Invoke On destroy methods
@@ -296,7 +296,7 @@ namespace decs
 			return spawnedEntity;
 		}
 
-		uint64_t componentsCount = prefabArchetype->ComponentsCount();
+		uint64_t componentsCount = prefabArchetype->ComponentCount();
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
@@ -341,13 +341,13 @@ namespace decs
 			return true;
 		}
 
-		uint64_t componentsCount = prefabArchetype->ComponentsCount();
+		uint64_t componentsCount = prefabArchetype->ComponentCount();
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
 
 		Archetype* spawnArchetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
-		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntitiesCount() + spawnCount);
+		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntityCount() + spawnCount);
 
 		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
@@ -395,13 +395,13 @@ namespace decs
 			return true;
 		}
 
-		uint64_t componentsCount = prefabArchetype->ComponentsCount();
+		uint64_t componentsCount = prefabArchetype->ComponentCount();
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
 
 		Archetype* spawnArchetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
-		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntitiesCount() + spawnCount);
+		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntityCount() + spawnCount);
 
 		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
@@ -430,7 +430,7 @@ namespace decs
 	{
 		Archetype& prefabArchetype = *prefabEntityData.m_Archetype;
 		Archetype* spawnedEntityArchetype = nullptr;
-		uint64_t componentsCount = prefabArchetype.ComponentsCount();
+		uint64_t componentsCount = prefabArchetype.ComponentCount();
 
 		if (prefabContainer == this)
 		{
@@ -469,7 +469,7 @@ namespace decs
 	)
 	{
 		Archetype* archetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
-		uint64_t componentsCount = archetype->ComponentsCount() + spawnState.m_CompRefsStart;
+		uint64_t componentsCount = archetype->ComponentCount() + spawnState.m_CompRefsStart;
 
 		archetype->AddEntityData(&spawnedEntityData);
 
@@ -592,7 +592,7 @@ namespace decs
 	void Container::DestroyEntitesInArchetypes(Archetype& archetype, bool invokeOnDestroyListeners)
 	{
 		auto& entitesData = archetype.m_EntitiesData;
-		uint64_t archetypeComponentsCount = archetype.ComponentsCount();
+		uint64_t archetypeComponentsCount = archetype.ComponentCount();
 		uint64_t entityDataCount = entitesData.size();
 
 		if (invokeOnDestroyListeners)
@@ -702,7 +702,7 @@ namespace decs
 	void Container::InvokeArchetypeOnCreateListeners(Archetype& archetype)
 	{
 		auto& entitesData = archetype.m_EntitiesData;
-		const uint64_t archetypeComponentsCount = archetype.ComponentsCount();
+		const uint64_t archetypeComponentsCount = archetype.ComponentCount();
 		const uint64_t entityDataCount = archetype.m_EntitesCountToInitialize;
 		Entity entity;
 
@@ -735,7 +735,7 @@ namespace decs
 	void Container::InvokeArchetypeOnDestroyListeners(Archetype& archetype)
 	{
 		auto& entitesData = archetype.m_EntitiesData;
-		uint64_t archetypeComponentsCount = archetype.ComponentsCount();
+		uint64_t archetypeComponentsCount = archetype.ComponentCount();
 		uint64_t entityDataCount = entitesData.size();
 
 		Entity entity;
