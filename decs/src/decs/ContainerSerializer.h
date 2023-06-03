@@ -15,6 +15,9 @@ namespace decs
 		template<typename T>
 		friend class ContainerSerializer;
 
+	public:
+		inline virtual TypeID GetComponentTypeID() const = 0;
+
 	protected:
 		virtual void SerializeComponentFromVoid(void* component, SerializerData* serializerData) = 0;
 	};
@@ -26,6 +29,11 @@ namespace decs
 		friend class ContainerSerializer;
 	public:
 		virtual void SerializeComponent(const typename component_type<ComponentType>::Type& component, SerializerData* serializerData) = 0;
+
+		inline virtual TypeID GetComponentTypeID() const
+		{
+			return Type<ComponentType>::ID();
+		}
 
 	private:
 		virtual void SerializeComponentFromVoid(void* component, SerializerData* serializerData) override
@@ -63,6 +71,12 @@ namespace decs
 			m_ComponentSerializers[id] = serializer;
 		}
 
+		void SetComponentSerializer(ComponentSerializerBase<SerializerData>* serializer)
+		{
+			m_ComponentSerializers[serializer->GetComponentTypeID()] = serializer;
+		}
+
+
 		void Serialize(Container& container, SerializerData* serializerData)
 		{
 			OnBeginSerialization(container, serializerData);
@@ -75,6 +89,15 @@ namespace decs
 				uint64_t archetypesChunks = archetypesVector.ChunkCount();
 
 				decs::Entity entityBuffer = {};
+
+				for (uint32_t i = 0; i < container.m_EmptyEntities.Size(); i++)
+				{
+					entityBuffer.Set(container.m_EmptyEntities[i], &container);
+					if (BeginEntitySerialize(entityBuffer))
+					{
+						EndEntitySerialize(entityBuffer);
+					}
+				}
 
 				for (uint64_t chunkIdx = 0; chunkIdx < archetypesChunks; chunkIdx++)
 				{

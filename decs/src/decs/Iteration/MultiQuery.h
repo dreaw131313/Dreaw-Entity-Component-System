@@ -108,12 +108,13 @@ namespace decs
 					for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
 					{
 						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-						if (ctx.m_EntitiesCount == 0) continue;
+						uint64_t ctxEntityCount = ctx.GetEntityCount();
+						if (ctxEntityCount == 0) continue;
 
 						std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
 						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
-						for (uint64_t idx = 0; idx < ctx.m_EntitiesCount; idx++)
+						for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 						{
 							const auto& entityData = entitiesData[idx];
 							if (entityData.IsActive())
@@ -240,14 +241,11 @@ namespace decs
 
 		TChunkedVector<ContainerContextType> m_ContainerContexts = {};
 		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
-
-		uint64_t m_EntitiesCount = 0;
 	private:
 		void Fetch()
 		{
 			uint64_t containerContextsSize = m_ContainerContexts.Size();
 			uint64_t minComponentsCount = GetMinComponentsCount();
-			m_EntitiesCount = 0;
 			if (m_IsDirty)
 			{
 				m_IsDirty = false;
@@ -262,7 +260,6 @@ namespace decs
 						m_WithAll,
 						minComponentsCount
 					);
-					m_EntitiesCount += containerContext.m_EntitiesCount;
 				}
 			}
 			else
@@ -277,9 +274,24 @@ namespace decs
 						m_WithAll,
 						minComponentsCount
 					);
-					m_EntitiesCount += containerContext.m_EntitiesCount;
 				}
 			}
+		}
+
+		uint64_t CalculateEntityCount()
+		{
+			uint64_t entitiesCount = 0;
+			for (uint64_t i = 0; i < m_ContainerContexts.Size(); i++)
+			{
+				ContainerContextType& containerCtx = m_ContainerContexts[i];
+				uint64_t archetypesCtxCount = containerCtx.m_ArchetypesContexts.size();
+				for (uint64_t j = 0; j < archetypesCtxCount; j++)
+				{
+					ArchetypeContextType& archetypeCtx = containerCtx.m_ArchetypesContexts[j];
+					entitiesCount += archetypeCtx.GetEntityCount();
+				}
+			}
+			return entitiesCount;
 		}
 
 		template<typename T = void, typename... Args>
@@ -381,9 +393,10 @@ namespace decs
 						for (; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
 						{
 							ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-							if (ctx.m_EntitiesCount == 0) continue;
+							uint64_t ctxEntityCount = ctx.GetEntityCount();
+							if (ctxEntityCount == 0) continue;
 
-							uint64_t leftEntitiesInArchetypeToIterate = ctx.m_EntitiesCount - startEntitiyIndex;
+							uint64_t leftEntitiesInArchetypeToIterate = ctxEntityCount - startEntitiyIndex;
 							uint64_t entitiesCount;
 
 							if (leftEntitiesToIterate <= leftEntitiesInArchetypeToIterate)
@@ -469,7 +482,7 @@ namespace decs
 		)
 		{
 			Fetch();
-			uint64_t entitiesCount = m_EntitiesCount;
+			uint64_t entitiesCount = CalculateEntityCount();
 
 			uint64_t realDesiredBatchSize = std::llround(std::ceil((float)entitiesCount / (float)desiredBatchesCount));
 			uint64_t finalBatchSize;
@@ -496,9 +509,9 @@ namespace decs
 					for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
 					{
 						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-						if (ctx.m_EntitiesCount == 0) continue;
+						uint64_t ctxEntitiesCount = ctx.GetEntityCount();
+						if (ctxEntitiesCount == 0) continue;
 
-						uint64_t ctxEntitiesCount = ctx.m_EntitiesCount;
 						uint64_t currentEntityIndex = 0;
 
 						while (ctxEntitiesCount > 0)

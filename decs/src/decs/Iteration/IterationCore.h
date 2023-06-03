@@ -11,11 +11,13 @@ namespace decs
 	{
 	public:
 		Archetype* Arch = nullptr;
-		uint64_t m_EntitiesCount = 0;
 		PackedContainerBase* m_Containers[elementsCount] = { nullptr };
 
 	public:
-		inline void ValidateEntitiesCount() { m_EntitiesCount = Arch->EntityCount(); }
+		inline uint64_t GetEntityCount() const
+		{
+			return Arch->EntityCount();
+		}
 	};
 
 
@@ -27,7 +29,6 @@ namespace decs
 		ecsSet<Archetype*> m_ContainedArchetypes;
 		Container* m_Container = nullptr;
 		uint64_t m_ArchetypesCountDirty = 0;
-		uint64_t m_EntitiesCount = 0;
 		bool m_bIsEnabled = true;
 
 	public:
@@ -80,15 +81,6 @@ namespace decs
 				}
 
 				m_ArchetypesCountDirty = containerArchetypesCount;
-			}
-
-			uint64_t archetypesCount = m_ArchetypesContexts.size();
-			m_EntitiesCount = 0;
-			for (uint64_t i = 0; i < archetypesCount; i++)
-			{
-				auto& context = m_ArchetypesContexts[i];
-				context.ValidateEntitiesCount();
-				m_EntitiesCount += context.m_EntitiesCount;
 			}
 		}
 

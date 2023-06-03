@@ -77,7 +77,7 @@ namespace decs
 		void ForEachForward(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
-			ValidateQuery();
+			Fetch();
 
 			Entity entityBuffor = {};
 			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
@@ -85,12 +85,13 @@ namespace decs
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
-				if (ctx.m_EntitiesCount == 0) continue;
+				uint64_t ctxEntityCount = ctx.GetEntityCount();
+				if (ctxEntityCount == 0) continue;
 
 				std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
 				CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
-				for (uint64_t idx = 0; idx < ctx.m_EntitiesCount; idx++)
+				for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 				{
 					const auto& entityData = entitiesData[idx];
 					if (entityData.IsActive())
@@ -113,7 +114,7 @@ namespace decs
 		void ForEachBackward(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
-			ValidateQuery();
+			Fetch();
 
 			Entity entityBuffor = {};
 			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
@@ -195,17 +196,6 @@ namespace decs
 		bool m_IsDirty = true;
 
 	private:
-
-		inline void ValidateQuery()
-		{
-			Fetch();
-			uint64_t archetypesCount = m_ArchetypesContexts.size();
-			for (uint64_t i = 0; i < archetypesCount; i++)
-			{
-				m_ArchetypesContexts[i].ValidateEntitiesCount();
-			}
-		}
-
 		inline uint64_t GetMinComponentsCount() const
 		{
 			uint64_t includesCount = sizeof...(ComponentsTypes);
@@ -422,7 +412,8 @@ namespace decs
 				for (; contextIndex < contextCount; contextIndex++)
 				{
 					const ArchetypeContextType& ctx = archetypeContexts[contextIndex];
-					if (ctx.m_EntitiesCount == 0) continue;
+					uint64_t ctxEntityCount = ctx.GetEntityCount();
+					if (ctxEntityCount == 0) continue;
 
 					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
 					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
@@ -439,7 +430,7 @@ namespace decs
 						iterationIndex = 0;
 					}
 
-					uint64_t leftEntitiesInContext = ctx.m_EntitiesCount - iterationIndex;
+					uint64_t leftEntitiesInContext = ctxEntityCount - iterationIndex;
 					if (leftEntitiesToIterate <= leftEntitiesInContext)
 					{
 						iterationsCount = iterationIndex + leftEntitiesToIterate;
@@ -531,8 +522,7 @@ namespace decs
 			uint64_t entitiesCount = 0;
 			for (ArchetypeContextType& archContext : m_ArchetypesContexts)
 			{
-				archContext.ValidateEntitiesCount();
-				entitiesCount += archContext.m_EntitiesCount;
+				entitiesCount += archContext.GetEntityCount();
 			}
 
 			uint64_t realDesiredBatchSize = std::llround(std::ceil((float)entitiesCount / (float)desiredBatchesCount));
@@ -550,9 +540,9 @@ namespace decs
 			for (uint64_t contextIndex = 0; contextIndex < contextsCount; contextIndex++)
 			{
 				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
-				if (ctx.m_EntitiesCount == 0) continue;
+				uint64_t ctxEntitiesCount = ctx.GetEntityCount();
+				if (ctxEntitiesCount == 0) continue;
 
-				uint64_t ctxEntitiesCount = ctx.m_EntitiesCount;
 				uint64_t currentEntityIndex = 0;
 
 				while (ctxEntitiesCount > 0)

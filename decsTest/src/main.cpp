@@ -205,10 +205,10 @@ int main()
 	IntSerializer intSerializer = {};
 	DoubleSerializer doubleSerializer = {};
 
-	serializer.SetComponentSerializer<Position>(&positionSerializer);
-	serializer.SetComponentSerializer<decs::Stable<float>>(&floatSerializer);
-	serializer.SetComponentSerializer<decs::Stable<int>>(&intSerializer);
-	serializer.SetComponentSerializer<decs::Stable<double>>(&doubleSerializer);
+	serializer.SetComponentSerializer(&positionSerializer);
+	serializer.SetComponentSerializer(&floatSerializer);
+	serializer.SetComponentSerializer(&intSerializer);
+	serializer.SetComponentSerializer(&doubleSerializer);
 
 	PrintLine();
 	PrintLine("Serialization: Container");
