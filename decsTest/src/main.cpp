@@ -159,7 +159,7 @@ int main()
 	PrintLine("Query foreach:");
 
 	query.ForEachForward(lambda);
-	//query.ForEachBackward(lambda);
+	query.ForEachBackward(lambda);
 
 	std::vector<QueryType::BatchIterator> iterators;
 	query.CreateBatchIterators(iterators, 2, 4);
@@ -183,8 +183,10 @@ int main()
 	};
 
 	PrintLine("");
-	PrintLine("Multi Query foreach:");
+	PrintLine("Multi Query foreach forward:");
 	testMultiQuery.ForEachForward(queryLambda);
+	PrintLine("Multi Query foreach backwards:");
+	testMultiQuery.ForEach(queryLambda);
 
 	std::vector<MultiQueryType::BatchIterator> multiQueryIterators;
 	testMultiQuery.CreateBatchIterators(multiQueryIterators, 3, 3);
@@ -198,6 +200,7 @@ int main()
 		it.ForEach(queryLambda);
 	}
 
+#pragma region Container serializator test:
 	// Serializer test:
 	TestSerializer serializer = {};
 	PositionSerializer positionSerializer = {};
@@ -216,6 +219,8 @@ int main()
 	PrintLine();
 	PrintLine("Serialization: Prefab Container");
 	serializer.Serialize(prefabContainer, nullptr);
+
+#pragma endregion
 
 	return 0;
 }

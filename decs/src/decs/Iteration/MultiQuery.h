@@ -163,12 +163,13 @@ namespace decs
 					for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
 					{
 						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-						if (ctx.m_EntitiesCount == 0) continue;
+						uint64_t ctxEntityCount = ctx.GetEntityCount();
+						if (ctxEntityCount == 0) continue;
 
 						std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
 						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
-						for (int64_t idx = (int64_t)ctx.m_EntitiesCount - 1; idx > -1; idx--)
+						for (int64_t idx = (int64_t)ctxEntityCount - 1; idx > -1; idx--)
 						{
 							const auto& entityData = entitiesData[idx];
 							if (entityData.IsActive())

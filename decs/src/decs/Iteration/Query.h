@@ -122,11 +122,12 @@ namespace decs
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
 				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
-				if (ctx.m_EntitiesCount == 0) continue;
+				uint64_t ctxEntityCount = ctx.GetEntityCount();
+				if (ctxEntityCount == 0) continue;
 
 				std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
 				CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
-				int64_t idx = ctx.m_EntitiesCount - 1;
+				int64_t idx = ctxEntityCount - 1;
 
 				for (; idx > -1; idx--)
 				{
