@@ -76,7 +76,6 @@ namespace decs
 			m_ComponentSerializers[serializer->GetComponentTypeID()] = serializer;
 		}
 
-
 		void Serialize(Container& container, SerializerData* serializerData)
 		{
 			OnBeginSerialization(container, serializerData);
