@@ -42,7 +42,7 @@ public:
 	}
 };
 
-class FloatSerializer : public decs::ComponentSerializer<decs::Stable<float>, void>
+class FloatSerializer : public decs::ComponentSerializer<decs::stable<float>, void>
 {
 public:
 	// Inherited via ComponentSerializer
@@ -52,7 +52,7 @@ public:
 	}
 };
 
-class IntSerializer : public decs::ComponentSerializer< decs::Stable<int>, void>
+class IntSerializer : public decs::ComponentSerializer< decs::stable<int>, void>
 {
 public:
 	// Inherited via ComponentSerializer
@@ -62,7 +62,7 @@ public:
 	}
 };
 
-class DoubleSerializer : public decs::ComponentSerializer< decs::Stable<double>, void>
+class DoubleSerializer : public decs::ComponentSerializer< decs::stable<double>, void>
 {
 public:
 	// Inherited via ComponentSerializer
@@ -143,7 +143,7 @@ int main()
 	container.Spawn(prefab, 3, true);
 	/*auto e2 = container.CreateEntity();
 	e2.AddComponent<Position>();
-	e2.AddComponent<decs::Stable<float>>();*/
+	e2.AddComponent<decs::stable<float>>();*/
 
 
 	using QueryType = decs::Query<Position>;

@@ -411,7 +411,7 @@ namespace decs
 		template<typename ComponentType, typename ...Args>
 		ComponentType* AddStableComponent(Entity& entity, EntityData& entityData, Args&&... args)
 		{
-			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<Stable<ComponentType>>::ID();
+			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<stable<ComponentType>>::ID();
 
 			if (!m_CanAddComponents) return nullptr;
 
@@ -452,7 +452,7 @@ namespace decs
 				uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
 				if (entityData.m_Archetype != nullptr)
 				{
-					entityNewArchetype->MoveEntityComponentsAfterAddComponent<Stable<ComponentType>>(
+					entityNewArchetype->MoveEntityComponentsAfterAddComponent<stable<ComponentType>>(
 						entityData.m_Archetype,
 						entityData.m_IndexInArchetype,
 						&entityData
@@ -541,10 +541,10 @@ namespace decs
 		{
 			if (entityData.m_Archetype != nullptr)
 			{
-				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<Stable<ComponentType>>();
+				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<stable<ComponentType>>();
 				if (findTypeIndex != Limits::MaxComponentCount)
 				{
-					PackedContainer<Stable<ComponentType>>* container = static_cast<PackedContainer<Stable<ComponentType>>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
+					PackedContainer<stable<ComponentType>>* container = static_cast<PackedContainer<stable<ComponentType>>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
 					return static_cast<ComponentType*>(container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr);
 				}
 			}
@@ -593,7 +593,7 @@ namespace decs
 			EntityData& entityData
 		)
 		{
-			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<Stable<ComponentType>>::ID();
+			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<stable<ComponentType>>::ID();
 			if (entityData.m_Archetype != nullptr)
 			{
 				uint32_t componentIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
@@ -699,33 +699,33 @@ namespace decs
 			uint32_t& componentContainerIndex
 		)
 		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<Stable<ComponentType>>::ID();
+			TYPE_ID_CONSTEXPR TypeID id = Type<stable<ComponentType>>::ID();
 
 			Archetype* entityNewArchetype = nullptr;
 			if (toArchetype == nullptr)
 			{
-				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype<Stable<ComponentType>>();
+				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype<stable<ComponentType>>();
 				if (entityNewArchetype == nullptr)
 				{
-					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<Stable<ComponentType>>(
-						m_ComponentContextManager->GetOrCreateComponentContext<Stable<ComponentType>>(),
+					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<stable<ComponentType>>(
+						m_ComponentContextManager->GetOrCreateComponentContext<stable<ComponentType>>(),
 						m_StableContainers.GetOrCreateStableContainer<ComponentType>()
 					);
 				}
 			}
 			else
 			{
-				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<Stable<ComponentType>>(*toArchetype);
+				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<stable<ComponentType>>(*toArchetype);
 				if (entityNewArchetype == nullptr)
 				{
-					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<Stable<ComponentType>>(
+					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<stable<ComponentType>>(
 						*toArchetype,
-						m_ComponentContextManager->GetOrCreateComponentContext<Stable<ComponentType>>(),
+						m_ComponentContextManager->GetOrCreateComponentContext<stable<ComponentType>>(),
 						m_StableContainers.GetOrCreateStableContainer<ComponentType>()
 					);
 				}
 
-				componentContainerIndex = entityNewArchetype->FindTypeIndex<Stable<ComponentType>>();
+				componentContainerIndex = entityNewArchetype->FindTypeIndex<stable<ComponentType>>();
 			}
 
 			return entityNewArchetype;

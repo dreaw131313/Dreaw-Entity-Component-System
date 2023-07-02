@@ -47,10 +47,9 @@ namespace decs
 		}
 
 	public:
-
 		bool operator==(const Entity& rhs)const
 		{
-			return this->m_Container == rhs.m_Container && this->m_ID == rhs.m_ID && this->m_Version == rhs.m_Version;
+			return this->m_EntityData == rhs.m_EntityData && this->m_Version == rhs.m_Version;
 		}
 
 		inline EntityID GetID() const { return m_ID; }
@@ -99,7 +98,7 @@ namespace decs
 		inline typename component_type<T>::Type* GetStableComponent() const
 		{
 			if (IsValid())
-				return m_Container->GetComponent<decs::Stable<T>>(*m_EntityData);
+				return m_Container->GetComponent<decs::stable<T>>(*m_EntityData);
 
 			return nullptr;
 		}
@@ -113,7 +112,7 @@ namespace decs
 		template<typename T>
 		inline bool HasStableComponent() const
 		{
-			return IsValid() && m_Container->HasComponent<decs::Stable<T>>(*m_EntityData);
+			return IsValid() && m_Container->HasComponent<decs::stable<T>>(*m_EntityData);
 		}
 
 		template<typename T>
@@ -131,7 +130,7 @@ namespace decs
 		inline bool TryGetStableComponent(typename component_type<T>::Type*& component) const
 		{
 			if (IsValid())
-				component = m_Container->GetComponent<decs::Stable<T>>(*m_EntityData);
+				component = m_Container->GetComponent<decs::stable<T>>(*m_EntityData);
 			else
 				component = nullptr;
 
@@ -151,7 +150,7 @@ namespace decs
 		inline typename component_type<T>::Type* AddStableComponent(Args&&... args)
 		{
 			if (IsValid())
-				return m_Container->AddComponent<decs::Stable<T>>(*this, *m_EntityData, std::forward<Args>(args)...);
+				return m_Container->AddComponent<decs::stable<T>>(*this, *m_EntityData, std::forward<Args>(args)...);
 
 			return nullptr;
 		}
@@ -165,7 +164,7 @@ namespace decs
 		template<typename T>
 		inline bool RemoveStableComponent()
 		{
-			return IsValid() && m_Container->RemoveComponent<decs::Stable<T>>(*this);
+			return IsValid() && m_Container->RemoveComponent<decs::stable<T>>(*this);
 		}
 
 		inline EntityVersion GetVersion() const

@@ -91,15 +91,15 @@ namespace decs
 
 
 	template<typename ComponentType>
-	class ComponentContext<Stable<ComponentType>> : public ComponentContextBase
+	class ComponentContext<stable<ComponentType>> : public ComponentContextBase
 	{
 		friend class Container;
 	public:
-		ComponentObserver<Stable<ComponentType>>* m_Observer = nullptr;
+		ComponentObserver<stable<ComponentType>>* m_Observer = nullptr;
 
 	public:
 		ComponentContext(
-			ComponentObserver<Stable<ComponentType>>* observer
+			ComponentObserver<stable<ComponentType>>* observer
 		) :
 			m_Observer(observer)
 		{
@@ -135,14 +135,14 @@ namespace decs
 			}
 			else
 			{
-				m_Observer = observerManager->GetComponentObserver<Stable<ComponentType>>();
+				m_Observer = observerManager->GetComponentObserver<stable<ComponentType>>();
 			}
 		}
 
 		ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) override
 		{
-			return new ComponentContext<Stable<ComponentType>>(
-				observerManager != nullptr ? observerManager->GetComponentObserver<Stable<ComponentType>>() : nullptr
+			return new ComponentContext<stable<ComponentType>>(
+				observerManager != nullptr ? observerManager->GetComponentObserver<stable<ComponentType>>() : nullptr
 				);
 		}
 	};

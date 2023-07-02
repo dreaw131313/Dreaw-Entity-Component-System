@@ -45,14 +45,14 @@ namespace decs
 
 
 	template<typename ComponentType>
-	class CreateComponentObserver<Stable<ComponentType>>
+	class CreateComponentObserver<stable<ComponentType>>
 	{
 	public:
 		virtual void OnCreateComponent(ComponentType& component, Entity& entity) = 0;
 	};
 
 	template<typename ComponentType>
-	class DestroyComponentObserver<Stable<ComponentType>>
+	class DestroyComponentObserver<stable<ComponentType>>
 	{
 	public:
 		virtual void OnDestroyComponent(ComponentType& component, Entity& entity) = 0;

@@ -1,7 +1,7 @@
 namespace decs
 {
 	template<typename T>
-	struct Stable
+	struct stable
 	{
 	};
 
@@ -12,7 +12,7 @@ namespace decs
 	};
 
 	template<typename T>
-	struct component_type<Stable<T>>
+	struct component_type<stable<T>>
 	{
 		using Type = T;
 	};
@@ -24,7 +24,7 @@ namespace decs
 	};
 
 	template<typename T>
-	struct is_stable<Stable<T>>
+	struct is_stable<stable<T>>
 	{
 		static constexpr bool value = true;
 	};

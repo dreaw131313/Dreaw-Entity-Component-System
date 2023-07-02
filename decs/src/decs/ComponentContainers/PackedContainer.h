@@ -109,7 +109,7 @@ namespace decs
 	};
 
 	template<typename ComponentType>
-	class PackedContainer<decs::Stable<ComponentType>> : public PackedContainerBase
+	class PackedContainer<decs::stable<ComponentType>> : public PackedContainerBase
 	{
 		friend class Container;
 		friend class Archetype;
@@ -129,7 +129,7 @@ namespace decs
 
 		virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept override
 		{
-			return new PackedContainer<decs::Stable<ComponentType>>();
+			return new PackedContainer<decs::stable<ComponentType>>();
 		}
 
 		inline virtual void PopBack() override
