@@ -98,7 +98,13 @@ namespace decs
 
 
 #pragma region Extension data
-		/*public:
+		public:
+			template<typename T>
+			void SetExtensionData(T* data)
+			{
+				m_ExtensionData = static_cast<T*>(data);
+			}
+
 			template<typename T>
 			T* GetExtensionData()
 			{
@@ -106,7 +112,7 @@ namespace decs
 			}
 
 		private:
-			void* m_ExtensionData = nullptr;*/
+			void* m_ExtensionData = nullptr;
 
 #pragma endregion 
 
