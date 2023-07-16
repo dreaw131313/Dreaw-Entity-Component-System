@@ -14,7 +14,7 @@ To start using decs, copy the **decs** folder to your project and include the he
 All entites and components are stored in class **decs::Container**.<br/>
 Component classes do not need to inherit from any class. Base types like int, float etc. (except bool) can also be components.<br/>
 
-By default components stored in **decs::Container** do not have **stable memory addresses**, but it can be enforced by using template **decs::Stable< ComponentType >** instead of only **ComponentType**.<br/>
+By default components stored in **decs::Container** do not have **stable memory addresses**, but it can be enforced by using template **decs::stable< ComponentType >** instead of only **ComponentType**.<br/>
 
 ```cpp
 class Component1
@@ -43,9 +43,9 @@ int main()
 	decs::Entity entity1 = container.CreateEntity();
 	// using entity member function :
 	Component1* c1 = entity1.AddComponent<Component1>(1.f,2.f);
-	Component2* c2 = entity1.AddComponent<decs::Stable<Component2>>(3.f,4.f);
+	Component2* c2 = entity1.AddComponent<decs::stable<Component2>>(3.f,4.f);
 	entity1.RemoveComponent<Component1>();
-	entity1.RemoveComponent<decs::Stable<Component2>>();
+	entity1.RemoveComponent<decs::stable<Component2>>();
 	entity1.Destroy()
 	
 	return 0;
@@ -101,7 +101,7 @@ Query::ForEach(Callable&& func);
 decs::Container container = {}; 
 
 // this query can iterate over all entities which contains components passed as template parameters
-decs::Query<Component1, decs::Stable<Component2>> query = { container }; 
+decs::Query<Component1, decs::stable<Component2>> query = { container }; 
 
 query.ForEach([](Component1& c1, Component2& c2)
 {
@@ -130,7 +130,7 @@ Query& With(); // Entities in query will have all components from ComponentTypes
 
 Creating Query with this methods can look like:
 ```cpp
-decs::Query<Component1, decs::Stable<Component2>, Component3> query = { container };
+decs::Query<Component1, decs::stable<Component2>, Component3> query = { container };
 query.Without<Component4, Component5>().WithAnyFrom<Component6, Component7>().With<Component8, Component9>();
 
 query.ForEach([](Component1& c1, Component2& c2, Component3& c3)
