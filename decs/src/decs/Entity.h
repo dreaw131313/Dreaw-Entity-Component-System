@@ -2,6 +2,7 @@
 #include "Core.h"
 #include "Container.h"
 #include "Type.h"
+#include "Archetypes/Archetype.h"
 
 namespace decs
 {
@@ -177,6 +178,16 @@ namespace decs
 			if (IsValid())
 				return m_EntityData->ComponentCount();
 			return 0;
+		}
+
+		const Archetype* GetArchetype() const
+		{
+			if (IsValid())
+			{
+				return m_EntityData->m_Archetype;
+			}
+
+			return nullptr;
 		}
 
 	private:

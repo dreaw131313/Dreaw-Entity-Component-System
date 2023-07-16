@@ -190,6 +190,110 @@ namespace decs
 			}
 		}
 
+		template<typename Callable>
+		void ForEachForwardWithoutActiveCheck(Callable&& func)
+		{
+			Fetch();
+
+			uint64_t containerContextChunksCount = m_ContainerContexts.ChunkCount();
+			decs::Entity entityBuffor = {};
+			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
+
+			for (uint64_t chunkIdx = 0; chunkIdx < containerContextChunksCount; chunkIdx++)
+			{
+				auto chunk = m_ContainerContexts.GetChunk(chunkIdx);
+				const uint64_t chunkSize = m_ContainerContexts.GetChunkSize(chunkIdx);
+
+				for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++)
+				{
+					ContainerContextType& containerContext = chunk[elementIndex];
+					if (!containerContext.m_bIsEnabled)
+					{
+						continue; // Skip if container context is disabled
+					}
+
+					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+
+					for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+					{
+						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+						uint64_t ctxEntityCount = ctx.GetEntityCount();
+						if (ctxEntityCount == 0) continue;
+
+						std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+						for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+						{
+							if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
+							{
+								const auto& entityData = entitiesData[idx];
+								entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
+								func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+							}
+							else
+							{
+								func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		template<typename Callable>
+		void ForEachBackwardWithoutActiveCheck(Callable&& func)
+		{
+			Fetch();
+
+			uint64_t containerContextChunksCount = m_ContainerContexts.ChunkCount();
+			decs::Entity entityBuffor = {};
+			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
+
+			for (uint64_t chunkIdx = 0; chunkIdx < containerContextChunksCount; chunkIdx++)
+			{
+				auto chunk = m_ContainerContexts.GetChunk(chunkIdx);
+				const uint64_t chunkSize = m_ContainerContexts.GetChunkSize(chunkIdx);
+
+				for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++)
+				{
+					ContainerContextType& containerContext = chunk[elementIndex];
+					if (!containerContext.m_bIsEnabled)
+					{
+						continue; // Skip if container context is disabled
+					}
+
+					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+
+					for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+					{
+						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+						uint64_t ctxEntityCount = ctx.GetEntityCount();
+						if (ctxEntityCount == 0) continue;
+
+						std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+						for (int64_t idx = (int64_t)ctxEntityCount - 1; idx > -1; idx--)
+						{
+							if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
+							{
+								const auto& entityData = entitiesData[idx];
+								entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
+								func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+							}
+							else
+							{
+								func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+							}
+						}
+					}
+				}
+			}
+		}
+
 		virtual bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{
 			auto& contextIndex = m_ContainerContextsIndexes[container];
