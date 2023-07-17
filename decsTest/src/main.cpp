@@ -8,7 +8,7 @@ void PrintLine(std::string message = "")
 	std::cout << message << "\n";
 }
 
-class Position
+struct Position
 {
 public:
 	float X = 0;
@@ -117,6 +117,18 @@ int main()
 	prefab.AddStableComponent<double>();
 	prefab.AddComponent<Position>(1.f, 2.f);
 
+	// print prefab components names
+	{
+		PrintLine();
+		PrintLine("Prefab component names:");
+		for (uint32_t i = 0; i < prefab.GetArchetype()->ComponentCount(); i++)
+		{
+			std::cout << "\t" << i + 1 << ". " << prefab.GetArchetype()->GetComponentTypeClassName(i) << "\n";
+		}
+
+		PrintLine();
+	}
+
 
 	std::hash<decs::Entity>{}(prefab);
 
@@ -221,6 +233,16 @@ int main()
 	serializer.Serialize(prefabContainer, nullptr);
 
 #pragma endregion
+
+
+	{
+		Position p;
+		PrintLine();
+
+
+		std::cout << "\"" << decs::Type<decs::component_type<decs::stable<decs::Entity>>::Type>::Name() << "\"" << std::endl;
+		decs::Entity entity = {};
+	}
 
 	return 0;
 }

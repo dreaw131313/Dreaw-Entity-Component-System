@@ -66,7 +66,7 @@ namespace decs
 	public:
 
 #ifdef USE_CONSTEXPR_TYPE_ID
-		static constexpr TypeID ID()
+		inline static constexpr TypeID ID()
 		{
 			return Type_Base<T, TypeID>::ID();
 		}
@@ -79,8 +79,42 @@ namespace decs
 	private:
 		static const std::type_info* m_TypeInfo;
 #endif
+
+		inline static constexpr std::string Name()
+		{
+			constexpr const char* classSubstr = "<class ";
+			constexpr const char* structSubstr = "<struct ";
+
+			std::string funcsig = __FUNCTION__;
+
+			uint64_t index = funcsig.find(classSubstr);
+			while (index != std::string::npos)
+			{
+				funcsig.erase(index + 1, 6);
+				index = funcsig.find(classSubstr);
+			}
+
+			index = funcsig.find(structSubstr);
+			while (index != std::string::npos)
+			{
+				funcsig.erase(index + 1, 7);
+				index = funcsig.find(structSubstr);
+			}
+
+			index = funcsig.find(" ");
+			while (index != std::string::npos)
+			{
+				funcsig.erase(index, 1);
+				index = funcsig.find(" ");
+			}
+
+			funcsig.erase(funcsig.begin(), funcsig.begin() + 11);
+			funcsig.erase(funcsig.end() - 7, funcsig.end());
+
+			return funcsig;
+		}
 	};
-	
+
 #ifndef USE_CONSTEXPR_TYPE_ID
 	template<typename T>
 	const std::type_info* Type<T>::m_TypeInfo = &typeid(T);

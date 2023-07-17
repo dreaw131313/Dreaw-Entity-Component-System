@@ -13,7 +13,7 @@ namespace decs
 		InDestruction = 2,
 		DelayedToDestruction = 3,
 	};
-
+	
 	class EntityData
 	{
 		friend class EntityManager;

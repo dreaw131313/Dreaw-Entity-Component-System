@@ -244,7 +244,7 @@ namespace decs
 		for (uint64_t i = 0; i < componentsCount; i++)
 		{
 			ArchetypeTypeData& typeData = currentArchetype->m_TypeData[i];
-			typeData.m_ComponentContext->InvokeOnDestroyComponent_S(typeData.m_PackedContainer->GetComponentPtrAsVoid(indexInArchetype), entity);
+			typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentPtrAsVoid(indexInArchetype), entity);
 		}
 	}
 
@@ -307,7 +307,7 @@ namespace decs
 		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
 		{
-			typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent_S(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx].Get(), spawnedEntity);
+			typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx].Get(), spawnedEntity);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -363,7 +363,7 @@ namespace decs
 
 			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
 			{
-				typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent_S(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx].Get(), spawnedEntity);
+				typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx].Get(), spawnedEntity);
 			}
 		}
 
@@ -414,7 +414,7 @@ namespace decs
 
 			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
 			{
-				typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent_S(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx].Get(), spawnedEntity);
+				typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx].Get(), spawnedEntity);
 			}
 		}
 
@@ -508,7 +508,7 @@ namespace decs
 		}
 
 		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
-		archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(
+		archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent(
 			archetypeTypeData.m_PackedContainer->GetComponentPtrAsVoid(entityData.m_IndexInArchetype),
 			entity
 		);
@@ -555,7 +555,7 @@ namespace decs
 		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
 		auto& packedContainer = archetypeTypeData.m_PackedContainer;
 
-		archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(
+		archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent(
 			packedContainer->GetComponentPtrAsVoid(entityData.m_IndexInArchetype),
 			entity
 		);
@@ -586,7 +586,7 @@ namespace decs
 
 	void Container::InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(Entity& entity, ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData)
 	{
-		componentContext->InvokeOnCreateComponent_S(componentPtr, entity);
+		componentContext->InvokeOnCreateComponent(componentPtr, entity);
 	}
 
 	void Container::DestroyEntitesInArchetypes(Archetype& archetype, bool invokeOnDestroyListeners)
@@ -611,7 +611,7 @@ namespace decs
 				for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 				{
 					ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
-					archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(
+					archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent(
 						archetypeTypeData.m_PackedContainer->GetComponentPtrAsVoid(entityDataIdx),
 						entity
 					);
@@ -726,7 +726,7 @@ namespace decs
 
 				if (compRef)
 				{
-					archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent_S(compRef.Get(), entity);
+					archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent(compRef.Get(), entity);
 				}
 			}
 		}
@@ -752,7 +752,7 @@ namespace decs
 			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 			{
 				ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
-				archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent_S(
+				archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent(
 					archetypeTypeData.m_PackedContainer->GetComponentPtrAsVoid(entityDataIdx),
 					entity
 				);
