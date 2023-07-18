@@ -339,8 +339,8 @@ namespace decs
 
 #pragma endregion
 
-		/*
 #pragma region Entity operation data
+		/*
 	private:
 		enum class EEntityComponentOperationType
 		{
@@ -380,8 +380,8 @@ namespace decs
 			m_EntityComponentOperationData.m_OperationType = EEntityComponentOperationType::None;
 		}
 
-#pragma endregion
 		*/
+#pragma endregion
 
 #pragma region COMPONENTS:
 	private:
