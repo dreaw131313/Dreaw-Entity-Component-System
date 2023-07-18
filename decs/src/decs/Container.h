@@ -98,21 +98,21 @@ namespace decs
 
 
 #pragma region Extension data
-		public:
-			template<typename T>
-			void SetExtensionData(T* data)
-			{
-				m_ExtensionData = static_cast<T*>(data);
-			}
+	public:
+		template<typename T>
+		void SetExtensionData(T* data)
+		{
+			m_ExtensionData = static_cast<T*>(data);
+		}
 
-			template<typename T>
-			T* GetExtensionData()
-			{
-				return static_cast<T*>(m_ExtensionData);
-			}
+		template<typename T>
+		T* GetExtensionData()
+		{
+			return static_cast<T*>(m_ExtensionData);
+		}
 
-		private:
-			void* m_ExtensionData = nullptr;
+	private:
+		void* m_ExtensionData = nullptr;
 
 #pragma endregion 
 
@@ -339,6 +339,50 @@ namespace decs
 
 #pragma endregion
 
+		/*
+#pragma region Entity operation data
+	private:
+		enum class EEntityComponentOperationType
+		{
+			None = 0,
+			AddComponent,
+			RemoveComponent,
+		};
+
+		struct EntityComponentOperationData
+		{
+		public:
+			EntityData* m_EntityData = nullptr;
+			TypeID m_ComponentTypeID = 0;
+			EEntityComponentOperationType m_OperationType = EEntityComponentOperationType::None;
+
+		public:
+		};
+
+		EntityComponentOperationData m_EntityComponentOperationData = {};
+
+	private:
+		inline void BeginEntityComponentOperationData(
+			EntityData* entityData,
+			TypeID componentTypeID,
+			EEntityComponentOperationType operationType
+		)
+		{
+			m_EntityComponentOperationData.m_EntityData = entityData;
+			m_EntityComponentOperationData.m_ComponentTypeID = componentTypeID;
+			m_EntityComponentOperationData.m_OperationType = operationType;
+		}
+
+		inline void EndEntityComponentOperationData()
+		{
+			m_EntityComponentOperationData.m_EntityData = nullptr;
+			m_EntityComponentOperationData.m_ComponentTypeID = 0;
+			m_EntityComponentOperationData.m_OperationType = EEntityComponentOperationType::None;
+		}
+
+#pragma endregion
+		*/
+
 #pragma region COMPONENTS:
 	private:
 		bool m_HaveOwnComponentContextManager = true;
@@ -348,6 +392,8 @@ namespace decs
 		template<typename ComponentType, typename ...Args>
 		inline typename component_type<ComponentType>::Type* AddComponent(Entity& entity, EntityData& entityData, Args&&... args)
 		{
+			if (!m_CanAddComponents) return nullptr;
+
 			if constexpr (is_stable<ComponentType>::value)
 			{
 				return AddStableComponent<typename component_type<ComponentType>::Type>(entity, entityData, std::forward<Args>(args)...);
@@ -362,25 +408,13 @@ namespace decs
 		ComponentType* AddUnstableComponent(Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<ComponentType>::ID();
-			if (!m_CanAddComponents) return nullptr;
 
 			if (entityData.IsValidToPerformComponentOperation())
 			{
-				if (m_PerformDelayedDestruction)
+				auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
+				if (currentComponent != nullptr)
 				{
-					ComponentType* delayedToDestroyComponent = TryAddUnstableComponentDelayedToDestroy<ComponentType>(entityData);
-					if (delayedToDestroyComponent != nullptr)
-					{
-						return delayedToDestroyComponent;
-					}
-				}
-				else
-				{
-					auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
-					if (currentComponent != nullptr)
-					{
-						return currentComponent;
-					}
+					return currentComponent;
 				}
 
 				uint32_t componentContainerIndex = 0;
@@ -419,25 +453,12 @@ namespace decs
 		{
 			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<stable<ComponentType>>::ID();
 
-			if (!m_CanAddComponents) return nullptr;
-
 			if (entityData.IsValidToPerformComponentOperation())
 			{
-				if (m_PerformDelayedDestruction)
+				auto currentComponent = GetStableComponentWithoutCheckingIsAlive<ComponentType>(entityData);
+				if (currentComponent != nullptr)
 				{
-					ComponentType* delayedToDestroyComponent = TryAddStableComponentDelayedToDestroy<ComponentType>(entityData);
-					if (delayedToDestroyComponent != nullptr)
-					{
-						return delayedToDestroyComponent;
-					}
-				}
-				else
-				{
-					auto currentComponent = GetStableComponentWithoutCheckingIsAlive<ComponentType>(entityData);
-					if (currentComponent != nullptr)
-					{
-						return currentComponent;
-					}
+					return currentComponent;
 				}
 
 				uint32_t componentContainerIndex = 0;
@@ -479,6 +500,11 @@ namespace decs
 		template<typename ComponentType>
 		bool RemoveComponent(Entity& entity)
 		{
+			if (!m_CanRemoveComponents)
+			{
+				return false;
+			}
+
 			if constexpr (is_stable<ComponentType>::value)
 			{
 				return RemoveStableComponent(entity, Type<ComponentType>::ID());
@@ -740,9 +766,6 @@ namespace decs
 #pragma endregion
 
 #pragma region OBSERVERS
-	private:
-		std::vector<ComponentRefAsVoid> m_ComponentRefsToInvokeObserverCallbacks;
-
 	public:
 		bool SetObserversManager(ObserversManager* observersManager);
 
@@ -783,7 +806,7 @@ namespace decs
 			}
 		}
 
-		void InvokeArchetypeOnCreateListeners(Archetype& archetype);
+		void InvokeArchetypeOnCreateListeners(Archetype& archetype, std::vector<ComponentRefAsVoid>& componentRefsToInvokeObserverCallbacks);
 
 		void InvokeArchetypeOnDestroyListeners(Archetype& archetype);
 
@@ -792,7 +815,6 @@ namespace decs
 #pragma region DELAYED DESTROY:
 	private:
 		std::vector<EntityData*> m_DelayedEntitiesToDestroy;
-		ecsSet<ComponentDelayedDestroyData> m_DelayedComponentsToDestroy;
 
 		bool m_PerformDelayedDestruction = false;
 
@@ -801,20 +823,7 @@ namespace decs
 
 		void DestroyDelayedEntity(Entity& entity);
 
-		void DestroyDelayedComponents();
-
 		void AddEntityToDelayedDestroy(Entity& entity);
-
-		inline bool AddComponentToDelayedDestroy(EntityData* entityData, TypeID typeID, bool isStable)
-		{
-			auto pair = m_DelayedComponentsToDestroy.emplace(entityData, typeID, isStable);
-			return pair.second;
-		}
-
-		inline bool RemoveComponentFromDelayedToDestroy(EntityData* entityData, TypeID typeID, bool isStable)
-		{
-			return m_DelayedComponentsToDestroy.erase({ entityData, typeID, isStable });
-		}
 #pragma endregion
 	};
 }

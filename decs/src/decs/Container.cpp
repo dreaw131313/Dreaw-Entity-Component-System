@@ -69,9 +69,7 @@ namespace decs
 
 		m_SpawnData.Clear();
 
-		m_ComponentRefsToInvokeObserverCallbacks.clear();
 		m_DelayedEntitiesToDestroy.clear();
-		m_DelayedComponentsToDestroy.clear();
 
 		m_EmptyEntities.Clear();
 	}
@@ -494,18 +492,13 @@ namespace decs
 
 	bool Container::RemoveUnstableComponent(Entity& entity, TypeID componentTypeID)
 	{
-		if (!m_CanRemoveComponents || entity.m_Container != this) return false;
+		if (entity.m_Container != this) return false;
 
 		EntityData& entityData = *entity.m_EntityData;
 		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
 
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
 		if (compIdxInArch == Limits::MaxComponentCount) return false;
-
-		if (m_PerformDelayedDestruction)
-		{
-			return AddComponentToDelayedDestroy(entity.m_EntityData, componentTypeID, false);
-		}
 
 		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
 		archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent(
@@ -539,18 +532,13 @@ namespace decs
 
 	bool Container::RemoveStableComponent(Entity& entity, TypeID componentTypeID)
 	{
-		if (!m_CanRemoveComponents || entity.m_Container != this) return false;
+		if (entity.m_Container != this) return false;
 
 		EntityData& entityData = *entity.m_EntityData;
 		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
 
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
 		if (compIdxInArch == Limits::MaxComponentCount) return false;
-
-		if (m_PerformDelayedDestruction)
-		{
-			return AddComponentToDelayedDestroy(entity.m_EntityData, componentTypeID, true);
-		}
 
 		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
 		auto& packedContainer = archetypeTypeData.m_PackedContainer;
@@ -644,6 +632,9 @@ namespace decs
 	{
 		{
 			BoolSwitch delayedDestroySwitch(m_PerformDelayedDestruction, true);
+			BoolSwitch canRemoveComponentSwitch(m_CanRemoveComponents, true);
+
+			std::vector<ComponentRefAsVoid> componentRefsToInvokeObserverCallbacks = {};
 
 			auto& archetypes = m_ArchetypesMap.m_Archetypes;
 			for (uint64_t i = 0; i < archetypes.Size(); i++)
@@ -655,7 +646,7 @@ namespace decs
 			for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
 			{
 				Archetype& archetype = archetypes[archetypeIdx];
-				InvokeArchetypeOnCreateListeners(archetype);
+				InvokeArchetypeOnCreateListeners(archetype, componentRefsToInvokeObserverCallbacks);
 			}
 
 			Entity entity = {};
@@ -669,7 +660,6 @@ namespace decs
 		}
 
 		DestroyDelayedEntities();
-		DestroyDelayedComponents();
 	}
 
 	void Container::InvokeEntitesOnDestroyListeners()
@@ -699,12 +689,14 @@ namespace decs
 		}
 	}
 
-	void Container::InvokeArchetypeOnCreateListeners(Archetype& archetype)
+	void Container::InvokeArchetypeOnCreateListeners(Archetype& archetype, std::vector<ComponentRefAsVoid>& componentRefsToInvokeObserverCallbacks)
 	{
 		auto& entitesData = archetype.m_EntitiesData;
 		const uint64_t archetypeComponentsCount = archetype.ComponentCount();
 		const uint64_t entityDataCount = archetype.m_EntitesCountToInitialize;
 		Entity entity;
+
+		componentRefsToInvokeObserverCallbacks.reserve(archetype.ComponentCount());
 
 		for (int64_t entityDataIdx = entityDataCount - 1; entityDataIdx > -1; entityDataIdx--)
 		{
@@ -713,16 +705,16 @@ namespace decs
 			InvokeEntityCreationObservers(entity);
 
 			// fill entity component refs, component refs are needed couse if component will be added to current entity it will chang its archetype.
-			m_ComponentRefsToInvokeObserverCallbacks.clear();
+			componentRefsToInvokeObserverCallbacks.clear();
 			for (uint32_t i = 0; i < archetypeComponentsCount; i++)
 			{
-				m_ComponentRefsToInvokeObserverCallbacks.emplace_back(archetype.m_TypeData[i].m_TypeID, *entity.m_EntityData, i);
+				componentRefsToInvokeObserverCallbacks.emplace_back(archetype.m_TypeData[i].m_TypeID, *entity.m_EntityData, i);
 			}
 
 			for (uint32_t i = 0; i < archetypeComponentsCount; i++)
 			{
 				ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
-				auto& compRef = m_ComponentRefsToInvokeObserverCallbacks[i];
+				auto& compRef = componentRefsToInvokeObserverCallbacks[i];
 
 				if (compRef)
 				{
@@ -786,25 +778,6 @@ namespace decs
 		}
 
 		m_EntityManager->DestroyEntity(*entity.m_EntityData);
-	}
-
-	void Container::DestroyDelayedComponents()
-	{
-		Entity entity = {};
-		for (auto& data : m_DelayedComponentsToDestroy)
-		{
-			entity.Set(*data.m_EntityData, this);
-
-			if (data.m_IsStable)
-			{
-				RemoveStableComponent(entity, data.m_TypeID);
-			}
-			else
-			{
-				RemoveUnstableComponent(entity, data.m_TypeID);
-			}
-		}
-		m_DelayedComponentsToDestroy.clear();
 	}
 
 	void Container::AddEntityToDelayedDestroy(Entity& entity)
