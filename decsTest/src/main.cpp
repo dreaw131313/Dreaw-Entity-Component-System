@@ -97,6 +97,7 @@ int main()
 	PrintLine(std::format("Sizeof of Query<int>: {} bytes", sizeof(decs::Query<int>)));
 	PrintLine(std::format("Sizeof of Query<int, float>: {} bytes", sizeof(decs::Query<int, float>)));
 	PrintLine(std::format("Sizeof of Multi Query: {} bytes", sizeof(decs::MultiQuery<int>)));
+	PrintLine(std::format("Sizeof of StableComponentRef: {} bytes", sizeof(decs::StableComponentRef)));
 	PrintLine();
 
 	std::cout << "decs::Container size = " << sizeof(decs::Container) << " bytes" << "\n";

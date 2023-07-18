@@ -157,8 +157,5 @@ namespace decs
 
 	private:
 		TypeID m_TypesIDs[sizeof...(Args)];
-		uint64_t m_Size = sizeof...(Args);
-
-	private:
 	};
 }

@@ -9,18 +9,18 @@ namespace decs
 	struct AllocationResult final
 	{
 	public:
-		uint64_t Index = std::numeric_limits<uint64_t>::max();
 		DataType* Data = nullptr;
+		uint32_t Index = std::numeric_limits<uint32_t>::max();
 
 	public:
 		AllocationResult() {}
 
 		AllocationResult(
-			uint64_t index,
+			uint32_t index,
 			DataType* data
 		) :
-			Index(index),
-			Data(data)
+			Data(data),
+			Index(index)
 		{
 
 		}
@@ -36,11 +36,11 @@ namespace decs
 	{
 		using ChunkAllocationResult = AllocationResult<DataType>;
 	public:
-		uint64_t m_Index = 0;
-		uint64_t m_IndexInFreeSpaces = 0;
+		uint32_t m_Index = 0;
+		uint32_t m_IndexInFreeSpaces = 0;
 		bool m_IsInFreeSpaces = 0;
 	public:
-		Chunk(uint64_t capacity) :
+		Chunk(uint32_t capacity) :
 			m_Capacity(capacity)
 		{
 			m_AllocationFlags = new bool[capacity]();
@@ -71,9 +71,9 @@ namespace decs
 
 		bool IsFull() const { return m_Capacity == m_Size; }
 
-		DataType& operator[](uint64_t index) const { return m_Data[index]; }
+		DataType& operator[](uint32_t index) const { return m_Data[index]; }
 
-		bool IsAllocatedAt(uint64_t index) const
+		bool IsAllocatedAt(uint32_t index) const
 		{
 			return m_AllocationFlags[index];
 		}
@@ -88,7 +88,7 @@ namespace decs
 			if (m_FreeSpacesCount > 0)
 			{
 				m_FreeSpacesCount -= 1;
-				uint64_t freeSpaceIndex = m_FreeSpaces.back();
+				uint32_t freeSpaceIndex = m_FreeSpaces.back();
 				m_FreeSpaces.pop_back();
 				DataType* data = new(&m_Data[freeSpaceIndex])DataType(std::forward<Args>(args)...);
 
@@ -96,7 +96,7 @@ namespace decs
 				return ChunkAllocationResult(freeSpaceIndex, data);
 			}
 
-			uint64_t allocationIndex = m_CurrentAllocationOffset;
+			uint32_t allocationIndex = m_CurrentAllocationOffset;
 			DataType* data = new(&m_Data[allocationIndex])DataType(std::forward<Args>(args)...);
 			m_AllocationFlags[allocationIndex] = true;
 
@@ -105,7 +105,7 @@ namespace decs
 			return ChunkAllocationResult(allocationIndex, data);
 		}
 
-		bool RemoveAt(uint64_t index)
+		bool RemoveAt(uint32_t index)
 		{
 			if (index < m_Capacity && m_AllocationFlags[index])
 			{
@@ -135,23 +135,23 @@ namespace decs
 		}
 
 	private:
-		std::vector<uint64_t> m_FreeSpaces;
-		uint64_t m_Capacity = 0;
+		std::vector<uint32_t> m_FreeSpaces;
+		uint32_t m_Capacity = 0;
 		DataType* m_Data = nullptr;
 		bool* m_AllocationFlags = nullptr;
 
-		uint64_t m_CurrentAllocationOffset = 0;
-		uint64_t m_Size = 0;
+		uint32_t m_CurrentAllocationOffset = 0;
+		uint32_t m_Size = 0;
 
-		uint64_t m_FreeSpacesCount = 0;
+		uint32_t m_FreeSpacesCount = 0;
 	};
 
 	class StableComponentRef
 	{
 	public:
-		uint64_t m_ChunkIndex = std::numeric_limits<uint64_t>::max();
-		uint64_t m_Index = std::numeric_limits<uint64_t>::max();
 		void* m_ComponentPtr = nullptr;
+		uint32_t m_ChunkIndex = std::numeric_limits<uint32_t>::max();
+		uint32_t m_Index = std::numeric_limits<uint32_t>::max();
 
 	public:
 		StableComponentRef()
@@ -161,8 +161,8 @@ namespace decs
 
 		StableComponentRef(
 			void* componentPtr,
-			uint64_t chunkIndex,
-			uint64_t index
+			uint32_t chunkIndex,
+			uint32_t index
 		) :
 			m_ComponentPtr(componentPtr), m_ChunkIndex(chunkIndex), m_Index(index)
 		{
@@ -175,11 +175,11 @@ namespace decs
 	{
 	public:
 		inline virtual TypeID GetTypeID()const noexcept = 0;
-		virtual StableContainerBase* CreateOwnEmptyCopy(uint64_t withChunkSize) = 0;
+		virtual StableContainerBase* CreateOwnEmptyCopy(uint32_t withChunkSize) = 0;
 
-		virtual bool Remove(uint64_t chunkIndex, uint64_t elementIndex) = 0;
+		virtual bool Remove(uint32_t chunkIndex, uint32_t elementIndex) = 0;
 		virtual StableComponentRef EmplaceFromVoid(void* ptr) = 0;
-		virtual uint64_t GetChunkSize() const noexcept = 0;
+		virtual uint32_t GetChunkSize() const noexcept = 0;
 		virtual void Clear() = 0;
 	};
 
@@ -197,7 +197,7 @@ namespace decs
 
 		}
 
-		StableContainer(uint64_t chunkCapacity) :
+		StableContainer(uint32_t chunkCapacity) :
 			m_ChunkCapacity(chunkCapacity)
 		{
 		}
@@ -215,12 +215,12 @@ namespace decs
 
 		virtual TypeID GetTypeID()const noexcept override { return Type<stable<DataType>>::ID(); }
 
-		virtual StableContainerBase* CreateOwnEmptyCopy(uint64_t withChunkSize) override
+		virtual StableContainerBase* CreateOwnEmptyCopy(uint32_t withChunkSize) override
 		{
 			return new StableContainer<DataType>(withChunkSize);
 		}
 
-		virtual uint64_t GetChunkSize() const noexcept override
+		virtual uint32_t GetChunkSize() const noexcept override
 		{
 			return m_ChunkCapacity;
 		}
@@ -236,10 +236,10 @@ namespace decs
 				RemoveChunkFromFreeSpaces(chunk);
 			}
 
-			return StableComponentRef(result.Data, chunk->m_Index, result.Index);
+			return StableComponentRef(result.Data, static_cast<uint32_t>(chunk->m_Index), result.Index);
 		}
 
-		bool Remove(uint64_t chunkIndex, uint64_t elementIndex) override
+		bool Remove(uint32_t chunkIndex, uint32_t elementIndex) override
 		{
 			if (chunkIndex < m_Chunks.size() && m_Chunks[chunkIndex] != nullptr)
 			{
@@ -281,7 +281,7 @@ namespace decs
 		std::vector<ChunkType*> m_Chunks;
 		std::vector<ChunkType*> m_ChunksWithFreeSpace;
 		ChunkType* m_CurrentChunk = nullptr;
-		uint64_t m_ChunkCapacity = 1000;
+		uint32_t m_ChunkCapacity = 1000;
 
 	private:
 		inline ChunkType* GetCurrentChunk()
@@ -296,7 +296,7 @@ namespace decs
 				{
 					m_CurrentChunk = new ChunkType(m_ChunkCapacity);
 					m_CurrentChunk->m_IsInFreeSpaces = true;
-					m_CurrentChunk->m_IndexInFreeSpaces = m_ChunksWithFreeSpace.size();
+					m_CurrentChunk->m_IndexInFreeSpaces = static_cast<uint32_t>(m_ChunksWithFreeSpace.size());
 					m_ChunksWithFreeSpace.push_back(m_CurrentChunk);
 
 					bool isChunkPlacedInChunks = false;
@@ -313,7 +313,7 @@ namespace decs
 
 					if (!isChunkPlacedInChunks)
 					{
-						m_CurrentChunk->m_Index = m_Chunks.size();
+						m_CurrentChunk->m_Index = static_cast<uint32_t>(m_Chunks.size());
 						m_Chunks.push_back(m_CurrentChunk);
 					}
 				}
@@ -375,7 +375,7 @@ namespace decs
 			if (chunk->m_IsInFreeSpaces || chunk->IsFull()) return false;
 
 			chunk->m_IsInFreeSpaces = true;
-			chunk->m_IndexInFreeSpaces = m_ChunksWithFreeSpace.size();
+			chunk->m_IndexInFreeSpaces = static_cast<uint32_t>(m_ChunksWithFreeSpace.size());
 			m_ChunksWithFreeSpace.push_back(chunk);
 
 			return true;
@@ -390,14 +390,14 @@ namespace decs
 
 		}
 
-		StableContainersManager(uint64_t defaultChunkSize) :
+		StableContainersManager(uint32_t defaultChunkSize) :
 			m_DefaultChunkSize(defaultChunkSize)
 		{
 
 		}
 
 		template<typename T>
-		bool SetStableComponentChunkSize(uint64_t chunkSize)
+		bool SetStableComponentChunkSize(uint32_t chunkSize)
 		{
 			TYPE_ID_CONSTEXPR TypeID typeID = Type<stable<T>>::ID();
 			auto& container = m_Containers[typeID];
@@ -411,7 +411,7 @@ namespace decs
 			return false;
 		}
 
-		bool SetStableComponentChunkSize(TypeID typeID, uint64_t chunkSize)
+		bool SetStableComponentChunkSize(TypeID typeID, uint32_t chunkSize)
 		{
 			auto& container = m_Containers[typeID];
 
@@ -425,7 +425,7 @@ namespace decs
 		}
 
 		template<typename T>
-		uint64_t GetStableComponentChunkSize()
+		uint32_t GetStableComponentChunkSize()
 		{
 			TYPE_ID_CONSTEXPR TypeID typeID = Type<stable<T>>::ID();
 			auto it = m_Containers.find(typeID);
@@ -435,10 +435,10 @@ namespace decs
 				return it->second->GetChunkSize();
 			}
 
-			return std::numeric_limits<uint64_t>::max();
+			return std::numeric_limits<uint32_t>::max();
 		}
 
-		uint64_t GetStableComponentChunkSize(TypeID typeID)
+		uint32_t GetStableComponentChunkSize(TypeID typeID)
 		{
 			auto it = m_Containers.find(typeID);
 
@@ -447,7 +447,7 @@ namespace decs
 				return it->second.first;
 			}
 
-			return std::numeric_limits<uint64_t>::max();
+			return std::numeric_limits<uint32_t>::max();
 		}
 
 		inline StableContainerBase* GetStableContainer(TypeID typeID)
@@ -510,7 +510,7 @@ namespace decs
 		}
 
 	private:
-		ecsMap<TypeID, std::pair<uint64_t, StableContainerBase*>> m_Containers;// pair: uint64_t is chunk size of container
-		uint64_t m_DefaultChunkSize = 1000;
+		ecsMap<TypeID, std::pair<uint32_t, StableContainerBase*>> m_Containers;// pair: uint32_t is chunk size of container
+		uint32_t m_DefaultChunkSize = 1000;
 	};
 }

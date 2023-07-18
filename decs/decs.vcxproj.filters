@@ -87,9 +87,6 @@
     <ClInclude Include="src\decs\Iteration\IterationCore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Containers\TConstSizeArray.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decs\ContainerSerializer.h">
       <Filter>Header Files</Filter>
     </ClInclude>

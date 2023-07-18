@@ -43,9 +43,7 @@ namespace decs
 		ComponentObserver<ComponentType>* m_Observer = nullptr;
 
 	public:
-		ComponentContext(
-			ComponentObserver<ComponentType>* observer
-		) :
+		ComponentContext(ComponentObserver<ComponentType>* observer) :
 			m_Observer(observer)
 		{
 
@@ -106,9 +104,7 @@ namespace decs
 		ComponentObserver<stable<ComponentType>>* m_Observer = nullptr;
 
 	public:
-		ComponentContext(
-			ComponentObserver<stable<ComponentType>>* observer
-		) :
+		ComponentContext(ComponentObserver<stable<ComponentType>>* observer) :
 			m_Observer(observer)
 		{
 

@@ -9,24 +9,19 @@ namespace decs
 		friend class Container;
 		friend class ArchetypesMap;
 	public:
+		NON_COPYABLE(ComponentContextsManager);
+		NON_MOVEABLE(ComponentContextsManager);
+
 		ComponentContextsManager()
 		{
 
 		}
 
-		ComponentContextsManager(
-			ObserversManager* observersManager
-		) :
+		ComponentContextsManager(ObserversManager* observersManager) :
 			m_ObserversManager(observersManager)
 		{
 
 		}
-
-		ComponentContextsManager(const ComponentContextsManager&) = delete;
-		ComponentContextsManager(ComponentContextsManager&&) = delete;
-
-		ComponentContextsManager& operator=(const ComponentContextsManager&) = delete;
-		ComponentContextsManager& operator=(ComponentContextsManager&&) = delete;
 
 		~ComponentContextsManager()
 		{

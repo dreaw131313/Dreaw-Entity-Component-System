@@ -15,7 +15,7 @@ namespace decs
 
 	Container::Container(
 		uint64_t enititesChunkSize,
-		uint64_t stableComponentDefaultChunkSize,
+		uint32_t stableComponentDefaultChunkSize,
 		uint64_t m_EmptyEntitiesChunkSize
 	) :
 		m_HaveOwnEntityManager(true),
@@ -29,7 +29,7 @@ namespace decs
 
 	Container::Container(
 		EntityManager* entityManager,
-		uint64_t stableComponentDefaultChunkSize,
+		uint32_t stableComponentDefaultChunkSize,
 		uint64_t m_EmptyEntitiesChunkSize
 	) :
 		m_HaveOwnEntityManager(entityManager == nullptr),

@@ -84,13 +84,13 @@ namespace decs
 
 		Container(
 			uint64_t enititesChunkSize,
-			uint64_t stableComponentDefaultChunkSize,
+			uint32_t stableComponentDefaultChunkSize,
 			uint64_t m_EmptyEntitiesChunkSize = 100
 		);
 
 		Container(
 			EntityManager* entityManager,
-			uint64_t stableComponentDefaultChunkSize,
+			uint32_t stableComponentDefaultChunkSize,
 			uint64_t m_EmptyEntitiesChunkSize = 100
 		);
 
@@ -620,12 +620,12 @@ namespace decs
 		StableContainersManager m_StableContainers = { 100 };
 	public:
 		template<typename T>
-		bool SetStableComponentChunkSize(uint64_t chunkSize)
+		bool SetStableComponentChunkSize(uint32_t chunkSize)
 		{
 			return m_StableContainers.SetStableComponentChunkSize<T>(chunkSize);
 		}
 
-		bool SetStableComponentChunkSize(TypeID typeID, uint64_t chunkSize)
+		bool SetStableComponentChunkSize(TypeID typeID, uint32_t chunkSize)
 		{
 			return m_StableContainers.SetStableComponentChunkSize(typeID, chunkSize);
 		}
