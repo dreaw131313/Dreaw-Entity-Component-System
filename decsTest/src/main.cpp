@@ -124,7 +124,7 @@ int main()
 		PrintLine("Prefab component names:");
 		for (uint32_t i = 0; i < prefab.GetArchetype()->ComponentCount(); i++)
 		{
-			std::cout << "\t" << i + 1 << ". " << prefab.GetArchetype()->GetComponentTypeClassName(i) << "\n";
+			std::cout << "\t" << i + 1 << ". " << prefab.GetArchetype()->GetComponentTypeName(i) << "\n";
 		}
 
 		PrintLine();

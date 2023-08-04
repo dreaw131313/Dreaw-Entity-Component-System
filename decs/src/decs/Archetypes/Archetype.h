@@ -120,7 +120,7 @@ namespace decs
 			return m_TypeData[index].m_TypeID;
 		}
 
-		inline std::string GetComponentTypeClassName(uint64_t componentIndex) const
+		inline std::string GetComponentTypeName(uint64_t componentIndex) const
 		{
 			if (componentIndex < m_TypeData.size())
 			{
