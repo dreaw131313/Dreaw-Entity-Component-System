@@ -76,20 +76,20 @@ namespace decs
 		friend class EntityData;
 		friend class EntityManager;
 		friend class ArchetypesMap;
-		template<typename T>
+		template<typename>
 		friend class ContainerSerializer;
 
 		template<typename...>
-		friend 	class Query;
+		friend class Query;
 		template<typename...>
-		friend 	class MultiQuery;
+		friend class MultiQuery;
 		template<typename, typename...>
 		friend class IterationContainerContext;
 
-		template<typename... ComponentTypes>
+		template<typename...>
 		friend class BatchIterator;
 
-		template<typename ComponentType>
+		template<typename>
 		friend class ComponentRef;
 		friend class ComponentRefAsVoid;
 

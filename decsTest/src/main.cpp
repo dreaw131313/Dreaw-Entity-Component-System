@@ -235,15 +235,5 @@ int main()
 
 #pragma endregion
 
-
-	{
-		Position p;
-		PrintLine();
-
-
-		std::cout << "\"" << decs::Type<decs::component_type<decs::stable<decs::Entity>>::Type>::Name() << "\"" << std::endl;
-		decs::Entity entity = {};
-	}
-
 	return 0;
 }

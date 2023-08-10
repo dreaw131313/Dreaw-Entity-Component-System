@@ -106,11 +106,9 @@ namespace decs
 	class ArchetypesMap
 	{
 		friend class Container;
-		template<typename T>
+		template<typename>
 		friend class ContainerSerializer;
-		template<typename ...Types>
-		friend class Query;
-		template<typename ...Types>
+		template<typename...>
 		friend class Query;
 		template<typename, typename...>
 		friend class IterationContainerContext;
