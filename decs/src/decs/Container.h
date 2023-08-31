@@ -442,7 +442,8 @@ namespace decs
 					entityNewArchetype->AddEntityData(&entityData);
 				}
 
-				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(entity, archetypeTypeData.m_ComponentContext, createdComponent, entityData);
+				archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent(createdComponent, entity);
+
 				return createdComponent;
 			}
 			return nullptr;
@@ -491,7 +492,8 @@ namespace decs
 					entityNewArchetype->AddEntityData(&entityData);
 				}
 
-				InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(entity, archetypeTypeData.m_ComponentContext, componentPtr, entityData);
+				archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent(componentPtr, entity);
+
 				return componentPtr;
 			}
 			return nullptr;
@@ -597,8 +599,6 @@ namespace decs
 		{
 			return HasComponentInternal(entityData, Type<ComponentType>::ID());
 		}
-
-		void InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(Entity& entity, ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData);
 
 		template<typename ComponentType>
 		ComponentType* TryAddUnstableComponentDelayedToDestroy(

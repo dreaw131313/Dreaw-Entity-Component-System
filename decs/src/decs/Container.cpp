@@ -572,11 +572,6 @@ namespace decs
 		return true;
 	}
 
-	void Container::InvokeOnCreateComponentFromEntityDataAndVoidComponentPtr(Entity& entity, ComponentContextBase* componentContext, void* componentPtr, EntityData& entityData)
-	{
-		componentContext->InvokeOnCreateComponent(componentPtr, entity);
-	}
-
 	void Container::DestroyEntitesInArchetypes(Archetype& archetype, bool invokeOnDestroyListeners)
 	{
 		auto& entitesData = archetype.m_EntitiesData;
