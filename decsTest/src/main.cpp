@@ -1,3 +1,6 @@
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+
 #include <iostream>
 #include <format>
 
@@ -106,8 +109,11 @@ int main()
 	std::cout << "Archetype size: " << sizeof(decs::Archetype) << " bytes" << "\n";
 	PrintLine();
 
-	decs::Container prefabContainer = {};
-	decs::Container container = {};
+	decs::Container* c1 = new decs::Container();
+	decs::Container* c2 = new decs::Container();
+
+	decs::Container& prefabContainer = *c1;
+	decs::Container& container = *c2;
 
 	container.SetStableComponentChunkSize<float>(100);
 
@@ -233,6 +239,19 @@ int main()
 	serializer.Serialize(prefabContainer, nullptr);
 
 #pragma endregion
+
+	//decs::Container* c = new decs::Container();
+	//
+	//auto e = c->CreateEntity();
+	//e.AddComponent<int>();
+	//e.AddStableComponent<float>();
+	//
+	//delete c;
+
+	delete c1;
+	delete c2;
+
+	_CrtDumpMemoryLeaks();
 
 	return 0;
 }

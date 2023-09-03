@@ -28,7 +28,7 @@ namespace decs
 
 				chunk.m_Size = 0;
 
-				chunk.m_Data = (T*) ::operator new(chunk.m_Capacity * sizeof(T));
+				chunk.m_Data = (T*) ::operator new[](chunk.m_Capacity * sizeof(T));
 			}
 
 			static void Destroy(Chunk& chunk)
@@ -38,8 +38,7 @@ namespace decs
 					chunk.m_Data[idx].~T();
 				}
 
-				uint64_t size = chunk.m_Capacity * sizeof(T);
-				::operator delete(chunk.m_Data, size);
+				::operator delete[](chunk.m_Data);
 			}
 
 			static void Copy(const Chunk& from, Chunk& to)
@@ -160,7 +159,9 @@ namespace decs
 		~TChunkedVector()
 		{
 			for (auto& chunk : m_Chunks)
+			{
 				Chunk::Destroy(chunk);
+			}
 		}
 
 		TChunkedVector(uint64_t chunkCapacity) :
