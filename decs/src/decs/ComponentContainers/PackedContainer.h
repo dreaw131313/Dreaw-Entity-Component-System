@@ -13,6 +13,11 @@ namespace decs
 
 		}
 
+		virtual ~PackedContainerBase()
+		{
+
+		}
+
 		inline virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept = 0;
 
 		inline virtual void PopBack() = 0;
@@ -109,7 +114,7 @@ namespace decs
 	};
 
 	template<typename ComponentType>
-	class PackedContainer<decs::stable<ComponentType>> : public PackedContainerBase
+	class PackedContainer<decs::stable<ComponentType>> final : public PackedContainerBase
 	{
 		friend class Container;
 		friend class Archetype;

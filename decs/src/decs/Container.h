@@ -206,6 +206,8 @@ namespace decs
 
 		EntityData* CreateAliveEntityData(bool bIsActive);
 
+		void ReturnOwnedEntitiesToEntityManager();
+
 #pragma endregion
 
 #pragma region RESERVING ENTITIES:

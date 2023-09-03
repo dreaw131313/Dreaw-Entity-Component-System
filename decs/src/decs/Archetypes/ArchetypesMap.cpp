@@ -10,6 +10,10 @@ namespace decs
 
 	}
 
+	ArchetypesMap::~ArchetypesMap()
+	{
+	}
+
 	void ArchetypesMap::ShrinkArchetypesToFit()
 	{
 		if (ArchetypesCount() == 0)

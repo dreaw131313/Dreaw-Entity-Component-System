@@ -121,9 +121,7 @@ namespace decs
 
 		ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize);
 
-		~ArchetypesMap()
-		{
-		}
+		~ArchetypesMap();
 
 		inline uint64_t ArchetypesCount() const noexcept
 		{

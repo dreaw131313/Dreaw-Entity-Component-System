@@ -49,8 +49,9 @@ namespace decs
 		}
 		else
 		{
-			DestroyOwnedEntities(false);
+			ReturnOwnedEntitiesToEntityManager();
 		}
+		
 		if (m_HaveOwnComponentContextManager)
 		{
 			delete m_ComponentContextManager;
@@ -260,6 +261,11 @@ namespace decs
 		{
 			return m_EntityManager->CreateEntity(bIsActive);
 		}
+	}
+
+	void Container::ReturnOwnedEntitiesToEntityManager()
+	{
+		DestroyOwnedEntities(false);
 	}
 
 	void Container::ReserveEntities(uint32_t entitiesToReserve)

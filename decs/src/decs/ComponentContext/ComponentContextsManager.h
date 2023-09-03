@@ -88,7 +88,9 @@ namespace decs
 		inline void DestroyComponentsContexts()
 		{
 			for (auto& [key, value] : m_Contexts)
+			{
 				delete value;
+			}
 		}
 	};
 }

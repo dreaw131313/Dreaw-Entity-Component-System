@@ -51,7 +51,7 @@ namespace decs
 		{
 			if (m_Size > 0)
 			{
-				for (uint32_t i = 0; i < m_Capacity; i++)
+				for (uint32_t i = 0; i < m_CurrentAllocationOffset; i++)
 				{
 					if (m_AllocationFlags[i])
 					{
@@ -85,9 +85,8 @@ namespace decs
 
 			m_Size += 1;
 
-			if (m_FreeSpacesCount > 0)
+			if (m_FreeSpaces.size() > 0)
 			{
-				m_FreeSpacesCount -= 1;
 				uint32_t freeSpaceIndex = m_FreeSpaces.back();
 				m_FreeSpaces.pop_back();
 				DataType* data = new(&m_Data[freeSpaceIndex])DataType(std::forward<Args>(args)...);
@@ -116,7 +115,6 @@ namespace decs
 				}
 				else
 				{
-					m_FreeSpacesCount += 1;
 					m_FreeSpaces.push_back(index);
 				}
 
@@ -124,7 +122,6 @@ namespace decs
 				{
 					m_FreeSpaces.clear();
 					m_CurrentAllocationOffset = 0;
-					m_FreeSpacesCount = 0;
 				}
 
 				m_AllocationFlags[index] = false;
@@ -136,14 +133,13 @@ namespace decs
 
 	private:
 		std::vector<uint32_t> m_FreeSpaces;
+
 		uint32_t m_Capacity = 0;
 		DataType* m_Data = nullptr;
 		bool* m_AllocationFlags = nullptr;
 
 		uint32_t m_CurrentAllocationOffset = 0;
 		uint32_t m_Size = 0;
-
-		uint32_t m_FreeSpacesCount = 0;
 	};
 
 	class StableComponentRef
@@ -174,6 +170,11 @@ namespace decs
 	class StableContainerBase
 	{
 	public:
+		virtual ~StableContainerBase()
+		{
+
+		}
+
 		inline virtual TypeID GetTypeID()const noexcept = 0;
 		virtual StableContainerBase* CreateOwnEmptyCopy(uint32_t withChunkSize) = 0;
 
@@ -392,6 +393,11 @@ namespace decs
 
 		StableContainersManager(uint32_t defaultChunkSize) :
 			m_DefaultChunkSize(defaultChunkSize)
+		{
+
+		}
+
+		~StableContainersManager()
 		{
 
 		}
