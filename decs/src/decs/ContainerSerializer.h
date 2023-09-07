@@ -19,7 +19,7 @@ namespace decs
 		inline virtual TypeID GetComponentTypeID() const = 0;
 
 	protected:
-		virtual void SerializeComponentFromVoid(void* component, SerializerData& serializerData) = 0;
+		virtual void SerializeComponentFromVoid(void* component, SerializerData& serializerData) const = 0;
 	};
 
 	template<typename ComponentType, typename SerializerData>
@@ -28,7 +28,7 @@ namespace decs
 		template<typename T>
 		friend class ContainerSerializer;
 	public:
-		virtual void SerializeComponent(const typename component_type<ComponentType>::Type& component, SerializerData& serializerData) = 0;
+		virtual void SerializeComponent(const typename component_type<ComponentType>::Type& component, SerializerData& serializerData) const = 0;
 
 		inline virtual TypeID GetComponentTypeID() const final
 		{
@@ -36,7 +36,7 @@ namespace decs
 		}
 
 	private:
-		virtual void SerializeComponentFromVoid(void* component, SerializerData& serializerData) final override
+		virtual void SerializeComponentFromVoid(void* component, SerializerData& serializerData) const final override
 		{
 			SerializeComponent(*reinterpret_cast<typename component_type<ComponentType>::Type*>(component), serializerData);
 		}
@@ -49,7 +49,7 @@ namespace decs
 		struct ComponentSerializationData
 		{
 		public:
-			ComponentSerializerBase<SerializerData>* m_Serializer = nullptr;
+			const ComponentSerializerBase<SerializerData>* m_Serializer = nullptr;
 			PackedContainerBase* m_PackedContainer = nullptr;
 		};
 
@@ -92,9 +92,9 @@ namespace decs
 				for (uint32_t i = 0; i < container.m_EmptyEntities.Size(); i++)
 				{
 					entityBuffer.Set(container.m_EmptyEntities[i], &container);
-					if (BeginEntitySerialize(entityBuffer))
+					if (BeginEntitySerialize(entityBuffer, serializerData))
 					{
-						EndEntitySerialize(entityBuffer);
+						EndEntitySerialize(entityBuffer, serializerData);
 					}
 				}
 
@@ -116,7 +116,7 @@ namespace decs
 							for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 							{
 								entityBuffer.Set(archetype.m_EntitiesData[entityIdx].m_EntityData, &container);
-								if (BeginEntitySerialize(entityBuffer))
+								if (BeginEntitySerialize(entityBuffer, serializerData))
 								{
 									for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
 									{
@@ -127,7 +127,7 @@ namespace decs
 											serializerData
 										);
 									}
-									EndEntitySerialize(entityBuffer);
+									EndEntitySerialize(entityBuffer, serializerData);
 								}
 							}
 						}
@@ -153,12 +153,12 @@ namespace decs
 		/// </summary>
 		/// <param name="entity"></param>
 		/// <returns></returns>
-		virtual bool BeginEntitySerialize(const Entity& entity) = 0;
+		virtual bool BeginEntitySerialize(const Entity& entity, SerializerData& serializerData) = 0;
 
-		virtual void EndEntitySerialize(const Entity& entity) = 0;
+		virtual void EndEntitySerialize(const Entity& entity, SerializerData& serializerData) = 0;
 
 	private:
-		ecsMap<TypeID, ComponentSerializerBase<SerializerData>*> m_ComponentSerializers = {};
+		ecsMap<TypeID, const ComponentSerializerBase<SerializerData>*> m_ComponentSerializers = {};
 
 	private:
 		void GetComponentSerializers(Archetype& archetype, std::vector<ComponentSerializationData>& serializers)

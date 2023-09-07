@@ -36,7 +36,7 @@ class PositionSerializer : public decs::ComponentSerializer<Position, int>
 {
 public:
 	// Inherited via ComponentSerializer
-	virtual void SerializeComponent(const Position& component, int& serializerData) override
+	virtual void SerializeComponent(const Position& component, int& serializerData) const override
 	{
 		PrintLine(std::format("\tPosition: X: {0}, Y: {1}", component.X, component.Y));
 	}
@@ -46,7 +46,7 @@ class FloatSerializer : public decs::ComponentSerializer<decs::stable<float>, in
 {
 public:
 	// Inherited via ComponentSerializer
-	virtual void SerializeComponent(const float& component, int& serializerData) override
+	virtual void SerializeComponent(const float& component, int& serializerData)const override
 	{
 		PrintLine(std::format("\tFloat: {0}", component));
 	}
@@ -56,7 +56,7 @@ class IntSerializer : public decs::ComponentSerializer< decs::stable<int>, int>
 {
 public:
 	// Inherited via ComponentSerializer
-	virtual void SerializeComponent(const int& component, int& serializerData) override
+	virtual void SerializeComponent(const int& component, int& serializerData)const override
 	{
 		PrintLine(std::format("\tInt: {0}", component));
 	}
@@ -66,7 +66,7 @@ class DoubleSerializer : public decs::ComponentSerializer< decs::stable<double>,
 {
 public:
 	// Inherited via ComponentSerializer
-	virtual void SerializeComponent(const double& component, int& serializerData) override
+	virtual void SerializeComponent(const double& component, int& serializerData)const override
 	{
 		PrintLine(std::format("\tDouble: {0}", component));
 	}
@@ -79,14 +79,14 @@ public:
 
 protected:
 	// Inherited via ContainerSerializer
-	virtual bool BeginEntitySerialize(const decs::Entity& entity) override
+	virtual bool BeginEntitySerialize(const decs::Entity& entity, int& serializerData) override
 	{
 		PrintLine(std::format("Entity ID: {0}, is active: {1}", entity.GetID(), entity.IsActive()));
 
 		return true;
 	}
 
-	virtual void EndEntitySerialize(const decs::Entity& entity) override
+	virtual void EndEntitySerialize(const decs::Entity& entity, int& serializerData) override
 	{
 	}
 };
