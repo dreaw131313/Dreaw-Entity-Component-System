@@ -19,7 +19,7 @@ namespace decs
 		inline virtual TypeID GetComponentTypeID() const = 0;
 
 	protected:
-		virtual void SerializeComponentFromVoid(void* component, SerializerData* serializerData) = 0;
+		virtual void SerializeComponentFromVoid(void* component, SerializerData& serializerData) = 0;
 	};
 
 	template<typename ComponentType, typename SerializerData>
@@ -28,15 +28,15 @@ namespace decs
 		template<typename T>
 		friend class ContainerSerializer;
 	public:
-		virtual void SerializeComponent(const typename component_type<ComponentType>::Type& component, SerializerData* serializerData) = 0;
+		virtual void SerializeComponent(const typename component_type<ComponentType>::Type& component, SerializerData& serializerData) = 0;
 
-		inline virtual TypeID GetComponentTypeID() const
+		inline virtual TypeID GetComponentTypeID() const final
 		{
 			return Type<ComponentType>::ID();
 		}
 
 	private:
-		virtual void SerializeComponentFromVoid(void* component, SerializerData* serializerData) override
+		virtual void SerializeComponentFromVoid(void* component, SerializerData& serializerData) final override
 		{
 			SerializeComponent(*reinterpret_cast<typename component_type<ComponentType>::Type*>(component), serializerData);
 		}
@@ -76,7 +76,7 @@ namespace decs
 			m_ComponentSerializers[serializer->GetComponentTypeID()] = serializer;
 		}
 
-		void Serialize(Container& container, SerializerData* serializerData)
+		void Serialize(Container& container, SerializerData& serializerData)
 		{
 			OnBeginSerialization(container, serializerData);
 			{
@@ -107,25 +107,28 @@ namespace decs
 					for (uint64_t archetypeIdx = 0; archetypeIdx < elementsCount; archetypeIdx++)
 					{
 						Archetype& archetype = chunk[archetypeIdx];
-						GetComponentSerializers(archetype, componentSerializersData);
-						uint64_t componentCount = componentSerializersData.size();
-
 						uint64_t entitesCount = archetype.EntityCount();
-						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
+						if (entitesCount > 0)
 						{
-							entityBuffer.Set(archetype.m_EntitiesData[entityIdx].m_EntityData, &container);
-							if (BeginEntitySerialize(entityBuffer))
-							{
-								for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
-								{
-									auto& componentSerializerData = componentSerializersData[componentIdx];
+							GetComponentSerializers(archetype, componentSerializersData);
+							uint64_t componentCount = componentSerializersData.size();
 
-									componentSerializerData.m_Serializer->SerializeComponentFromVoid(
-										componentSerializerData.m_PackedContainer->GetComponentPtrAsVoid(entityIdx),
-										serializerData
-									);
+							for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
+							{
+								entityBuffer.Set(archetype.m_EntitiesData[entityIdx].m_EntityData, &container);
+								if (BeginEntitySerialize(entityBuffer))
+								{
+									for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
+									{
+										auto& componentSerializerData = componentSerializersData[componentIdx];
+
+										componentSerializerData.m_Serializer->SerializeComponentFromVoid(
+											componentSerializerData.m_PackedContainer->GetComponentPtrAsVoid(entityIdx),
+											serializerData
+										);
+									}
+									EndEntitySerialize(entityBuffer);
 								}
-								EndEntitySerialize(entityBuffer);
 							}
 						}
 					}
@@ -135,12 +138,12 @@ namespace decs
 		}
 
 	protected:
-		virtual void OnBeginSerialization(Container& container, SerializerData* serializerData)
+		virtual void OnBeginSerialization(Container& container, SerializerData& serializerData)
 		{
 
 		}
 
-		virtual void OnEndSerialization(Container& container, SerializerData* serializerData)
+		virtual void OnEndSerialization(Container& container, SerializerData& serializerData)
 		{
 
 		}

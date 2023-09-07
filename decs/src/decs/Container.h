@@ -177,9 +177,15 @@ namespace decs
 		TChunkedVector<EntityData*> m_EmptyEntities = { m_DefaultEmptyEntitiesChunkSize };
 		EntityManager* m_EntityManager = nullptr;
 		bool m_HaveOwnEntityManager = false;
+		uint32_t m_EntiesCount = 0;
 
 	public:
 		Entity CreateEntity(bool isActive = true);
+
+		inline uint32_t GetEntitesCount() const
+		{
+			return m_EntiesCount;
+		}
 
 	public:
 		bool DestroyEntity(Entity& entity);

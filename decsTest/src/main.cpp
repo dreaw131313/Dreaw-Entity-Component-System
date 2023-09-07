@@ -32,48 +32,48 @@ public:
 	}
 };
 
-class PositionSerializer : public decs::ComponentSerializer<Position, void>
+class PositionSerializer : public decs::ComponentSerializer<Position, int>
 {
 public:
 	// Inherited via ComponentSerializer
-	virtual void SerializeComponent(const Position& component, void* serializerData) override
+	virtual void SerializeComponent(const Position& component, int& serializerData) override
 	{
 		PrintLine(std::format("\tPosition: X: {0}, Y: {1}", component.X, component.Y));
 	}
 };
 
-class FloatSerializer : public decs::ComponentSerializer<decs::stable<float>, void>
+class FloatSerializer : public decs::ComponentSerializer<decs::stable<float>, int>
 {
 public:
 	// Inherited via ComponentSerializer
-	virtual void SerializeComponent(const float& component, void* serializerData) override
+	virtual void SerializeComponent(const float& component, int& serializerData) override
 	{
 		PrintLine(std::format("\tFloat: {0}", component));
 	}
 };
 
-class IntSerializer : public decs::ComponentSerializer< decs::stable<int>, void>
+class IntSerializer : public decs::ComponentSerializer< decs::stable<int>, int>
 {
 public:
 	// Inherited via ComponentSerializer
-	virtual void SerializeComponent(const int& component, void* serializerData) override
+	virtual void SerializeComponent(const int& component, int& serializerData) override
 	{
 		PrintLine(std::format("\tInt: {0}", component));
 	}
 };
 
-class DoubleSerializer : public decs::ComponentSerializer< decs::stable<double>, void>
+class DoubleSerializer : public decs::ComponentSerializer< decs::stable<double>, int>
 {
 public:
 	// Inherited via ComponentSerializer
-	virtual void SerializeComponent(const double& component, void* serializerData) override
+	virtual void SerializeComponent(const double& component, int& serializerData) override
 	{
 		PrintLine(std::format("\tDouble: {0}", component));
 	}
 };
 
 
-class TestSerializer : public decs::ContainerSerializer<void>
+class TestSerializer : public decs::ContainerSerializer<int>
 {
 public:
 
@@ -228,12 +228,13 @@ int main()
 	serializer.SetComponentSerializer(&intSerializer);
 	serializer.SetComponentSerializer(&doubleSerializer);
 
+	int  serializerInt = 0;
 	PrintLine();
 	PrintLine("Serialization: Container");
-	serializer.Serialize(container, nullptr);
+	serializer.Serialize(container, serializerInt);
 	PrintLine();
 	PrintLine("Serialization: Prefab Container");
-	serializer.Serialize(prefabContainer, nullptr);
+	serializer.Serialize(prefabContainer, serializerInt);
 
 #pragma endregion
 

@@ -51,7 +51,7 @@ namespace decs
 		{
 			ReturnOwnedEntitiesToEntityManager();
 		}
-		
+
 		if (m_HaveOwnComponentContextManager)
 		{
 			delete m_ComponentContextManager;
@@ -83,6 +83,7 @@ namespace decs
 			Entity e(entityData, this);
 			AddToEmptyEntitiesRightAfterNewEntityCreation(*e.m_EntityData);
 			InvokeEntityCreationObservers(e);
+			m_EntiesCount += 1;
 			return e;
 		}
 		return Entity();
@@ -92,7 +93,7 @@ namespace decs
 	{
 		if (entity.IsValid())
 		{
-			DestroyEntityInternal(entity);
+			return DestroyEntityInternal(entity);
 		}
 		return false;
 	}
@@ -132,6 +133,8 @@ namespace decs
 
 		m_EmptyEntities.Clear();
 		m_StableContainers.ClearContainers();
+
+		m_EntiesCount = 0;
 	}
 
 	bool Container::DestroyEntityInternal(Entity& entity)
@@ -175,6 +178,9 @@ namespace decs
 			}
 
 			m_EntityManager->DestroyEntity(entityData);
+
+			m_EntiesCount -= 1;
+
 			return true;
 		}
 
