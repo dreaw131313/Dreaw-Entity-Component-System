@@ -33,28 +33,14 @@ namespace decs
 	class CreateComponentObserver
 	{
 	public:
-		virtual void OnCreateComponent(ComponentType& component, Entity& entity) = 0;
+		virtual void OnCreateComponent(component_type<ComponentType>::Type& component, Entity& entity) = 0;
 	};
 
 	template<typename ComponentType>
 	class DestroyComponentObserver
 	{
 	public:
-		virtual void OnDestroyComponent(ComponentType& component, Entity& entity) = 0;
+		virtual void OnDestroyComponent(component_type<ComponentType>::Type& component, Entity& entity) = 0;
 	};
 
-
-	template<typename ComponentType>
-	class CreateComponentObserver<stable<ComponentType>>
-	{
-	public:
-		virtual void OnCreateComponent(ComponentType& component, Entity& entity) = 0;
-	};
-
-	template<typename ComponentType>
-	class DestroyComponentObserver<stable<ComponentType>>
-	{
-	public:
-		virtual void OnDestroyComponent(ComponentType& component, Entity& entity) = 0;
-	};
 }
