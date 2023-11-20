@@ -173,6 +173,11 @@ int main()
 	PrintLine();
 	PrintLine("Query foreach:");
 
+	if (query.Contain(prefab))
+	{
+		PrintLine("Query contain prefab!");
+	}
+
 	query.ForEachForward(lambda);
 	query.ForEachBackward(lambda);
 
@@ -196,6 +201,12 @@ int main()
 		//std::cout << "Query lambda -> Entity ID: " << e.ID() << ". Container ptr:"<< e.GetContainer() << "\n";
 		std::cout << "Query lambda -> Entity ID: " << e.GetID() << ". Hash: " << std::hash<decs::Entity>{}(e) << "\n";
 	};
+
+
+	if (testMultiQuery.Contain(prefab))
+	{
+		PrintLine("testMultiQuery contain prefab!");
+	}
 
 	PrintLine("");
 	PrintLine("Multi Query foreach forward:");

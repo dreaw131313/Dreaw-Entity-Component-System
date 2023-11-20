@@ -232,6 +232,27 @@ namespace decs
 			}
 		}
 
+		bool Contain(const decs::Entity& entity)
+		{
+			if (entity.IsValid())
+			{
+				auto containerCtxIdxIt = m_ContainerContextsIndexes.find(entity.GetContainer());
+				if (containerCtxIdxIt!= m_ContainerContextsIndexes.end())
+				{
+					auto& ctx = m_ContainerContexts[containerCtxIdxIt->second];
+					ctx.Fetch(
+						m_Includes,
+						m_Without,
+						m_WithAnyOf,
+						m_WithAll,
+						GetMinComponentsCount()
+					);
+					return ctx.Contain(entity);
+				}
+			}
+			return false;
+		}
+
 	private:
 		TypeGroup<ComponentsTypes...> m_Includes = {};
 		std::vector<TypeID> m_Without;

@@ -26,7 +26,7 @@ namespace decs
 	{
 	public:
 		std::vector<ArchetypeContextType> m_ArchetypesContexts;
-		ecsSet<Archetype*> m_ContainedArchetypes;
+		ecsSet<const Archetype*> m_ContainedArchetypes;
 		Container* m_Container = nullptr;
 		uint64_t m_ArchetypesCountDirty = 0;
 		bool m_bIsEnabled = true;
@@ -82,6 +82,11 @@ namespace decs
 
 				m_ArchetypesCountDirty = containerArchetypesCount;
 			}
+		}
+
+		bool Contain(const decs::Entity& entity)
+		{
+			return m_ContainedArchetypes.find(entity.GetArchetype()) != m_ContainedArchetypes.end();
 		}
 
 	private:

@@ -182,12 +182,27 @@ namespace decs
 			}
 		}
 
+		/// <summary>
+		/// Checks if entity belong to this query.
+		/// </summary>
+		/// <param name="entity"></param>
+		/// <returns></returns>
+		bool Contain(const decs::Entity& entity)
+		{
+			if (entity.IsValid())
+			{
+				Fetch();
+				return m_ContainedArchetypes.find(entity.GetArchetype()) != m_ContainedArchetypes.end();
+			}
+			return false;
+		}
+
 	private:
 		std::vector<TypeID> m_Without;
 		std::vector<TypeID> m_WithAnyOf;
 		std::vector<TypeID> m_WithAll;
 		std::vector<ArchetypeContextType> m_ArchetypesContexts;
-		ecsSet<Archetype*> m_ContainedArchetypes;
+		ecsSet<const Archetype*> m_ContainedArchetypes;
 		TypeGroup<ComponentsTypes...> m_Includes = {};
 
 		// cache value to check if query should be updated:
