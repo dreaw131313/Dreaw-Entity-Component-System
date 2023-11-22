@@ -91,7 +91,7 @@ protected:
 	}
 };
 
-int main()
+void BaseTest()
 {
 	PrintLine(std::format("Sizeof of Query<int>: {} bytes", sizeof(decs::Query<int>)));
 	PrintLine(std::format("Sizeof of Query<int, float>: {} bytes", sizeof(decs::Query<int, float>)));
@@ -248,14 +248,53 @@ int main()
 	serializer.Serialize(prefabContainer, serializerInt);
 
 #pragma endregion
+}
 
-	//decs::Container* c = new decs::Container();
-	//
-	//auto e = c->CreateEntity();
-	//e.AddComponent<int>();
-	//e.AddStableComponent<float>();
-	//
-	//delete c;
+struct TestComp
+{
+public:
+	TestComp()
+	{
+		PrintLine("Default constructor");
+	}
+
+	TestComp(const TestComp& other)
+	{
+		PrintLine("Copy constructor");
+	}
+
+	TestComp(TestComp&& other) noexcept
+	{
+		PrintLine("Move constructor");
+	}
+
+	TestComp& operator=(const TestComp& other)
+	{
+		PrintLine("Copy assignment");
+		return *this;
+	}
+
+	TestComp& operator=(TestComp&& other)noexcept
+	{
+		PrintLine("Move assignment");
+		return *this;
+	}
+};
+
+int main()
+{
+	decs::Container container = {};
+	auto entity = container.CreateEntity();
+
+	entity.AddComponent<TestComp>();
+
+	auto entity2 = container.CreateEntity();
+	entity2.AddComponent<TestComp>();
+
+	entity.AddComponent<int>();
+	entity.RemoveComponent<int>();
+
+	container.Spawn(entity);
 
 
 	return 0;
