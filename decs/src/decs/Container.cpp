@@ -245,10 +245,14 @@ namespace decs
 		const uint32_t componentsCount = currentArchetype->ComponentCount();
 		const uint32_t indexInArchetype = entity.m_EntityData->m_IndexInArchetype;
 
+		auto& typeDatas = currentArchetype->m_TypeData;
+		auto& orderDatas = currentArchetype->m_ComponentContextsInOrder;
+
 		// Invoke On destroy methods
 		for (uint64_t i = 0; i < componentsCount; i++)
 		{
-			ArchetypeTypeData& typeData = currentArchetype->m_TypeData[i];
+			const auto& orderData = orderDatas[i];
+			ArchetypeTypeData& typeData = typeDatas[orderData.m_ComponentIndex];
 			typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentPtrAsVoid(indexInArchetype), entity);
 		}
 	}
@@ -708,21 +712,24 @@ namespace decs
 			entity.Set(archetypeEntityData.GetEntityData(), this);
 			InvokeEntityCreationObservers(entity);
 
+			auto& typeDatas = archetype.m_TypeData;
+			auto& orderDatas = archetype.m_ComponentContextsInOrder;
+
 			// fill entity component refs, component refs are needed couse if component will be added to current entity it will chang its archetype.
 			componentRefsToInvokeObserverCallbacks.clear();
 			for (uint32_t i = 0; i < archetypeComponentsCount; i++)
 			{
-				componentRefsToInvokeObserverCallbacks.emplace_back(archetype.m_TypeData[i].m_TypeID, *entity.m_EntityData, i);
+				componentRefsToInvokeObserverCallbacks.emplace_back(typeDatas[i].m_TypeID, *entity.m_EntityData, i);
 			}
 
-			for (uint32_t i = 0; i < archetypeComponentsCount; i++)
+			// Invoke On destroy methods
+			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 			{
-				ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
-				auto& compRef = componentRefsToInvokeObserverCallbacks[i];
-
+				const auto& orderData = orderDatas[i];
+				auto& compRef = componentRefsToInvokeObserverCallbacks[orderData.m_ComponentIndex];
 				if (compRef)
 				{
-					archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent(compRef.Get(), entity);
+					orderData.m_ComponentContext->InvokeOnCreateComponent(compRef.Get(), entity);
 				}
 			}
 		}
@@ -747,7 +754,8 @@ namespace decs
 
 			for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 			{
-				ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
+				auto& orderData = archetype.m_ComponentContextsInOrder[i];
+				ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[orderData.m_ComponentIndex];
 				archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent(
 					archetypeTypeData.m_PackedContainer->GetComponentPtrAsVoid(entityDataIdx),
 					entity

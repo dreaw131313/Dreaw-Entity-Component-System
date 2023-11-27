@@ -92,21 +92,32 @@ protected:
 };
 
 
-class FloatObserver : public decs::CreateComponentObserver<float>
+class FloatObserver : public decs::CreateComponentObserver<float>, public decs::DestroyComponentObserver<float>
 {
 	// Inherited via CreateComponentObserver
 	virtual void OnCreateComponent(float& component, decs::Entity& entity) override
 	{
-		PrintLine("Float observer");
+		PrintLine("Float creation");
+	}
+	// Inherited via DestroyComponentObserver
+	virtual void OnDestroyComponent(float& component, decs::Entity& entity) override
+	{
+		PrintLine("Float destruction");
 	}
 };
 
-class IntObserver : public decs::CreateComponentObserver<int>
+class IntObserver : public decs::CreateComponentObserver<int>, public decs::DestroyComponentObserver<int>
 {
 	// Inherited via CreateComponentObserver
 	virtual void OnCreateComponent(int& component, decs::Entity& entity) override
 	{
-		PrintLine("Int observer");
+		PrintLine("Int creation");
+	}
+
+	// Inherited via DestroyComponentObserver
+	virtual void OnDestroyComponent(int& component, decs::Entity& entity) override
+	{
+		PrintLine("Int destruction");
 	}
 };
 
@@ -315,14 +326,29 @@ int main()
 	decs::ObserversManager observerManager = {};
 
 	observerManager.SetComponentCreateObserver<float>(&floatObserver);
+	observerManager.SetComponentDestroyObserver<float>(&floatObserver);
 	observerManager.SetComponentCreateObserver<int>(&intObserver);
+	observerManager.SetComponentDestroyObserver<int>(&intObserver);
 
 	container.SetObserversManager(&observerManager);
 
 	container.SetComponentObserverOrder<float>(0);
 	container.SetComponentObserverOrder<int>(-1);
 
-	container.Spawn(prefab);
+	{
+		PrintLine("");
+		auto spawnedEntity = container.Spawn(prefab);
+		container.DestroyEntity(spawnedEntity);
+	}
+
+	PrintLine("");
+	container.InvokeEntitesOnCreateListeners();
+
+	container.SetComponentObserverOrder<float>(0);
+	container.SetComponentObserverOrder<int>(1);
+
+	PrintLine("");
+	container.InvokeEntitesOnDestroyListeners();
 
 	return 0;
 }
