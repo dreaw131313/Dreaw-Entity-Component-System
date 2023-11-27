@@ -273,10 +273,11 @@ namespace decs
 			{
 				ArchetypeTypeData& fromArchetypeTypeData = fromArchetype.m_TypeData[i];
 
-				auto& context = componentContextsManager->m_Contexts[fromArchetypeTypeData.m_TypeID];
-				if (context == nullptr)
+				// TODO: change it with special method in ComponentContextsManager
+				auto& contextRecord = componentContextsManager->m_Contexts[fromArchetypeTypeData.m_TypeID];
+				if (contextRecord.m_Context == nullptr)
 				{
-					context = fromArchetypeTypeData.m_ComponentContext->CreateOwnEmptyCopy(observerManager);
+					contextRecord.m_Context = fromArchetypeTypeData.m_ComponentContext->CreateOwnEmptyCopy(observerManager);
 				}
 
 				if (fromArchetypeTypeData.m_StableContainer != nullptr)

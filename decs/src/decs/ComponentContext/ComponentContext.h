@@ -11,7 +11,8 @@ namespace decs
 	{
 		friend class Container;
 	public:
-		ComponentContextBase()
+		ComponentContextBase(int observerOrder = 0) :
+			m_ObserverOrder(observerOrder)
 		{
 
 		}
@@ -28,11 +29,15 @@ namespace decs
 		virtual void SetObserverManager(ObserversManager* observerManager) = 0;
 		virtual ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) = 0;
 
-		inline int GetObservatorOrder() const { return m_ObservatorOrder; }
+		inline int GetObserverOrder() const { return m_ObserverOrder; }
 
+		inline void SetObserverOrder(int order)
+		{
+			m_ObserverOrder = order;
+		}
 
 	private:
-		int m_ObservatorOrder = 0;
+		int m_ObserverOrder = 0;
 	};
 
 	template<typename ComponentType>
@@ -43,7 +48,8 @@ namespace decs
 		ComponentObserver<ComponentType>* m_Observer = nullptr;
 
 	public:
-		ComponentContext(ComponentObserver<ComponentType>* observer) :
+		ComponentContext(ComponentObserver<ComponentType>* observer, bool order) :
+			ComponentContextBase(order),
 			m_Observer(observer)
 		{
 
@@ -90,7 +96,8 @@ namespace decs
 		ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) override
 		{
 			return new ComponentContext<ComponentType>(
-				observerManager != nullptr ? observerManager->GetComponentObserver<ComponentType>() : nullptr
+				observerManager != nullptr ? observerManager->GetComponentObserver<ComponentType>() : nullptr,
+				GetObserverOrder()
 			);
 		}
 	};
@@ -104,7 +111,8 @@ namespace decs
 		ComponentObserver<stable<ComponentType>>* m_Observer = nullptr;
 
 	public:
-		ComponentContext(ComponentObserver<stable<ComponentType>>* observer) :
+		ComponentContext(ComponentObserver<stable<ComponentType>>* observer, int order) :
+			ComponentContextBase(order),
 			m_Observer(observer)
 		{
 
@@ -151,7 +159,8 @@ namespace decs
 		ComponentContextBase* CreateOwnEmptyCopy(ObserversManager* observerManager) override
 		{
 			return new ComponentContext<stable<ComponentType>>(
-				observerManager != nullptr ? observerManager->GetComponentObserver<stable<ComponentType>>() : nullptr
+				observerManager != nullptr ? observerManager->GetComponentObserver<stable<ComponentType>>() : nullptr,
+				GetObserverOrder()
 			);
 		}
 	};

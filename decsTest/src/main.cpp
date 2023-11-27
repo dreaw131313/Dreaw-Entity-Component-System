@@ -283,18 +283,7 @@ public:
 
 int main()
 {
-	decs::Container container = {};
-	auto entity = container.CreateEntity();
-
-	entity.AddComponent<TestComp>();
-
-	auto entity2 = container.CreateEntity();
-	entity2.AddComponent<TestComp>();
-
-	entity.AddComponent<int>();
-	entity.RemoveComponent<int>();
-
-	container.Spawn(entity);
+	BaseTest();
 
 
 	return 0;

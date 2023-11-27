@@ -97,6 +97,22 @@ namespace decs
 			return nullptr;
 		}
 
+		template<typename Callable>
+		void IterateOverAllArchetypes(Callable&& func)
+		{
+			uint64_t archetypesGroupCount = m_Archetypes.size();
+			for (uint64_t groupIdx = 0; groupIdx < archetypesGroupCount; groupIdx++)
+			{
+				auto& group = m_Archetypes[groupIdx];
+				uint64_t archetypeCount = m_Archetypes.size();
+				for (uint64_t archIdx = 0; archIdx < archetypeCount; archIdx++)
+				{
+					auto archetype = group[archIdx];
+					func(archetype);
+				}
+			}
+		}
+
 	private:
 		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
 		std::vector<std::vector<Archetype*>> m_Archetypes;
@@ -153,6 +169,19 @@ namespace decs
 		inline const TChunkedVector<Archetype>& GetArchetypesChunkedVector() const
 		{
 			return m_Archetypes;
+		}
+
+		template<typename ComponentType>
+		void UpdateOrderInAllArchetypesWithComponentType()
+		{
+			auto it = m_ArchetypesGroupedByOneType.find(Type<ComponentType>::ID());
+			if (it != m_ArchetypesGroupedByOneType.end())
+			{
+				it->second->IterateOverAllArchetypes([](Archetype* arch)
+				{
+					arch->UpdateOrderOfComponentContexts();
+				});
+			}
 		}
 
 	private:
@@ -238,20 +267,20 @@ namespace decs
 			return archetype;
 		}
 
-		Archetype* CreateSingleComponentArchetype(Archetype& from)
-		{
-			uint64_t typeID = from.m_TypeData[0].m_TypeID;
-			uint64_t typeIndex = from.FindTypeIndex(typeID);
-			auto& archetype = m_SingleComponentArchetypes[typeID];
-			if (archetype != nullptr) return archetype;
-			archetype = &m_Archetypes.EmplaceBack();
-
-			ArchetypeTypeData& fromTypeData = from.m_TypeData[typeIndex];
-			archetype->AddTypeID(typeID, fromTypeData.m_PackedContainer, fromTypeData.m_ComponentContext, fromTypeData.m_StableContainer);
-			AddArchetypeToCorrectContainers(*archetype, false);
-			MakeArchetypeEdges(*archetype);
-			return archetype;
-		}
+		//Archetype* CreateSingleComponentArchetype(Archetype& from)
+		//{
+		//	uint64_t typeID = from.m_TypeData[0].m_TypeID;
+		//	uint64_t typeIndex = from.FindTypeIndex(typeID);
+		//	auto& archetype = m_SingleComponentArchetypes[typeID];
+		//	if (archetype != nullptr) return archetype;
+		//	archetype = &m_Archetypes.EmplaceBack();
+		//
+		//	ArchetypeTypeData& fromTypeData = from.m_TypeData[typeIndex];
+		//	archetype->AddTypeID(typeID, fromTypeData.m_PackedContainer, fromTypeData.m_ComponentContext, fromTypeData.m_StableContainer);
+		//	AddArchetypeToCorrectContainers(*archetype, false);
+		//	MakeArchetypeEdges(*archetype);
+		//	return archetype;
+		//}
 
 		template<typename T>
 		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype)

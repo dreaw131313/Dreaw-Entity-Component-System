@@ -1,6 +1,8 @@
 #pragma once
 #include "Archetype.h"
 
+#include <algorithm>
+
 namespace decs
 {
 	Archetype::Archetype()
@@ -32,6 +34,20 @@ namespace decs
 		return it->second;
 	}
 
+	void Archetype::UpdateOrderOfComponentContexts()
+	{
+		static auto sortLambda = [](OrderData& lhs, OrderData& rhs)
+		{
+			if (lhs.m_ComponentContext->GetObserverOrder() < rhs.m_ComponentContext->GetObserverOrder())
+			{
+				return true;
+			}
+			return false;
+		};
+
+		std::sort(m_ComponentContextsInOrder.begin(), m_ComponentContextsInOrder.end(), sortLambda);
+	}
+
 	void Archetype::AddTypeID(
 		const TypeID& id,
 		PackedContainerBase* frompackedContainer,
@@ -44,7 +60,7 @@ namespace decs
 		{
 			m_ComponentsCount += 1;
 			m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
-			m_TypeData.emplace_back(
+			AddTypeData(
 				id,
 				frompackedContainer->CreateOwnEmptyCopy(),
 				componentContext,
@@ -154,7 +170,7 @@ namespace decs
 			otherTypeData.m_TypeID;
 			m_TypeIDsIndexes[otherTypeData.m_TypeID] = i;
 
-			m_TypeData.emplace_back(
+			AddTypeData(
 				otherTypeData.m_TypeID,
 				otherTypeData.m_PackedContainer->CreateOwnEmptyCopy(),
 				componentContexts->GetComponentContext(otherTypeData.m_TypeID),

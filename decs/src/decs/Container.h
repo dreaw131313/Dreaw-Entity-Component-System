@@ -345,6 +345,8 @@ namespace decs
 			const SpawnDataState& spawnState
 		);
 
+		void InvokeOnCreateObserversOnSpawn(Entity& entity, Archetype* archetype, uint64_t componentsCount, const SpawnDataState& spawnState);
+
 #pragma endregion
 
 #pragma region Entity operation data
@@ -786,6 +788,15 @@ namespace decs
 
 		void InvokeEntitesOnDestroyListeners();
 
+		template<typename ComponentType>
+		void SetComponentObserverOrder(int order)
+		{
+			if (m_ComponentContextManager->SetObserverOrder<ComponentType>(order))
+			{
+				// sort order of observers in all archetypes that contain ComponentType
+				m_ArchetypesMap.UpdateOrderInAllArchetypesWithComponentType<ComponentType>();
+			}
+		}
 	private:
 		inline void InvokeEntityCreationObservers(Entity& entity)
 		{

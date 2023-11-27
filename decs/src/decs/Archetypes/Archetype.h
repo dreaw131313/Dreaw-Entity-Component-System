@@ -6,6 +6,7 @@
 #include "decs/ComponentContainers/StableContainer.h"
 #include "decs/EntityData.h"
 
+
 namespace decs
 {
 	class Entity;
@@ -94,12 +95,22 @@ namespace decs
 		friend class ComponentRefAsVoid;
 
 	private:
-		std::vector<ArchetypeEntityData> m_EntitiesData;
-		std::vector<ArchetypeTypeData> m_TypeData;
 		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
 
 		ecsMap<TypeID, Archetype*> m_AddEdges;
 		ecsMap<TypeID, Archetype*> m_RemoveEdges;
+
+		std::vector<ArchetypeEntityData> m_EntitiesData;
+		std::vector<ArchetypeTypeData> m_TypeData;
+
+		struct OrderData
+		{
+		public:
+			ComponentContextBase* m_ComponentContext = nullptr;
+			uint32_t m_ComponentIndex = std::numeric_limits<uint32_t>::max();
+		};
+
+		std::vector<OrderData> m_ComponentContextsInOrder = {};
 
 		uint32_t m_EntitesCountToInitialize = 0;
 		uint32_t m_ComponentsCount = 0; // number of components for each entity
@@ -177,12 +188,43 @@ namespace decs
 		}
 
 	private:
+		// instead of using "m_TypeData.emplace_back"
+		inline ArchetypeTypeData& AddTypeData(
+			TypeID typeID,
+			PackedContainerBase* packedContainer,
+			ComponentContextBase* componentContext,
+			StableContainerBase* stableContainer
+		)
+		{
+			InsertComponentContextInCorrectPlace(componentContext, static_cast<uint32_t>(m_TypeData.size()));
+			return m_TypeData.emplace_back(typeID, packedContainer, componentContext, stableContainer);
+		}
+
+		void UpdateOrderOfComponentContexts();
+
 		inline void SetEntityActiveState(uint32_t index, bool isActive)
 		{
 			if (index < m_EntitiesCount)
 			{
 				m_EntitiesData[index].m_bIsActive = isActive;
 			}
+		}
+
+		void InsertComponentContextInCorrectPlace(ComponentContextBase* componentContext, uint32_t typeDataIndex)
+		{
+			// TODO: find better way to insert new elements,
+			uint64_t size = m_ComponentContextsInOrder.size();
+			for (uint32_t i = 0; i < size; i++)
+			{
+				if (m_ComponentContextsInOrder[i].m_ComponentContext->GetObserverOrder() >= componentContext->GetObserverOrder())
+				{
+					auto insertPos = m_ComponentContextsInOrder.begin();
+					std::advance(insertPos, i);
+					m_ComponentContextsInOrder.insert(insertPos, { componentContext, typeDataIndex });
+					return;
+				}
+			}
+			m_ComponentContextsInOrder.push_back({ componentContext, typeDataIndex });
 		}
 
 		template<typename ComponentType>
@@ -194,7 +236,7 @@ namespace decs
 			{
 				m_ComponentsCount += 1;
 				m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
-				m_TypeData.emplace_back(
+				AddTypeData(
 					id,
 					new PackedContainer<ComponentType>(),
 					componentContext,

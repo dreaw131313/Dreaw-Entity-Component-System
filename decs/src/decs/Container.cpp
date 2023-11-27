@@ -313,12 +313,7 @@ namespace decs
 		CreateEntityFromSpawnData(*spawnedEntityData, spawnState);
 
 		InvokeEntityCreationObservers(spawnedEntity);
-
-		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
-		for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
-		{
-			typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx].Get(), spawnedEntity);
-		}
+		InvokeOnCreateObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
 
@@ -359,7 +354,6 @@ namespace decs
 		Archetype* spawnArchetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
 		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntityCount() + spawnCount);
 
-		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
 			EntityData* entityData = CreateAliveEntityData(areActive);
@@ -370,11 +364,7 @@ namespace decs
 
 			CreateEntityFromSpawnData(*entityData, spawnState);
 			InvokeEntityCreationObservers(spawnedEntity);
-
-			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
-			{
-				typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx].Get(), spawnedEntity);
-			}
+			InvokeOnCreateObserversOnSpawn(spawnedEntity, spawnArchetype, componentsCount, spawnState);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -413,7 +403,6 @@ namespace decs
 		Archetype* spawnArchetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
 		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntityCount() + spawnCount);
 
-		auto& typeDataVector = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex]->m_TypeData;
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
 			EntityData* entityData = CreateAliveEntityData(areActive);
@@ -421,11 +410,7 @@ namespace decs
 
 			CreateEntityFromSpawnData(*entityData, spawnState);
 			InvokeEntityCreationObservers(spawnedEntity);
-
-			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++, compRefIdx++)
-			{
-				typeDataVector[idx].m_ComponentContext->InvokeOnCreateComponent(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx].Get(), spawnedEntity);
-			}
+			InvokeOnCreateObserversOnSpawn(spawnedEntity, spawnArchetype, componentsCount, spawnState);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -500,6 +485,18 @@ namespace decs
 			}
 			m_SpawnData.m_SpawnedEntityComponentRefs[i].Set(currentTypeData.m_TypeID, spawnedEntityData, i);
 		}
+	}
+
+	void Container::InvokeOnCreateObserversOnSpawn(Entity& entity, Archetype* archetype, uint64_t componentsCount, const SpawnDataState& spawnState)
+	{
+		auto& orderContextVector = archetype->m_ComponentContextsInOrder;
+		for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++)
+		{
+			auto& orderData = orderContextVector[idx];
+			uint32_t componentIdx = orderData.m_ComponentIndex;
+			orderData.m_ComponentContext->InvokeOnCreateComponent(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx + componentIdx].Get(), entity);
+		}
+
 	}
 
 	bool Container::RemoveUnstableComponent(Entity& entity, TypeID componentTypeID)
