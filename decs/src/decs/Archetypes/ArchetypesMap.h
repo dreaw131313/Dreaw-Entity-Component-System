@@ -286,20 +286,24 @@ namespace decs
 		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype)
 		{
 			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::ID();
-			auto edge = toArchetype.m_AddEdges.find(addedComponentTypeID);
+			auto edge = toArchetype.GetEdge(addedComponentTypeID);
 
-			if (edge == toArchetype.m_AddEdges.end()) return nullptr;
-			return edge->second;
+			if (edge.IsValid() && edge.m_EdgeType == EComponentEdgeType::Add)
+			{
+				return edge.m_Archetype;
+			}
+			return nullptr;
 		}
 
 		template<typename T>
 		inline Archetype* CreateArchetypeAfterAddComponent(Archetype& toArchetype, ComponentContextBase* componentContext, StableContainerBase* stableContainer)
 		{
 			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::ID();
-			auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
-			if (edge != nullptr)
+			//auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
+			auto edge = toArchetype.GetEdge(addedComponentTypeID);
+			if (edge.IsValid() && edge.m_EdgeType == EComponentEdgeType::Add)
 			{
-				return edge;
+				return edge.m_Archetype;
 			}
 
 			Archetype& newArchetype = m_Archetypes.EmplaceBack();

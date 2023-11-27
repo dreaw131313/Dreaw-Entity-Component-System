@@ -116,8 +116,8 @@ namespace decs
 
 					if (isArchetypeValid)
 					{
-						testArchetype.m_AddEdges[notFindedType] = &archetype;
-						archetype.m_RemoveEdges[notFindedType] = &testArchetype;
+						testArchetype.AddEdge(notFindedType, &archetype, EComponentEdgeType::Add);
+						archetype.AddEdge(notFindedType, &testArchetype, EComponentEdgeType::Remove);
 					}
 				}
 			}
@@ -163,8 +163,8 @@ namespace decs
 
 					if (isArchetypeValid)
 					{
-						testArchetype.m_RemoveEdges[lastIncorrectType] = &archetype;
-						archetype.m_AddEdges[lastIncorrectType] = &testArchetype;
+						testArchetype.AddEdge(lastIncorrectType, &archetype, EComponentEdgeType::Remove);
+						archetype.AddEdge(lastIncorrectType, &testArchetype, EComponentEdgeType::Add);
 					}
 				}
 			}
@@ -201,10 +201,11 @@ namespace decs
 		{
 			while (typeIndex < typesCount)
 			{
-				auto it = finalArchetype->m_AddEdges.find(archetypeToMatch->GetTypeID(typeIndex));
-				if (it != finalArchetype->m_AddEdges.end() && it->second != nullptr)
+				auto edge = finalArchetype->GetEdge(archetypeToMatch->GetTypeID(typeIndex));
+
+				if (edge.IsValid() && edge.m_EdgeType == EComponentEdgeType::Add)
 				{
-					finalArchetype = it->second;
+					finalArchetype = edge.m_Archetype;
 					typeIndex += 1;
 				}
 				else
@@ -319,10 +320,10 @@ namespace decs
 		TypeID addedComponentTypeID = archetypeToGetContainer.m_TypeData[addedComponentIndex].m_TypeID;
 		uint64_t componentIndexToAdd = archetypeToGetContainer.FindTypeIndex(addedComponentTypeID);
 
-		auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
-		if (edge != nullptr)
+		auto edge = toArchetype.GetEdge(addedComponentTypeID);
+		if (edge.IsValid() && edge.m_EdgeType == EComponentEdgeType::Add)
 		{
-			return edge;
+			return edge.m_Archetype;
 		}
 
 		Archetype& newArchetype = m_Archetypes.EmplaceBack();
@@ -376,10 +377,10 @@ namespace decs
 			return nullptr;
 		}
 
-		auto& edge = fromArchetype.m_RemoveEdges[removedComponentTypeID];
-		if (edge != nullptr)
+		auto edge = fromArchetype.GetEdge(removedComponentTypeID);
+		if (edge.IsValid() && edge.m_EdgeType == EComponentEdgeType::Remove)
 		{
-			return edge;
+			return edge.m_Archetype;
 		}
 
 		Archetype& newArchetype = m_Archetypes.EmplaceBack();

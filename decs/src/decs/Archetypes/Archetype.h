@@ -71,6 +71,36 @@ namespace decs
 
 	};
 
+	enum class EComponentEdgeType
+	{
+		Add,
+		Remove
+	};
+
+	struct ArchetypeEdge
+	{
+	public:
+		Archetype* m_Archetype = nullptr;
+		EComponentEdgeType m_EdgeType = EComponentEdgeType::Add;
+
+	public:
+		ArchetypeEdge()
+		{
+
+		}
+
+		ArchetypeEdge(Archetype* archetype, EComponentEdgeType edgeType) :
+			m_Archetype(archetype), m_EdgeType(edgeType)
+		{
+
+		}
+
+		inline bool IsValid() const
+		{
+			return m_Archetype != nullptr;
+		}
+	};
+
 	class Archetype final
 	{
 		friend class Container;
@@ -96,9 +126,7 @@ namespace decs
 
 	private:
 		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
-
-		ecsMap<TypeID, Archetype*> m_AddEdges;
-		ecsMap<TypeID, Archetype*> m_RemoveEdges;
+		ecsMap<TypeID, ArchetypeEdge> m_Edges;
 
 		std::vector<ArchetypeEntityData> m_EntitiesData;
 		std::vector<ArchetypeTypeData> m_TypeData;
@@ -317,7 +345,6 @@ namespace decs
 					continue;
 				}
 
-
 				ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
 				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
 					fromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex)
@@ -332,5 +359,47 @@ namespace decs
 
 		void ShrinkToFit();
 
+		// Edges utility functions:
+		template<typename ComponentType>
+		void AddEdge(Archetype* archetype, EComponentEdgeType edgeType)
+		{
+			auto& edge = m_Edges[Type<ComponentType>::ID()];
+			if (!edge.IsValid())
+			{
+				edge.m_Archetype = archetype;
+				edge.m_EdgeType = edgeType;
+			}
+		}
+
+		void AddEdge(TypeID componentTypeID, Archetype* archetype, EComponentEdgeType edgeType)
+		{
+			auto& edge = m_Edges[componentTypeID];
+			if (!edge.IsValid())
+			{
+				edge.m_Archetype = archetype;
+				edge.m_EdgeType = edgeType;
+			}
+		}
+
+		template<typename ComponentType>
+		ArchetypeEdge GetEdge() const
+		{
+			auto it = m_Edges.find(Type<ComponentType>::ID());
+			if (it != m_Edges.end())
+			{
+				return it->second;
+			}
+			return {};
+		}
+
+		ArchetypeEdge GetEdge(TypeID componentTypeID) const
+		{
+			auto it = m_Edges.find(componentTypeID);
+			if (it != m_Edges.end())
+			{
+				return it->second;
+			}
+			return {};
+		}
 	};
 }

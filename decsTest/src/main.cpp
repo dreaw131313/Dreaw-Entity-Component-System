@@ -311,10 +311,8 @@ public:
 	}
 };
 
-int main()
+void ObservatorOrderTest()
 {
-	//BaseTest();
-
 	decs::Container container = {};
 	auto prefab = container.CreateEntity();
 	prefab.AddComponent<float>();
@@ -350,5 +348,11 @@ int main()
 	PrintLine("");
 	container.InvokeEntitesOnDestroyListeners();
 
+}
+
+int main()
+{
+	BaseTest();
+	//ObservatorOrderTest();
 	return 0;
 }
