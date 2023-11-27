@@ -321,9 +321,16 @@ namespace decs
 		uint64_t componentIndexToAdd = archetypeToGetContainer.FindTypeIndex(addedComponentTypeID);
 
 		auto edge = toArchetype.GetEdge(addedComponentTypeID);
-		if (edge.IsValid() && edge.m_EdgeType == EComponentEdgeType::Add)
+		if (edge.IsValid())
 		{
-			return edge.m_Archetype;
+			if (edge.m_EdgeType == EComponentEdgeType::Remove)
+			{
+				return edge.m_Archetype;
+			}
+			else
+			{
+				return nullptr;
+			}
 		}
 
 		Archetype& newArchetype = m_Archetypes.EmplaceBack();
@@ -378,9 +385,16 @@ namespace decs
 		}
 
 		auto edge = fromArchetype.GetEdge(removedComponentTypeID);
-		if (edge.IsValid() && edge.m_EdgeType == EComponentEdgeType::Remove)
+		if (edge.IsValid())
 		{
-			return edge.m_Archetype;
+			if (edge.m_EdgeType == EComponentEdgeType::Remove)
+			{
+				return edge.m_Archetype;
+			}
+			else
+			{
+				return nullptr;
+			}
 		}
 
 		Archetype& newArchetype = m_Archetypes.EmplaceBack();
