@@ -91,6 +91,25 @@ protected:
 	}
 };
 
+
+class FloatObserver : public decs::CreateComponentObserver<float>
+{
+	// Inherited via CreateComponentObserver
+	virtual void OnCreateComponent(float& component, decs::Entity& entity) override
+	{
+		PrintLine("Float observer");
+	}
+};
+
+class IntObserver : public decs::CreateComponentObserver<int>
+{
+	// Inherited via CreateComponentObserver
+	virtual void OnCreateComponent(int& component, decs::Entity& entity) override
+	{
+		PrintLine("Int observer");
+	}
+};
+
 void BaseTest()
 {
 	PrintLine(std::format("Sizeof of Query<int>: {} bytes", sizeof(decs::Query<int>)));
@@ -283,8 +302,27 @@ public:
 
 int main()
 {
-	BaseTest();
+	//BaseTest();
 
+	decs::Container container = {};
+	auto prefab = container.CreateEntity();
+	prefab.AddComponent<float>();
+	prefab.AddComponent<int>();
+
+	FloatObserver floatObserver = {};
+	IntObserver intObserver = {};
+
+	decs::ObserversManager observerManager = {};
+
+	observerManager.SetComponentCreateObserver<float>(&floatObserver);
+	observerManager.SetComponentCreateObserver<int>(&intObserver);
+
+	container.SetObserversManager(&observerManager);
+
+	container.SetComponentObserverOrder<float>(0);
+	container.SetComponentObserverOrder<int>(-1);
+
+	container.Spawn(prefab);
 
 	return 0;
 }

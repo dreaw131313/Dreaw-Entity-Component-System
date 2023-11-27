@@ -104,7 +104,7 @@ namespace decs
 			for (uint64_t groupIdx = 0; groupIdx < archetypesGroupCount; groupIdx++)
 			{
 				auto& group = m_Archetypes[groupIdx];
-				uint64_t archetypeCount = m_Archetypes.size();
+				uint64_t archetypeCount = group.size();
 				for (uint64_t archIdx = 0; archIdx < archetypeCount; archIdx++)
 				{
 					auto archetype = group[archIdx];
