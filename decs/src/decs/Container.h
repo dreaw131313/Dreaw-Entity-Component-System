@@ -119,14 +119,10 @@ namespace decs
 #pragma region UTILITY
 	public:
 		/// <summary>
-		/// Some functions change internal state of container during invocation and if error will be thrown in this functions they can leave invalid internal state of Container object. This function brings back container to valid state.
+		/// Some functions change internal state of container during invocation and if error will be thrown in any of this functions they can leave invalid internal state of Container object. This function brings back container to valid state.
 		/// </summary>
 		void ValidateInternalState();
 
-		uint64_t GetCreatedEntitiesCount()
-		{
-			return m_EntityManager->GetCreatedEntitiesCount();
-		}
 #pragma endregion
 
 #pragma region FLAGS:
@@ -174,10 +170,10 @@ namespace decs
 
 #pragma region ENTITIES:
 	private:
-		TChunkedVector<EntityData*> m_EmptyEntities = { m_DefaultEmptyEntitiesChunkSize };
+		TChunkedVector<EntityData*> m_EmptyEntities = { m_DefaultEmptyEntitiesChunkSize }; //TODO: change to std::vector
 		EntityManager* m_EntityManager = nullptr;
-		bool m_HaveOwnEntityManager = false;
 		uint32_t m_EntiesCount = 0;
+		bool m_HaveOwnEntityManager = false;
 
 	public:
 		Entity CreateEntity(bool isActive = true);

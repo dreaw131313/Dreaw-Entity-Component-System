@@ -351,7 +351,7 @@ namespace decs
 		template<typename T>
 		inline Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype)
 		{
-			return GetArchetypeAfterRemoveComponent(fromArchetype, Type<T>::GetID());
+			return GetArchetypeAfterRemoveComponent(fromArchetype, Type<T>::ID());
 		}
 	};
 }

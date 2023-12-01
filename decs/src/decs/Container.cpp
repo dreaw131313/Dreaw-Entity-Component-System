@@ -71,8 +71,6 @@ namespace decs
 		m_SpawnData.Clear();
 
 		m_DelayedEntitiesToDestroy.clear();
-
-		m_EmptyEntities.Clear();
 	}
 
 	Entity Container::CreateEntity(bool isActive)
@@ -276,6 +274,8 @@ namespace decs
 	void Container::ReturnOwnedEntitiesToEntityManager()
 	{
 		DestroyOwnedEntities(false);
+
+		//TODO: add returning reserved entities
 	}
 
 	void Container::ReserveEntities(uint32_t entitiesToReserve)
@@ -606,7 +606,8 @@ namespace decs
 
 				for (uint64_t i = 0; i < archetypeComponentsCount; i++)
 				{
-					ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[i];
+					auto& orderData = archetype.m_ComponentContextsInOrder[i];
+					ArchetypeTypeData& archetypeTypeData = archetype.m_TypeData[orderData.m_ComponentIndex];
 					archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent(
 						archetypeTypeData.m_PackedContainer->GetComponentPtrAsVoid(entityDataIdx),
 						entity
