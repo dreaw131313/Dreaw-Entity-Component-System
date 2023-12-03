@@ -784,15 +784,35 @@ namespace decs
 
 		void InvokeEntitesOnDestroyListeners();
 
+		/// <summary>
+		/// Changes order of invoking function of component observers. Callback for component with lower order will be invoked first.
+		/// </summary>
+		/// <typeparam name="ComponentType"></typeparam>
+		/// <param name="order"></param>
 		template<typename ComponentType>
-		void SetComponentObserverOrder(int order)
+		void SetComponentOrder(int order)
 		{
-			if (m_ComponentContextManager->SetObserverOrder<ComponentType>(order))
+			if (m_ComponentContextManager->SetComponentOrder<ComponentType>(order))
 			{
 				// sort order of observers in all archetypes that contain ComponentType
 				m_ArchetypesMap.UpdateOrderInAllArchetypesWithComponentType<ComponentType>();
 			}
 		}
+
+		/// <summary>
+		/// Changes order of invoking function of component observers. Callback for component with lower order will be invoked first.
+		/// </summary>
+		/// <typeparam name="ComponentType"></typeparam>
+		/// <param name="order"></param>
+		void SetComponentOrder(TypeID typeID, int order)
+		{
+			if (m_ComponentContextManager->SetComponentOrder(typeID, order))
+			{
+				// sort order of observers in all archetypes that contain ComponentType
+				m_ArchetypesMap.UpdateOrderInAllArchetypesWithComponentType(typeID);
+			}
+		}
+
 	private:
 		inline void InvokeEntityCreationObservers(Entity& entity)
 		{

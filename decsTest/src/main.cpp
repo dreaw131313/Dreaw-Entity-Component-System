@@ -330,8 +330,8 @@ void ObservatorOrderTest()
 
 	container.SetObserversManager(&observerManager);
 
-	container.SetComponentObserverOrder<float>(0);
-	container.SetComponentObserverOrder<int>(-1);
+	container.SetComponentOrder<float>(0);
+	container.SetComponentOrder<int>(-1);
 
 	{
 		PrintLine("");
@@ -342,8 +342,8 @@ void ObservatorOrderTest()
 	PrintLine("");
 	container.InvokeEntitesOnCreateListeners();
 
-	container.SetComponentObserverOrder<float>(0);
-	container.SetComponentObserverOrder<int>(1);
+	container.SetComponentOrder<float>(0);
+	container.SetComponentOrder<int>(1);
 
 	PrintLine("");
 	container.InvokeEntitesOnDestroyListeners();

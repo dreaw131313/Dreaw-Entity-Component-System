@@ -92,26 +92,26 @@ namespace decs
 		}
 
 		template<typename ComponentType>
-		bool SetObserverOrder(int order)
+		bool SetComponentOrder(int order)
 		{
 			ComponentContext<ComponentType>* context = GetOrCreateComponentContext<ComponentType>();
 			if (context->GetObserverOrder() != order)
 			{
-				context->SetObserverOrder(order);
+				context->SetComponentOrder(order);
 				return true;
 			}
 			return false;
 		}
 
 		// Return true only when context form component with type id equal componentTypeID exist, else returns false
-		bool SetObserverOrder(TypeID componentTypeID, int order)
+		bool SetComponentOrder(TypeID componentTypeID, int order)
 		{
 			auto& record = m_Contexts[componentTypeID];
 			if (record.m_Context != nullptr)
 			{
 				if (record.m_Context->GetObserverOrder() != order)
 				{
-					record.m_Context->SetObserverOrder(order);
+					record.m_Context->SetComponentOrder(order);
 					return true;
 				}
 			}

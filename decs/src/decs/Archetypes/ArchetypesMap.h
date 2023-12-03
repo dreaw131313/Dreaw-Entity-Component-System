@@ -184,6 +184,18 @@ namespace decs
 			}
 		}
 
+		void UpdateOrderInAllArchetypesWithComponentType(TypeID typeID)
+		{
+			auto it = m_ArchetypesGroupedByOneType.find(typeID);
+			if (it != m_ArchetypesGroupedByOneType.end())
+			{
+				it->second->IterateOverAllArchetypes([](Archetype* arch)
+				{
+					arch->UpdateOrderOfComponentContexts();
+				});
+			}
+		}
+
 	private:
 		TChunkedVector<Archetype> m_Archetypes = { 100 };
 		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes;

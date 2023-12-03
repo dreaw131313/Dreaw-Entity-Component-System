@@ -31,7 +31,7 @@ namespace decs
 
 		inline int GetObserverOrder() const { return m_ObserverOrder; }
 
-		inline void SetObserverOrder(int order)
+		inline void SetComponentOrder(int order)
 		{
 			m_ObserverOrder = order;
 		}
