@@ -119,14 +119,10 @@ namespace decs
 #pragma region UTILITY
 	public:
 		/// <summary>
-		/// Some functions change internal state of container during invocation and if error will be thrown in this functions they can leave invalid internal state of Container object. This function brings back container to valid state.
+		/// Some functions change internal state of container during invocation and if error will be thrown in any of this functions they can leave invalid internal state of Container object. This function brings back container to valid state.
 		/// </summary>
 		void ValidateInternalState();
 
-		uint64_t GetCreatedEntitiesCount()
-		{
-			return m_EntityManager->GetCreatedEntitiesCount();
-		}
 #pragma endregion
 
 #pragma region FLAGS:
@@ -174,10 +170,10 @@ namespace decs
 
 #pragma region ENTITIES:
 	private:
-		TChunkedVector<EntityData*> m_EmptyEntities = { m_DefaultEmptyEntitiesChunkSize };
+		TChunkedVector<EntityData*> m_EmptyEntities = { m_DefaultEmptyEntitiesChunkSize }; //TODO: change to std::vector
 		EntityManager* m_EntityManager = nullptr;
-		bool m_HaveOwnEntityManager = false;
 		uint32_t m_EntiesCount = 0;
+		bool m_HaveOwnEntityManager = false;
 
 	public:
 		Entity CreateEntity(bool isActive = true);
@@ -344,6 +340,8 @@ namespace decs
 			EntityData& spawnedEntityData,
 			const SpawnDataState& spawnState
 		);
+
+		void InvokeOnCreateObserversOnSpawn(Entity& entity, Archetype* archetype, uint64_t componentsCount, const SpawnDataState& spawnState);
 
 #pragma endregion
 
@@ -786,6 +784,15 @@ namespace decs
 
 		void InvokeEntitesOnDestroyListeners();
 
+		template<typename ComponentType>
+		void SetComponentObserverOrder(int order)
+		{
+			if (m_ComponentContextManager->SetObserverOrder<ComponentType>(order))
+			{
+				// sort order of observers in all archetypes that contain ComponentType
+				m_ArchetypesMap.UpdateOrderInAllArchetypesWithComponentType<ComponentType>();
+			}
+		}
 	private:
 		inline void InvokeEntityCreationObservers(Entity& entity)
 		{

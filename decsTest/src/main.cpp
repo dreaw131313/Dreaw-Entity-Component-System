@@ -91,6 +91,36 @@ protected:
 	}
 };
 
+
+class FloatObserver : public decs::CreateComponentObserver<float>, public decs::DestroyComponentObserver<float>
+{
+	// Inherited via CreateComponentObserver
+	virtual void OnCreateComponent(float& component, decs::Entity& entity) override
+	{
+		PrintLine("Float creation");
+	}
+	// Inherited via DestroyComponentObserver
+	virtual void OnDestroyComponent(float& component, decs::Entity& entity) override
+	{
+		PrintLine("Float destruction");
+	}
+};
+
+class IntObserver : public decs::CreateComponentObserver<int>, public decs::DestroyComponentObserver<int>
+{
+	// Inherited via CreateComponentObserver
+	virtual void OnCreateComponent(int& component, decs::Entity& entity) override
+	{
+		PrintLine("Int creation");
+	}
+
+	// Inherited via DestroyComponentObserver
+	virtual void OnDestroyComponent(int& component, decs::Entity& entity) override
+	{
+		PrintLine("Int destruction");
+	}
+};
+
 void BaseTest()
 {
 	PrintLine(std::format("Sizeof of Query<int>: {} bytes", sizeof(decs::Query<int>)));
@@ -281,21 +311,49 @@ public:
 	}
 };
 
-int main()
+void ObservatorOrderTest()
 {
 	decs::Container container = {};
-	auto entity = container.CreateEntity();
+	auto prefab = container.CreateEntity();
+	prefab.AddComponent<float>();
+	prefab.AddComponent<int>();
 
-	entity.AddComponent<TestComp>();
+	FloatObserver floatObserver = {};
+	IntObserver intObserver = {};
 
-	auto entity2 = container.CreateEntity();
-	entity2.AddComponent<TestComp>();
+	decs::ObserversManager observerManager = {};
 
-	entity.AddComponent<int>();
-	entity.RemoveComponent<int>();
+	observerManager.SetComponentCreateObserver<float>(&floatObserver);
+	observerManager.SetComponentDestroyObserver<float>(&floatObserver);
+	observerManager.SetComponentCreateObserver<int>(&intObserver);
+	observerManager.SetComponentDestroyObserver<int>(&intObserver);
 
-	container.Spawn(entity);
+	container.SetObserversManager(&observerManager);
 
+	container.SetComponentObserverOrder<float>(0);
+	container.SetComponentObserverOrder<int>(-1);
+
+	{
+		PrintLine("");
+		auto spawnedEntity = container.Spawn(prefab);
+		container.DestroyEntity(spawnedEntity);
+	}
+
+	PrintLine("");
+	container.InvokeEntitesOnCreateListeners();
+
+	container.SetComponentObserverOrder<float>(0);
+	container.SetComponentObserverOrder<int>(1);
+
+	PrintLine("");
+	container.InvokeEntitesOnDestroyListeners();
+
+}
+
+int main()
+{
+	BaseTest();
+	//ObservatorOrderTest();
 
 	return 0;
 }

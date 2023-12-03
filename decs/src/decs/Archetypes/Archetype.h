@@ -6,6 +6,7 @@
 #include "decs/ComponentContainers/StableContainer.h"
 #include "decs/EntityData.h"
 
+
 namespace decs
 {
 	class Entity;
@@ -70,6 +71,36 @@ namespace decs
 
 	};
 
+	enum class EComponentEdgeType
+	{
+		Add,
+		Remove
+	};
+
+	struct ArchetypeEdge
+	{
+	public:
+		Archetype* m_Archetype = nullptr;
+		EComponentEdgeType m_EdgeType = EComponentEdgeType::Add;
+
+	public:
+		ArchetypeEdge()
+		{
+
+		}
+
+		ArchetypeEdge(Archetype* archetype, EComponentEdgeType edgeType) :
+			m_Archetype(archetype), m_EdgeType(edgeType)
+		{
+
+		}
+
+		inline bool IsValid() const
+		{
+			return m_Archetype != nullptr;
+		}
+	};
+
 	class Archetype final
 	{
 		friend class Container;
@@ -94,12 +125,20 @@ namespace decs
 		friend class ComponentRefAsVoid;
 
 	private:
+		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
+		ecsMap<TypeID, ArchetypeEdge> m_Edges;
+
 		std::vector<ArchetypeEntityData> m_EntitiesData;
 		std::vector<ArchetypeTypeData> m_TypeData;
-		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
 
-		ecsMap<TypeID, Archetype*> m_AddEdges;
-		ecsMap<TypeID, Archetype*> m_RemoveEdges;
+		struct OrderData
+		{
+		public:
+			ComponentContextBase* m_ComponentContext = nullptr;
+			uint32_t m_ComponentIndex = std::numeric_limits<uint32_t>::max();
+		};
+
+		std::vector<OrderData> m_ComponentContextsInOrder = {};
 
 		uint32_t m_EntitesCountToInitialize = 0;
 		uint32_t m_ComponentsCount = 0; // number of components for each entity
@@ -177,11 +216,69 @@ namespace decs
 		}
 
 	private:
+		// instead of using "m_TypeData.emplace_back"
+		inline ArchetypeTypeData& AddTypeData(
+			TypeID typeID,
+			PackedContainerBase* packedContainer,
+			ComponentContextBase* componentContext,
+			StableContainerBase* stableContainer
+		)
+		{
+			InsertComponentContextInCorrectPlace(componentContext, static_cast<uint32_t>(m_TypeData.size()));
+			return m_TypeData.emplace_back(typeID, packedContainer, componentContext, stableContainer);
+		}
+
+		void UpdateOrderOfComponentContexts();
+
 		inline void SetEntityActiveState(uint32_t index, bool isActive)
 		{
 			if (index < m_EntitiesCount)
 			{
 				m_EntitiesData[index].m_bIsActive = isActive;
+			}
+		}
+
+		void InsertComponentContextInCorrectPlace(ComponentContextBase* componentContext, uint32_t typeDataIndex)
+		{
+			// TODO: find better way to insert new elements,
+			/*uint64_t size = m_ComponentContextsInOrder.size();
+			for (uint32_t i = 0; i < size; i++)
+			{
+				if (m_ComponentContextsInOrder[i].m_ComponentContext->GetObserverOrder() >= componentContext->GetObserverOrder())
+				{
+					auto insertPos = m_ComponentContextsInOrder.begin();
+					std::advance(insertPos, i);
+					m_ComponentContextsInOrder.insert(insertPos, { componentContext, typeDataIndex });
+					return;
+				}
+			}
+			m_ComponentContextsInOrder.push_back({ componentContext, typeDataIndex });*/
+
+			//
+			{
+				int32_t contextCount = static_cast<int32_t>(m_ComponentContextsInOrder.size());
+				int32_t contextCountMinusOne = contextCount - 1;
+				for (int32_t i = contextCountMinusOne; i >= 0; i--)
+				{
+					auto& orderData = m_ComponentContextsInOrder[i];
+					if (orderData.m_ComponentContext->GetObserverOrder() <= componentContext->GetObserverOrder())
+					{
+						if (i < contextCountMinusOne)
+						{
+							// insert on i+1 place
+							auto insertPos = m_ComponentContextsInOrder.begin();
+							std::advance(insertPos, i + 1);
+							m_ComponentContextsInOrder.insert(insertPos, { componentContext, typeDataIndex });
+						}
+						else
+						{
+							// pushback
+							m_ComponentContextsInOrder.push_back({ componentContext, typeDataIndex });
+						}
+						return;
+					}
+				}
+				m_ComponentContextsInOrder.insert(m_ComponentContextsInOrder.begin(), { componentContext, typeDataIndex });
 			}
 		}
 
@@ -194,7 +291,7 @@ namespace decs
 			{
 				m_ComponentsCount += 1;
 				m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
-				m_TypeData.emplace_back(
+				AddTypeData(
 					id,
 					new PackedContainer<ComponentType>(),
 					componentContext,
@@ -275,7 +372,6 @@ namespace decs
 					continue;
 				}
 
-
 				ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
 				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
 					fromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex)
@@ -290,5 +386,47 @@ namespace decs
 
 		void ShrinkToFit();
 
+		// Edges utility functions:
+		template<typename ComponentType>
+		void AddEdge(Archetype* archetype, EComponentEdgeType edgeType)
+		{
+			auto& edge = m_Edges[Type<ComponentType>::ID()];
+			if (!edge.IsValid())
+			{
+				edge.m_Archetype = archetype;
+				edge.m_EdgeType = edgeType;
+			}
+		}
+
+		void AddEdge(TypeID componentTypeID, Archetype* archetype, EComponentEdgeType edgeType)
+		{
+			auto& edge = m_Edges[componentTypeID];
+			if (!edge.IsValid())
+			{
+				edge.m_Archetype = archetype;
+				edge.m_EdgeType = edgeType;
+			}
+		}
+
+		template<typename ComponentType>
+		ArchetypeEdge GetEdge() const
+		{
+			auto it = m_Edges.find(Type<ComponentType>::ID());
+			if (it != m_Edges.end())
+			{
+				return it->second;
+			}
+			return {};
+		}
+
+		ArchetypeEdge GetEdge(TypeID componentTypeID) const
+		{
+			auto it = m_Edges.find(componentTypeID);
+			if (it != m_Edges.end())
+			{
+				return it->second;
+			}
+			return {};
+		}
 	};
 }

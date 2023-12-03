@@ -4,6 +4,13 @@
 
 namespace decs
 {
+	struct ComponentContextRecord
+	{
+	public:
+		ComponentContextBase* m_Context = nullptr;
+		int m_BufferOrder = 0;
+	};
+
 	class ComponentContextsManager final
 	{
 		friend class Container;
@@ -33,9 +40,12 @@ namespace decs
 			if (observersManager == m_ObserversManager) return false;
 
 			m_ObserversManager = observersManager;
-			for (auto& [typeID, context] : m_Contexts)
+			for (auto& [typeID, contextRecord] : m_Contexts)
 			{
-				context->SetObserverManager(m_ObserversManager);
+				if (contextRecord.m_Context != nullptr)
+				{
+					contextRecord.m_Context->SetObserverManager(m_ObserversManager);
+				}
 			}
 
 			return true;
@@ -46,28 +56,28 @@ namespace decs
 		{
 			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::ID();
 
-			auto& componentContext = m_Contexts[id];
-			if (componentContext == nullptr)
+			auto& contextRecord = m_Contexts[id];
+			if (contextRecord.m_Context == nullptr)
 			{
-				ComponentContext<ComponentType>* context;
+				ComponentContext<ComponentType>* context = nullptr;
 				if (m_ObserversManager != nullptr)
 				{
-					context = new ComponentContext<ComponentType>(m_ObserversManager->GetComponentObserver<ComponentType>());
+					context = new ComponentContext<ComponentType>(m_ObserversManager->GetComponentObserver<ComponentType>(), contextRecord.m_BufferOrder);
 				}
 				else
 				{
-					context = new ComponentContext<ComponentType>(nullptr);
+					context = new ComponentContext<ComponentType>(nullptr, contextRecord.m_BufferOrder);
 				}
-				componentContext = context;
+				contextRecord.m_Context = context;
 				return context;
 			}
 			else
 			{
-				ComponentContext<ComponentType>* containedContext = dynamic_cast<ComponentContext<ComponentType>*>(componentContext);
+				ComponentContext<ComponentType>* containedContext = dynamic_cast<ComponentContext<ComponentType>*>(contextRecord.m_Context);
 
 				if (containedContext == nullptr)
 				{
-					std::string errorMessage = "decs::Container contains component context with id " + std::to_string(id) + " to type other than " + typeid(ComponentType).name();
+					std::string errorMessage = "decs::Container contains component context with id " + std::to_string(id) + " to type other than " + Type<ComponentType>::Name();
 					throw new std::runtime_error(errorMessage.c_str());
 				}
 
@@ -78,10 +88,43 @@ namespace decs
 		ComponentContextBase* GetComponentContext(const TypeID& typeID)
 		{
 			auto it = m_Contexts.find(typeID);
-			return it != m_Contexts.end() ? it->second : nullptr;
+			return it != m_Contexts.end() ? it->second.m_Context : nullptr;
 		}
+
+		template<typename ComponentType>
+		bool SetObserverOrder(int order)
+		{
+			ComponentContext<ComponentType>* context = GetOrCreateComponentContext<ComponentType>();
+			if (context->GetObserverOrder() != order)
+			{
+				context->SetObserverOrder(order);
+				return true;
+			}
+			return false;
+		}
+
+		// Return true only when context form component with type id equal componentTypeID exist, else returns false
+		bool SetObserverOrder(TypeID componentTypeID, int order)
+		{
+			auto& record = m_Contexts[componentTypeID];
+			if (record.m_Context != nullptr)
+			{
+				if (record.m_Context->GetObserverOrder() != order)
+				{
+					record.m_Context->SetObserverOrder(order);
+					return true;
+				}
+			}
+			else
+			{
+				record.m_BufferOrder = order;
+			}
+
+			return false;
+		}
+
 	private:
-		ecsMap<TypeID, ComponentContextBase*> m_Contexts;
+		ecsMap<TypeID, ComponentContextRecord> m_Contexts;
 		ObserversManager* m_ObserversManager = nullptr;
 
 	private:
@@ -89,7 +132,7 @@ namespace decs
 		{
 			for (auto& [key, value] : m_Contexts)
 			{
-				delete value;
+				delete value.m_Context;
 			}
 		}
 	};

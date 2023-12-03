@@ -10,8 +10,8 @@ namespace decs
 
 	class ComponentObserverBase
 	{
-	protected:
-		virtual void FunctionToHaveDynamicCast() = 0;
+	public:
+		virtual ~ComponentObserverBase() = default;
 	};
 
 	template<typename ComponentType>
@@ -20,12 +20,6 @@ namespace decs
 	public:
 		CreateComponentObserver<ComponentType>* m_CreateObserver = nullptr;
 		DestroyComponentObserver<ComponentType>* m_DestroyObserver = nullptr;
-
-	protected:
-		virtual void FunctionToHaveDynamicCast() override
-		{
-
-		}
 	};
 
 	class ObserversManager
