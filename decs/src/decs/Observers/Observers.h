@@ -8,24 +8,32 @@ namespace decs
 	class CreateEntityObserver
 	{
 	public:
+		virtual ~CreateEntityObserver() = default;
+
 		virtual void OnCreateEntity(Entity& entity) = 0;
 	};
 
 	class DestroyEntityObserver
 	{
 	public:
+		virtual ~DestroyEntityObserver() = default;
+
 		virtual void OnDestroyEntity(Entity& entity) = 0;
 	};
 
 	class ActivateEntityObserver
 	{
 	public:
+		virtual ~ActivateEntityObserver() = default;
+
 		virtual void OnSetEntityActive(Entity& entity) = 0;
 	};
 
 	class DeactivateEntityObserver
 	{
 	public:
+		virtual ~DeactivateEntityObserver() = default;
+
 		virtual void OnSetEntityInactive(Entity& entity) = 0;;
 	};
 
@@ -33,6 +41,8 @@ namespace decs
 	class CreateComponentObserver
 	{
 	public:
+		virtual ~CreateComponentObserver() = default;
+
 		virtual void OnCreateComponent(component_type<ComponentType>::Type& component, Entity& entity) = 0;
 	};
 
@@ -40,6 +50,8 @@ namespace decs
 	class DestroyComponentObserver
 	{
 	public:
+		virtual ~DestroyComponentObserver() = default;
+
 		virtual void OnDestroyComponent(component_type<ComponentType>::Type& component, Entity& entity) = 0;
 	};
 
