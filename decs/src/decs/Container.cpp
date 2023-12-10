@@ -503,46 +503,7 @@ namespace decs
 
 	}
 
-	bool Container::RemoveUnstableComponent(Entity& entity, TypeID componentTypeID)
-	{
-		if (entity.m_Container != this) return false;
-
-		EntityData& entityData = *entity.m_EntityData;
-		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
-
-		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
-		if (compIdxInArch == Limits::MaxComponentCount) return false;
-
-		ArchetypeTypeData& archetypeTypeData = entityData.m_Archetype->m_TypeData[compIdxInArch];
-		archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent(
-			archetypeTypeData.m_PackedContainer->GetComponentPtrAsVoid(entityData.m_IndexInArchetype),
-			entity
-		);
-
-		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
-			*entityData.m_Archetype,
-			componentTypeID
-		);
-
-		Archetype* oldArchetype = entityData.m_Archetype;
-		if (newEntityArchetype != nullptr)
-		{
-			newEntityArchetype->MoveEntityComponentsAfterRemoveComponent(
-				componentTypeID,
-				entityData.m_Archetype,
-				entityData.m_IndexInArchetype,
-				&entityData
-			);
-		}
-		else
-		{
-			entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
-			AddToEmptyEntities(entityData);
-		}
-		return true;
-	}
-
-	bool Container::RemoveStableComponent(Entity& entity, TypeID componentTypeID)
+	bool Container::RemoveComponent(Entity& entity, TypeID componentTypeID)
 	{
 		if (entity.m_Container != this) return false;
 

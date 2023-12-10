@@ -513,19 +513,10 @@ namespace decs
 				return false;
 			}
 
-			if constexpr (is_stable<ComponentType>::value)
-			{
-				return RemoveStableComponent(entity, Type<ComponentType>::ID());
-			}
-			else
-			{
-				return RemoveUnstableComponent(entity, Type<ComponentType>::ID());
-			}
+			 return RemoveComponent(entity, Type<ComponentType>::ID());
 		}
 
-		bool RemoveUnstableComponent(Entity& entity, TypeID componentTypeID);
-
-		bool RemoveStableComponent(Entity& entity, TypeID componentTypeID);
+		bool RemoveComponent(Entity& entity, TypeID componentTypeID);
 
 		// remove multiple components:
 		template<typename... ComponentsTypes>
