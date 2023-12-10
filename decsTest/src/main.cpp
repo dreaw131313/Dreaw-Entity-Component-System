@@ -356,14 +356,17 @@ void RemoveMultipleComponentTest()
 
 	auto entity = container.CreateEntity();
 	entity.AddComponent<int>();
-	entity.AddComponent<float>();
+	entity.AddComponent<decs::stable<float>>();
 	entity.AddComponent<double>();
 	entity.AddComponent<char>();
 
-	uint32_t removedComponentCount = entity.RemoveComponents<char, double, std::string>();
+	uint32_t removedComponentCount = entity.RemoveComponents<char, double, decs::stable<float>, int>();
 
 	std::cout << "Removed component count: " << removedComponentCount << std::endl;
-	std::cout << "Entity components count: " << entity.GetArchetype()->ComponentCount() << std::endl;
+	if (entity.GetArchetype() != nullptr)
+	{
+		std::cout << "Entity components count: " << entity.GetArchetype()->ComponentCount() << std::endl;
+	}
 }
 
 int main()

@@ -524,7 +524,6 @@ namespace decs
 			componentTypeID
 		);
 
-		uint64_t oldArchetypeIndex = entityData.m_IndexInArchetype;
 		Archetype* oldArchetype = entityData.m_Archetype;
 		if (newEntityArchetype != nullptr)
 		{
