@@ -527,6 +527,85 @@ namespace decs
 
 		bool RemoveStableComponent(Entity& entity, TypeID componentTypeID);
 
+		// remove multiple components:
+		template<typename... ComponentsTypes>
+		uint32_t RemoveMultipleComponnets(Entity& entity, EntityData& entityData)
+		{
+			if constexpr (sizeof...(ComponentsTypes) == 0)
+			{
+				return 0;
+			}
+
+			if (!m_CanRemoveComponents || entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation())
+			{
+				return 0;
+			}
+
+			Archetype* currentArchetype = entityData.m_Archetype;
+			if (currentArchetype == nullptr)
+			{
+				return 0;
+			}
+
+			// invoke on destroy listeners:
+			{
+				uint32_t indexInArchetype = entityData.m_IndexInArchetype;
+				TypeGroup<ComponentsTypes...> componentsTypes = {};
+
+				for (uint32_t i = 0; i < componentsTypes.Size(); i++)
+				{
+					auto type = componentsTypes[i];
+
+					if (currentArchetype != nullptr)
+					{
+						uint32_t typeIdx = currentArchetype->FindTypeIndex(type);
+						if (typeIdx != Limits::MaxComponentCount)
+						{
+							auto& typeData = currentArchetype->m_TypeData[typeIdx];
+							typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentPtrAsVoid(indexInArchetype), entity);
+						}
+
+						currentArchetype = entityData.m_Archetype;
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+
+			// archetype has changed during invoking of observers
+			if (currentArchetype == nullptr)
+			{
+				return 0;
+			}
+
+			Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponents<ComponentsTypes...>(currentArchetype);
+
+			if (newArchetype == currentArchetype)
+			{
+				// archetype not changed 
+				return  0;
+			}
+
+			// archetype changed:
+			if (newArchetype != nullptr)
+			{
+				uint32_t removedComponents = currentArchetype->ComponentCount() - newArchetype->ComponentCount();
+				newArchetype->MoveEntityComponentsAfterRemoveComponent(currentArchetype, entityData.m_IndexInArchetype, &entityData);
+
+				return removedComponents;
+			}
+			else
+			{
+				// here new archetype is nullptr
+				entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
+				AddToEmptyEntities(entityData);
+
+				return currentArchetype->ComponentCount();
+			}
+		}
+
 		template<typename ComponentType>
 		typename component_type<ComponentType>::Type* GetComponent(EntityID e) const
 		{

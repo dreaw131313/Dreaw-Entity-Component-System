@@ -62,7 +62,7 @@ namespace decs
 				ComponentContext<ComponentType>* context = nullptr;
 				if (m_ObserversManager != nullptr)
 				{
-					context = new ComponentContext<ComponentType>(m_ObserversManager->GetComponentObserver<ComponentType>(), contextRecord.m_BufferOrder);
+					context = new ComponentContext<ComponentType>(m_ObserversManager->GetComponentObserverGroup<ComponentType>(), contextRecord.m_BufferOrder);
 				}
 				else
 				{

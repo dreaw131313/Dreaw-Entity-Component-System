@@ -348,6 +348,12 @@ namespace decs
 			EntityData* entityData
 		);
 
+		void MoveEntityComponentsAfterRemoveComponent(
+			Archetype* fromArchetype,
+			uint64_t fromIndex,
+			EntityData* entityData
+		);
+
 		/// <summary>
 		/// Moves entity components from "fromArchetype" to this archetype.
 		/// </summary>

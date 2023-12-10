@@ -350,10 +350,28 @@ void ObservatorOrderTest()
 
 }
 
+void RemoveMultipleComponentTest()
+{
+	decs::Container container = {};
+
+	auto entity = container.CreateEntity();
+	entity.AddComponent<int>();
+	entity.AddComponent<float>();
+	entity.AddComponent<double>();
+	entity.AddComponent<char>();
+
+	uint32_t removedComponentCount = entity.RemoveComponents<char, double, std::string>();
+
+	std::cout << "Removed component count: " << removedComponentCount << std::endl;
+	std::cout << "Entity components count: " << entity.GetArchetype()->ComponentCount() << std::endl;
+}
+
 int main()
 {
-	BaseTest();
+	//BaseTest();
 	//ObservatorOrderTest();
+
+	RemoveMultipleComponentTest();
 
 	return 0;
 }

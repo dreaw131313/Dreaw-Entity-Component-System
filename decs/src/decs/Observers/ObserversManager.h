@@ -8,14 +8,14 @@ namespace decs
 {
 	class Entity;
 
-	class ComponentObserverBase
+	class ComponentObserversGroupBase
 	{
 	public:
-		virtual ~ComponentObserverBase() = default;
+		virtual ~ComponentObserversGroupBase() = default;
 	};
 
 	template<typename ComponentType>
-	class ComponentObserver final : public ComponentObserverBase
+	class ComponentObserversGroup final : public ComponentObserversGroupBase
 	{
 	public:
 		CreateComponentObserver<ComponentType>* m_CreateObserver = nullptr;
@@ -112,14 +112,14 @@ namespace decs
 #pragma region COMPONENTS OBSERVERS
 	public:
 		template<typename ComponentType>
-		ComponentObserver<ComponentType>* GetComponentObserver()
+		ComponentObserversGroup<ComponentType>* GetComponentObserverGroup()
 		{
-			ComponentObserverBase*& observer = m_ComponentyContainers[Type<ComponentType>::ID()];
+			ComponentObserversGroupBase*& observer = m_ComponentyContainers[Type<ComponentType>::ID()];
 			if (observer == nullptr)
 			{
-				observer = new ComponentObserver<ComponentType>();
+				observer = new ComponentObserversGroup<ComponentType>();
 			}
-			ComponentObserver<ComponentType>* finalObserver = dynamic_cast<ComponentObserver<ComponentType>*>(observer);
+			ComponentObserversGroup<ComponentType>* finalObserver = dynamic_cast<ComponentObserversGroup<ComponentType>*>(observer);
 			if (finalObserver == nullptr)
 			{
 				throw std::runtime_error("Failed to create componenty observer!");
@@ -130,19 +130,19 @@ namespace decs
 		template<typename ComponentType>
 		void SetComponentCreateObserver(CreateComponentObserver<ComponentType>* observer)
 		{
-			auto componentObserver = GetComponentObserver<ComponentType>();
+			auto componentObserver = GetComponentObserverGroup<ComponentType>();
 			componentObserver->m_CreateObserver = observer;
 		}
 
 		template<typename ComponentType>
 		void SetComponentDestroyObserver(DestroyComponentObserver<ComponentType>* observer)
 		{
-			auto componentObserver = GetComponentObserver<ComponentType>();
+			auto componentObserver = GetComponentObserverGroup<ComponentType>();
 			componentObserver->m_DestroyObserver = observer;
 		}
 
 	private:
-		ecsMap<TypeID, ComponentObserverBase*> m_ComponentyContainers;
+		ecsMap<TypeID, ComponentObserversGroupBase*> m_ComponentyContainers;
 #pragma endregion
 	};
 }

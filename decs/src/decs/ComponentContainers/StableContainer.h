@@ -176,7 +176,7 @@ namespace decs
 		}
 
 		inline virtual TypeID GetTypeID()const noexcept = 0;
-		virtual StableContainerBase* CreateOwnEmptyCopy(uint32_t withChunkSize) = 0;
+		virtual StableContainerBase* Clone(uint32_t withChunkSize) = 0;
 
 		virtual bool Remove(uint32_t chunkIndex, uint32_t elementIndex) = 0;
 		virtual StableComponentRef EmplaceFromVoid(void* ptr) = 0;
@@ -216,7 +216,7 @@ namespace decs
 
 		virtual TypeID GetTypeID()const noexcept override { return Type<stable<DataType>>::ID(); }
 
-		virtual StableContainerBase* CreateOwnEmptyCopy(uint32_t withChunkSize) override
+		virtual StableContainerBase* Clone(uint32_t withChunkSize) override
 		{
 			return new StableContainer<DataType>(withChunkSize);
 		}
@@ -474,7 +474,7 @@ namespace decs
 
 			if (containerPair.second == nullptr)
 			{
-				containerPair.second = other->CreateOwnEmptyCopy(containerPair.first);
+				containerPair.second = other->Clone(containerPair.first);
 			}
 
 			return containerPair.second;

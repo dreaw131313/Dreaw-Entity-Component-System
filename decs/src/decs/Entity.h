@@ -168,6 +168,16 @@ namespace decs
 			return IsValid() && m_Container->RemoveComponent<decs::stable<T>>(*this);
 		}
 
+		template<typename... Ts>
+		inline uint32_t RemoveComponents()
+		{
+			if (IsValid())
+			{
+				return m_Container->RemoveMultipleComponnets<Ts...>(*this, *m_EntityData);
+			}
+			return 0;
+		}
+
 		inline EntityVersion GetVersion() const
 		{
 			return m_Version;

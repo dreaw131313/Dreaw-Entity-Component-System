@@ -365,5 +365,29 @@ namespace decs
 		{
 			return GetArchetypeAfterRemoveComponent(fromArchetype, Type<T>::ID());
 		}
+
+		template<typename T = void, typename... ComponentsTypes>
+		Archetype* GetArchetypeAfterRemoveComponents(Archetype* baseArchetype)
+		{
+			if (baseArchetype == nullptr)
+			{
+				return nullptr;
+			}
+
+			Archetype* arch = GetArchetypeAfterRemoveComponent<T>(*baseArchetype);
+
+			if constexpr (sizeof...(ComponentsTypes) == 0)
+			{
+				return arch;
+			}
+
+			return GetArchetypeAfterRemoveComponents<ComponentsTypes...>(arch);
+		}
+
+		template<>
+		Archetype* GetArchetypeAfterRemoveComponents<void>(Archetype* baseArchetype)
+		{
+			return baseArchetype;
+		}
 	};
 }

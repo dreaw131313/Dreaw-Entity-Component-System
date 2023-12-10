@@ -278,7 +278,7 @@ namespace decs
 				auto& contextRecord = componentContextsManager->m_Contexts[fromArchetypeTypeData.m_TypeID];
 				if (contextRecord.m_Context == nullptr)
 				{
-					contextRecord.m_Context = fromArchetypeTypeData.m_ComponentContext->CreateOwnEmptyCopy(observerManager);
+					contextRecord.m_Context = fromArchetypeTypeData.m_ComponentContext->Clone(observerManager);
 				}
 
 				if (fromArchetypeTypeData.m_StableContainer != nullptr)
@@ -384,6 +384,7 @@ namespace decs
 			return nullptr;
 		}
 
+		// first we check if we have edge it will fail only once
 		auto edge = fromArchetype.GetEdge(removedComponentTypeID);
 		if (edge.IsValid())
 		{
@@ -395,6 +396,14 @@ namespace decs
 			{
 				return nullptr;
 			}
+		}
+
+		// next check if we have this component in archetype if no we must not create new archetype
+		if (!fromArchetype.ContainType(removedComponentTypeID))
+		{
+			// TODO: check if this is ok:
+			// this archetype do not have component with id removedComponentTypeID so we return same archetype.
+			return &fromArchetype;
 		}
 
 		Archetype& newArchetype = m_Archetypes.EmplaceBack();

@@ -18,7 +18,7 @@ namespace decs
 
 		}
 
-		inline virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept = 0;
+		inline virtual PackedContainerBase* Clone() const noexcept = 0;
 
 		inline virtual void PopBack() = 0;
 		inline virtual void Clear() = 0;
@@ -55,7 +55,7 @@ namespace decs
 
 		}
 
-		virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept override
+		virtual PackedContainerBase* Clone() const noexcept override
 		{
 			return new PackedContainer<ComponentType>();
 		}
@@ -132,7 +132,7 @@ namespace decs
 
 		}
 
-		virtual PackedContainerBase* CreateOwnEmptyCopy() const noexcept override
+		virtual PackedContainerBase* Clone() const noexcept override
 		{
 			return new PackedContainer<decs::stable<ComponentType>>();
 		}
