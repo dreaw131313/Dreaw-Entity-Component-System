@@ -293,24 +293,7 @@ namespace decs
 
 			archetype->InitEmptyFromOther(fromArchetype, componentContextsManager, stableContainersManager);
 			AddArchetypeToCorrectContainers(*archetype, true);
-
-			/* {
-				Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
-				for (uint64_t i = 1; i < archetype->ComponentCount() - 1; i++)
-				{
-					archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
-				}
-				MakeArchetypeEdges(*archetype);
-			}*/
 		}
-		/*else if (!pair.second)
-		{
-			Archetype* archetypeBuffor = CreateSingleComponentArchetype(*archetype);
-			for (uint64_t i = 1; i < archetype->ComponentCount() - 1; i++)
-			{
-				archetypeBuffor = CreateArchetypeAfterAddComponent(*archetypeBuffor, *archetype, i);
-			}
-		}*/
 
 		return archetype;
 	}
@@ -323,7 +306,7 @@ namespace decs
 		auto edge = toArchetype.GetEdge(addedComponentTypeID);
 		if (edge.IsValid())
 		{
-			if (edge.m_EdgeType == EComponentEdgeType::Remove)
+			if (edge.m_EdgeType == EComponentEdgeType::Add)
 			{
 				return edge.m_Archetype;
 			}
@@ -331,6 +314,11 @@ namespace decs
 			{
 				return nullptr;
 			}
+		}
+
+		if (toArchetype.ContainType(addedComponentTypeID))
+		{
+			return &toArchetype;
 		}
 
 		Archetype& newArchetype = m_Archetypes.EmplaceBack();

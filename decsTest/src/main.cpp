@@ -376,10 +376,10 @@ void RemoveMultipleComponentTest()
 
 int main()
 {
-	//BaseTest();
+	BaseTest();
 	//ObservatorOrderTest();
 
-	RemoveMultipleComponentTest();
+	//RemoveMultipleComponentTest();
 
 	return 0;
 }

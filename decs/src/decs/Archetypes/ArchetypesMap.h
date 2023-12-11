@@ -325,6 +325,11 @@ namespace decs
 				}
 			}
 
+			if (toArchetype.ContainType(addedComponentTypeID))
+			{
+				return &toArchetype;
+			}
+
 			Archetype& newArchetype = m_Archetypes.EmplaceBack();
 			bool isNewComponentTypeAdded = false;
 
