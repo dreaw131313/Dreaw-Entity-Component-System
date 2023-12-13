@@ -120,9 +120,8 @@ namespace decs
 	const std::type_info* Type<T>::m_TypeInfo = &typeid(T);
 #endif
 
-
 	template<typename T = void, typename... Args>
-	void findIds(std::vector<TypeID>& ids)
+	void findIdsInVector(std::vector<TypeID>& ids)
 	{
 		ids.push_back(Type<T>::ID());
 		if (sizeof ... (Args) == 0)
@@ -130,6 +129,18 @@ namespace decs
 		else
 			findIds<Args...>(ids);
 	}
+
+	template<typename... Args>
+	void findIds(std::vector<TypeID>& ids)
+	{
+		constexpr uint64_t typeCount = sizeof...(Args);
+		if (ids.capacity() != typeCount)
+		{
+			ids.reserve(typeCount);
+		}
+		findIdsInVector<Args...>(ids);
+	}
+
 
 	template<typename T = void, typename... Args>
 	void findIds(TypeID ids[], uint64_t index)

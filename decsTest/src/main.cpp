@@ -334,18 +334,18 @@ void ObservatorOrderTest()
 	container.SetComponentOrder<int>(-1);
 
 	{
-		PrintLine("");
+		PrintLine();
 		auto spawnedEntity = container.Spawn(prefab);
 		container.DestroyEntity(spawnedEntity);
 	}
 
-	PrintLine("");
+	PrintLine();
 	container.InvokeEntitesOnCreateListeners();
 
 	container.SetComponentOrder<float>(0);
 	container.SetComponentOrder<int>(1);
 
-	PrintLine("");
+	PrintLine();
 	container.InvokeEntitesOnDestroyListeners();
 
 }

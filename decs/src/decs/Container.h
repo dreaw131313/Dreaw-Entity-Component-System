@@ -540,7 +540,6 @@ namespace decs
 
 			// invoke on destroy listeners:
 			{
-				uint32_t indexInArchetype = entityData.m_IndexInArchetype;
 				TypeGroup<ComponentsTypes...> componentsTypes = {};
 
 				for (uint32_t i = 0; i < componentsTypes.Size(); i++)
@@ -553,7 +552,7 @@ namespace decs
 						if (typeIdx != Limits::MaxComponentCount)
 						{
 							auto& typeData = currentArchetype->m_TypeData[typeIdx];
-							typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentPtrAsVoid(indexInArchetype), entity);
+							typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentPtrAsVoid(entityData.m_IndexInArchetype), entity);
 						}
 
 						currentArchetype = entityData.m_Archetype;
