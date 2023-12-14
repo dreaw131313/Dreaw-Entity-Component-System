@@ -62,7 +62,7 @@ namespace decs
 
 		inline bool IsValidToPerformComponentOperation() const
 		{
-			return m_State == decs::EntityState::Alive && !m_bIsUsedAsPrefab;
+			return m_State == EntityState::Alive && !m_bIsUsedAsPrefab;
 		}
 
 		inline bool CanBeDestructed() const

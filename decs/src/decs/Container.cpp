@@ -295,7 +295,7 @@ namespace decs
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
 		Container* prefabContainer = prefab.GetContainer();
-		EntityData& prefabEntityData = prefabContainer->m_EntityManager->GetEntityData(prefab.GetID());
+		EntityData& prefabEntityData = *prefab.m_EntityData;
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
 		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
@@ -498,9 +498,14 @@ namespace decs
 		{
 			auto& orderData = orderContextVector[idx];
 			uint32_t componentIdx = orderData.m_ComponentIndex;
-			orderData.m_ComponentContext->InvokeOnCreateComponent(m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx + componentIdx].Get(), entity);
-		}
 
+			auto& componentRef = m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx + componentIdx];
+			void* componentVoidPtr = componentRef.Get();
+			if (componentVoidPtr != nullptr)
+			{
+				orderData.m_ComponentContext->InvokeOnCreateComponent(componentVoidPtr, entity);
+			}
+		}
 	}
 
 	bool Container::RemoveComponent(Entity& entity, TypeID componentTypeID)
@@ -688,9 +693,10 @@ namespace decs
 			{
 				const auto& orderData = orderDatas[i];
 				auto& compRef = componentRefsToInvokeObserverCallbacks[orderData.m_ComponentIndex];
-				if (compRef)
+				void* componentVoidPtr = compRef.Get();
+				if (componentVoidPtr != nullptr)
 				{
-					orderData.m_ComponentContext->InvokeOnCreateComponent(compRef.Get(), entity);
+					orderData.m_ComponentContext->InvokeOnCreateComponent(componentVoidPtr, entity);
 				}
 			}
 		}
