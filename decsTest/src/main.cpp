@@ -360,26 +360,18 @@ void RemoveMultipleComponentTest()
 	entity.AddComponent<double>();
 	entity.AddComponent<char>();
 
-	entity.RemoveComponent<int>();
+	entity.RemoveComponents<int, decs::stable<float>>();
 	entity.RemoveComponent<decs::stable<float>>();
 
-	/*
-	uint32_t removedComponentCount = entity.RemoveComponents<char, double, decs::stable<float>, int>();
+	entity.SetActive(false);
 
-	std::cout << "Removed component count: " << removedComponentCount << std::endl;
-	if (entity.GetArchetype() != nullptr)
-	{
-		std::cout << "Entity components count: " << entity.GetArchetype()->ComponentCount() << std::endl;
-	}
-	*/
 }
 
 int main()
 {
 	BaseTest();
-	//ObservatorOrderTest();
-
-	//RemoveMultipleComponentTest();
+	ObservatorOrderTest();
+	RemoveMultipleComponentTest();
 
 	return 0;
 }

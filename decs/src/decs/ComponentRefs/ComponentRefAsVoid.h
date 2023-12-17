@@ -36,12 +36,12 @@ namespace decs
 		operator bool() { return Get() != nullptr; }
 
 	private:
-		TypeID m_TypeID = std::numeric_limits<TypeID>::min();
 		EntityData* m_EntityData = nullptr;
 		Archetype* m_Archetype = nullptr;
+		PackedContainerBase* m_PackedContainer = nullptr;
+		TypeID m_TypeID = std::numeric_limits<TypeID>::min();
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 		uint32_t m_ComponentIndex = Limits::MaxComponentCount;
-		PackedContainerBase* m_PackedContainer = nullptr;
 
 	private:
 		void Set(TypeID typeID, EntityData& entityData, uint32_t componentIndex);

@@ -55,4 +55,22 @@ namespace decs
 		virtual void OnDestroyComponent(component_type<ComponentType>::Type& component, Entity& entity) = 0;
 	};
 
+	template<typename ComponentType>
+	class ActivateEntityComponentObserver
+	{
+	public:
+		virtual ~ActivateEntityComponentObserver() = default;
+
+		virtual void OnSetEntityActive(component_type<ComponentType>::Type& component, Entity& entity) = 0;
+	};
+
+	template<typename ComponentType>
+	class EntityDisableComponentObserver
+	{
+	public:
+		virtual ~EntityDisableComponentObserver() = default;
+
+		virtual void OnDisableEntity(component_type<ComponentType>::Type& component, Entity& entity) = 0;
+	};
+
 }

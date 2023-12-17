@@ -38,7 +38,8 @@ namespace decs
 
 		virtual void InvokeOnEnableEntity(void* component, Entity& entity) = 0;
 
-		virtual void InvokeOnOnDisable(void* component, Entity& entity) = 0;
+		virtual void InvokeOnOnDisableEntity(void* component, Entity& entity) = 0;
+
 
 	private:
 		int m_ObserverOrder = 0;
@@ -110,7 +111,7 @@ namespace decs
 
 		}
 
-		virtual void InvokeOnOnDisable(void* component, Entity& entity) override
+		virtual void InvokeOnOnDisableEntity(void* component, Entity& entity) override
 		{
 
 		}
@@ -184,7 +185,7 @@ namespace decs
 
 		}
 
-		virtual void InvokeOnOnDisable(void* component, Entity& entity) override
+		virtual void InvokeOnOnDisableEntity(void* component, Entity& entity) override
 		{
 
 		}

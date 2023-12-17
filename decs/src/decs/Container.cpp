@@ -663,6 +663,92 @@ namespace decs
 		}
 	}
 
+	void Container::InvokeEntityActivationObservers(Entity& entity)
+	{
+		if (m_ComponentContextManager->m_ObserversManager != nullptr)
+		{
+			m_ComponentContextManager->m_ObserversManager->InvokeEntityActivationObservers(entity);
+		}
+
+		// TODO: add components activation listeners invoking
+
+		EntityData& entityData = *entity.m_EntityData;
+		if (entityData.m_Archetype != nullptr)
+		{
+			uint64_t startRefsIdx = m_ActivationChangeComponentRefs.size();
+			uint64_t refCount = entityData.m_Archetype->ComponentCount();
+
+			m_ActivationChangeComponentRefs.reserve(startRefsIdx + refCount);
+
+			// fetch components refs
+			auto& componentsTypeData = entityData.m_Archetype->m_TypeData;
+			for (uint64_t idx = 0; idx < refCount; idx++)
+			{
+				auto& typeData = componentsTypeData[idx];
+				m_ActivationChangeComponentRefs.emplace_back(typeData.m_TypeID, entityData, static_cast<uint32_t>(idx));
+			}
+
+			// invoke components activation listeners:
+			auto& componentOrderData = entityData.m_Archetype->m_ComponentContextsInOrder;
+			for (uint64_t idx = 0; idx < refCount; idx++)
+			{
+				auto& orderData = componentOrderData[idx];
+				auto& compRef = m_ActivationChangeComponentRefs[startRefsIdx + orderData.m_ComponentIndex];
+				void* compPtr = compRef.Get();
+				if (compPtr != nullptr)
+				{
+					// invoke activation listener:
+					orderData.m_ComponentContext->InvokeOnEnableEntity(compPtr, entity);
+				}
+			}
+
+			// erase used component refs:
+			m_ActivationChangeComponentRefs.erase(m_ActivationChangeComponentRefs.begin() + startRefsIdx, m_ActivationChangeComponentRefs.end());
+		}
+	}
+
+	void Container::InvokeEntityDeactivationObservers(Entity& entity)
+	{
+		if (m_ComponentContextManager->m_ObserversManager != nullptr)
+		{
+			m_ComponentContextManager->m_ObserversManager->InvokeEntityDeactivationObservers(entity);
+		}
+
+		// TODO: add components deactivation listeners invoking
+		EntityData& entityData = *entity.m_EntityData;
+		if (entityData.m_Archetype != nullptr)
+		{
+			uint64_t startRefsIdx = m_ActivationChangeComponentRefs.size();
+			uint64_t refCount = entityData.m_Archetype->ComponentCount();
+
+			m_ActivationChangeComponentRefs.reserve(startRefsIdx + refCount);
+
+			// fetch components refs
+			auto& componentsTypeData = entityData.m_Archetype->m_TypeData;
+			for (uint64_t idx = 0; idx < refCount; idx++)
+			{
+				auto& typeData = componentsTypeData[idx];
+				m_ActivationChangeComponentRefs.emplace_back(typeData.m_TypeID, entityData, static_cast<uint32_t>(idx));
+			}
+
+			// invoke components activation listeners:
+			auto& componentOrderData = entityData.m_Archetype->m_ComponentContextsInOrder;
+			for (uint64_t idx = 0; idx < refCount; idx++)
+			{
+				auto& orderData = componentOrderData[idx];
+				auto& compRef = m_ActivationChangeComponentRefs[startRefsIdx + orderData.m_ComponentIndex];
+				void* compPtr = compRef.Get();
+				if (compPtr != nullptr)
+				{
+					orderData.m_ComponentContext->InvokeOnOnDisableEntity(compPtr, entity);
+				}
+			}
+
+			// erase used component refs:
+			m_ActivationChangeComponentRefs.erase(m_ActivationChangeComponentRefs.begin() + startRefsIdx, m_ActivationChangeComponentRefs.end());
+		}
+	}
+
 	void Container::InvokeArchetypeOnCreateListeners(Archetype& archetype, std::vector<ComponentRefAsVoid>& componentRefsToInvokeObserverCallbacks)
 	{
 		auto& entitesData = archetype.m_EntitiesData;

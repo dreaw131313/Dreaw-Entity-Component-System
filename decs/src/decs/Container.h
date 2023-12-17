@@ -513,7 +513,7 @@ namespace decs
 				return false;
 			}
 
-			 return RemoveComponent(entity, Type<ComponentType>::ID());
+			return RemoveComponent(entity, Type<ComponentType>::ID());
 		}
 
 		bool RemoveComponent(Entity& entity, TypeID componentTypeID);
@@ -883,6 +883,9 @@ namespace decs
 		}
 
 	private:
+		std::vector<ComponentRefAsVoid> m_ActivationChangeComponentRefs = {};
+
+	private:
 		inline void InvokeEntityCreationObservers(Entity& entity)
 		{
 			if (m_ComponentContextManager->m_ObserversManager != nullptr)
@@ -899,21 +902,9 @@ namespace decs
 			}
 		}
 
-		inline void InvokeEntityActivationObservers(Entity& entity)
-		{
-			if (m_ComponentContextManager->m_ObserversManager != nullptr)
-			{
-				m_ComponentContextManager->m_ObserversManager->InvokeEntityActivationObservers(entity);
-			}
-		}
+		void InvokeEntityActivationObservers(Entity& entity);
 
-		inline void InvokeEntityDeactivationObservers(Entity& entity)
-		{
-			if (m_ComponentContextManager->m_ObserversManager != nullptr)
-			{
-				m_ComponentContextManager->m_ObserversManager->InvokeEntityDeactivationObservers(entity);
-			}
-		}
+		void InvokeEntityDeactivationObservers(Entity& entity);
 
 		void InvokeArchetypeOnCreateListeners(Archetype& archetype, std::vector<ComponentRefAsVoid>& componentRefsToInvokeObserverCallbacks);
 
