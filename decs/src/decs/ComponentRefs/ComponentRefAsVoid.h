@@ -15,20 +15,23 @@ namespace decs
 		ComponentRefAsVoid() {}
 
 		ComponentRefAsVoid(TypeID typeID, EntityData& entityData);
-		
+
 		ComponentRefAsVoid(TypeID typeID, EntityData& entityData, uint32_t componentIndex);
-		
+
 		ComponentRefAsVoid(TypeID typeID, Entity& entity);
 
 		inline void* Get()
 		{
-			if (!IsValid())
+			if (m_EntityData != nullptr && IsEntityVersionValid())
 			{
-				FetchWhenIsInvalid();
-			}
-			if (m_PackedContainer != nullptr)
-			{
-				return m_PackedContainer->GetComponentPtrAsVoid(m_IndexInArchetype);
+				if (!IsArchetypeValid())
+				{
+					FetchWhenArchetypeIsInvalid();
+				}
+				if (m_PackedContainer != nullptr)
+				{
+					return m_PackedContainer->GetComponentPtrAsVoid(m_EntityData->m_IndexInArchetype);
+				}
 			}
 			return nullptr;
 		}
@@ -40,72 +43,48 @@ namespace decs
 		Archetype* m_Archetype = nullptr;
 		PackedContainerBase* m_PackedContainer = nullptr;
 		TypeID m_TypeID = std::numeric_limits<TypeID>::min();
-		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
-		uint32_t m_ComponentIndex = Limits::MaxComponentCount;
+		EntityVersion m_EntityVersion = Limits::MaxVersion;
 
 	private:
 		void Set(TypeID typeID, EntityData& entityData, uint32_t componentIndex);
 
-		inline bool IsValid() const
+		inline bool IsArchetypeValid() const
 		{
-			return m_EntityData->m_Archetype == m_Archetype && m_EntityData->m_IndexInArchetype == m_IndexInArchetype;
+			return m_EntityData->m_Archetype == m_Archetype;
 		}
 
-		inline void SetComponentFromValidData()
+		inline bool IsEntityVersionValid() const
 		{
-			m_PackedContainer = m_Archetype->m_TypeData[m_ComponentIndex].m_PackedContainer;
+			return m_EntityData->m_Version == m_EntityVersion;
 		}
 
-		inline void FetchWhenIsInvalid()
-		{
-			if (m_Archetype != m_EntityData->m_Archetype)
-			{
-				m_Archetype = m_EntityData->m_Archetype;
-				m_ComponentIndex = m_Archetype->FindTypeIndex(m_TypeID);
-			}
-			m_IndexInArchetype = m_EntityData->m_IndexInArchetype;
-
-			if (m_Archetype == nullptr || m_ComponentIndex == Limits::MaxComponentCount)
-			{
-				m_PackedContainer = nullptr;
-			}
-			else
-			{
-				SetComponentFromValidData();
-			}
-		}
-
-		inline void FetchWithoutGettingComponentIndex()
+		inline void FetchWhenArchetypeIsInvalid()
 		{
 			m_Archetype = m_EntityData->m_Archetype;
-			m_IndexInArchetype = m_EntityData->m_IndexInArchetype;
-
-			if (m_Archetype == nullptr || m_ComponentIndex == Limits::MaxComponentCount)
+			if (m_Archetype != nullptr)
 			{
-				m_PackedContainer = nullptr;
+				uint32_t compIndex = m_Archetype->FindTypeIndex(m_TypeID);
+				if (compIndex != Limits::MaxComponentCount)
+				{
+					m_PackedContainer = m_Archetype->m_TypeData[compIndex].m_PackedContainer;
+					return;
+				}
+			}
+
+			m_PackedContainer = nullptr;
+		}
+
+		inline void FetchWithoutGettingComponentIndex(uint32_t componentIndex)
+		{
+			m_Archetype = m_EntityData->m_Archetype;
+			if (m_Archetype != nullptr && componentIndex != Limits::MaxComponentCount)
+			{
+				m_PackedContainer = m_Archetype->m_TypeData[componentIndex].m_PackedContainer;
 			}
 			else
 			{
-				SetComponentFromValidData();
+				m_PackedContainer = nullptr;
 			}
 		}
-
-		inline void FetchFullDataFromEntity()
-		{
-			if (m_EntityData != nullptr)
-			{
-				m_Archetype = m_EntityData->m_Archetype;
-				m_IndexInArchetype = m_EntityData->m_IndexInArchetype;
-				if (m_Archetype != nullptr)
-				{
-					m_ComponentIndex = m_Archetype->FindTypeIndex(m_TypeID);
-					if (m_ComponentIndex != Limits::MaxComponentCount)
-					{
-						SetComponentFromValidData();
-					}
-				}
-			}
-		}
-
 	};
 }

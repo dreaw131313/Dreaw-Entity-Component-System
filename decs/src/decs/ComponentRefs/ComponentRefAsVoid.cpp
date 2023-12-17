@@ -6,26 +6,34 @@ namespace decs
 {
 	ComponentRefAsVoid::ComponentRefAsVoid(TypeID typeID, EntityData& entityData) :
 		m_TypeID(typeID),
-		m_EntityData(&entityData)
+		m_EntityData(&entityData),
+		m_EntityVersion(entityData.m_Version)
 	{
-		FetchWhenIsInvalid();
+		if (m_EntityData != nullptr)
+		{
+			FetchWhenArchetypeIsInvalid();
+		}
 	}
 
 	ComponentRefAsVoid::ComponentRefAsVoid(TypeID typeID, EntityData& entityData, uint32_t componentIndex) :
 		m_TypeID(typeID),
 		m_EntityData(&entityData),
-		m_ComponentIndex(componentIndex)
+		m_EntityVersion(entityData.m_Version)
 	{
-		FetchWithoutGettingComponentIndex();
+		if (m_EntityData != nullptr)
+		{
+			FetchWithoutGettingComponentIndex(componentIndex);
+		}
 	}
 
 	ComponentRefAsVoid::ComponentRefAsVoid(TypeID typeID, Entity& entity) :
 		m_TypeID(typeID),
-		m_EntityData(entity.m_EntityData)
+		m_EntityData(entity.m_EntityData),
+		m_EntityVersion(entity.m_EntityData->m_Version)
 	{
 		if (m_EntityData != nullptr)
 		{
-			FetchWhenIsInvalid();
+			FetchWhenArchetypeIsInvalid();
 		}
 	}
 
@@ -33,8 +41,11 @@ namespace decs
 	{
 		m_TypeID = typeID;
 		m_EntityData = &entityData;
-		m_ComponentIndex = componentIndex;
-		FetchWithoutGettingComponentIndex();
+		m_EntityVersion = entityData.m_Version;
+		if (m_EntityData != nullptr)
+		{
+			FetchWithoutGettingComponentIndex(componentIndex);
+		}
 	}
 
 }

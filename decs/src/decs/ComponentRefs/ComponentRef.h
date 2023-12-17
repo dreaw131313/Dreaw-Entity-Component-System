@@ -46,7 +46,7 @@ namespace decs
 		{
 			if (m_EntityData != nullptr && IsEntityVersionValid())
 			{
-				if (!ShouldFetchData())
+				if (!IsArchetypeValid())
 				{
 					FetchWhenIsInvalid();
 				}
@@ -80,7 +80,7 @@ namespace decs
 		EntityVersion m_EntityVersion = std::numeric_limits<EntityVersion>::max();
 
 	private:
-		inline bool ShouldFetchData() const
+		inline bool IsArchetypeValid() const
 		{
 			return m_EntityData->m_Archetype == m_Archetype;
 		}

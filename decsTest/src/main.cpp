@@ -134,6 +134,7 @@ void BaseTest()
 	std::cout << "decs::Entity size = " << sizeof(decs::Entity) << " bytes" << "\n";
 	std::cout << "ComponentRef<Position> size: " << sizeof(decs::ComponentRef<Position>) << " bytes" << "\n";
 	std::cout << "Archetype size: " << sizeof(decs::Archetype) << " bytes" << "\n";
+	std::cout << "ComponentRefAsVoid size: " << sizeof(decs::ComponentRefAsVoid) << " bytes" << "\n";
 	PrintLine();
 
 	//decs::Container* c1 = new decs::Container();
