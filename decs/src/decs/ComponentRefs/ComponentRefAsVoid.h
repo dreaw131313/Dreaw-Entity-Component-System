@@ -55,7 +55,7 @@ namespace decs
 
 		inline bool IsEntityVersionValid() const
 		{
-			return m_EntityData->m_Version == m_EntityVersion;
+			return m_EntityData->GetVersion() == m_EntityVersion;
 		}
 
 		inline void FetchWhenArchetypeIsInvalid()

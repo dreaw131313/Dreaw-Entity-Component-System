@@ -30,7 +30,7 @@ namespace decs
 			EntityData* entityData = m_FreeEntities.back();
 			m_FreeEntities.pop_back();
 			entityData->SetState(EntityState::Alive);
-			entityData->m_bIsActive = isActive;
+			entityData->SetIsActive(isActive);
 
 			return entityData;
 		}
@@ -79,7 +79,7 @@ namespace decs
 	void EntityManager::CreateEntityFromReservedEntityData(EntityData* entityData, bool bIsActive)
 	{
 		m_CreatedEntitiesCount += 1;
-		entityData->m_bIsActive = bIsActive;
+		entityData->SetIsActive(bIsActive);
 		entityData->SetState(EntityState::Alive);
 	}
 

@@ -33,7 +33,7 @@ namespace decs
 			m_ID(id),
 			m_Container(container),
 			m_EntityData(&container->m_EntityManager->GetEntityData(id)),
-			m_Version(m_EntityData->m_Version)
+			m_Version(m_EntityData->GetVersion())
 		{
 
 		}
@@ -42,7 +42,7 @@ namespace decs
 			m_ID(entityData->GetID()),
 			m_Container(container),
 			m_EntityData(entityData),
-			m_Version(entityData->m_Version)
+			m_Version(entityData->GetVersion())
 		{
 
 		}
@@ -59,14 +59,14 @@ namespace decs
 
 		inline bool IsValid() const
 		{
-			return m_EntityData != nullptr && m_Version == m_EntityData->m_Version;
+			return m_EntityData != nullptr && m_Version == m_EntityData->GetVersion();
 		}
 
 		inline bool IsNull() const { return !IsValid() || !m_EntityData->IsAlive(); }
 
 		inline bool IsActive() const
 		{
-			return IsValid() && m_EntityData->m_bIsActive;
+			return IsValid() && m_EntityData->IsActive();
 		}
 
 		inline void SetActive(const bool& isActive)
@@ -212,23 +212,23 @@ namespace decs
 			m_ID = id;
 			m_Container = container;
 			m_EntityData = &container->m_EntityManager->GetEntityData(id);
-			m_Version = m_EntityData->m_Version;
+			m_Version = m_EntityData->GetVersion();
 		}
 
 		void Set(EntityData& data, Container* container)
 		{
-			m_ID = data.m_ID;
+			m_ID = data.GetID();
 			m_Container = container;
 			m_EntityData = &data;
-			m_Version = data.m_Version;
+			m_Version = data.GetVersion();
 		}
 
 		void Set(EntityData* data, Container* container)
 		{
-			m_ID = data->m_ID;
+			m_ID = data->GetID();
 			m_Container = container;
 			m_EntityData = data;
-			m_Version = data->m_Version;
+			m_Version = data->GetVersion();
 		}
 
 		inline void Invalidate()

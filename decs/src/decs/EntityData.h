@@ -17,13 +17,19 @@ namespace decs
 	class EntityData
 	{
 		friend class EntityManager;
+		friend class Container;
+
 	public:
 		Archetype* m_Archetype = nullptr;
 
+	private:
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
-		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
-		EntityVersion m_Version = 1;
 
+	public:
+		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
+
+	private:
+		EntityVersion m_Version = 1;
 		EntityState m_State = EntityState::Alive;
 		bool m_bIsActive = false;
 		bool m_bIsUsedAsPrefab = false;
@@ -43,7 +49,22 @@ namespace decs
 
 		}
 
+		inline EntityVersion GetVersion() const
+		{
+			return m_Version;
+		}
+
 		inline EntityID GetID() const noexcept { return m_ID; }
+
+		inline bool IsActive() const
+		{
+			return m_bIsActive;
+		}
+
+		inline void SetIsActive(bool bIsActive)
+		{
+			m_bIsActive = bIsActive;
+		}
 
 		inline bool IsAlive() const noexcept
 		{

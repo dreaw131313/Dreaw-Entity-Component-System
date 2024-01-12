@@ -187,7 +187,7 @@ namespace decs
 
 	void Container::SetEntityActive(Entity& entity, bool isActive)
 	{
-		if (entity.m_Container == this && entity.m_EntityData->IsAlive() && entity.m_EntityData->m_bIsActive != isActive)
+		if (entity.m_Container == this && entity.m_EntityData->IsAlive() && entity.m_EntityData->IsActive() != isActive)
 		{
 			entity.m_EntityData->SetActiveState(isActive);
 			if (isActive)
@@ -298,7 +298,7 @@ namespace decs
 		EntityData& prefabEntityData = *prefab.m_EntityData;
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
-		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
+		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true};
 
 		EntityData* spawnedEntityData = CreateAliveEntityData(isActive);
 		Entity spawnedEntity(spawnedEntityData, this);

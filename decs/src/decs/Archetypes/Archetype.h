@@ -28,7 +28,7 @@ namespace decs
 			EntityData* entityData
 		) :
 			m_EntityData(entityData),
-			m_bIsActive(entityData->m_bIsActive)
+			m_bIsActive(entityData->IsActive())
 		{
 
 		}
