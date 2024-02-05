@@ -82,34 +82,43 @@ namespace decs
 
 		inline static constexpr std::string Name()
 		{
-			constexpr const char* classSubstr = "<class ";
-			constexpr const char* structSubstr = "<struct ";
+			static std::string className = FindName();
+			return className;
+		}
+
+	private:
+		static std::string FindName()
+		{
+			auto erase = [](std::string& from, const std::string& erasedString, uint32_t aditionalOffset)
+			{
+				if (erasedString.empty())
+				{
+					return;
+				}
+
+				uint64_t index = from.find(erasedString);
+				while (index != std::string::npos)
+				{
+					from.erase(index + aditionalOffset, erasedString.size() - aditionalOffset);
+					index = from.find(erasedString);
+				}
+			};
+
+			constexpr const char* class1 = "<class ";
+			constexpr const char* class2 = ",class ";
+			constexpr const char* struct1 = "<struct ";
+			constexpr const char* struct2 = ",struct ";
 
 			std::string funcsig = __FUNCTION__;
 
-			uint64_t index = funcsig.find(classSubstr);
-			while (index != std::string::npos)
-			{
-				funcsig.erase(index + 1, 6);
-				index = funcsig.find(classSubstr);
-			}
-
-			index = funcsig.find(structSubstr);
-			while (index != std::string::npos)
-			{
-				funcsig.erase(index + 1, 7);
-				index = funcsig.find(structSubstr);
-			}
-
-			index = funcsig.find(" ");
-			while (index != std::string::npos)
-			{
-				funcsig.erase(index, 1);
-				index = funcsig.find(" ");
-			}
+			erase(funcsig, class1, 1);
+			erase(funcsig, class2, 1);
+			erase(funcsig, struct1, 1);
+			erase(funcsig, struct2, 1);
+			erase(funcsig, " ", 0);
 
 			funcsig.erase(funcsig.begin(), funcsig.begin() + 11);
-			funcsig.erase(funcsig.end() - 7, funcsig.end());
+			funcsig.erase(funcsig.end() - 11, funcsig.end());
 
 			return funcsig;
 		}

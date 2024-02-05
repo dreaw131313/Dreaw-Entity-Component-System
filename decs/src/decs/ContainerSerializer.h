@@ -38,7 +38,7 @@ namespace decs
 	private:
 		virtual void SerializeComponentFromVoid(void* component, SerializerData& serializerData) const final override
 		{
-			SerializeComponent(*reinterpret_cast<typename component_type<ComponentType>::Type*>(component), serializerData);
+			SerializeComponent(*static_cast<typename component_type<ComponentType>::Type*>(component), serializerData);
 		}
 	};
 

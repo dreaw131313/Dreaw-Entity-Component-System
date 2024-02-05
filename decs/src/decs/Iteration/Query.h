@@ -362,7 +362,7 @@ namespace decs
 		) const noexcept
 		{
 			constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
-			std::get<PackedContainer<T>*>(containersTuple) = (reinterpret_cast<PackedContainer<T>*>(context.m_Containers[compIdx]));
+			std::get<PackedContainer<T>*>(containersTuple) = (static_cast<PackedContainer<T>*>(context.m_Containers[compIdx]));
 
 			if constexpr (sizeof...(Args) == 0) return;
 
@@ -491,7 +491,7 @@ namespace decs
 			) const noexcept
 			{
 				constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
-				std::get<PackedContainer<T>*>(containersTuple) = (reinterpret_cast<PackedContainer<T>*>(context.m_Containers[compIdx]));
+				std::get<PackedContainer<T>*>(containersTuple) = (static_cast<PackedContainer<T>*>(context.m_Containers[compIdx]));
 
 				if constexpr (sizeof...(Args) == 0) return;
 

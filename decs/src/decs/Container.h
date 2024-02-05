@@ -430,7 +430,7 @@ namespace decs
 				);
 
 				ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
-				PackedContainer<ComponentType>* container = reinterpret_cast<PackedContainer<ComponentType>*>(archetypeTypeData.m_PackedContainer);
+				PackedContainer<ComponentType>* container = static_cast<PackedContainer<ComponentType>*>(archetypeTypeData.m_PackedContainer);
 				ComponentType* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
 
 				uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();

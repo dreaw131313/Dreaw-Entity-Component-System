@@ -94,7 +94,7 @@ namespace decs
 		{
 			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_CreateObserver != nullptr)
 			{
-				m_ObserversGroup->m_CreateObserver->OnCreateComponent(*reinterpret_cast<ComponentType*>(component), entity);
+				m_ObserversGroup->m_CreateObserver->OnCreateComponent(*static_cast<ComponentType*>(component), entity);
 			}
 		}
 
@@ -102,7 +102,7 @@ namespace decs
 		{
 			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_DestroyObserver != nullptr)
 			{
-				m_ObserversGroup->m_DestroyObserver->OnDestroyComponent(*reinterpret_cast<ComponentType*>(component), entity);
+				m_ObserversGroup->m_DestroyObserver->OnDestroyComponent(*static_cast<ComponentType*>(component), entity);
 			}
 		}
 
@@ -168,7 +168,7 @@ namespace decs
 		{
 			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_CreateObserver != nullptr)
 			{
-				m_ObserversGroup->m_CreateObserver->OnCreateComponent(*reinterpret_cast<ComponentType*>(component), entity);
+				m_ObserversGroup->m_CreateObserver->OnCreateComponent(*static_cast<ComponentType*>(component), entity);
 			}
 		}
 
@@ -176,7 +176,7 @@ namespace decs
 		{
 			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_DestroyObserver != nullptr)
 			{
-				m_ObserversGroup->m_DestroyObserver->OnDestroyComponent(*reinterpret_cast<ComponentType*>(component), entity);
+				m_ObserversGroup->m_DestroyObserver->OnDestroyComponent(*static_cast<ComponentType*>(component), entity);
 			}
 		}
 

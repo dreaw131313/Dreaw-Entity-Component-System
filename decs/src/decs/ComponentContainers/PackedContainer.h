@@ -95,7 +95,7 @@ namespace decs
 
 		inline virtual void EmplaceFromVoid(void* data)  noexcept override
 		{
-			m_Data.emplace_back(*reinterpret_cast<ComponentType*>(data));
+			m_Data.emplace_back(*static_cast<ComponentType*>(data));
 		}
 
 		inline virtual void RemoveSwapBack(uint64_t index)noexcept override
@@ -109,7 +109,7 @@ namespace decs
 
 		inline virtual void MoveEmplaceBackFromVoid(void* data) noexcept override
 		{
-			m_Data.push_back(std::move(*reinterpret_cast<ComponentType*>(data)));
+			m_Data.push_back(std::move(*static_cast<ComponentType*>(data)));
 		}
 	};
 
@@ -182,13 +182,13 @@ namespace decs
 
 		inline virtual void EmplaceFromVoid(void* data) noexcept override
 		{
-			StableComponentRef* newElement = reinterpret_cast<StableComponentRef*>(data);
+			StableComponentRef* newElement = static_cast<StableComponentRef*>(data);
 			m_Data.emplace_back(newElement->m_ComponentPtr, newElement->m_ChunkIndex, newElement->m_Index);
 		}
 
 		inline virtual void MoveEmplaceBackFromVoid(void* data) noexcept override
 		{
-			StableComponentRef* newElement = reinterpret_cast<StableComponentRef*>(data);
+			StableComponentRef* newElement = static_cast<StableComponentRef*>(data);
 			m_Data.emplace_back(newElement->m_ComponentPtr, newElement->m_ChunkIndex, newElement->m_Index);
 		}
 
