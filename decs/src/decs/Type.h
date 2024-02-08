@@ -87,7 +87,7 @@ namespace decs
 		}
 
 	private:
-		static std::string FindName()
+		constexpr static std::string FindName()
 		{
 			auto erase = [](std::string& from, const std::string& erasedString, uint32_t aditionalOffset)
 			{
