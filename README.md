@@ -1,8 +1,6 @@
 # Dreaw-Entity-Component-Systems
 **Dreaw-Entity-Component-Systems** in short **decs** it is archetype based ECS library written in **C++ 20**. 
 
-It can also use hash maps from https://github.com/skarupke/flat_hash_map repository (which hash map is used can be changed in Core.h file by changing line with: ``` using ecsMap = std::unordered_map<Key, Value>;```).<br/>
-
 ## How to use **decs**
 To start using decs, copy the **decs** folder to your project and include the header file **decs.h**.
 
