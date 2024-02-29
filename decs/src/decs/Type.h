@@ -86,6 +86,12 @@ namespace decs
 			return className;
 		}
 
+		inline static constexpr std::string NameWithoutNamespace()
+		{
+			static std::string name = FindNameWithoutNamespace();
+			return name;
+		}
+
 	private:
 		constexpr static std::string FindName()
 		{
@@ -121,6 +127,22 @@ namespace decs
 			funcsig.erase(funcsig.end() - 11, funcsig.end());
 
 			return funcsig;
+		}
+
+		constexpr static std::string FindNameWithoutNamespace()
+		{
+			std::string nameWithNamespaces = Name();
+			int index = static_cast<int>(nameWithNamespaces.size());
+			while (index >= 0)
+			{
+				index -= 1;
+				if (nameWithNamespaces[index] == ':')
+				{
+					break;
+				}
+			}
+			index += 1;
+			return std::string(nameWithNamespaces.begin() + index, nameWithNamespaces.end());
 		}
 	};
 
