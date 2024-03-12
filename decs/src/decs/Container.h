@@ -611,7 +611,7 @@ namespace decs
 		template<typename ComponentType>
 		typename component_type<ComponentType>::Type* GetComponent(EntityData& entityData) const
 		{
-			if (entityData.m_Archetype != nullptr && entityData.IsValidToPerformComponentOperation())
+			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
 			{
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<ComponentType>();
 				if (findTypeIndex != Limits::MaxComponentCount)
