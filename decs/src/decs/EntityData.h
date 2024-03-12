@@ -68,7 +68,7 @@ namespace decs
 
 		inline bool IsAlive() const noexcept
 		{
-			return m_State == EntityState::Alive;
+			return m_State != EntityState::Dead;
 		}
 
 		inline bool IsDead() const
