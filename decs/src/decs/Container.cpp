@@ -87,7 +87,7 @@ namespace decs
 		return Entity();
 	}
 
-	bool Container::DestroyEntity(Entity& entity)
+	bool Container::DestroyEntity(const Entity& entity)
 	{
 		if (entity.IsValid())
 		{
@@ -185,7 +185,7 @@ namespace decs
 		return false;
 	}
 
-	void Container::SetEntityActive(Entity& entity, bool isActive)
+	void Container::SetEntityActive( const Entity& entity, bool isActive)
 	{
 		if (entity.m_Container == this && entity.m_EntityData->IsAlive() && entity.m_EntityData->IsActive() != isActive)
 		{
@@ -237,7 +237,7 @@ namespace decs
 		data.m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 	}
 
-	void Container::InvokeEntityComponentDestructionObservers(Entity& entity)
+	void Container::InvokeEntityComponentDestructionObservers(const Entity& entity)
 	{
 		Archetype* currentArchetype = entity.m_EntityData->m_Archetype;
 		const uint32_t componentsCount = currentArchetype->ComponentCount();
@@ -491,7 +491,7 @@ namespace decs
 		}
 	}
 
-	void Container::InvokeOnCreateObserversOnSpawn(Entity& entity, Archetype* archetype, uint64_t componentsCount, const SpawnDataState& spawnState)
+	void Container::InvokeOnCreateObserversOnSpawn(const Entity& entity, Archetype* archetype, uint64_t componentsCount, const SpawnDataState& spawnState)
 	{
 		auto& orderContextVector = archetype->m_ComponentContextsInOrder;
 		for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++)
@@ -508,7 +508,7 @@ namespace decs
 		}
 	}
 
-	bool Container::RemoveComponent(Entity& entity, TypeID componentTypeID)
+	bool Container::RemoveComponent(const Entity& entity, TypeID componentTypeID)
 	{
 		if (entity.m_Container != this) return false;
 
@@ -667,7 +667,7 @@ namespace decs
 		}
 	}
 
-	void Container::InvokeEntityActivationObservers(Entity& entity)
+	void Container::InvokeEntityActivationObservers(const Entity& entity)
 	{
 		if (m_ComponentContextManager->m_ObserversManager != nullptr)
 		{
@@ -711,7 +711,7 @@ namespace decs
 		}
 	}
 
-	void Container::InvokeEntityDeactivationObservers(Entity& entity)
+	void Container::InvokeEntityDeactivationObservers(const Entity& entity)
 	{
 		if (m_ComponentContextManager->m_ObserversManager != nullptr)
 		{
@@ -832,7 +832,7 @@ namespace decs
 		m_DelayedEntitiesToDestroy.clear();
 	}
 
-	void Container::DestroyDelayedEntity(Entity& entity)
+	void Container::DestroyDelayedEntity(const Entity& entity)
 	{
 		Archetype* currentArchetype = entity.m_EntityData->m_Archetype;
 		InvokeEntityDestructionObservers(entity);
@@ -849,7 +849,7 @@ namespace decs
 		m_EntityManager->DestroyEntity(*entity.m_EntityData);
 	}
 
-	void Container::AddEntityToDelayedDestroy(Entity& entity)
+	void Container::AddEntityToDelayedDestroy(const Entity& entity)
 	{
 		entity.m_EntityData->SetState(EntityState::DelayedToDestruction);
 		m_DelayedEntitiesToDestroy.push_back(entity.m_EntityData);

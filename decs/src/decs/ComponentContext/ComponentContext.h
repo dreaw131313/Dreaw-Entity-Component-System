@@ -32,13 +32,13 @@ namespace decs
 
 		virtual ComponentContextBase* Clone(ObserversManager* observerManager) = 0;
 
-		virtual void InvokeOnCreateComponent(void* component, Entity& entity) = 0;
+		virtual void InvokeOnCreateComponent(void* component, const Entity& entity) = 0;
 
-		virtual void InvokeOnDestroyComponent(void* component, Entity& entity) = 0;
+		virtual void InvokeOnDestroyComponent(void* component, const Entity& entity) = 0;
 
-		virtual void InvokeOnEnableEntity(void* component, Entity& entity) = 0;
+		virtual void InvokeOnEnableEntity(void* component, const Entity& entity) = 0;
 
-		virtual void InvokeOnOnDisableEntity(void* component, Entity& entity) = 0;
+		virtual void InvokeOnOnDisableEntity(void* component, const  Entity& entity) = 0;
 
 
 	private:
@@ -90,7 +90,7 @@ namespace decs
 			);
 		}
 
-		virtual void InvokeOnCreateComponent(void* component, Entity& entity)override
+		virtual void InvokeOnCreateComponent(void* component, const Entity& entity)override
 		{
 			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_CreateObserver != nullptr)
 			{
@@ -98,7 +98,7 @@ namespace decs
 			}
 		}
 
-		virtual void InvokeOnDestroyComponent(void* component, Entity& entity)override
+		virtual void InvokeOnDestroyComponent(void* component, const Entity& entity)override
 		{
 			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_DestroyObserver != nullptr)
 			{
@@ -106,12 +106,12 @@ namespace decs
 			}
 		}
 
-		virtual void InvokeOnEnableEntity(void* component, Entity& entity) override
+		virtual void InvokeOnEnableEntity(void* component, const Entity& entity) override
 		{
 
 		}
 
-		virtual void InvokeOnOnDisableEntity(void* component, Entity& entity) override
+		virtual void InvokeOnOnDisableEntity(void* component, const Entity& entity) override
 		{
 
 		}
@@ -164,7 +164,7 @@ namespace decs
 			);
 		}
 
-		virtual void InvokeOnCreateComponent(void* component, Entity& entity)override
+		virtual void InvokeOnCreateComponent(void* component, const Entity& entity)override
 		{
 			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_CreateObserver != nullptr)
 			{
@@ -172,7 +172,7 @@ namespace decs
 			}
 		}
 
-		virtual void InvokeOnDestroyComponent(void* component, Entity& entity)override
+		virtual void InvokeOnDestroyComponent(void* component, const Entity& entity) override
 		{
 			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_DestroyObserver != nullptr)
 			{
@@ -180,12 +180,12 @@ namespace decs
 			}
 		}
 
-		virtual void InvokeOnEnableEntity(void* component, Entity& entity) override
+		virtual void InvokeOnEnableEntity(void* component, const Entity& entity) override
 		{
 
 		}
 
-		virtual void InvokeOnOnDisableEntity(void* component, Entity& entity) override
+		virtual void InvokeOnOnDisableEntity(void* component, const Entity& entity) override
 		{
 
 		}

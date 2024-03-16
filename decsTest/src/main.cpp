@@ -95,12 +95,12 @@ protected:
 class FloatObserver : public decs::CreateComponentObserver<float>, public decs::DestroyComponentObserver<float>
 {
 	// Inherited via CreateComponentObserver
-	virtual void OnCreateComponent(float& component, decs::Entity& entity) override
+	virtual void OnCreateComponent(float& component, const decs::Entity& entity) override
 	{
 		PrintLine("Float creation");
 	}
 	// Inherited via DestroyComponentObserver
-	virtual void OnDestroyComponent(float& component, decs::Entity& entity) override
+	virtual void OnDestroyComponent(float& component, const decs::Entity& entity) override
 	{
 		PrintLine("Float destruction");
 	}
@@ -109,13 +109,13 @@ class FloatObserver : public decs::CreateComponentObserver<float>, public decs::
 class IntObserver : public decs::CreateComponentObserver<int>, public decs::DestroyComponentObserver<int>
 {
 	// Inherited via CreateComponentObserver
-	virtual void OnCreateComponent(int& component, decs::Entity& entity) override
+	virtual void OnCreateComponent(int& component, const decs::Entity& entity) override
 	{
 		PrintLine("Int creation");
 	}
 
 	// Inherited via DestroyComponentObserver
-	virtual void OnDestroyComponent(int& component, decs::Entity& entity) override
+	virtual void OnDestroyComponent(int& component, const decs::Entity& entity) override
 	{
 		PrintLine("Int destruction");
 	}
@@ -196,9 +196,10 @@ void BaseTest()
 	QueryType query = { container };
 
 	uint64_t iterationCount = 0;
-	auto lambda = [&](decs::Entity& e, Position& pos)
+	auto lambda = [&](const decs::Entity& e, Position& pos)
 	{
 		PrintLine("Enityt ID: " + std::to_string(e.GetID()) + " pos: " + std::to_string(pos.X) + ", " + std::to_string(pos.Y));
+
 	};
 
 	PrintLine();

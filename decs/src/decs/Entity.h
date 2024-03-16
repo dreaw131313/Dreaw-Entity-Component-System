@@ -53,29 +53,39 @@ namespace decs
 			return this->m_EntityData == rhs.m_EntityData && this->m_Version == rhs.m_Version;
 		}
 
-		inline EntityID GetID() const { return m_ID; }
+		inline EntityID GetID() const
+		{
+			return m_ID;
+		}
 
-		inline Container* GetContainer() const { return m_Container; }
+		inline Container* GetContainer() const
+		{
+			return m_Container;
+		}
 
 		inline bool IsValid() const
 		{
 			return m_EntityData != nullptr && m_Version == m_EntityData->GetVersion();
 		}
 
-		inline bool IsNull() const { return !IsValid() || !m_EntityData->IsAlive(); }
+		inline bool IsNull() const
+		{
+			return !IsValid() ||
+				!m_EntityData->IsAlive();
+		}
 
 		inline bool IsActive() const
 		{
 			return IsValid() && m_EntityData->IsActive();
 		}
 
-		inline void SetActive(const bool& isActive)
+		inline void SetActive(const bool& isActive) const
 		{
 			if (IsValid())
 				m_Container->SetEntityActive(*this, isActive);
 		}
 
-		inline bool Destroy()
+		inline bool Destroy() const
 		{
 			if (IsValid())
 			{
@@ -139,7 +149,7 @@ namespace decs
 		}
 
 		template<typename T, typename... Args>
-		inline typename component_type<T>::Type* AddComponent(Args&&... args)
+		inline typename component_type<T>::Type* AddComponent(Args&&... args) const
 		{
 			if (IsValid())
 				return m_Container->AddComponent<T>(*this, *m_EntityData, std::forward<Args>(args)...);
@@ -148,7 +158,7 @@ namespace decs
 		}
 
 		template<typename T, typename... Args>
-		inline typename component_type<T>::Type* AddStableComponent(Args&&... args)
+		inline typename component_type<T>::Type* AddStableComponent(Args&&... args) const
 		{
 			if (IsValid())
 				return m_Container->AddComponent<decs::stable<T>>(*this, *m_EntityData, std::forward<Args>(args)...);
@@ -157,19 +167,19 @@ namespace decs
 		}
 
 		template<typename T>
-		inline bool RemoveComponent()
+		inline bool RemoveComponent() const
 		{
 			return IsValid() && m_Container->RemoveComponent<T>(*this);
 		}
 
 		template<typename T>
-		inline bool RemoveStableComponent()
+		inline bool RemoveStableComponent() const
 		{
 			return IsValid() && m_Container->RemoveComponent<decs::stable<T>>(*this);
 		}
 
 		template<typename... Ts>
-		inline uint32_t RemoveComponents()
+		inline uint32_t RemoveComponents() const
 		{
 			if (IsValid())
 			{
@@ -183,7 +193,7 @@ namespace decs
 			return m_Version;
 		}
 
-		inline uint32_t ComponentCount()
+		inline uint32_t ComponentCount() const
 		{
 			if (IsValid())
 				return m_EntityData->ComponentCount();
@@ -201,10 +211,10 @@ namespace decs
 		}
 
 	private:
-		Container* m_Container = nullptr;
-		EntityData* m_EntityData = nullptr;
-		EntityID m_ID = std::numeric_limits<EntityID>::max();
-		EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
+		mutable Container* m_Container = nullptr;
+		mutable EntityData* m_EntityData = nullptr;
+		mutable EntityID m_ID = std::numeric_limits<EntityID>::max();
+		mutable EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
 
 	private:
 		void Set(EntityID id, Container* container)
@@ -231,7 +241,7 @@ namespace decs
 			m_Version = data->GetVersion();
 		}
 
-		inline void Invalidate()
+		inline void Invalidate() const
 		{
 			m_ID = std::numeric_limits<EntityID>::max();
 			m_Container = nullptr;
