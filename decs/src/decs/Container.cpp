@@ -298,7 +298,7 @@ namespace decs
 		EntityData& prefabEntityData = *prefab.m_EntityData;
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
-		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true};
+		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
 
 		EntityData* spawnedEntityData = CreateAliveEntityData(isActive);
 		Entity spawnedEntity(spawnedEntityData, this);
@@ -526,25 +526,29 @@ namespace decs
 			entity
 		);
 
-		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
-			*entityData.m_Archetype,
-			componentTypeID
-		);
+		if (entity.IsValid())
+		{
+			Archetype* oldArchetype = entityData.m_Archetype;
 
-		Archetype* oldArchetype = entityData.m_Archetype;
-		if (newEntityArchetype != nullptr)
-		{
-			newEntityArchetype->MoveEntityComponentsAfterRemoveComponent(
-				componentTypeID,
-				entityData.m_Archetype,
-				entityData.m_IndexInArchetype,
-				&entityData
+			Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
+				*entityData.m_Archetype,
+				componentTypeID
 			);
-		}
-		else
-		{
-			oldArchetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
-			AddToEmptyEntities(entityData);
+
+			if (newEntityArchetype != nullptr)
+			{
+				newEntityArchetype->MoveEntityComponentsAfterRemoveComponent(
+					componentTypeID,
+					entityData.m_Archetype,
+					entityData.m_IndexInArchetype,
+					&entityData
+				);
+			}
+			else
+			{
+				oldArchetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
+				AddToEmptyEntities(entityData);
+			}
 		}
 
 		return true;
