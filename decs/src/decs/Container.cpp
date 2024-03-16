@@ -135,7 +135,7 @@ namespace decs
 		m_EntiesCount = 0;
 	}
 
-	bool Container::DestroyEntityInternal(Entity& entity)
+	bool Container::DestroyEntityInternal(Entity entity)
 	{
 		if (m_CanDestroyEntities && entity.m_Container == this)
 		{

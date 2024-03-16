@@ -194,7 +194,7 @@ namespace decs
 		}
 
 	private:
-		bool DestroyEntityInternal(Entity& entity);
+		bool DestroyEntityInternal(Entity entity);
 
 		void SetEntityActive(Entity& entity, bool bIsActive);
 
@@ -396,7 +396,7 @@ namespace decs
 
 	private:
 		template<typename ComponentType, typename ...Args>
-		inline typename component_type<ComponentType>::Type* AddComponent(Entity& entity, EntityData& entityData, Args&&... args)
+		inline typename component_type<ComponentType>::Type* AddComponent(Entity entity, EntityData& entityData, Args&&... args)
 		{
 			if (!m_CanAddComponents) return nullptr;
 
@@ -506,7 +506,7 @@ namespace decs
 		}
 
 		template<typename ComponentType>
-		bool RemoveComponent(Entity& entity)
+		bool RemoveComponent(Entity entity)
 		{
 			if (!m_CanRemoveComponents)
 			{
@@ -520,7 +520,7 @@ namespace decs
 
 		// remove multiple components:
 		template<typename... ComponentsTypes>
-		uint32_t RemoveMultipleComponnets(Entity& entity, EntityData& entityData)
+		uint32_t RemoveMultipleComponnets(Entity entity, EntityData& entityData)
 		{
 			if constexpr (sizeof...(ComponentsTypes) == 0)
 			{
