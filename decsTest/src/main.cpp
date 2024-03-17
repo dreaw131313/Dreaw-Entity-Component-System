@@ -102,6 +102,11 @@ class FloatObserver : public decs::CreateComponentObserver<float>, public decs::
 	// Inherited via DestroyComponentObserver
 	virtual void OnDestroyComponent(float& component, const decs::Entity& entity) override
 	{
+		if (entity.HasComponent<float>())
+		{
+			PrintLine("Has float but shouldnt!");
+		}
+
 		PrintLine("Float destruction");
 	}
 };
@@ -149,7 +154,11 @@ void BaseTest()
 	prefab.AddStableComponent<float>();
 	prefab.AddStableComponent<int>();
 	prefab.AddStableComponent<double>();
+	prefab.AddComponent<uint64_t>();
 	prefab.AddComponent<Position>(1.f, 2.f);
+
+	prefab.RemoveStableComponent<float>();
+	prefab.RemoveComponent<uint64_t>();
 
 	// print prefab components names
 	{
@@ -331,6 +340,8 @@ void ObservatorOrderTest()
 	observerManager.SetComponentDestroyObserver<int>(&intObserver);
 
 	container.SetObserversManager(&observerManager);
+
+	prefab.RemoveComponent<float>();
 
 	container.SetComponentOrder<float>(0);
 	container.SetComponentOrder<int>(-1);
