@@ -75,7 +75,7 @@ namespace decs
 			return true;
 		}
 
-		inline void InvokeEntityCreationObservers(Entity& entity)
+		inline void InvokeEntityCreationObservers(const Entity& entity)
 		{
 			if (m_EntityCreationObserver != nullptr)
 			{
@@ -83,7 +83,7 @@ namespace decs
 			}
 		}
 
-		inline void InvokeEntityDestructionObservers(Entity& entity)
+		inline void InvokeEntityDestructionObservers(const Entity& entity)
 		{
 			if (m_EntityDestructionObserver != nullptr)
 			{
@@ -91,7 +91,7 @@ namespace decs
 			}
 		}
 
-		inline void InvokeEntityActivationObservers(Entity& entity)
+		inline void InvokeEntityActivationObservers(const Entity& entity)
 		{
 			if (m_EntityActivateObserver != nullptr)
 			{
@@ -99,7 +99,7 @@ namespace decs
 			}
 		}
 
-		inline void InvokeEntityDeactivationObservers(Entity& entity)
+		inline void InvokeEntityDeactivationObservers(const Entity& entity)
 		{
 			if (m_EntityDeactivateObserver != nullptr)
 			{

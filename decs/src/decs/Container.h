@@ -184,7 +184,7 @@ namespace decs
 		}
 
 	public:
-		bool DestroyEntity(Entity& entity);
+		bool DestroyEntity(const Entity& entity);
 
 		void DestroyOwnedEntities(bool invokeOnDestroyListeners = true);
 
@@ -196,7 +196,7 @@ namespace decs
 	private:
 		bool DestroyEntityInternal(Entity entity);
 
-		void SetEntityActive(Entity& entity, bool bIsActive);
+		void SetEntityActive(const Entity& entity, bool bIsActive);
 
 		void AddToEmptyEntitiesRightAfterNewEntityCreation(EntityData& data);
 
@@ -204,7 +204,7 @@ namespace decs
 
 		void RemoveFromEmptyEntities(EntityData& data);
 
-		void InvokeEntityComponentDestructionObservers(Entity& entity);
+		void InvokeEntityComponentDestructionObservers(const Entity& entity);
 
 		EntityData* CreateAliveEntityData(bool bIsActive);
 
@@ -341,7 +341,7 @@ namespace decs
 			const SpawnDataState& spawnState
 		);
 
-		void InvokeOnCreateObserversOnSpawn(Entity& entity, Archetype* archetype, uint64_t componentsCount, const SpawnDataState& spawnState);
+		void InvokeOnCreateObserversOnSpawn(const Entity& entity, Archetype* archetype, uint64_t componentsCount, const SpawnDataState& spawnState);
 
 #pragma endregion
 
@@ -411,7 +411,7 @@ namespace decs
 		}
 
 		template<typename ComponentType, typename ...Args>
-		ComponentType* AddUnstableComponent(Entity& entity, EntityData& entityData, Args&&... args)
+		ComponentType* AddUnstableComponent(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<ComponentType>::ID();
 
@@ -456,7 +456,7 @@ namespace decs
 		}
 
 		template<typename ComponentType, typename ...Args>
-		ComponentType* AddStableComponent(Entity& entity, EntityData& entityData, Args&&... args)
+		ComponentType* AddStableComponent(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<stable<ComponentType>>::ID();
 
@@ -516,7 +516,7 @@ namespace decs
 			return RemoveComponent(entity, Type<ComponentType>::ID());
 		}
 
-		bool RemoveComponent(Entity& entity, TypeID componentTypeID);
+		bool RemoveComponent(const Entity& entity, TypeID componentTypeID);
 
 		// remove multiple components:
 		template<typename... ComponentsTypes>
@@ -886,7 +886,7 @@ namespace decs
 		std::vector<ComponentRefAsVoid> m_ActivationChangeComponentRefs = {};
 
 	private:
-		inline void InvokeEntityCreationObservers(Entity& entity)
+		inline void InvokeEntityCreationObservers(const Entity& entity)
 		{
 			if (m_ComponentContextManager->m_ObserversManager != nullptr)
 			{
@@ -894,7 +894,7 @@ namespace decs
 			}
 		}
 
-		inline void InvokeEntityDestructionObservers(Entity& entity)
+		inline void InvokeEntityDestructionObservers(const Entity& entity)
 		{
 			if (m_ComponentContextManager->m_ObserversManager != nullptr)
 			{
@@ -902,9 +902,9 @@ namespace decs
 			}
 		}
 
-		void InvokeEntityActivationObservers(Entity& entity);
+		void InvokeEntityActivationObservers(const Entity& entity);
 
-		void InvokeEntityDeactivationObservers(Entity& entity);
+		void InvokeEntityDeactivationObservers(const Entity& entity);
 
 		void InvokeArchetypeOnCreateListeners(Archetype& archetype, std::vector<ComponentRefAsVoid>& componentRefsToInvokeObserverCallbacks);
 
@@ -921,9 +921,9 @@ namespace decs
 	private:
 		void DestroyDelayedEntities();
 
-		void DestroyDelayedEntity(Entity& entity);
+		void DestroyDelayedEntity(const Entity& entity);
 
-		void AddEntityToDelayedDestroy(Entity& entity);
+		void AddEntityToDelayedDestroy(const Entity& entity);
 #pragma endregion
 	};
 }

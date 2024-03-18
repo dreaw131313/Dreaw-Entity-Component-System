@@ -10,7 +10,7 @@ namespace decs
 	public:
 		virtual ~CreateEntityObserver() = default;
 
-		virtual void OnCreateEntity(Entity& entity) = 0;
+		virtual void OnCreateEntity(const Entity& entity) = 0;
 	};
 
 	class DestroyEntityObserver
@@ -18,7 +18,7 @@ namespace decs
 	public:
 		virtual ~DestroyEntityObserver() = default;
 
-		virtual void OnDestroyEntity(Entity& entity) = 0;
+		virtual void OnDestroyEntity(const Entity& entity) = 0;
 	};
 
 	class ActivateEntityObserver
@@ -26,7 +26,7 @@ namespace decs
 	public:
 		virtual ~ActivateEntityObserver() = default;
 
-		virtual void OnSetEntityActive(Entity& entity) = 0;
+		virtual void OnSetEntityActive(const Entity& entity) = 0;
 	};
 
 	class DeactivateEntityObserver
@@ -34,7 +34,7 @@ namespace decs
 	public:
 		virtual ~DeactivateEntityObserver() = default;
 
-		virtual void OnSetEntityInactive(Entity& entity) = 0;;
+		virtual void OnSetEntityInactive(const Entity& entity) = 0;;
 	};
 
 	template<typename ComponentType>
@@ -43,7 +43,7 @@ namespace decs
 	public:
 		virtual ~CreateComponentObserver() = default;
 
-		virtual void OnCreateComponent(component_type<ComponentType>::Type& component, Entity& entity) = 0;
+		virtual void OnCreateComponent(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
 	};
 
 	template<typename ComponentType>
@@ -52,7 +52,7 @@ namespace decs
 	public:
 		virtual ~DestroyComponentObserver() = default;
 
-		virtual void OnDestroyComponent(component_type<ComponentType>::Type& component, Entity& entity) = 0;
+		virtual void OnDestroyComponent(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
 	};
 
 	template<typename ComponentType>
@@ -61,7 +61,7 @@ namespace decs
 	public:
 		virtual ~ActivateEntityComponentObserver() = default;
 
-		virtual void OnSetEntityActive(component_type<ComponentType>::Type& component, Entity& entity) = 0;
+		virtual void OnSetEntityActive(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
 	};
 
 	template<typename ComponentType>
@@ -70,7 +70,7 @@ namespace decs
 	public:
 		virtual ~EntityDisableComponentObserver() = default;
 
-		virtual void OnDisableEntity(component_type<ComponentType>::Type& component, Entity& entity) = 0;
+		virtual void OnDisableEntity(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
 	};
 
 }

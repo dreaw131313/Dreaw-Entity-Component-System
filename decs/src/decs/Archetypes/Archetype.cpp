@@ -271,6 +271,77 @@ namespace decs
 		fromArchetype->RemoveSwapBackEntityData(fromIndex);
 	}
 
+	void Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
+		TypeID removedComponentTypeID,
+		Archetype* fromArchetype,
+		uint64_t fromIndex,
+		EntityData* entityData
+	)
+	{
+		uint64_t thisArchetypeIndex = 0;
+		uint64_t fromArchetypeIndex = 0;
+
+		this->AddEntityData(entityData);
+
+		for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++, fromArchetypeIndex++)
+		{
+			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
+			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
+			if (fromArchetypeData.m_TypeID == removedComponentTypeID)
+			{
+				fromArchetypeIndex += 1;
+			}
+
+			ArchetypeTypeData& updatetFromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
+			thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+				updatetFromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex)
+			);
+		}
+
+		fromArchetype->m_EntitiesData[fromIndex].m_bIsActive = false;
+	}
+
+	void Archetype::RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(uint64_t entityIndex, TypeID removedComponentTypeID)
+	{
+		if (entityIndex >= m_EntitiesCount)
+		{
+			return;
+		}
+
+		if (entityIndex == m_EntitiesCount - 1)
+		{
+			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			{
+				auto& typeData = m_TypeData[i];
+				if (removedComponentTypeID == typeData.m_TypeID && typeData.m_StableContainer != nullptr)
+				{
+					StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetComponentDataAsVoid(entityIndex));
+					typeData.m_StableContainer->Remove(compRef->m_ChunkIndex, compRef->m_Index);
+				}
+
+				typeData.m_PackedContainer->PopBack();
+			}
+
+		}
+		else
+		{
+			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			{
+				auto& typeData = m_TypeData[i];
+				if (removedComponentTypeID == typeData.m_TypeID && typeData.m_StableContainer != nullptr)
+				{
+					StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetComponentDataAsVoid(entityIndex));
+					typeData.m_StableContainer->Remove(compRef->m_ChunkIndex, compRef->m_Index);
+				}
+
+				typeData.m_PackedContainer->RemoveSwapBack(entityIndex);
+			}
+		}
+
+		RemoveSwapBackEntityData(entityIndex);
+
+	}
+
 	void Archetype::ShrinkToFit()
 	{
 		m_EntitiesData.shrink_to_fit();

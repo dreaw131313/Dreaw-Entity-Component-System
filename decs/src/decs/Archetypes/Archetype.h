@@ -354,6 +354,15 @@ namespace decs
 			EntityData* entityData
 		);
 
+		void MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
+			TypeID removedComponentTypeID,
+			Archetype* fromArchetype,
+			uint64_t fromIndex,
+			EntityData* entityData
+		);
+
+		void RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(uint64_t entityIndex, TypeID removedComponentTypeID);
+
 		/// <summary>
 		/// Moves entity components from "fromArchetype" to this archetype.
 		/// </summary>

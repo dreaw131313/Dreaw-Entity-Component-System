@@ -95,13 +95,18 @@ protected:
 class FloatObserver : public decs::CreateComponentObserver<float>, public decs::DestroyComponentObserver<float>
 {
 	// Inherited via CreateComponentObserver
-	virtual void OnCreateComponent(float& component, decs::Entity& entity) override
+	virtual void OnCreateComponent(float& component, const decs::Entity& entity) override
 	{
 		PrintLine("Float creation");
 	}
 	// Inherited via DestroyComponentObserver
-	virtual void OnDestroyComponent(float& component, decs::Entity& entity) override
+	virtual void OnDestroyComponent(float& component, const decs::Entity& entity) override
 	{
+		if (entity.HasComponent<float>())
+		{
+			PrintLine("Has float but shouldnt!");
+		}
+
 		PrintLine("Float destruction");
 	}
 };
@@ -109,13 +114,13 @@ class FloatObserver : public decs::CreateComponentObserver<float>, public decs::
 class IntObserver : public decs::CreateComponentObserver<int>, public decs::DestroyComponentObserver<int>
 {
 	// Inherited via CreateComponentObserver
-	virtual void OnCreateComponent(int& component, decs::Entity& entity) override
+	virtual void OnCreateComponent(int& component, const decs::Entity& entity) override
 	{
 		PrintLine("Int creation");
 	}
 
 	// Inherited via DestroyComponentObserver
-	virtual void OnDestroyComponent(int& component, decs::Entity& entity) override
+	virtual void OnDestroyComponent(int& component, const decs::Entity& entity) override
 	{
 		PrintLine("Int destruction");
 	}
@@ -149,7 +154,11 @@ void BaseTest()
 	prefab.AddStableComponent<float>();
 	prefab.AddStableComponent<int>();
 	prefab.AddStableComponent<double>();
+	prefab.AddComponent<uint64_t>();
 	prefab.AddComponent<Position>(1.f, 2.f);
+
+	prefab.RemoveStableComponent<float>();
+	prefab.RemoveComponent<uint64_t>();
 
 	// print prefab components names
 	{
@@ -196,9 +205,10 @@ void BaseTest()
 	QueryType query = { container };
 
 	uint64_t iterationCount = 0;
-	auto lambda = [&](decs::Entity& e, Position& pos)
+	auto lambda = [&](const decs::Entity& e, Position& pos)
 	{
 		PrintLine("Enityt ID: " + std::to_string(e.GetID()) + " pos: " + std::to_string(pos.X) + ", " + std::to_string(pos.Y));
+
 	};
 
 	PrintLine();
@@ -330,6 +340,8 @@ void ObservatorOrderTest()
 	observerManager.SetComponentDestroyObserver<int>(&intObserver);
 
 	container.SetObserversManager(&observerManager);
+
+	prefab.RemoveComponent<float>();
 
 	container.SetComponentOrder<float>(0);
 	container.SetComponentOrder<int>(-1);
