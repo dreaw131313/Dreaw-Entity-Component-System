@@ -78,76 +78,62 @@ namespace decs
 
 		void Serialize(Container& container, SerializerData& serializerData)
 		{
-			OnBeginSerialization(container, serializerData);
+			std::vector<ComponentSerializationData> componentSerializersData;
+
+			auto& archetypesMap = container.m_ArchetypesMap;
+			auto& archetypesVector = container.m_ArchetypesMap.m_Archetypes;
+
+			uint64_t archetypesChunks = archetypesVector.ChunkCount();
+
+			decs::Entity entityBuffer = {};
+
+			for (uint32_t i = 0; i < container.m_EmptyEntities.Size(); i++)
 			{
-				std::vector<ComponentSerializationData> componentSerializersData;
-
-				auto& archetypesMap = container.m_ArchetypesMap;
-				auto& archetypesVector = container.m_ArchetypesMap.m_Archetypes;
-
-				uint64_t archetypesChunks = archetypesVector.ChunkCount();
-
-				decs::Entity entityBuffer = {};
-
-				for (uint32_t i = 0; i < container.m_EmptyEntities.Size(); i++)
+				entityBuffer.Set(container.m_EmptyEntities[i], &container);
+				if (BeginEntitySerialize(entityBuffer, serializerData))
 				{
-					entityBuffer.Set(container.m_EmptyEntities[i], &container);
-					if (BeginEntitySerialize(entityBuffer, serializerData))
-					{
-						EndEntitySerialize(entityBuffer, serializerData);
-					}
+					EndEntitySerialize(entityBuffer, serializerData);
 				}
+			}
 
-				for (uint64_t chunkIdx = 0; chunkIdx < archetypesChunks; chunkIdx++)
+			for (uint64_t chunkIdx = 0; chunkIdx < archetypesChunks; chunkIdx++)
+			{
+				uint64_t elementsCount = archetypesVector.GetChunkSize(chunkIdx);
+
+				auto chunk = archetypesVector.GetChunk(chunkIdx);
+
+				for (uint64_t archetypeIdx = 0; archetypeIdx < elementsCount; archetypeIdx++)
 				{
-					uint64_t elementsCount = archetypesVector.GetChunkSize(chunkIdx);
-
-					auto chunk = archetypesVector.GetChunk(chunkIdx);
-
-					for (uint64_t archetypeIdx = 0; archetypeIdx < elementsCount; archetypeIdx++)
+					Archetype& archetype = chunk[archetypeIdx];
+					uint64_t entitesCount = archetype.EntityCount();
+					if (entitesCount > 0)
 					{
-						Archetype& archetype = chunk[archetypeIdx];
-						uint64_t entitesCount = archetype.EntityCount();
-						if (entitesCount > 0)
+						GetComponentSerializers(archetype, componentSerializersData);
+						uint64_t componentCount = componentSerializersData.size();
+
+						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 						{
-							GetComponentSerializers(archetype, componentSerializersData);
-							uint64_t componentCount = componentSerializersData.size();
-
-							for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
+							entityBuffer.Set(archetype.m_EntitiesData[entityIdx].m_EntityData, &container);
+							if (BeginEntitySerialize(entityBuffer, serializerData))
 							{
-								entityBuffer.Set(archetype.m_EntitiesData[entityIdx].m_EntityData, &container);
-								if (BeginEntitySerialize(entityBuffer, serializerData))
+								for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
 								{
-									for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
-									{
-										auto& componentSerializerData = componentSerializersData[componentIdx];
+									auto& componentSerializerData = componentSerializersData[componentIdx];
 
-										componentSerializerData.m_Serializer->SerializeComponentFromVoid(
-											componentSerializerData.m_PackedContainer->GetComponentPtrAsVoid(entityIdx),
-											serializerData
-										);
-									}
-									EndEntitySerialize(entityBuffer, serializerData);
+									componentSerializerData.m_Serializer->SerializeComponentFromVoid(
+										componentSerializerData.m_PackedContainer->GetComponentPtrAsVoid(entityIdx),
+										serializerData
+									);
 								}
+								EndEntitySerialize(entityBuffer, serializerData);
 							}
 						}
 					}
 				}
 			}
-			OnEndSerialization(container, serializerData);
 		}
 
 	protected:
-		virtual void OnBeginSerialization(Container& container, SerializerData& serializerData)
-		{
-
-		}
-
-		virtual void OnEndSerialization(Container& container, SerializerData& serializerData)
-		{
-
-		}
-
 		/// <summary>
 		/// If return false subsequent methods of entity and its components serialization will not be invoked, if returns true, subsequent serialization methods of entity and its components will be invoked.
 		/// </summary>
