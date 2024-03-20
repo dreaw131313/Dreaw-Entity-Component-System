@@ -69,8 +69,9 @@ namespace decs
 		template<typename, typename...>
 		friend class IterationContainerContext;
 		friend class Entity;
-		template<typename T>
+		template<typename>
 		friend class ContainerSerializer;
+		friend class ContainerIterator;
 
 		NON_COPYABLE(Container);
 		NON_MOVEABLE(Container);
@@ -925,5 +926,6 @@ namespace decs
 
 		void AddEntityToDelayedDestroy(const Entity& entity);
 #pragma endregion
+
 	};
 }

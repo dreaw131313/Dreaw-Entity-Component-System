@@ -12,31 +12,46 @@ namespace decs
 	template<typename SerializerData>
 	class ComponentSerializerBase
 	{
-		template<typename T>
+		template<typename>
 		friend class ContainerSerializer;
 
 	public:
 		inline virtual TypeID GetComponentTypeID() const = 0;
 
+		inline virtual std::string GetComponentTypeName() const = 0;
+
+		inline virtual std::string GetComponentTypeNameWithoutNamespace() const = 0;
+
 	protected:
 		virtual void SerializeComponentFromVoid(void* component, SerializerData& serializerData) const = 0;
+
 	};
 
 	template<typename ComponentType, typename SerializerData>
 	class ComponentSerializer : ComponentSerializerBase<SerializerData>
 	{
-		template<typename T>
+		template<typename>
 		friend class ContainerSerializer;
 	public:
 		virtual void SerializeComponent(const typename component_type<ComponentType>::Type& component, SerializerData& serializerData) const = 0;
 
-		inline virtual TypeID GetComponentTypeID() const final
+		inline virtual TypeID GetComponentTypeID() const override final
 		{
 			return Type<ComponentType>::ID();
 		}
 
+		inline virtual std::string GetComponentTypeName() const override final
+		{
+			return Type<ComponentType>::Name();
+		}
+
+		inline virtual std::string GetComponentTypeNameWithoutNamespace() const override final
+		{
+			return Type<ComponentType>::NameWithoutNamespace();
+		}
+
 	private:
-		virtual void SerializeComponentFromVoid(void* component, SerializerData& serializerData) const final override
+		virtual void SerializeComponentFromVoid(void* component, SerializerData& serializerData) const override final
 		{
 			SerializeComponent(*static_cast<typename component_type<ComponentType>::Type*>(component), serializerData);
 		}
@@ -119,11 +134,14 @@ namespace decs
 								for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
 								{
 									auto& componentSerializerData = componentSerializersData[componentIdx];
-
-									componentSerializerData.m_Serializer->SerializeComponentFromVoid(
-										componentSerializerData.m_PackedContainer->GetComponentPtrAsVoid(entityIdx),
-										serializerData
-									);
+									BeginComponentSerialize(entityBuffer, componentSerializerData.m_Serializer, serializerData);
+									{
+										componentSerializerData.m_Serializer->SerializeComponentFromVoid(
+											componentSerializerData.m_PackedContainer->GetComponentPtrAsVoid(entityIdx),
+											serializerData
+										);
+									}
+									EndComponentSerialize(entityBuffer, componentSerializerData.m_Serializer, serializerData);
 								}
 								EndEntitySerialize(entityBuffer, serializerData);
 							}
@@ -142,6 +160,10 @@ namespace decs
 		virtual bool BeginEntitySerialize(const Entity& entity, SerializerData& serializerData) = 0;
 
 		virtual void EndEntitySerialize(const Entity& entity, SerializerData& serializerData) = 0;
+
+		virtual void BeginComponentSerialize(const Entity& entity, const ComponentSerializerBase<SerializerData>* componentSerializer, SerializerData& serializerData) = 0;
+
+		virtual void EndComponentSerialize(const Entity& entity, const ComponentSerializerBase<SerializerData>* componentSerializer, SerializerData& serializerData) = 0;
 
 	private:
 		ecsMap<TypeID, const ComponentSerializerBase<SerializerData>*> m_ComponentSerializers = {};

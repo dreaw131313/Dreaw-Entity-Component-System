@@ -89,6 +89,17 @@ protected:
 	virtual void EndEntitySerialize(const decs::Entity& entity, int& serializerData) override
 	{
 	}
+
+	// Inherited via ContainerSerializer
+	void BeginComponentSerialize(const decs::Entity& entity, const decs::ComponentSerializerBase<int>* componentSerializer, int& serializerData) override
+	{
+		std::cout << "Begin component: " << componentSerializer->GetComponentTypeName() << std::endl;
+	}
+
+	void EndComponentSerialize(const decs::Entity& entity, const decs::ComponentSerializerBase<int>* componentSerializer, int& serializerData) override
+	{
+		std::cout << "End component: " << componentSerializer->GetComponentTypeName() << std::endl;
+	}
 };
 
 
@@ -204,6 +215,8 @@ void BaseTest()
 	using QueryType = decs::Query<Position>;
 	QueryType query = { container };
 
+	query.With();
+
 	uint64_t iterationCount = 0;
 	auto lambda = [&](const decs::Entity& e, Position& pos)
 	{
@@ -266,6 +279,13 @@ void BaseTest()
 		PrintLine("Iterator " + std::to_string(i + 1));
 		it.ForEach(queryLambda);
 	}
+
+	PrintLine("Iteration over containers:");
+	decs::ContainerIterator iterator = {};
+	iterator.Foreach(container, [](const decs::Entity& e)
+	{
+		std::cout << "Entity_" << e.GetID() << std::endl;
+	});
 
 #pragma region Container serializator test:
 	// Serializer test:
@@ -385,6 +405,7 @@ int main()
 	BaseTest();
 	ObservatorOrderTest();
 	RemoveMultipleComponentTest();
+
 
 	return 0;
 }

@@ -99,7 +99,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\decs\ContainerSerializer.h" />
+    <ClInclude Include="src\decs\Utils\ContainerIterator.h" />
+    <ClInclude Include="src\decs\Utils\ContainerSerializer.h" />
     <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h" />
     <ClInclude Include="src\decs\ComponentContainers\PackedContainer.h" />
     <ClInclude Include="src\decs\ComponentContainers\StableContainer.h" />

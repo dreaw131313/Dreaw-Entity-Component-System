@@ -78,7 +78,10 @@
     <ClInclude Include="src\decs\Iteration\IterationCore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\ContainerSerializer.h">
+    <ClInclude Include="src\decs\Utils\ContainerSerializer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\Utils\ContainerIterator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -122,6 +122,7 @@ namespace decs
 	class ArchetypesMap
 	{
 		friend class Container;
+		friend class ContainerIterator;
 		template<typename>
 		friend class ContainerSerializer;
 		template<typename...>

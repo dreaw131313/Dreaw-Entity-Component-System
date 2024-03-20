@@ -104,6 +104,7 @@ namespace decs
 	class Archetype final
 	{
 		friend class Container;
+		friend class ContainerIterator;
 		friend class EntityData;
 		friend class EntityManager;
 		friend class ArchetypesMap;
