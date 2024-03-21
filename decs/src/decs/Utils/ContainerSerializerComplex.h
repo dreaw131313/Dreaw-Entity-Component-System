@@ -71,7 +71,6 @@ namespace decs
 
 		virtual void EndArchetypeSerialize(const Archetype& archetype) = 0;
 
-
 		/// <summary>
 		/// If return false subsequent methods of entity and its components serialization will not be invoked, if returns true, subsequent serialization methods of entity and its components will be invoked.
 		/// </summary>

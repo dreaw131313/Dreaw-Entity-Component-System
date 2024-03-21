@@ -10,4 +10,5 @@
 #include "ComponentRefs/ComponentRef.h"
 #include "ComponentRefs/ComponentRefAsVoid.h"
 #include "Utils/ContainerSerializer.h"
+#include "Utils/ContainerSerializerComplex.h"
 #include "Utils/ContainerIterator.h"
