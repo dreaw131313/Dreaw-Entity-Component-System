@@ -122,6 +122,7 @@
     <ClInclude Include="src\decs\traits.h" />
     <ClInclude Include="src\decs\Type.h" />
     <ClInclude Include="src\decs\Iteration\Query.h" />
+    <ClInclude Include="src\decs\Utils\ContainerSerializerComplex.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\decs\Archetypes\Archetype.cpp" />

@@ -110,6 +110,7 @@ namespace decs
 		friend class ArchetypesMap;
 		template<typename>
 		friend class ContainerSerializer;
+		friend class ContainerSerializerComplex;
 
 		template<typename...>
 		friend class Query;

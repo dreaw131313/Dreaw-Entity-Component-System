@@ -27,6 +27,12 @@ namespace decs
 		inline virtual uint64_t Size() = 0;
 		inline virtual void Reserve(uint64_t newCapacity) = 0;
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns>Component size in bytes.</returns>
+		inline virtual uint64_t GetComponentSize() const = 0;
+
 		inline virtual void* GetComponentPtrAsVoid(uint64_t index) noexcept = 0;
 
 		inline virtual void* GetComponentDataAsVoid(uint64_t index) noexcept = 0;
@@ -55,6 +61,11 @@ namespace decs
 
 		}
 
+		inline virtual uint64_t GetComponentSize() const override
+		{
+			return sizeof(ComponentType);
+		}
+
 		virtual PackedContainerBase* Clone() const noexcept override
 		{
 			return new PackedContainer<ComponentType>();
@@ -72,16 +83,36 @@ namespace decs
 
 		inline virtual void PopBack() override
 		{
-			if (m_Data.size() > 0) { m_Data.pop_back(); }
+			if (m_Data.size() > 0)
+			{
+				m_Data.pop_back();
+			}
 		}
-		inline virtual void Clear() override { m_Data.clear(); }
+
+		inline virtual void Clear() override
+		{
+			m_Data.clear();
+		}
+
 		inline virtual void ShrinkToFit() override
 		{
 			m_Data.shrink_to_fit();
 		}
-		inline virtual uint64_t Capacity() override { return m_Data.capacity(); }
-		inline virtual uint64_t Size() override { return m_Data.size(); }
-		inline virtual void Reserve(uint64_t newCapacity) override { m_Data.reserve(newCapacity); }
+
+		inline virtual uint64_t Capacity() override
+		{
+			return m_Data.capacity();
+		}
+
+		inline virtual uint64_t Size() override
+		{
+			return m_Data.size();
+		}
+
+		inline virtual void Reserve(uint64_t newCapacity) override
+		{
+			m_Data.reserve(newCapacity);
+		}
 
 		inline virtual void* GetComponentPtrAsVoid(uint64_t index) noexcept override
 		{
@@ -130,6 +161,11 @@ namespace decs
 		~PackedContainer()
 		{
 
+		}
+
+		inline virtual uint64_t GetComponentSize() const override
+		{
+			return sizeof(ComponentType);
 		}
 
 		virtual PackedContainerBase* Clone() const noexcept override

@@ -125,6 +125,7 @@ namespace decs
 		friend class ContainerIterator;
 		template<typename>
 		friend class ContainerSerializer;
+		friend class ContainerSerializerComplex;
 		template<typename...>
 		friend class Query;
 		template<typename, typename...>

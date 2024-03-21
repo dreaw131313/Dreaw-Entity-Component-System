@@ -71,6 +71,7 @@ namespace decs
 		friend class Entity;
 		template<typename>
 		friend class ContainerSerializer;
+		friend class ContainerSerializerComplex;
 		friend class ContainerIterator;
 
 		NON_COPYABLE(Container);
