@@ -50,6 +50,7 @@ namespace decs
 										const auto& archetypeComponentData = archetype.m_TypeData[componentIdx];
 
 										SerializeComponent(
+											entityBuffer,
 											archetypeComponentData.m_PackedContainer->GetComponentPtrAsVoid(entityIdx),
 											archetypeComponentData.m_PackedContainer->GetComponentSize(),
 											archetypeComponentData.m_TypeID,
@@ -80,7 +81,7 @@ namespace decs
 
 		virtual void EndEntitySerialize(const Entity& entity) = 0;
 
-		virtual void SerializeComponent(void* component, uint64_t componentSize, TypeID componentTypeID, uint64_t componentIndexInArchetype) = 0;
+		virtual void SerializeComponent(const Entity& entity, void* component, uint64_t componentSize, TypeID componentTypeID, uint64_t componentIndexInArchetype) = 0;
 
 	};
 }
