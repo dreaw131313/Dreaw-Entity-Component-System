@@ -137,6 +137,21 @@ class IntObserver : public decs::CreateComponentObserver<int>, public decs::Dest
 	}
 };
 
+class PositionObserver : public decs::CreateComponentObserver<decs::stable<Position>>, public decs::DestroyComponentObserver<decs::stable<Position>>
+{
+	// Inherited via CreateComponentObserver
+	virtual void OnCreateComponent(Position& component, const decs::Entity& entity) override
+	{
+		PrintLine("Position creation");
+	}
+
+	// Inherited via DestroyComponentObserver
+	virtual void OnDestroyComponent(Position& component, const decs::Entity& entity) override
+	{
+		PrintLine("Position destruction");
+	}
+};
+
 void BaseTest()
 {
 	PrintLine(std::format("Sizeof of Query<int>: {} bytes", sizeof(decs::Query<int>)));
@@ -348,9 +363,11 @@ void ObservatorOrderTest()
 	auto prefab = container.CreateEntity();
 	prefab.AddComponent<float>();
 	prefab.AddComponent<int>();
+	prefab.AddStableComponent<Position>();
 
 	FloatObserver floatObserver = {};
 	IntObserver intObserver = {};
+	PositionObserver positionObserver = {};
 
 	decs::ObserversManager observerManager = {};
 
@@ -358,6 +375,9 @@ void ObservatorOrderTest()
 	observerManager.SetComponentDestroyObserver<float>(&floatObserver);
 	observerManager.SetComponentCreateObserver<int>(&intObserver);
 	observerManager.SetComponentDestroyObserver<int>(&intObserver);
+	
+	observerManager.SetComponentCreateObserver<decs::stable<Position>>(&positionObserver);
+	observerManager.SetComponentDestroyObserver<decs::stable<Position>>(&positionObserver);
 
 	container.SetObserversManager(&observerManager);
 
@@ -402,9 +422,9 @@ void RemoveMultipleComponentTest()
 
 int main()
 {
-	BaseTest();
+	//BaseTest();
 	ObservatorOrderTest();
-	RemoveMultipleComponentTest();
+	//RemoveMultipleComponentTest();
 
 
 	return 0;

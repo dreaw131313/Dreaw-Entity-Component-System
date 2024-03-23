@@ -45,15 +45,18 @@ namespace decs
 		int m_ObserverOrder = 0;
 	};
 
-	template<typename ComponentType>
+	template<typename T>
 	class ComponentContext : public ComponentContextBase
 	{
 		friend class Container;
-	public:
-		ComponentObserversGroup<ComponentType>* m_ObserversGroup = nullptr;
+
+		using TComponentType = component_type<T>::Type;
 
 	public:
-		ComponentContext(ComponentObserversGroup<ComponentType>* observer, bool order) :
+		ComponentObserversGroup<T>* m_ObserversGroup = nullptr;
+
+	public:
+		ComponentContext(ComponentObserversGroup<T>* observer, bool order) :
 			ComponentContextBase(order),
 			m_ObserversGroup(observer)
 		{
@@ -67,7 +70,7 @@ namespace decs
 
 		inline virtual std::string GetComponentName() const override
 		{
-			return decs::Type<component_type<ComponentType>::Type>::Name();
+			return decs::Type<T>::Name();
 		}
 
 		virtual void SetObserverManager(ObserversManager* observerManager) override
@@ -78,14 +81,14 @@ namespace decs
 			}
 			else
 			{
-				m_ObserversGroup = observerManager->GetComponentObserverGroup<ComponentType>();
+				m_ObserversGroup = observerManager->GetComponentObserverGroup<T>();
 			}
 		}
 
 		ComponentContextBase* Clone(ObserversManager* observerManager) override
 		{
-			return new ComponentContext<ComponentType>(
-				observerManager != nullptr ? observerManager->GetComponentObserverGroup<ComponentType>() : nullptr,
+			return new ComponentContext<T>(
+				observerManager != nullptr ? observerManager->GetComponentObserverGroup<T>() : nullptr,
 				GetObserverOrder()
 			);
 		}
@@ -94,7 +97,7 @@ namespace decs
 		{
 			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_CreateObserver != nullptr)
 			{
-				m_ObserversGroup->m_CreateObserver->OnCreateComponent(*static_cast<ComponentType*>(component), entity);
+				m_ObserversGroup->m_CreateObserver->OnCreateComponent(*static_cast<TComponentType*>(component), entity);
 			}
 		}
 
@@ -102,81 +105,7 @@ namespace decs
 		{
 			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_DestroyObserver != nullptr)
 			{
-				m_ObserversGroup->m_DestroyObserver->OnDestroyComponent(*static_cast<ComponentType*>(component), entity);
-			}
-		}
-
-		virtual void InvokeOnEnableEntity(void* component, const Entity& entity) override
-		{
-
-		}
-
-		virtual void InvokeOnOnDisableEntity(void* component, const Entity& entity) override
-		{
-
-		}
-
-	};
-
-
-	template<typename ComponentType>
-	class ComponentContext<stable<ComponentType>> : public ComponentContextBase
-	{
-		friend class Container;
-	public:
-		ComponentObserversGroup<stable<ComponentType>>* m_ObserversGroup = nullptr;
-
-	public:
-		ComponentContext(ComponentObserversGroup<stable<ComponentType>>* observer, int order) :
-			ComponentContextBase(order),
-			m_ObserversGroup(observer)
-		{
-
-		}
-
-		~ComponentContext()
-		{
-
-		}
-
-		inline virtual std::string GetComponentName() const override
-		{
-			return decs::Type<component_type<ComponentType>::Type>::Name();
-		}
-
-		virtual void SetObserverManager(ObserversManager* observerManager) override
-		{
-			if (observerManager == nullptr)
-			{
-				m_ObserversGroup = nullptr;
-			}
-			else
-			{
-				m_ObserversGroup = observerManager->GetComponentObserverGroup<stable<ComponentType>>();
-			}
-		}
-
-		ComponentContextBase* Clone(ObserversManager* observerManager) override
-		{
-			return new ComponentContext<stable<ComponentType>>(
-				observerManager != nullptr ? observerManager->GetComponentObserverGroup<stable<ComponentType>>() : nullptr,
-				GetObserverOrder()
-			);
-		}
-
-		virtual void InvokeOnCreateComponent(void* component, const Entity& entity)override
-		{
-			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_CreateObserver != nullptr)
-			{
-				m_ObserversGroup->m_CreateObserver->OnCreateComponent(*static_cast<ComponentType*>(component), entity);
-			}
-		}
-
-		virtual void InvokeOnDestroyComponent(void* component, const Entity& entity) override
-		{
-			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_DestroyObserver != nullptr)
-			{
-				m_ObserversGroup->m_DestroyObserver->OnDestroyComponent(*static_cast<ComponentType*>(component), entity);
+				m_ObserversGroup->m_DestroyObserver->OnDestroyComponent(*static_cast<TComponentType*>(component), entity);
 			}
 		}
 
