@@ -22,7 +22,10 @@ namespace decs
 			{
 				entityBuffer.Set(container.m_EmptyEntities[i], &container);
 
-				// entity serialize:
+				if (BeginEntitySerialize(entityBuffer))
+				{
+					EndEntitySerialize(entityBuffer);
+				}
 			}
 
 			for (uint64_t chunkIdx = 0; chunkIdx < archetypesChunks; chunkIdx++)
