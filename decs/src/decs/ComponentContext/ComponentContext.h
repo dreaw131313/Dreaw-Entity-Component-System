@@ -68,9 +68,13 @@ namespace decs
 
 		}
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns>Name of component if coponent is stable (T = decs::stable<ComponentType>) it will return name of ComponentType without decs::stable</returns>
 		inline virtual std::string GetComponentName() const override
 		{
-			return decs::Type<T>::Name();
+			return decs::Type<TComponentType>::Name();
 		}
 
 		virtual void SetObserverManager(ObserversManager* observerManager) override
