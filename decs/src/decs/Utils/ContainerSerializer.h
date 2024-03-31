@@ -102,7 +102,7 @@ namespace decs
 
 			decs::Entity entityBuffer = {};
 
-			for (uint32_t i = 0; i < container.m_EmptyEntities.Size(); i++)
+			for (uint32_t i = 0; i < container.m_EmptyEntities.size(); i++)
 			{
 				entityBuffer.Set(container.m_EmptyEntities[i], &container);
 				if (BeginEntitySerialize(entityBuffer, serializerData))

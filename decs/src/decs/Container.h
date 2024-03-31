@@ -86,18 +86,23 @@ namespace decs
 
 		Container(
 			uint64_t enititesChunkSize,
-			uint32_t stableComponentDefaultChunkSize,
-			uint64_t m_EmptyEntitiesChunkSize = 100
+			uint32_t stableComponentDefaultChunkSize
 		);
 
 		Container(
 			EntityManager* entityManager,
-			uint32_t stableComponentDefaultChunkSize,
-			uint64_t m_EmptyEntitiesChunkSize = 100
+			uint32_t stableComponentDefaultChunkSize
 		);
 
-		~Container();
+		Container(
+			EntityManager* entityManager,
+			ComponentContextsManager* componentContextManager,
+			uint32_t stableComponentDefaultChunkSize
+		);
 
+		Container(bool bCreateInvalid);
+
+		~Container();
 
 #pragma region Extension data
 	public:
@@ -125,6 +130,11 @@ namespace decs
 		/// </summary>
 		void ValidateInternalState();
 
+		void SetDataIfCreatedInvalid(
+			EntityManager* entityManager,
+			ComponentContextsManager* componentContextManager,
+			uint32_t stableComponentDefaultChunkSize
+		);
 #pragma endregion
 
 #pragma region FLAGS:
@@ -172,7 +182,7 @@ namespace decs
 
 #pragma region ENTITIES:
 	private:
-		TChunkedVector<EntityData*> m_EmptyEntities = { m_DefaultEmptyEntitiesChunkSize }; //TODO: change to std::vector
+		std::vector<EntityData*> m_EmptyEntities = {}; //TODO: change to std::vector
 		EntityManager* m_EntityManager = nullptr;
 		uint32_t m_EntiesCount = 0;
 		bool m_HaveOwnEntityManager = false;
@@ -192,7 +202,7 @@ namespace decs
 
 		inline uint64_t GetEmptyEntitiesCount() const
 		{
-			return m_EmptyEntities.Size();
+			return m_EmptyEntities.size();
 		}
 
 	private:

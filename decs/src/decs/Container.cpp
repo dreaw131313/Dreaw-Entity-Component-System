@@ -15,30 +15,49 @@ namespace decs
 
 	Container::Container(
 		uint64_t enititesChunkSize,
-		uint32_t stableComponentDefaultChunkSize,
-		uint64_t m_EmptyEntitiesChunkSize
+		uint32_t stableComponentDefaultChunkSize
 	) :
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(enititesChunkSize)),
 		m_StableContainers(stableComponentDefaultChunkSize),
 		m_HaveOwnComponentContextManager(true),
-		m_ComponentContextManager(new ComponentContextsManager(nullptr)),
-		m_EmptyEntities(m_EmptyEntitiesChunkSize)
+		m_ComponentContextManager(new ComponentContextsManager(nullptr))
 	{
 	}
 
 	Container::Container(
 		EntityManager* entityManager,
-		uint32_t stableComponentDefaultChunkSize,
-		uint64_t m_EmptyEntitiesChunkSize
+		uint32_t stableComponentDefaultChunkSize
 	) :
 		m_HaveOwnEntityManager(entityManager == nullptr),
 		m_EntityManager(entityManager == nullptr ? new EntityManager(m_DefaultEntitiesChunkSize) : entityManager),
 		m_HaveOwnComponentContextManager(true),
 		m_ComponentContextManager(new ComponentContextsManager(nullptr)),
-		m_StableContainers(stableComponentDefaultChunkSize),
-		m_EmptyEntities(m_EmptyEntitiesChunkSize)
+		m_StableContainers(stableComponentDefaultChunkSize)
 	{
+	}
+
+	Container::Container(
+		EntityManager* entityManager,
+		ComponentContextsManager* componentContextManager,
+		uint32_t stableComponentDefaultChunkSize
+	) :
+		m_HaveOwnEntityManager(entityManager == nullptr),
+		m_EntityManager(entityManager == nullptr ? new EntityManager(m_DefaultEntitiesChunkSize) : entityManager),
+		m_HaveOwnComponentContextManager(componentContextManager == nullptr),
+		m_ComponentContextManager(componentContextManager == nullptr ? new ComponentContextsManager(nullptr) : componentContextManager),
+		m_StableContainers(stableComponentDefaultChunkSize)
+	{
+
+	}
+
+	Container::Container(bool bCreateInvalid) :
+		m_HaveOwnEntityManager(!bCreateInvalid),
+		m_EntityManager(bCreateInvalid ? nullptr : new EntityManager(m_DefaultEntitiesChunkSize)),
+		m_HaveOwnComponentContextManager(!bCreateInvalid),
+		m_ComponentContextManager(bCreateInvalid ? nullptr : new ComponentContextsManager(nullptr))
+	{
+
 	}
 
 	Container::~Container()
@@ -71,6 +90,21 @@ namespace decs
 		m_SpawnData.Clear();
 
 		m_DelayedEntitiesToDestroy.clear();
+	}
+
+	void Container::SetDataIfCreatedInvalid(
+		EntityManager* entityManager, 
+		ComponentContextsManager* componentContextManager, 
+		uint32_t stableComponentDefaultChunkSize
+	)
+	{
+		if (m_EntityManager == nullptr && m_ComponentContextManager == nullptr)
+		{
+			m_EntityManager = entityManager;
+			m_ComponentContextManager = componentContextManager;
+			m_StableContainers.SetDefaultChunkSize(stableComponentDefaultChunkSize);
+			//m_EmptyEntities = { emptyEntitiesChunkSize };
+		}
 	}
 
 	Entity Container::CreateEntity(bool isActive)
@@ -117,7 +151,7 @@ namespace decs
 		}
 
 		Entity entity = {};
-		for (uint64_t i = 0; i < m_EmptyEntities.Size(); i++)
+		for (uint64_t i = 0; i < m_EmptyEntities.size(); i++)
 		{
 			EntityData& data = *m_EmptyEntities[i];
 			entity.Set(data, this);
@@ -129,7 +163,7 @@ namespace decs
 			m_EntityManager->DestroyEntity(data);
 		}
 
-		m_EmptyEntities.Clear();
+		m_EmptyEntities.clear();
 		m_StableContainers.ClearContainers();
 
 		m_EntiesCount = 0;
@@ -185,7 +219,7 @@ namespace decs
 		return false;
 	}
 
-	void Container::SetEntityActive( const Entity& entity, bool isActive)
+	void Container::SetEntityActive(const Entity& entity, bool isActive)
 	{
 		if (entity.m_Container == this && entity.m_EntityData->IsAlive() && entity.m_EntityData->IsActive() != isActive)
 		{
@@ -204,8 +238,8 @@ namespace decs
 	void Container::AddToEmptyEntitiesRightAfterNewEntityCreation(EntityData& data)
 	{
 		data.m_Archetype = nullptr;
-		data.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
-		m_EmptyEntities.EmplaceBack(&data);
+		data.m_IndexInArchetype = (uint32_t)m_EmptyEntities.size();
+		m_EmptyEntities.push_back(&data);
 	}
 
 	void Container::AddToEmptyEntities(EntityData& data)
@@ -216,8 +250,8 @@ namespace decs
 		}
 
 		data.m_Archetype = nullptr;
-		data.m_IndexInArchetype = (uint32_t)m_EmptyEntities.Size();
-		m_EmptyEntities.EmplaceBack(&data);
+		data.m_IndexInArchetype = (uint32_t)m_EmptyEntities.size();
+		m_EmptyEntities.push_back(&data);
 	}
 
 	void Container::RemoveFromEmptyEntities(EntityData& data)
@@ -227,13 +261,13 @@ namespace decs
 			return;
 		}
 
-		if (data.m_IndexInArchetype < m_EmptyEntities.Size() - 1)
+		if (data.m_IndexInArchetype < m_EmptyEntities.size() - 1)
 		{
-			m_EmptyEntities[data.m_IndexInArchetype] = m_EmptyEntities.Back();
-			m_EmptyEntities.Back()->m_IndexInArchetype = data.m_IndexInArchetype;
+			m_EmptyEntities[data.m_IndexInArchetype] = m_EmptyEntities.back();
+			m_EmptyEntities.back()->m_IndexInArchetype = data.m_IndexInArchetype;
 		}
 
-		m_EmptyEntities.PopBack();
+		m_EmptyEntities.pop_back();
 		data.m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 	}
 
@@ -627,7 +661,7 @@ namespace decs
 			}
 
 			Entity entity = {};
-			uint64_t emptyEntitiesSize = m_EmptyEntities.Size();
+			uint64_t emptyEntitiesSize = m_EmptyEntities.size();
 			for (uint64_t i = 0; i < emptyEntitiesSize; i++)
 			{
 				EntityData* data = m_EmptyEntities[i];
@@ -658,7 +692,7 @@ namespace decs
 		}
 
 		Entity entity = {};
-		for (uint64_t i = 0; i < m_EmptyEntities.Size(); i++)
+		for (uint64_t i = 0; i < m_EmptyEntities.size(); i++)
 		{
 			EntityData& data = *m_EmptyEntities[i];
 			entity.Set(data, this);
