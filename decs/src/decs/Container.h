@@ -94,12 +94,6 @@ namespace decs
 			uint32_t stableComponentDefaultChunkSize
 		);
 
-		Container(
-			EntityManager* entityManager,
-			ComponentContextsManager* componentContextManager,
-			uint32_t stableComponentDefaultChunkSize
-		);
-
 		Container(bool bCreateInvalid);
 
 		~Container();
@@ -132,7 +126,6 @@ namespace decs
 
 		void SetDataIfCreatedInvalid(
 			EntityManager* entityManager,
-			ComponentContextsManager* componentContextManager,
 			uint32_t stableComponentDefaultChunkSize
 		);
 #pragma endregion
@@ -403,8 +396,7 @@ namespace decs
 
 #pragma region COMPONENTS:
 	private:
-		bool m_HaveOwnComponentContextManager = true;
-		ComponentContextsManager* m_ComponentContextManager = nullptr;
+		ComponentContextsManager m_ComponentContextManager = {};
 
 	private:
 		template<typename ComponentType, typename ...Args>
@@ -794,7 +786,7 @@ namespace decs
 				if (entityNewArchetype == nullptr)
 				{
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<ComponentType>(
-						m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(),
+						m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>(),
 						nullptr
 					);
 				}
@@ -806,7 +798,7 @@ namespace decs
 				{
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<ComponentType>(
 						*toArchetype,
-						m_ComponentContextManager->GetOrCreateComponentContext<ComponentType>(),
+						m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>(),
 						nullptr
 					);
 				}
@@ -832,7 +824,7 @@ namespace decs
 				if (entityNewArchetype == nullptr)
 				{
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<stable<ComponentType>>(
-						m_ComponentContextManager->GetOrCreateComponentContext<stable<ComponentType>>(),
+						m_ComponentContextManager.GetOrCreateComponentContext<stable<ComponentType>>(),
 						m_StableContainers.GetOrCreateStableContainer<ComponentType>()
 					);
 				}
@@ -844,7 +836,7 @@ namespace decs
 				{
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<stable<ComponentType>>(
 						*toArchetype,
-						m_ComponentContextManager->GetOrCreateComponentContext<stable<ComponentType>>(),
+						m_ComponentContextManager.GetOrCreateComponentContext<stable<ComponentType>>(),
 						m_StableContainers.GetOrCreateStableContainer<ComponentType>()
 					);
 				}
@@ -873,7 +865,7 @@ namespace decs
 		template<typename ComponentType>
 		void SetComponentOrder(int order)
 		{
-			if (m_ComponentContextManager->SetComponentOrder<ComponentType>(order))
+			if (m_ComponentContextManager.SetComponentOrder<ComponentType>(order))
 			{
 				// sort order of observers in all archetypes that contain ComponentType
 				m_ArchetypesMap.UpdateOrderInAllArchetypesWithComponentType<ComponentType>();
@@ -887,7 +879,7 @@ namespace decs
 		/// <param name="order"></param>
 		void SetComponentOrder(TypeID typeID, int order)
 		{
-			if (m_ComponentContextManager->SetComponentOrder(typeID, order))
+			if (m_ComponentContextManager.SetComponentOrder(typeID, order))
 			{
 				// sort order of observers in all archetypes that contain ComponentType
 				m_ArchetypesMap.UpdateOrderInAllArchetypesWithComponentType(typeID);
@@ -900,17 +892,17 @@ namespace decs
 	private:
 		inline void InvokeEntityCreationObservers(const Entity& entity)
 		{
-			if (m_ComponentContextManager->m_ObserversManager != nullptr)
+			if (m_ComponentContextManager.m_ObserversManager != nullptr)
 			{
-				m_ComponentContextManager->m_ObserversManager->InvokeEntityCreationObservers(entity);
+				m_ComponentContextManager.m_ObserversManager->InvokeEntityCreationObservers(entity);
 			}
 		}
 
 		inline void InvokeEntityDestructionObservers(const Entity& entity)
 		{
-			if (m_ComponentContextManager->m_ObserversManager != nullptr)
+			if (m_ComponentContextManager.m_ObserversManager != nullptr)
 			{
-				m_ComponentContextManager->m_ObserversManager->InvokeEntityDestructionObservers(entity);
+				m_ComponentContextManager.m_ObserversManager->InvokeEntityDestructionObservers(entity);
 			}
 		}
 

@@ -6,9 +6,7 @@ namespace decs
 {
 	Container::Container() :
 		m_HaveOwnEntityManager(true),
-		m_EntityManager(new EntityManager(m_DefaultEntitiesChunkSize)),
-		m_HaveOwnComponentContextManager(true),
-		m_ComponentContextManager(new ComponentContextsManager(nullptr))
+		m_EntityManager(new EntityManager(m_DefaultEntitiesChunkSize))
 	{
 
 	}
@@ -19,9 +17,7 @@ namespace decs
 	) :
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(enititesChunkSize)),
-		m_StableContainers(stableComponentDefaultChunkSize),
-		m_HaveOwnComponentContextManager(true),
-		m_ComponentContextManager(new ComponentContextsManager(nullptr))
+		m_StableContainers(stableComponentDefaultChunkSize)
 	{
 	}
 
@@ -31,31 +27,13 @@ namespace decs
 	) :
 		m_HaveOwnEntityManager(entityManager == nullptr),
 		m_EntityManager(entityManager == nullptr ? new EntityManager(m_DefaultEntitiesChunkSize) : entityManager),
-		m_HaveOwnComponentContextManager(true),
-		m_ComponentContextManager(new ComponentContextsManager(nullptr)),
 		m_StableContainers(stableComponentDefaultChunkSize)
 	{
-	}
-
-	Container::Container(
-		EntityManager* entityManager,
-		ComponentContextsManager* componentContextManager,
-		uint32_t stableComponentDefaultChunkSize
-	) :
-		m_HaveOwnEntityManager(entityManager == nullptr),
-		m_EntityManager(entityManager == nullptr ? new EntityManager(m_DefaultEntitiesChunkSize) : entityManager),
-		m_HaveOwnComponentContextManager(componentContextManager == nullptr),
-		m_ComponentContextManager(componentContextManager == nullptr ? new ComponentContextsManager(nullptr) : componentContextManager),
-		m_StableContainers(stableComponentDefaultChunkSize)
-	{
-
 	}
 
 	Container::Container(bool bCreateInvalid) :
 		m_HaveOwnEntityManager(!bCreateInvalid),
-		m_EntityManager(bCreateInvalid ? nullptr : new EntityManager(m_DefaultEntitiesChunkSize)),
-		m_HaveOwnComponentContextManager(!bCreateInvalid),
-		m_ComponentContextManager(bCreateInvalid ? nullptr : new ComponentContextsManager(nullptr))
+		m_EntityManager(bCreateInvalid ? nullptr : new EntityManager(m_DefaultEntitiesChunkSize))
 	{
 
 	}
@@ -71,10 +49,6 @@ namespace decs
 			ReturnOwnedEntitiesToEntityManager();
 		}
 
-		if (m_HaveOwnComponentContextManager)
-		{
-			delete m_ComponentContextManager;
-		}
 		m_StableContainers.DestroyContainers();
 	}
 
@@ -93,15 +67,13 @@ namespace decs
 	}
 
 	void Container::SetDataIfCreatedInvalid(
-		EntityManager* entityManager, 
-		ComponentContextsManager* componentContextManager, 
+		EntityManager* entityManager,
 		uint32_t stableComponentDefaultChunkSize
 	)
 	{
-		if (m_EntityManager == nullptr && m_ComponentContextManager == nullptr)
+		if (m_EntityManager == nullptr)
 		{
 			m_EntityManager = entityManager;
-			m_ComponentContextManager = componentContextManager;
 			m_StableContainers.SetDefaultChunkSize(stableComponentDefaultChunkSize);
 			//m_EmptyEntities = { emptyEntitiesChunkSize };
 		}
@@ -473,9 +445,9 @@ namespace decs
 		{
 			spawnedEntityArchetype = m_ArchetypesMap.GetOrCreateMatchedArchetype(
 				*prefabEntityData.m_Archetype,
-				m_ComponentContextManager,
+				&m_ComponentContextManager,
 				&m_StableContainers,
-				m_ComponentContextManager->m_ObserversManager
+				m_ComponentContextManager.m_ObserversManager
 			);
 		}
 		m_SpawnData.m_SpawnArchetypes.push_back(spawnedEntityArchetype);
@@ -632,11 +604,7 @@ namespace decs
 
 	bool Container::SetObserversManager(ObserversManager* observersManager)
 	{
-		if (m_HaveOwnComponentContextManager)
-		{
-			return m_ComponentContextManager->SetObserversManager(observersManager);
-		}
-		return false;
+		return m_ComponentContextManager.SetObserversManager(observersManager);
 	}
 
 	void Container::InvokeEntitesOnCreateListeners()
@@ -702,9 +670,9 @@ namespace decs
 
 	void Container::InvokeEntityActivationObservers(const Entity& entity)
 	{
-		if (m_ComponentContextManager->m_ObserversManager != nullptr)
+		if (m_ComponentContextManager.m_ObserversManager != nullptr)
 		{
-			m_ComponentContextManager->m_ObserversManager->InvokeEntityActivationObservers(entity);
+			m_ComponentContextManager.m_ObserversManager->InvokeEntityActivationObservers(entity);
 		}
 
 		// TODO: add components activation listeners invoking
@@ -746,9 +714,9 @@ namespace decs
 
 	void Container::InvokeEntityDeactivationObservers(const Entity& entity)
 	{
-		if (m_ComponentContextManager->m_ObserversManager != nullptr)
+		if (m_ComponentContextManager.m_ObserversManager != nullptr)
 		{
-			m_ComponentContextManager->m_ObserversManager->InvokeEntityDeactivationObservers(entity);
+			m_ComponentContextManager.m_ObserversManager->InvokeEntityDeactivationObservers(entity);
 		}
 
 		// TODO: add components deactivation listeners invoking
