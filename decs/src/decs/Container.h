@@ -722,7 +722,7 @@ namespace decs
 
 #pragma region STABLE COMPONENTS
 	private:
-		StableContainersManager m_StableContainers = { 100 };
+		StableContainersManager m_StableContainers = { 1000 };
 	public:
 		template<typename T>
 		bool SetStableComponentChunkSize(uint32_t chunkSize)
