@@ -422,8 +422,8 @@ void RemoveMultipleComponentTest()
 
 int main()
 {
-	//BaseTest();
-	ObservatorOrderTest();
+	BaseTest();
+	//ObservatorOrderTest();
 	//RemoveMultipleComponentTest();
 
 

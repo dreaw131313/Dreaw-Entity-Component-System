@@ -34,12 +34,6 @@ namespace decs
 
 		}
 
-		MultiQuery(uint64_t containerContextsChunkSize) :
-			m_ContainerContexts(containerContextsChunkSize)
-		{
-
-		}
-
 		inline uint64_t GetMinComponentsCount() const
 		{
 			uint64_t includesCount = sizeof...(ComponentsTypes);
@@ -85,54 +79,49 @@ namespace decs
 		{
 			Fetch();
 
-			uint64_t containerContextChunksCount = m_ContainerContexts.ChunkCount();
 			decs::Entity entityBuffor = {};
 			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 
-			for (uint64_t chunkIdx = 0; chunkIdx < containerContextChunksCount; chunkIdx++)
+			uint64_t contextSize = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
-				auto chunk = m_ContainerContexts.GetChunk(chunkIdx);
-				const uint64_t chunkSize = m_ContainerContexts.GetChunkSize(chunkIdx);
-
-				for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++)
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				if (!containerContext.m_bIsEnabled)
 				{
-					ContainerContextType& containerContext = chunk[elementIndex];
-					if (!containerContext.m_bIsEnabled)
+					continue; // Skip if container context is disabled
+				}
+
+				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+
+				for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+				{
+					ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+					uint64_t ctxEntityCount = ctx.GetEntityCount();
+					if (ctxEntityCount == 0) continue;
+
+					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 					{
-						continue; // Skip if container context is disabled
-					}
-
-					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
-					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
-
-					for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
-					{
-						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-						uint64_t ctxEntityCount = ctx.GetEntityCount();
-						if (ctxEntityCount == 0) continue;
-
-						std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
-						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
-
-						for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+						const auto& entityData = entitiesData[idx];
+						if (entityData.IsActive())
 						{
-							const auto& entityData = entitiesData[idx];
-							if (entityData.IsActive())
+							if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
 							{
-								if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
-								{
-									entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
-									func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
-								}
-								else
-								{
-									func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
-								}
+								entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
+								func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+							}
+							else
+							{
+								func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 							}
 						}
 					}
 				}
 			}
+
 		}
 
 		template<typename Callable>
@@ -140,49 +129,44 @@ namespace decs
 		{
 			Fetch();
 
-			uint64_t containerContextChunksCount = m_ContainerContexts.ChunkCount();
 			decs::Entity entityBuffor = {};
 			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 
-			for (uint64_t chunkIdx = 0; chunkIdx < containerContextChunksCount; chunkIdx++)
+
+			uint64_t contextSize = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
-				auto chunk = m_ContainerContexts.GetChunk(chunkIdx);
-				const uint64_t chunkSize = m_ContainerContexts.GetChunkSize(chunkIdx);
-
-				for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++)
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				if (!containerContext.m_bIsEnabled)
 				{
-					ContainerContextType& containerContext = chunk[elementIndex];
-					if (!containerContext.m_bIsEnabled)
+					continue; // Skip if container context is disabled
+				}
+
+				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+
+				for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+				{
+					ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+					uint64_t ctxEntityCount = ctx.GetEntityCount();
+					if (ctxEntityCount == 0) continue;
+
+					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+					for (int64_t idx = (int64_t)ctxEntityCount - 1; idx > -1; idx--)
 					{
-						continue; // Skip if container context is disabled
-					}
-
-					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
-					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
-
-					for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
-					{
-						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-						uint64_t ctxEntityCount = ctx.GetEntityCount();
-						if (ctxEntityCount == 0) continue;
-
-						std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
-						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
-
-						for (int64_t idx = (int64_t)ctxEntityCount - 1; idx > -1; idx--)
+						const auto& entityData = entitiesData[idx];
+						if (entityData.IsActive())
 						{
-							const auto& entityData = entitiesData[idx];
-							if (entityData.IsActive())
+							if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
 							{
-								if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
-								{
-									entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
-									func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
-								}
-								else
-								{
-									func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
-								}
+								entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
+								func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+							}
+							else
+							{
+								func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 							}
 						}
 					}
@@ -193,10 +177,10 @@ namespace decs
 		virtual bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{
 			auto& contextIndex = m_ContainerContextsIndexes[container];
-			if (contextIndex >= m_ContainerContexts.Size() || m_ContainerContexts[contextIndex].m_Container != container)
+			if (contextIndex >= m_ContainerContexts.size() || m_ContainerContexts[contextIndex].m_Container != container)
 			{
-				contextIndex = m_ContainerContexts.Size();
-				m_ContainerContexts.EmplaceBack(container, bIsEnabled);
+				contextIndex = m_ContainerContexts.size();
+				m_ContainerContexts.emplace_back(container, bIsEnabled);
 				return true;
 			}
 			return false;
@@ -208,14 +192,15 @@ namespace decs
 			if (it != m_ContainerContextsIndexes.end())
 			{
 				const uint64_t index = it->second;
-				m_ContainerContexts.RemoveSwapBack(index);
-
-				if (index < m_ContainerContexts.Size())
-				{
-					ContainerContextType& context = m_ContainerContexts[index];
-					m_ContainerContextsIndexes[context.m_Container] = index;
-				}
 				m_ContainerContextsIndexes.erase(it);
+
+				if (index < (m_ContainerContexts.size() - 1))
+				{
+					auto& lastContext = m_ContainerContexts.back();
+					m_ContainerContextsIndexes[lastContext.m_Container] = index;
+					m_ContainerContexts[index] = lastContext;
+				}
+				m_ContainerContexts.pop_back();
 
 				return true;
 			}
@@ -237,7 +222,7 @@ namespace decs
 			if (entity.IsValid())
 			{
 				auto containerCtxIdxIt = m_ContainerContextsIndexes.find(entity.GetContainer());
-				if (containerCtxIdxIt!= m_ContainerContextsIndexes.end())
+				if (containerCtxIdxIt != m_ContainerContextsIndexes.end())
 				{
 					auto& ctx = m_ContainerContexts[containerCtxIdxIt->second];
 					ctx.Fetch(
@@ -254,20 +239,20 @@ namespace decs
 		}
 
 	private:
+		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
 		TypeGroup<ComponentsTypes...> m_Includes = {};
 		std::vector<TypeID> m_Without;
 		std::vector<TypeID> m_WithAnyOf;
 		std::vector<TypeID> m_WithAll;
 
-		TChunkedVector<ContainerContextType> m_ContainerContexts = {};
-		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
+		std::vector<ContainerContextType> m_ContainerContexts = {};
 
 		bool m_IsDirty = true;
 
 	private:
 		void Fetch()
 		{
-			uint64_t containerContextsSize = m_ContainerContexts.Size();
+			uint64_t containerContextsSize = m_ContainerContexts.size();
 			uint64_t minComponentsCount = GetMinComponentsCount();
 			if (m_IsDirty)
 			{
@@ -304,7 +289,7 @@ namespace decs
 		uint64_t CalculateEntityCount()
 		{
 			uint64_t entitiesCount = 0;
-			for (uint64_t i = 0; i < m_ContainerContexts.Size(); i++)
+			for (uint64_t i = 0; i < m_ContainerContexts.size(); i++)
 			{
 				ContainerContextType& containerCtx = m_ContainerContexts[i];
 				uint64_t archetypesCtxCount = containerCtx.m_ArchetypesContexts.size();
@@ -357,14 +342,12 @@ namespace decs
 
 			BatchIterator(
 				QueryType* query,
-				uint64_t startContainerChunkIndex,
 				uint64_t startContainerElementIndex,
 				uint64_t startArchetypeIndex,
 				uint64_t startEntityIndex,
 				uint64_t entitiesCount
 			) :
 				m_Query(query),
-				m_StartContainerChunkInex(startContainerChunkIndex),
 				m_StartContainerElementIndex(startContainerElementIndex),
 				m_StartArchetypeIndex(startArchetypeIndex),
 				m_StartEntityIndex(startEntityIndex),
@@ -377,86 +360,79 @@ namespace decs
 			void ForEach(Callable&& func) noexcept
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
-				uint64_t containerContextChunksCount = containerContexts.ChunkCount();
 				decs::Entity entityBuffor = {};
 				std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
 
 				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
-				for (uint64_t chunkIdx = m_StartContainerChunkInex; chunkIdx < containerContextChunksCount; chunkIdx++)
+				uint64_t contextSize = containerContexts.size();
+				for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 				{
-					auto chunk = containerContexts.GetChunk(chunkIdx);
-					const uint64_t chunkSize = containerContexts.GetChunkSize(chunkIdx);
-
-					uint64_t elementIndex = chunkIdx == m_StartContainerChunkInex ? m_StartContainerElementIndex : 0;
-					for (; elementIndex < chunkSize; elementIndex++)
+					ContainerContextType& containerContext = containerContexts[containerContextIndex];
+					if (!containerContext.m_bIsEnabled)
 					{
-						ContainerContextType& containerContext = chunk[elementIndex];
-						if (!containerContext.m_bIsEnabled)
-						{
-							continue; // Skip if container context is disabled
-						}
+						continue; // Skip if container context is disabled
+					}
 
-						auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
-						const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
 
-						uint64_t archetypeContextIdx;
-						uint64_t startEntitiyIndex;
-						if (chunkIdx == m_StartContainerChunkInex && elementIndex == m_StartContainerElementIndex)
+					uint64_t archetypeContextIdx;
+					uint64_t startEntitiyIndex;
+					if (containerContextIndex == m_StartContainerElementIndex)
+					{
+						archetypeContextIdx = m_StartArchetypeIndex;
+						startEntitiyIndex = m_StartEntityIndex;
+					}
+					else
+					{
+						archetypeContextIdx = 0;
+						startEntitiyIndex = 0;
+					}
+
+					for (; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+					{
+						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+						uint64_t ctxEntityCount = ctx.GetEntityCount();
+						if (ctxEntityCount == 0) continue;
+
+						uint64_t leftEntitiesInArchetypeToIterate = ctxEntityCount - startEntitiyIndex;
+						uint64_t entitiesCount;
+
+						if (leftEntitiesToIterate <= leftEntitiesInArchetypeToIterate)
 						{
-							archetypeContextIdx = m_StartArchetypeIndex;
-							startEntitiyIndex = m_StartEntityIndex;
+							entitiesCount = leftEntitiesToIterate + startEntitiyIndex;
+							leftEntitiesToIterate = 0;
 						}
 						else
 						{
-							archetypeContextIdx = 0;
-							startEntitiyIndex = 0;
+							entitiesCount = leftEntitiesInArchetypeToIterate + startEntitiyIndex;
+							leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
 						}
 
-						for (; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+						std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+						for (uint64_t idx = startEntitiyIndex; idx < entitiesCount; idx++)
 						{
-							ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-							uint64_t ctxEntityCount = ctx.GetEntityCount();
-							if (ctxEntityCount == 0) continue;
-
-							uint64_t leftEntitiesInArchetypeToIterate = ctxEntityCount - startEntitiyIndex;
-							uint64_t entitiesCount;
-
-							if (leftEntitiesToIterate <= leftEntitiesInArchetypeToIterate)
+							const auto& entityData = entitiesData[idx];
+							if (entityData.IsActive())
 							{
-								entitiesCount = leftEntitiesToIterate + startEntitiyIndex;
-								leftEntitiesToIterate = 0;
-							}
-							else
-							{
-								entitiesCount = leftEntitiesInArchetypeToIterate + startEntitiyIndex;
-								leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
-							}
-
-							std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
-							CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
-
-							for (uint64_t idx = startEntitiyIndex; idx < entitiesCount; idx++)
-							{
-								const auto& entityData = entitiesData[idx];
-								if (entityData.IsActive())
+								if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
 								{
-									if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
-									{
-										entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
-										func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
-									}
-									else
-									{
-										func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
-									}
+									entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
+									func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+								}
+								else
+								{
+									func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
 								}
 							}
+						}
 
-							if (leftEntitiesToIterate == 0)
-							{
-								return;
-							}
+						if (leftEntitiesToIterate == 0)
+						{
+							return;
 						}
 					}
 				}
@@ -464,7 +440,6 @@ namespace decs
 
 		private:
 			QueryType* m_Query = nullptr;
-			uint64_t m_StartContainerChunkInex = 0;
 			uint64_t m_StartContainerElementIndex = 0;
 			uint64_t m_StartArchetypeIndex = 0;
 			uint64_t m_StartEntityIndex = 0;
@@ -517,60 +492,55 @@ namespace decs
 
 			BatchIterator* iterator = nullptr;
 
-			uint64_t containerContextChunksCount = this->m_ContainerContexts.ChunkCount();
-			for (uint64_t chunkIdx = 0; chunkIdx < containerContextChunksCount; chunkIdx++)
+
+			uint64_t contextSize = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
-				auto chunk = m_ContainerContexts.GetChunk(chunkIdx);
-				const uint64_t chunkSize = m_ContainerContexts.GetChunkSize(chunkIdx);
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
 
-				for (uint64_t elementIndex = 0; elementIndex < chunkSize; elementIndex++)
+				for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
 				{
-					ContainerContextType& containerContext = chunk[elementIndex];
-					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
-					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+					ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+					uint64_t ctxEntitiesCount = ctx.GetEntityCount();
+					if (ctxEntitiesCount == 0) continue;
 
-					for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+					uint64_t currentEntityIndex = 0;
+
+					while (ctxEntitiesCount > 0)
 					{
-						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-						uint64_t ctxEntitiesCount = ctx.GetEntityCount();
-						if (ctxEntitiesCount == 0) continue;
-
-						uint64_t currentEntityIndex = 0;
-
-						while (ctxEntitiesCount > 0)
+						if (iterator == nullptr)
 						{
-							if (iterator == nullptr)
+							iterator = &iterators.emplace_back(this, containerContextIndex, archetypeContextIdx, currentEntityIndex, 0);
+						}
+
+						uint64_t neededEntitiesCount = finalBatchSize - iterator->m_EntitiesCount;
+
+						if (neededEntitiesCount > 0)
+						{
+							uint64_t entitiesCountToAddToIterator;
+							if (neededEntitiesCount <= ctxEntitiesCount)
 							{
-								iterator = &iterators.emplace_back(this, chunkIdx, elementIndex, archetypeContextIdx, currentEntityIndex, 0);
-							}
-
-							uint64_t neededEntitiesCount = finalBatchSize - iterator->m_EntitiesCount;
-
-							if (neededEntitiesCount > 0)
-							{
-								uint64_t entitiesCountToAddToIterator;
-								if (neededEntitiesCount <= ctxEntitiesCount)
-								{
-									entitiesCountToAddToIterator = neededEntitiesCount;
-									ctxEntitiesCount -= entitiesCountToAddToIterator;
-								}
-								else
-								{
-									entitiesCountToAddToIterator = ctxEntitiesCount;
-									ctxEntitiesCount = 0;
-								}
-								iterator->m_EntitiesCount += entitiesCountToAddToIterator;
-								currentEntityIndex += entitiesCountToAddToIterator;
-
-								if (iterator->m_EntitiesCount == finalBatchSize)
-								{
-									iterator = nullptr;
-								}
+								entitiesCountToAddToIterator = neededEntitiesCount;
+								ctxEntitiesCount -= entitiesCountToAddToIterator;
 							}
 							else
 							{
+								entitiesCountToAddToIterator = ctxEntitiesCount;
+								ctxEntitiesCount = 0;
+							}
+							iterator->m_EntitiesCount += entitiesCountToAddToIterator;
+							currentEntityIndex += entitiesCountToAddToIterator;
+
+							if (iterator->m_EntitiesCount == finalBatchSize)
+							{
 								iterator = nullptr;
 							}
+						}
+						else
+						{
+							iterator = nullptr;
 						}
 					}
 				}
