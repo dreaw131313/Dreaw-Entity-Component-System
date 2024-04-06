@@ -32,7 +32,7 @@ namespace decs
 
 		~ObserversManager()
 		{
-			for (auto& [key, value] : m_ComponentyContainers)
+			for (auto& [key, value] : m_ComponentObserverGroups)
 			{
 				delete value;
 			}
@@ -114,7 +114,7 @@ namespace decs
 		template<typename ComponentType>
 		ComponentObserversGroup<ComponentType>* GetComponentObserverGroup()
 		{
-			ComponentObserversGroupBase*& observer = m_ComponentyContainers[Type<ComponentType>::ID()];
+			ComponentObserversGroupBase*& observer = m_ComponentObserverGroups[Type<ComponentType>::ID()];
 			if (observer == nullptr)
 			{
 				observer = new ComponentObserversGroup<ComponentType>();
@@ -122,7 +122,7 @@ namespace decs
 			ComponentObserversGroup<ComponentType>* finalObserver = dynamic_cast<ComponentObserversGroup<ComponentType>*>(observer);
 			if (finalObserver == nullptr)
 			{
-				throw std::runtime_error("Failed to create componenty observer!");
+				throw std::runtime_error("Failed to create component observer group!");
 			}
 			return finalObserver;
 		}
@@ -142,7 +142,7 @@ namespace decs
 		}
 
 	private:
-		ecsMap<TypeID, ComponentObserversGroupBase*> m_ComponentyContainers;
+		ecsMap<TypeID, ComponentObserversGroupBase*> m_ComponentObserverGroups;
 #pragma endregion
 	};
 }
