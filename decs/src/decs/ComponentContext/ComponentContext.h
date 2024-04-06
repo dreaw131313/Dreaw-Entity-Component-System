@@ -42,9 +42,19 @@ namespace decs
 
 		virtual void InvokeOnOnDisableEntity(void* component, const  Entity& entity) = 0;
 
+		void SetCanInvokeCreateObservers(bool bCanInvokeObservers)
+		{
+			m_bCanInvokeCreateObservers = bCanInvokeObservers;
+		}
+
+		inline bool CanInvokeCreateObservers() const
+		{
+			return m_bCanInvokeCreateObservers;
+		}
 
 	private:
 		int m_ObserverOrder = 0;
+		bool m_bCanInvokeCreateObservers = true;
 	};
 
 	template<typename T>
@@ -106,7 +116,7 @@ namespace decs
 
 		virtual void InvokeOnCreateComponent(void* component, const Entity& entity)override
 		{
-			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_CreateObserver != nullptr)
+			if (CanInvokeCreateObservers() && m_ObserversGroup != nullptr && m_ObserversGroup->m_CreateObserver != nullptr)
 			{
 				m_ObserversGroup->m_CreateObserver->OnCreateComponent(*static_cast<TComponentType*>(component), entity);
 			}

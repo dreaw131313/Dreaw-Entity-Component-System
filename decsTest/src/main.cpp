@@ -113,11 +113,6 @@ class FloatObserver : public decs::CreateComponentObserver<float>, public decs::
 	// Inherited via DestroyComponentObserver
 	virtual void OnDestroyComponent(float& component, const decs::Entity& entity) override
 	{
-		if (entity.HasComponent<float>())
-		{
-			PrintLine("Has float but shouldnt!");
-		}
-
 		PrintLine("Float destruction");
 	}
 };
@@ -364,6 +359,7 @@ void ObservatorOrderTest()
 	prefab.AddComponent<float>();
 	prefab.AddComponent<int>();
 	prefab.AddStableComponent<Position>();
+	container.Spawn(prefab, 10, true);
 
 	FloatObserver floatObserver = {};
 	IntObserver intObserver = {};
@@ -381,24 +377,18 @@ void ObservatorOrderTest()
 
 	container.SetObserversManager(&observerManager);
 
-	prefab.RemoveComponent<float>();
-
 	container.SetComponentOrder<float>(0);
 	container.SetComponentOrder<int>(-1);
 
-	{
-		PrintLine();
-		auto spawnedEntity = container.Spawn(prefab);
-		container.DestroyEntity(spawnedEntity);
-	}
-
 	PrintLine();
 	container.InvokeEntitesOnCreateListeners();
+	container.InvokeEntitesOnDestroyListeners();
 
 	container.SetComponentOrder<float>(0);
 	container.SetComponentOrder<int>(1);
 
 	PrintLine();
+	container.InvokeEntitesOnCreateListeners();
 	container.InvokeEntitesOnDestroyListeners();
 
 }
@@ -422,8 +412,8 @@ void RemoveMultipleComponentTest()
 
 int main()
 {
-	BaseTest();
-	//ObservatorOrderTest();
+	//BaseTest();
+	ObservatorOrderTest();
 	//RemoveMultipleComponentTest();
 
 

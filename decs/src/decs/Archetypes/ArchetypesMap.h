@@ -198,6 +198,17 @@ namespace decs
 			}
 		}
 
+		template<typename Callable>
+		void IterateOverArchetypesWithType(TypeID componentType, Callable&& func)
+		{
+			auto groupedArchetypesIt = m_ArchetypesGroupedByOneType.find(componentType);
+			if (groupedArchetypesIt == m_ArchetypesGroupedByOneType.end())
+			{
+				return;
+			}
+			groupedArchetypesIt->second->IterateOverAllArchetypes(func);
+		}
+
 	private:
 		TChunkedVector<Archetype> m_Archetypes = { 100 };
 		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes;

@@ -2,6 +2,8 @@
 #include "Container.h"
 #include "Entity.h"
 
+#include "decs/Utils/ContainerIterator.h"
+
 namespace decs
 {
 	Container::Container() :
@@ -609,36 +611,57 @@ namespace decs
 
 	void Container::InvokeEntitesOnCreateListeners()
 	{
+		// invoking entity creation observers:
 		{
-			BoolSwitch delayedDestroySwitch(m_PerformDelayedDestruction, true);
-			BoolSwitch canRemoveComponentSwitch(m_CanRemoveComponents, true);
-
-			std::vector<ComponentRefAsVoid> componentRefsToInvokeObserverCallbacks = {};
-
-			auto& archetypes = m_ArchetypesMap.m_Archetypes;
-			for (uint64_t i = 0; i < archetypes.Size(); i++)
+			ContainerIterator iterator = {};
+			iterator.Foreach(*this, [this](const decs::Entity& entity)
 			{
-				archetypes[i].ValidateEntitiesCountToInitialize();
-			}
-
-			uint64_t archetypesCount = archetypes.Size();
-			for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
-			{
-				Archetype& archetype = archetypes[archetypeIdx];
-				InvokeArchetypeOnCreateListeners(archetype, componentRefsToInvokeObserverCallbacks);
-			}
-
-			Entity entity = {};
-			uint64_t emptyEntitiesSize = m_EmptyEntities.size();
-			for (uint64_t i = 0; i < emptyEntitiesSize; i++)
-			{
-				EntityData* data = m_EmptyEntities[i];
-				entity.Set(*data, this);
 				InvokeEntityCreationObservers(entity);
-			}
+			});
 		}
 
-		DestroyDelayedEntities();
+		// invoking components creation observers
+		{
+			Entity entity = {};
+
+			m_ComponentContextManager.IterateOverComponentContexts([](ComponentContextBase* componentContext)
+			{
+				componentContext->SetCanInvokeCreateObservers(false);
+			});
+
+			m_ComponentContextManager.IterateOverComponentContexts([&](ComponentContextBase* componentContext)
+			{
+				componentContext->SetCanInvokeCreateObservers(true);
+				TypeID componentTypeID = componentContext->GetComponentTypeID();
+
+				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [](Archetype* archetype)
+				{
+					archetype->ValidateEntitiesCountToInitialize();
+				});
+
+				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&](Archetype* archetype)
+				{
+					const uint64_t entitiesCountToInvokeCallbacks = archetype->EntitesCountToInvokeCallbacks();
+					if (entitiesCountToInvokeCallbacks == 0)
+					{
+						return;
+					}
+
+					const uint64_t compIdx = archetype->FindTypeIndex(componentTypeID);
+
+					const auto& typeData = archetype->m_TypeData[compIdx];
+					auto* packedContainer = typeData.m_PackedContainer;
+					const auto& entityData = archetype->m_EntitiesData;
+
+					for (int64_t idx = static_cast<int64_t>(entitiesCountToInvokeCallbacks) - 1; idx >= 0; idx--)
+					{
+						entity.Set(entityData[idx].m_EntityData, this);
+						auto compPtr = packedContainer->GetComponentPtrAsVoid(idx);
+						componentContext->InvokeOnCreateComponent(compPtr, entity);
+					}
+				});
+			});
+		}
 	}
 
 	void Container::InvokeEntitesOnDestroyListeners()
@@ -651,20 +674,45 @@ namespace decs
 		BoolSwitch canAddComponentSwitch(m_CanAddComponents, false);
 		BoolSwitch canRemoveComponentSwitch(m_CanRemoveComponents, false);
 
-		auto& archetypes = m_ArchetypesMap.m_Archetypes;
-		uint64_t archetypesCount = archetypes.Size();
-		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
+		// invoking components creation observers
 		{
-			Archetype& archetype = archetypes[archetypeIdx];
-			InvokeArchetypeOnDestroyListeners(archetype);
+			Entity entity = {};
+			m_ComponentContextManager.IterateOverComponentContextsBackward([&](ComponentContextBase* componentContext)
+			{
+				componentContext->SetCanInvokeCreateObservers(true);
+				TypeID componentTypeID = componentContext->GetComponentTypeID();
+
+				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&](Archetype* archetype)
+				{
+					const uint64_t entityCount = archetype->EntityCount();
+					if (entityCount == 0)
+					{
+						return;
+					}
+
+					const uint64_t compIdx = archetype->FindTypeIndex(componentTypeID);
+
+					const auto& typeData = archetype->m_TypeData[compIdx];
+					auto* packedContainer = typeData.m_PackedContainer;
+					const auto& entityData = archetype->m_EntitiesData;
+
+					for (int64_t idx = 0; idx < (int64_t)entityCount; idx++)
+					{
+						entity.Set(entityData[idx].m_EntityData, this);
+						auto compPtr = packedContainer->GetComponentPtrAsVoid(idx);
+						componentContext->InvokeOnDestroyComponent(compPtr, entity);
+					}
+				});
+			});
 		}
 
-		Entity entity = {};
-		for (uint64_t i = 0; i < m_EmptyEntities.size(); i++)
+		// invoking entity creation observers:
 		{
-			EntityData& data = *m_EmptyEntities[i];
-			entity.Set(data, this);
-			InvokeEntityDestructionObservers(entity);
+			ContainerIterator iterator = {};
+			iterator.Foreach(*this, [this](const decs::Entity& entity)
+			{
+				InvokeEntityDestructionObservers(entity);
+			});
 		}
 	}
 

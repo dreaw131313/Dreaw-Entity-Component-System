@@ -129,13 +129,47 @@ namespace decs
 			return m_ComponentContextsInOrder;
 		}
 
+		/// <summary>
+		/// Used only when invoking create observers by Container class.
+		/// </summary>
+		/// <typeparam name="Callable"></typeparam>
+		/// <param name="func"></param>
+		template<typename Callable>
+		void IterateOverComponentContexts(Callable&& func)
+		{
+			for (m_IterationIndex = 0; m_IterationIndex < (int64_t)m_ComponentContextsInOrder.size(); m_IterationIndex++)
+			{
+				func(m_ComponentContextsInOrder[m_IterationIndex]);
+			}
+		}
+
+		/// <summary>
+		/// Used only when invoking destroy observers by Container class.
+		/// </summary>
+		/// <typeparam name="Callable"></typeparam>
+		/// <param name="func"></param>
+		template<typename Callable>
+		void IterateOverComponentContextsBackward(Callable&& func)
+		{
+			for (m_IterationIndex = (int64_t)m_ComponentContextsInOrder.size() - 1; m_IterationIndex >= 0; m_IterationIndex--)
+			{
+				func(m_ComponentContextsInOrder[m_IterationIndex]);
+			}
+		}
+
 	private:
 		ecsMap<TypeID, ComponentContextRecord> m_Contexts = {};
 		std::vector<ComponentContextBase*> m_ComponentContextsInOrder = {};
 
 		ObserversManager* m_ObserversManager = nullptr;
+		int64_t m_IterationIndex = std::numeric_limits<int64_t>::max();
 
 	private:
+		inline bool IsIterating() const
+		{
+			return m_IterationIndex != std::numeric_limits<int64_t>::max();
+		}
+
 		inline void DestroyComponentsContexts()
 		{
 			for (auto& [key, value] : m_Contexts)
@@ -161,12 +195,25 @@ namespace decs
 						m_ComponentContextsInOrder.insert(m_ComponentContextsInOrder.begin() + i, contextRecord.m_Context);
 						contextRecord.m_OrderIndex = i;
 						RegenerateIndexes(i + 1);
+
+						if (IsIterating() && m_IterationIndex >= (int64_t)i)
+						{
+							m_IterationIndex += 1;
+						}
+						else
+						{
+							contextRecord.m_Context->SetCanInvokeCreateObservers(false);
+						}
 						return;
 					}
 				}
 
 				contextRecord.m_OrderIndex = m_ComponentContextsInOrder.size();
 				m_ComponentContextsInOrder.push_back(contextRecord.m_Context);
+				if (IsIterating())
+				{
+					contextRecord.m_Context->SetCanInvokeCreateObservers(false);
+				}
 			}
 		}
 
