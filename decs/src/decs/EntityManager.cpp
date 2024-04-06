@@ -26,7 +26,7 @@ namespace decs
 			m_FreeEntitiesCount -= 1;
 
 			auto it = m_FreeEntities.begin();
-			 
+
 			EntityData* entityData = m_FreeEntities.back();
 			m_FreeEntities.pop_back();
 			entityData->SetState(EntityState::Alive);
@@ -55,6 +55,16 @@ namespace decs
 		}
 
 		return false;
+	}
+
+	void EntityManager::ForceDestroyEntity(EntityData& entityData)
+	{
+		m_CreatedEntitiesCount -= 1;
+		m_FreeEntitiesCount += 1;
+
+		m_FreeEntities.push_back(&entityData);
+
+		entityData.OnDestroyByEntityManager();
 	}
 
 	void EntityManager::CreateReservedEntityData(uint32_t entitesToReserve, std::vector<EntityData*>& reservedEntityData)

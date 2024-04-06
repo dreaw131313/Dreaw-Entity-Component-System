@@ -922,7 +922,7 @@ namespace decs
 		};
 
 	private:
-		bool m_IsDestroyingOwnedEntities = false;
+		bool m_IsInvokingObserversCallbacks = false;
 		bool m_CanCreateEntities = true;
 		bool m_CanDestroyEntities = true;
 		bool m_CanSpawn = true;

@@ -15,13 +15,26 @@ namespace decs
 
 		EntityManager(uint64_t initialEntitiesCapacity);
 
-		uint64_t GetCreatedEntitiesCount() const { return m_CreatedEntitiesCount; }
-		uint64_t GetEntitiesDataCount() const { return m_EntityData.Size(); }
-		uint64_t GetFreeEntitiesCount() const { return m_FreeEntitiesCount; }
+		uint64_t GetCreatedEntitiesCount() const
+		{
+			return m_CreatedEntitiesCount;
+		}
+
+		uint64_t GetEntitiesDataCount() const
+		{
+			return m_EntityData.Size();
+		}
+
+		uint64_t GetFreeEntitiesCount() const
+		{
+			return m_FreeEntitiesCount;
+		}
 
 		EntityData* CreateEntity(bool isActive = true);
 
 		bool DestroyEntity(EntityData& entityData);
+
+		void ForceDestroyEntity(EntityData& entityData);
 
 		inline EntityData& GetEntityData(EntityID entity)
 		{

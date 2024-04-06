@@ -56,7 +56,7 @@ namespace decs
 
 	void Container::ValidateInternalState()
 	{
-		m_IsDestroyingOwnedEntities = false;
+		m_IsInvokingObserversCallbacks = false;
 		m_CanCreateEntities = true;
 		m_CanDestroyEntities = true;
 		m_CanSpawn = true;
@@ -106,41 +106,21 @@ namespace decs
 
 	void Container::DestroyOwnedEntities(bool invokeOnDestroyListeners)
 	{
-		if (m_IsDestroyingOwnedEntities) return;
-		BoolSwitch isDestroyingEntitesFlag(m_IsDestroyingOwnedEntities, true);
-		BoolSwitch canCreateSwitch(m_CanCreateEntities, false);
-		BoolSwitch canDestroySwitch(m_CanDestroyEntities, false);
-		BoolSwitch canSpawnSwitch(m_CanSpawn, false);
-		BoolSwitch canAddComponentSwitch(m_CanAddComponents, false);
-		BoolSwitch canRemoveComponentSwitch(m_CanRemoveComponents, false);
-
-		auto& archetypes = m_ArchetypesMap.m_Archetypes;
-
-		uint64_t archetypesCount = archetypes.Size();
-		for (uint64_t archetypeIdx = 0; archetypeIdx < archetypesCount; archetypeIdx++)
+		if (invokeOnDestroyListeners)
 		{
-			Archetype& archetype = archetypes[archetypeIdx];
-			DestroyEntitesInArchetypes(archetype, invokeOnDestroyListeners);
-			archetype.Reset();
+			InvokeEntitesOnDestroyListeners();
 		}
 
-		Entity entity = {};
-		for (uint64_t i = 0; i < m_EmptyEntities.size(); i++)
+		ContainerIterator iterator = {};
+
+		if (m_EntityManager != nullptr)
 		{
-			EntityData& data = *m_EmptyEntities[i];
-			entity.Set(data, this);
-			data.SetState(decs::EntityState::InDestruction);
-			if (invokeOnDestroyListeners)
+			iterator.Foreach(*this, [this](const decs::Entity& entity)
 			{
-				InvokeEntityDestructionObservers(entity);
-			}
-			m_EntityManager->DestroyEntity(data);
+				m_EntityManager->ForceDestroyEntity(*entity.m_EntityData);
+			});
 		}
 
-		m_EmptyEntities.clear();
-		m_StableContainers.ClearContainers();
-
-		m_EntiesCount = 0;
 	}
 
 	bool Container::DestroyEntityInternal(Entity entity)
@@ -284,6 +264,10 @@ namespace decs
 		DestroyOwnedEntities(false);
 
 		//TODO: add returning reserved entities
+		if (m_EntityManager != nullptr)
+		{
+			m_EntityManager->ReturnReservedEntityData(m_ReservedEntityData);
+		}
 	}
 
 	void Container::ReserveEntities(uint32_t entitiesToReserve)
@@ -611,6 +595,10 @@ namespace decs
 
 	void Container::InvokeEntitesOnCreateListeners()
 	{
+		if (m_IsInvokingObserversCallbacks) return;
+		BoolSwitch invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
+		BoolSwitch isDestroyingEntitesFlag(m_PerformDelayedDestruction, true);
+
 		// invoking entity creation observers:
 		{
 			ContainerIterator iterator = {};
@@ -662,12 +650,14 @@ namespace decs
 				});
 			});
 		}
+
+		DestroyDelayedEntities();
 	}
 
 	void Container::InvokeEntitesOnDestroyListeners()
 	{
-		if (m_IsDestroyingOwnedEntities) return;
-		BoolSwitch isDestroyingEntitesFlag(m_IsDestroyingOwnedEntities, true);
+		if (m_IsInvokingObserversCallbacks) return;
+		BoolSwitch invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
 		BoolSwitch canCreateSwitch(m_CanCreateEntities, false);
 		BoolSwitch canDestroySwitch(m_CanDestroyEntities, false);
 		BoolSwitch canSpawnSwitch(m_CanSpawn, false);
