@@ -66,6 +66,7 @@ namespace decs
 		m_SpawnData.Clear();
 
 		m_DelayedEntitiesToDestroy.clear();
+		m_ArchetypesRecordsToDelayedRemove.clear();
 	}
 
 	void Container::SetDataIfCreatedInvalid(
@@ -540,7 +541,14 @@ namespace decs
 			entity
 		);
 
-		oldArchetype->RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(entityIndexInOldArchetype, componentTypeID);
+		if (m_PerformDelayedDestruction)
+		{
+			AddArchetypeRecordToDelayedRemove(oldArchetype, static_cast<uint32_t>(entityIndexInOldArchetype), true, componentTypeID);
+		}
+		else
+		{
+			oldArchetype->RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(entityIndexInOldArchetype, componentTypeID);
+		}
 
 		return true;
 	}
@@ -643,15 +651,19 @@ namespace decs
 
 					for (int64_t idx = static_cast<int64_t>(entitiesCountToInvokeCallbacks) - 1; idx >= 0; idx--)
 					{
-						entity.Set(entityData[idx].m_EntityData, this);
-						auto compPtr = packedContainer->GetComponentPtrAsVoid(idx);
-						componentContext->InvokeOnCreateComponent(compPtr, entity);
+						const auto& archetypeEntityData = entityData[idx];
+						if (!archetypeEntityData.m_bIsIntendedToDelayedRemove)
+						{
+							entity.Set(archetypeEntityData.m_EntityData, this);
+							auto compPtr = packedContainer->GetComponentPtrAsVoid(idx);
+							componentContext->InvokeOnCreateComponent(compPtr, entity);
+						}
 					}
 				});
 			});
 		}
 
-		DestroyDelayedEntities();
+		PerformDelayedDestruction();
 	}
 
 	void Container::InvokeEntitesOnDestroyListeners()
@@ -667,7 +679,7 @@ namespace decs
 		// invoking components creation observers
 		{
 			Entity entity = {};
-			m_ComponentContextManager.IterateOverComponentContextsBackward([&](ComponentContextBase* componentContext)
+			m_ComponentContextManager.IterateOverComponentContextsForDestryObservers([&](ComponentContextBase* componentContext)
 			{
 				componentContext->SetCanInvokeCreateObservers(true);
 				TypeID componentTypeID = componentContext->GetComponentTypeID();
@@ -860,6 +872,12 @@ namespace decs
 		}
 	}
 
+	void Container::PerformDelayedDestruction()
+	{
+		RemoveArchetypesRecordsDelayedToRemove();
+		DestroyDelayedEntities();
+	}
+
 	void Container::DestroyDelayedEntities()
 	{
 		Entity e = {};
@@ -869,6 +887,22 @@ namespace decs
 			DestroyDelayedEntity(e);
 		}
 		m_DelayedEntitiesToDestroy.clear();
+	}
+
+	void Container::RemoveArchetypesRecordsDelayedToRemove()
+	{
+		for (const auto& record : m_ArchetypesRecordsToDelayedRemove)
+		{
+			if (record.bRemove)
+			{
+				record.archetype->RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(static_cast<uint64_t>(record.index), record.removedComponentTypeID);
+			}
+			else
+			{
+				record.archetype->RemoveSwapBackRecordRaw(record.index);
+			}
+		}
+		m_ArchetypesRecordsToDelayedRemove.clear();
 	}
 
 	void Container::DestroyDelayedEntity(const Entity& entity)
@@ -893,4 +927,5 @@ namespace decs
 		entity.m_EntityData->SetState(EntityState::DelayedToDestruction);
 		m_DelayedEntitiesToDestroy.push_back(entity.m_EntityData);
 	}
+
 }

@@ -136,6 +136,48 @@ namespace decs
 
 	}
 
+	void Archetype::RemoveSwapBackRecordRaw(uint64_t index)
+	{
+		if (index >= m_EntitiesCount)
+		{
+			return;
+		}
+
+		if (index == m_EntitiesCount - 1)
+		{
+			m_EntitiesData.pop_back();
+			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			{
+				m_TypeData[i].m_PackedContainer->PopBack();
+			}
+		}
+		else
+		{
+			auto& backEntityData = m_EntitiesData.back();
+			if (!backEntityData.IsIntendedToDelayedDestroy())
+			{
+				backEntityData.m_EntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
+			}
+
+			m_EntitiesData[index] = m_EntitiesData.back();
+			m_EntitiesData.pop_back();
+
+			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			{
+				m_TypeData[i].m_PackedContainer->RemoveSwapBack(index);
+			}
+		}
+	}
+
+	void Archetype::SetRecordAsIntendedToDelayedDestroy(uint64_t index)
+	{
+		if (index >= m_EntitiesCount)
+		{
+			return;
+		}
+		m_EntitiesData[index].SetIntendedToDelayedDestroy();
+	}
+
 	void Archetype::ReserveSpaceInArchetype(uint64_t desiredCapacity)
 	{
 		if (m_EntitiesData.capacity() < desiredCapacity)
@@ -340,6 +382,30 @@ namespace decs
 
 		RemoveSwapBackEntityData(entityIndex);
 
+	}
+
+	void Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource(Archetype* fromArchetype, uint64_t fromIndex, TypeID newComponentTypeID, EntityData* entityData)
+	{
+		this->AddEntityData(entityData);
+
+		uint64_t thisArchetypeIndex = 0;
+		uint64_t fromArchetypeIndex = 0;
+
+		for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++)
+		{
+			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
+			if (thisTypeData.m_TypeID == newComponentTypeID)
+			{
+				continue;
+			}
+
+			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
+			thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+				fromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex)
+			);
+
+			fromArchetypeIndex++;
+		}
 	}
 
 	void Archetype::ShrinkToFit()

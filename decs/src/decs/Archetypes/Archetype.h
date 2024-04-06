@@ -17,6 +17,7 @@ namespace decs
 	public:
 		EntityData* m_EntityData = nullptr;
 		bool m_bIsActive = false;
+		bool m_bIsIntendedToDelayedRemove = false;
 
 	public:
 		ArchetypeEntityData()
@@ -41,6 +42,17 @@ namespace decs
 		inline bool IsActive() const noexcept
 		{
 			return m_bIsActive;
+		}
+
+		inline void SetIntendedToDelayedDestroy()
+		{
+			m_bIsActive = false;
+			m_bIsIntendedToDelayedRemove = true;
+		}
+
+		inline bool IsIntendedToDelayedDestroy() const
+		{
+			return m_bIsIntendedToDelayedRemove;
 		}
 	};
 
@@ -315,6 +327,14 @@ namespace decs
 
 		void RemoveSwapBackEntity(uint64_t index);
 
+		/// <summary>
+		/// Removes entity data and components on index. Do not destroy stable components and do not change in any way entity data.
+		/// </summary>
+		/// <param name="index"></param>
+		void RemoveSwapBackRecordRaw(uint64_t index);
+
+		void SetRecordAsIntendedToDelayedDestroy(uint64_t index);
+
 		template<typename ComponentType>
 		inline PackedContainer<ComponentType>* GetContainerAt(uint64_t index)
 		{
@@ -362,8 +382,15 @@ namespace decs
 			uint64_t fromIndex,
 			EntityData* entityData
 		);
-
+		
 		void RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(uint64_t entityIndex, TypeID removedComponentTypeID);
+
+		void MoveEntityAfterAddComponentWithoutDestroyingFromSource(
+			Archetype* fromArchetype,
+			uint64_t fromIndex,
+			TypeID newComponentTypeID,
+			EntityData* entityData
+		);
 
 		/// <summary>
 		/// Moves entity components from "fromArchetype" to this archetype.

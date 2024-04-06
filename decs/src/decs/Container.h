@@ -397,11 +397,24 @@ namespace decs
 				uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
 				if (entityData.m_Archetype != nullptr)
 				{
-					entityNewArchetype->MoveEntityComponentsAfterAddComponent<ComponentType>(
-						entityData.m_Archetype,
-						entityData.m_IndexInArchetype,
-						&entityData
-					);
+					if (m_PerformDelayedDestruction)
+					{
+						AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
+						entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
+							entityData.m_Archetype,
+							entityData.m_IndexInArchetype,
+							copmonentTypeID,
+							&entityData
+						);
+					}
+					else
+					{
+						entityNewArchetype->MoveEntityComponentsAfterAddComponent<ComponentType>(
+							entityData.m_Archetype,
+							entityData.m_IndexInArchetype,
+							&entityData
+						);
+					}
 				}
 				else
 				{
@@ -447,11 +460,24 @@ namespace decs
 				uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
 				if (entityData.m_Archetype != nullptr)
 				{
-					entityNewArchetype->MoveEntityComponentsAfterAddComponent<stable<ComponentType>>(
-						entityData.m_Archetype,
-						entityData.m_IndexInArchetype,
-						&entityData
-					);
+					if (m_PerformDelayedDestruction)
+					{
+						AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
+						entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
+							entityData.m_Archetype,
+							entityData.m_IndexInArchetype,
+							copmonentTypeID,
+							&entityData
+						);
+					}
+					else
+					{
+						entityNewArchetype->MoveEntityComponentsAfterAddComponent<stable<ComponentType>>(
+							entityData.m_Archetype,
+							entityData.m_IndexInArchetype,
+							&entityData
+						);
+					}
 				}
 				else
 				{
@@ -877,14 +903,34 @@ namespace decs
 	private:
 		std::vector<EntityData*> m_DelayedEntitiesToDestroy;
 
+		struct ArchetypeRecordDelayedDestroyData
+		{
+			Archetype* archetype;
+			TypeID removedComponentTypeID;
+			uint32_t index;
+			bool bRemove;
+		};
+		std::vector<ArchetypeRecordDelayedDestroyData> m_ArchetypesRecordsToDelayedRemove = {};
+
 		bool m_PerformDelayedDestruction = false;
 
 	private:
+		void PerformDelayedDestruction();
+
 		void DestroyDelayedEntities();
+
+		void RemoveArchetypesRecordsDelayedToRemove();
 
 		void DestroyDelayedEntity(const Entity& entity);
 
 		void AddEntityToDelayedDestroy(const Entity& entity);
+
+		void AddArchetypeRecordToDelayedRemove(Archetype* archetype, uint32_t index, bool bRemove, TypeID removedComponentTypeID)
+		{
+			archetype->SetRecordAsIntendedToDelayedDestroy(index);
+
+			m_ArchetypesRecordsToDelayedRemove.push_back({ archetype, removedComponentTypeID, index, bRemove });
+		}
 #pragma endregion
 
 #pragma region FLAGS:
@@ -928,6 +974,8 @@ namespace decs
 		bool m_CanSpawn = true;
 		bool m_CanAddComponents = true;
 		bool m_CanRemoveComponents = true;
+
+
 #pragma endregion
 
 	};

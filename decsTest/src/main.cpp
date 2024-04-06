@@ -123,6 +123,8 @@ class IntObserver : public decs::CreateComponentObserver<int>, public decs::Dest
 	virtual void OnCreateComponent(int& component, const decs::Entity& entity) override
 	{
 		PrintLine("Int creation");
+
+		entity.RemoveComponent<float>();
 	}
 
 	// Inherited via DestroyComponentObserver
@@ -149,18 +151,6 @@ class PositionObserver : public decs::CreateComponentObserver<decs::stable<Posit
 
 void BaseTest()
 {
-	PrintLine(std::format("Sizeof of Query<int>: {} bytes", sizeof(decs::Query<int>)));
-	PrintLine(std::format("Sizeof of Query<int, float>: {} bytes", sizeof(decs::Query<int, float>)));
-	PrintLine(std::format("Sizeof of Multi Query: {} bytes", sizeof(decs::MultiQuery<int>)));
-	PrintLine(std::format("Sizeof of StableComponentRef: {} bytes", sizeof(decs::StableComponentRef)));
-	PrintLine();
-
-	std::cout << "decs::Container size = " << sizeof(decs::Container) << " bytes" << "\n";
-	std::cout << "decs::EntityData size = " << sizeof(decs::EntityData) << " bytes" << "\n";
-	std::cout << "decs::Entity size = " << sizeof(decs::Entity) << " bytes" << "\n";
-	std::cout << "ComponentRef<Position> size: " << sizeof(decs::ComponentRef<Position>) << " bytes" << "\n";
-	std::cout << "Archetype size: " << sizeof(decs::Archetype) << " bytes" << "\n";
-	std::cout << "ComponentRefAsVoid size: " << sizeof(decs::ComponentRefAsVoid) << " bytes" << "\n";
 	PrintLine();
 
 	//decs::Container* c1 = new decs::Container();
@@ -359,7 +349,7 @@ void ObservatorOrderTest()
 	prefab.AddComponent<float>();
 	prefab.AddComponent<int>();
 	prefab.AddStableComponent<Position>();
-	container.Spawn(prefab, 10, true);
+	//container.Spawn(prefab, 10, true);
 
 	FloatObserver floatObserver = {};
 	IntObserver intObserver = {};
@@ -380,16 +370,16 @@ void ObservatorOrderTest()
 	container.SetComponentOrder<float>(0);
 	container.SetComponentOrder<int>(-1);
 
-	PrintLine();
 	container.InvokeEntitesOnCreateListeners();
+	PrintLine();
 	container.InvokeEntitesOnDestroyListeners();
 
-	container.SetComponentOrder<float>(0);
-	container.SetComponentOrder<int>(1);
+	//container.SetComponentOrder<float>(0);
+	//container.SetComponentOrder<int>(1);
 
-	PrintLine();
-	container.InvokeEntitesOnCreateListeners();
-	container.InvokeEntitesOnDestroyListeners();
+	//PrintLine();
+	//container.InvokeEntitesOnCreateListeners();
+	//container.InvokeEntitesOnDestroyListeners();
 
 }
 
@@ -410,8 +400,25 @@ void RemoveMultipleComponentTest()
 
 }
 
+void StructsSizeTest()
+{
+	PrintLine(std::format("Sizeof of decs::Query<int>: {} bytes", sizeof(decs::Query<int>)));
+	PrintLine(std::format("Sizeof of decs::Query<int, float>: {} bytes", sizeof(decs::Query<int, float>)));
+	PrintLine(std::format("Sizeof of decs::Multi Query<int>: {} bytes", sizeof(decs::MultiQuery<int>)));
+	PrintLine(std::format("Sizeof of decs::StableComponentRef: {} bytes", sizeof(decs::StableComponentRef)));
+	PrintLine();
+
+	std::cout << "decs::Container size = " << sizeof(decs::Container) << " bytes" << "\n";
+	std::cout << "decs::EntityData size = " << sizeof(decs::EntityData) << " bytes" << "\n";
+	std::cout << "decs::Entity size = " << sizeof(decs::Entity) << " bytes" << "\n";
+	std::cout << "decs::ComponentRef<Position> size: " << sizeof(decs::ComponentRef<Position>) << " bytes" << "\n";
+	std::cout << "decs::Archetype size: " << sizeof(decs::Archetype) << " bytes" << "\n";
+	std::cout << "decs::ComponentRefAsVoid size: " << sizeof(decs::ComponentRefAsVoid) << " bytes" << "\n";
+}
+
 int main()
 {
+	//StructsSizeTest();
 	//BaseTest();
 	ObservatorOrderTest();
 	//RemoveMultipleComponentTest();

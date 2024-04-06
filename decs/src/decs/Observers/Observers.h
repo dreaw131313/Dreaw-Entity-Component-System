@@ -43,11 +43,6 @@ namespace decs
 	public:
 		virtual ~CreateComponentObserver() = default;
 
-		/// <summary>
-		/// In this method adding or removing components from existing entites (other than entity passed to this function) should not be performed because it can cause undefined behaviors, when create observers are invoked by Container::InvokeEntitesOnCreateListeners. Entity passed to this function can be modified (components to it can be added and removed). New entites also can be created and components to this entites can be added and removed.
-		/// </summary>
-		/// <param name="component"></param>
-		/// <param name="entity"></param>
 		virtual void OnCreateComponent(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
 	};
 
