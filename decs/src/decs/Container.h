@@ -130,49 +130,6 @@ namespace decs
 		);
 #pragma endregion
 
-#pragma region FLAGS:
-	private:
-		struct BoolSwitch final
-		{
-		public:
-			BoolSwitch(bool& boolToSwitch) :
-				m_Bool(boolToSwitch),
-				m_FinalValue(!boolToSwitch)
-			{
-			}
-
-			BoolSwitch(bool& boolToSwitch, const bool& startValue) :
-				m_Bool(boolToSwitch),
-				m_FinalValue(!startValue)
-			{
-				m_Bool = startValue;
-			}
-
-			BoolSwitch(const BoolSwitch&) = delete;
-			BoolSwitch(BoolSwitch&&) = delete;
-
-			BoolSwitch& operator=(const BoolSwitch&) = delete;
-			BoolSwitch& operator=(BoolSwitch&&) = delete;
-
-			~BoolSwitch()
-			{
-				m_Bool = m_FinalValue;
-			}
-
-		private:
-			bool& m_Bool;
-			bool m_FinalValue;
-		};
-
-	private:
-		bool m_IsDestroyingOwnedEntities = false;
-		bool m_CanCreateEntities = true;
-		bool m_CanDestroyEntities = true;
-		bool m_CanSpawn = true;
-		bool m_CanAddComponents = true;
-		bool m_CanRemoveComponents = true;
-#pragma endregion
-
 #pragma region ENTITIES:
 	private:
 		std::vector<EntityData*> m_EmptyEntities = {}; //TODO: change to std::vector
@@ -928,6 +885,49 @@ namespace decs
 		void DestroyDelayedEntity(const Entity& entity);
 
 		void AddEntityToDelayedDestroy(const Entity& entity);
+#pragma endregion
+
+#pragma region FLAGS:
+	private:
+		struct BoolSwitch final
+		{
+		public:
+			BoolSwitch(bool& boolToSwitch) :
+				m_Bool(boolToSwitch),
+				m_FinalValue(!boolToSwitch)
+			{
+			}
+
+			BoolSwitch(bool& boolToSwitch, const bool& startValue) :
+				m_Bool(boolToSwitch),
+				m_FinalValue(!startValue)
+			{
+				m_Bool = startValue;
+			}
+
+			BoolSwitch(const BoolSwitch&) = delete;
+			BoolSwitch(BoolSwitch&&) = delete;
+
+			BoolSwitch& operator=(const BoolSwitch&) = delete;
+			BoolSwitch& operator=(BoolSwitch&&) = delete;
+
+			~BoolSwitch()
+			{
+				m_Bool = m_FinalValue;
+			}
+
+		private:
+			bool& m_Bool;
+			bool m_FinalValue;
+		};
+
+	private:
+		bool m_IsDestroyingOwnedEntities = false;
+		bool m_CanCreateEntities = true;
+		bool m_CanDestroyEntities = true;
+		bool m_CanSpawn = true;
+		bool m_CanAddComponents = true;
+		bool m_CanRemoveComponents = true;
 #pragma endregion
 
 	};

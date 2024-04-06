@@ -19,6 +19,8 @@ namespace decs
 
 		virtual ~ComponentContextBase() = default;
 
+		inline virtual TypeID GetComponentTypeID() const = 0;
+
 		inline virtual std::string GetComponentName() const = 0;
 
 		inline int GetObserverOrder() const { return m_ObserverOrder; }
@@ -66,6 +68,11 @@ namespace decs
 		~ComponentContext()
 		{
 
+		}
+
+		inline virtual TypeID GetComponentTypeID() const override
+		{
+			return Type<T>::ID();
 		}
 
 		/// <summary>
