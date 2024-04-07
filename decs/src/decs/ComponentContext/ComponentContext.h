@@ -52,6 +52,10 @@ namespace decs
 			return m_bCanInvokeCreateObservers;
 		}
 
+		inline virtual bool HasCreateObserver() const = 0;
+
+		inline virtual bool HasDestroyObserver() const = 0;
+
 	private:
 		int m_ObserverOrder = 0;
 		bool m_bCanInvokeCreateObservers = true;
@@ -92,6 +96,16 @@ namespace decs
 		inline virtual std::string GetComponentName() const override
 		{
 			return decs::Type<TComponentType>::Name();
+		}
+
+		inline virtual bool HasCreateObserver() const override
+		{
+			return m_ObserversGroup != nullptr && m_ObserversGroup->m_CreateObserver != nullptr;
+		}
+
+		inline virtual bool HasDestroyObserver() const override
+		{
+			return m_ObserversGroup != nullptr && m_ObserversGroup->m_DestroyObserver != nullptr;
 		}
 
 		virtual void SetObserverManager(ObserversManager* observerManager) override

@@ -620,6 +620,11 @@ namespace decs
 			m_ComponentContextManager.IterateOverComponentContexts([&](ComponentContextBase* componentContext)
 			{
 				componentContext->SetCanInvokeCreateObservers(true);
+				if (!componentContext->HasCreateObserver())
+				{
+					return;
+				}
+
 				TypeID componentTypeID = componentContext->GetComponentTypeID();
 
 				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [](Archetype* archetype)
@@ -673,8 +678,12 @@ namespace decs
 			Entity entity = {};
 			m_ComponentContextManager.IterateOverComponentContextsForDestryObservers([&](ComponentContextBase* componentContext)
 			{
-				componentContext->SetCanInvokeCreateObservers(true);
 				TypeID componentTypeID = componentContext->GetComponentTypeID();
+
+				if (!componentContext->HasDestroyObserver())
+				{
+					return;
+				}
 
 				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&](Archetype* archetype)
 				{
