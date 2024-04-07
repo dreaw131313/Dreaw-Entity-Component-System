@@ -105,25 +105,6 @@ namespace decs
 		return false;
 	}
 
-	void Container::DestroyOwnedEntities(bool invokeOnDestroyListeners)
-	{
-		if (invokeOnDestroyListeners)
-		{
-			InvokeEntitesOnDestroyListeners();
-		}
-
-		ContainerIterator iterator = {};
-
-		if (m_EntityManager != nullptr)
-		{
-			iterator.Foreach(*this, [this](const decs::Entity& entity)
-			{
-				m_EntityManager->ForceDestroyEntity(*entity.m_EntityData);
-			});
-		}
-
-	}
-
 	bool Container::DestroyEntityInternal(Entity entity)
 	{
 		if (m_CanDestroyEntities && entity.m_Container == this)
@@ -262,12 +243,15 @@ namespace decs
 
 	void Container::ReturnOwnedEntitiesToEntityManager()
 	{
-		DestroyOwnedEntities(false);
+		ContainerIterator iterator = {};
+		iterator.Foreach(*this, [this](const decs::Entity& entity)
+		{
+			m_EntityManager->ForceDestroyEntity(*entity.m_EntityData);
+		});
 
-		//TODO: add returning reserved entities
 		if (m_EntityManager != nullptr)
 		{
-			m_EntityManager->ReturnReservedEntityData(m_ReservedEntityData);
+			FreeReservedEntities();
 		}
 	}
 
@@ -281,6 +265,7 @@ namespace decs
 	void Container::FreeReservedEntities()
 	{
 		m_EntityManager->ReturnReservedEntityData(m_ReservedEntityData);
+		m_ReservedEntityData.clear();
 	}
 
 	Entity Container::Spawn(const Entity& prefab, bool isActive)
