@@ -67,6 +67,13 @@ namespace decs
 
 		m_DelayedEntitiesToDestroy.clear();
 		m_ArchetypesRecordsToDelayedRemove.clear();
+
+
+		m_ComponentContextManager.IterateOverComponentContexts([](ComponentContextBase* componentContext)
+		{
+			componentContext->SetCanInvokeCreateObservers(true);
+		});
+
 	}
 
 	void Container::SetDataIfCreatedInvalid(
@@ -592,6 +599,11 @@ namespace decs
 		BoolSwitch invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
 		BoolSwitch isDestroyingEntitesFlag(m_PerformDelayedDestruction, true);
 
+		m_ComponentContextManager.IterateOverComponentContexts([](ComponentContextBase* componentContext)
+		{
+			componentContext->SetCanInvokeCreateObservers(false);
+		});
+
 		// invoking entity creation observers:
 		{
 			ContainerIterator iterator = {};
@@ -604,11 +616,6 @@ namespace decs
 		// invoking components creation observers
 		{
 			Entity entity = {};
-
-			m_ComponentContextManager.IterateOverComponentContexts([](ComponentContextBase* componentContext)
-			{
-				componentContext->SetCanInvokeCreateObservers(false);
-			});
 
 			m_ComponentContextManager.IterateOverComponentContexts([&](ComponentContextBase* componentContext)
 			{

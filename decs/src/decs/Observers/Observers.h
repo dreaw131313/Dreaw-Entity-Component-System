@@ -43,6 +43,11 @@ namespace decs
 	public:
 		virtual ~CreateComponentObserver() = default;
 
+		/// <summary>
+		/// In this method setup of components of existing entites (except entity passed to this function) should not be changed, because it can lead to undefined behavior when this method is called in function "Container::InvokeEntitesOnCreateListeners". New entites can be created and it component setup can be changed.
+		/// </summary>
+		/// <param name="component"></param>
+		/// <param name="entity"></param>
 		virtual void OnCreateComponent(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
 	};
 
