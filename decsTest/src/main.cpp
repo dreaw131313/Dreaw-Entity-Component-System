@@ -361,44 +361,48 @@ public:
 
 void ObservatorOrderTest()
 {
-	decs::Container container = {};
-	auto prefab = container.CreateEntity();
-	prefab.AddComponent<float>();
-	prefab.AddComponent<int>();
-	prefab.AddStableComponent<Position>();
+	decs::EntityManager entityManager = {};
 
-	container.Spawn(prefab, 5, true);
-	//container.Spawn(prefab, 10, true);
+	for (int i = 0; i < 100; i++)
+	{
+		decs::Container container = decs::Container(&entityManager, 1000);
+		auto prefab = container.CreateEntity();
+		prefab.AddComponent<float>();
+		prefab.AddComponent<int>();
+		prefab.AddStableComponent<Position>();
 
-	EntityCreateObserver entityCreateObserver{};
-	EntityDesxtroyObserver entityDestroyObserver{};
+		container.Spawn(prefab, 5, true);
+		//container.Spawn(prefab, 10, true);
 
-	FloatObserver floatObserver = {};
-	IntObserver intObserver = {};
-	PositionObserver positionObserver = {};
+		EntityCreateObserver entityCreateObserver{};
+		EntityDesxtroyObserver entityDestroyObserver{};
 
-	decs::ObserversManager observerManager = {};
+		FloatObserver floatObserver = {};
+		IntObserver intObserver = {};
+		PositionObserver positionObserver = {};
 
-	observerManager.SetEntityCreationObserver(&entityCreateObserver);
-	observerManager.SetEntityDestructionObserver(&entityDestroyObserver);
+		decs::ObserversManager observerManager = {};
 
-	observerManager.SetComponentCreateObserver<float>(&floatObserver);
-	observerManager.SetComponentDestroyObserver<float>(&floatObserver);
-	observerManager.SetComponentCreateObserver<int>(&intObserver);
-	observerManager.SetComponentDestroyObserver<int>(&intObserver);
-	
-	observerManager.SetComponentCreateObserver<decs::stable<Position>>(&positionObserver);
-	observerManager.SetComponentDestroyObserver<decs::stable<Position>>(&positionObserver);
+		observerManager.SetEntityCreationObserver(&entityCreateObserver);
+		observerManager.SetEntityDestructionObserver(&entityDestroyObserver);
 
-	container.SetObserversManager(&observerManager);
+		observerManager.SetComponentCreateObserver<float>(&floatObserver);
+		observerManager.SetComponentDestroyObserver<float>(&floatObserver);
+		observerManager.SetComponentCreateObserver<int>(&intObserver);
+		observerManager.SetComponentDestroyObserver<int>(&intObserver);
 
-	container.SetComponentOrder<float>(0);
-	container.SetComponentOrder<int>(-1);
+		observerManager.SetComponentCreateObserver<decs::stable<Position>>(&positionObserver);
+		observerManager.SetComponentDestroyObserver<decs::stable<Position>>(&positionObserver);
 
-	container.InvokeEntitesOnCreateListeners();
-	PrintLine();
-	container.InvokeEntitesOnDestroyListeners();
+		container.SetObserversManager(&observerManager);
 
+		container.SetComponentOrder<float>(0);
+		container.SetComponentOrder<int>(-1);
+
+		container.InvokeEntitesOnCreateListeners();
+		PrintLine();
+		container.InvokeEntitesOnDestroyListeners();
+	}
 	//container.SetComponentOrder<float>(0);
 	//container.SetComponentOrder<int>(1);
 
