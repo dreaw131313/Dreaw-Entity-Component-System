@@ -24,6 +24,7 @@ namespace decs
 
 	class ObserversManager
 	{
+		friend class Container;
 	public:
 		ObserversManager()
 		{

@@ -599,24 +599,45 @@ namespace decs
 		BoolSwitch invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
 		BoolSwitch isDestroyingEntitesFlag(m_PerformDelayedDestruction, true);
 
+		Entity entity = {};
+
 		m_ComponentContextManager.IterateOverComponentContexts([](ComponentContextBase* componentContext)
 		{
 			componentContext->SetCanInvokeCreateObservers(false);
 		});
 
+		m_ArchetypesMap.IterateOverArchetypes([](Archetype* archetype)
+		{
+			archetype->ValidateEntitiesCountToInitialize();
+		});
+
 		// invoking entity creation observers:
 		{
-			ContainerIterator iterator = {};
-			iterator.Foreach(*this, [this](const decs::Entity& entity)
+			auto entityCreateObserver = GetEntityCreateObserver();
+			if (entityCreateObserver!= nullptr)
 			{
-				InvokeEntityCreationObservers(entity);
-			});
+				m_ArchetypesMap.IterateOverArchetypes([&](Archetype* archetype)
+				{
+					if (archetype->EntitesCountToInvokeCallbacks() == 0)
+					{
+						return;
+					}
+					const auto& entitiesData = archetype->m_EntitiesData;
+					for (int64_t idx = static_cast<int64_t>(archetype->EntitesCountToInvokeCallbacks()) - 1; idx >= 0; idx--)
+					{
+						const auto& entityData = entitiesData[idx];
+						if (!entityData.IsIntendedToDelayedDestroy())
+						{
+							entity.Set(entityData.m_EntityData, this);
+							entityCreateObserver->OnCreateEntity(entity);
+						}
+					}
+				});
+			}
 		}
 
 		// invoking components creation observers
 		{
-			Entity entity = {};
-
 			m_ComponentContextManager.IterateOverComponentContexts([&](ComponentContextBase* componentContext)
 			{
 				componentContext->SetCanInvokeCreateObservers(true);

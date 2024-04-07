@@ -209,6 +209,22 @@ namespace decs
 			groupedArchetypesIt->second->IterateOverAllArchetypes(func);
 		}
 
+		template<typename Callable>
+		void IterateOverArchetypes(Callable&& func)
+		{
+			int64_t chunkCount = static_cast<int64_t>(m_Archetypes.ChunkCount());
+			for (int64_t chunkIdx = chunkCount - 1; chunkIdx >= 0; chunkIdx--)
+			{
+				auto chunk = m_Archetypes.GetChunk(chunkIdx);
+				int64_t elementCount = m_Archetypes.GetChunkSize(chunkIdx);
+
+				for (int64_t elementIdx = elementCount - 1; elementIdx >= 0; elementIdx--)
+				{
+					func(&chunk[elementIdx]);
+				}
+			}
+		}
+
 	private:
 		TChunkedVector<Archetype> m_Archetypes = { 100 };
 		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes;

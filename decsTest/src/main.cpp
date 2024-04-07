@@ -102,6 +102,23 @@ protected:
 	}
 };
 
+class EntityCreateObserver : public decs::CreateEntityObserver
+{
+	// Inherited via CreateEntityObserver
+	void OnCreateEntity(const decs::Entity& entity) override
+	{
+		PrintLine(std::format("Create Entity {0}", entity.GetID()));
+	}
+};
+
+class EntityDesxtroyObserver : public decs::DestroyEntityObserver
+{
+	// Inherited via DestroyEntityObserver
+	void OnDestroyEntity(const decs::Entity& entity) override
+	{
+		PrintLine(std::format("Destroy Entity {0}", entity.GetID()));
+	}
+};
 
 class FloatObserver : public decs::CreateComponentObserver<float>, public decs::DestroyComponentObserver<float>
 {
@@ -349,13 +366,21 @@ void ObservatorOrderTest()
 	prefab.AddComponent<float>();
 	prefab.AddComponent<int>();
 	prefab.AddStableComponent<Position>();
+
+	container.Spawn(prefab, 5, true);
 	//container.Spawn(prefab, 10, true);
+
+	EntityCreateObserver entityCreateObserver{};
+	EntityDesxtroyObserver entityDestroyObserver{};
 
 	FloatObserver floatObserver = {};
 	IntObserver intObserver = {};
 	PositionObserver positionObserver = {};
 
 	decs::ObserversManager observerManager = {};
+
+	observerManager.SetEntityCreationObserver(&entityCreateObserver);
+	observerManager.SetEntityDestructionObserver(&entityDestroyObserver);
 
 	observerManager.SetComponentCreateObserver<float>(&floatObserver);
 	observerManager.SetComponentDestroyObserver<float>(&floatObserver);

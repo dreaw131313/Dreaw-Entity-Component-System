@@ -867,6 +867,34 @@ namespace decs
 			}
 		}
 
+		inline bool HasEntityCreateObserver() const
+		{
+			return m_ComponentContextManager.m_ObserversManager != nullptr && m_ComponentContextManager.m_ObserversManager->m_EntityCreationObserver != nullptr;
+		}
+
+		inline decs::CreateEntityObserver* GetEntityCreateObserver()
+		{
+			if (HasEntityCreateObserver())
+			{
+				return m_ComponentContextManager.m_ObserversManager->m_EntityCreationObserver;
+			}
+			return nullptr;
+		}
+		
+		inline bool HasEntityDestroyObserver() const
+		{
+			return m_ComponentContextManager.m_ObserversManager != nullptr && m_ComponentContextManager.m_ObserversManager->m_EntityDestructionObserver != nullptr;
+		}
+
+		inline decs::DestroyEntityObserver* GetEntityDestroyObserver()
+		{
+			if (HasEntityDestroyObserver())
+			{
+				return m_ComponentContextManager.m_ObserversManager->m_EntityDestructionObserver;
+			}
+			return nullptr;
+		}
+
 	private:
 		std::vector<ComponentRefAsVoid> m_ActivationChangeComponentRefs = {};
 
