@@ -37,6 +37,20 @@ namespace decs
 		virtual void InvokeOnCreateComponent(void* component, const Entity& entity) = 0;
 
 		virtual void InvokeOnDestroyComponent(void* component, const Entity& entity) = 0;
+		
+		/// <summary>
+		/// This function tries invoke Create observer without checking if observer is valid.
+		/// </summary>
+		/// <param name="component"></param>
+		/// <param name="entity"></param>
+		virtual void InvokeOnCreateComponentRaw(void* component, const Entity& entity) = 0;
+
+		/// <summary>
+		/// This function tries invoke Destroy observer without checking if observer is valid.
+		/// </summary>
+		/// <param name="component"></param>
+		/// <param name="entity"></param>
+		virtual void InvokeOnDestroyComponentRaw(void* component, const Entity& entity) = 0;
 
 		virtual void InvokeOnEnableEntity(void* component, const Entity& entity) = 0;
 
@@ -84,7 +98,7 @@ namespace decs
 
 		}
 
-		inline virtual TypeID GetComponentTypeID() const override
+		inline TypeID GetComponentTypeID() const override
 		{
 			return Type<T>::ID();
 		}
@@ -93,22 +107,22 @@ namespace decs
 		/// 
 		/// </summary>
 		/// <returns>Name of component if coponent is stable (T = decs::stable<ComponentType>) it will return name of ComponentType without decs::stable</returns>
-		inline virtual std::string GetComponentName() const override
+		inline std::string GetComponentName() const override
 		{
 			return decs::Type<TComponentType>::Name();
 		}
 
-		inline virtual bool HasCreateObserver() const override
+		inline bool HasCreateObserver() const override
 		{
 			return m_ObserversGroup != nullptr && m_ObserversGroup->m_CreateObserver != nullptr;
 		}
 
-		inline virtual bool HasDestroyObserver() const override
+		inline bool HasDestroyObserver() const override
 		{
 			return m_ObserversGroup != nullptr && m_ObserversGroup->m_DestroyObserver != nullptr;
 		}
 
-		virtual void SetObserverManager(ObserversManager* observerManager) override
+		void SetObserverManager(ObserversManager* observerManager) override
 		{
 			if (observerManager == nullptr)
 			{
@@ -128,7 +142,7 @@ namespace decs
 			);
 		}
 
-		virtual void InvokeOnCreateComponent(void* component, const Entity& entity)override
+		void InvokeOnCreateComponent(void* component, const Entity& entity)override
 		{
 			if (CanInvokeCreateObservers() && m_ObserversGroup != nullptr && m_ObserversGroup->m_CreateObserver != nullptr)
 			{
@@ -136,7 +150,7 @@ namespace decs
 			}
 		}
 
-		virtual void InvokeOnDestroyComponent(void* component, const Entity& entity)override
+		void InvokeOnDestroyComponent(void* component, const Entity& entity)override
 		{
 			if (m_ObserversGroup != nullptr && m_ObserversGroup->m_DestroyObserver != nullptr)
 			{
@@ -144,12 +158,22 @@ namespace decs
 			}
 		}
 
-		virtual void InvokeOnEnableEntity(void* component, const Entity& entity) override
+		void InvokeOnCreateComponentRaw(void* component, const Entity& entity) override
+		{
+			m_ObserversGroup->m_CreateObserver->OnCreateComponent(*static_cast<TComponentType*>(component), entity);
+		}
+
+		void InvokeOnDestroyComponentRaw(void* component, const Entity& entity) override
+		{
+			m_ObserversGroup->m_DestroyObserver->OnDestroyComponent(*static_cast<TComponentType*>(component), entity);
+		}
+
+		void InvokeOnEnableEntity(void* component, const Entity& entity) override
 		{
 
 		}
 
-		virtual void InvokeOnOnDisableEntity(void* component, const Entity& entity) override
+		void InvokeOnOnDisableEntity(void* component, const Entity& entity) override
 		{
 
 		}

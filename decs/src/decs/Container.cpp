@@ -653,7 +653,7 @@ namespace decs
 						{
 							entity.Set(archetypeEntityData.m_EntityData, this);
 							auto compPtr = packedContainer->GetComponentPtrAsVoid(idx);
-							componentContext->InvokeOnCreateComponent(compPtr, entity);
+							componentContext->InvokeOnCreateComponentRaw(compPtr, entity);
 						}
 					}
 				});
@@ -703,7 +703,7 @@ namespace decs
 					{
 						entity.Set(entityData[idx].m_EntityData, this);
 						auto compPtr = packedContainer->GetComponentPtrAsVoid(idx);
-						componentContext->InvokeOnDestroyComponent(compPtr, entity);
+						componentContext->InvokeOnDestroyComponentRaw(compPtr, entity);
 					}
 				});
 			});
