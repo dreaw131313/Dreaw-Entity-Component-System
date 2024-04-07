@@ -167,6 +167,8 @@ namespace decs
 				m_TypeData[i].m_PackedContainer->RemoveSwapBack(index);
 			}
 		}
+
+		m_EntitiesCount -= 1;
 	}
 
 	void Archetype::SetRecordAsIntendedToDelayedDestroy(uint64_t index)

@@ -148,8 +148,6 @@ namespace decs
 	public:
 		bool DestroyEntity(const Entity& entity);
 
-		void DestroyOwnedEntities(bool invokeOnDestroyListeners = true);
-
 		inline uint64_t GetEmptyEntitiesCount() const
 		{
 			return m_EmptyEntities.size();
@@ -910,6 +908,7 @@ namespace decs
 			uint32_t index;
 			bool bRemove;
 		};
+
 		std::vector<ArchetypeRecordDelayedDestroyData> m_ArchetypesRecordsToDelayedRemove = {};
 
 		bool m_PerformDelayedDestruction = false;
@@ -931,6 +930,7 @@ namespace decs
 
 			m_ArchetypesRecordsToDelayedRemove.push_back({ archetype, removedComponentTypeID, index, bRemove });
 		}
+
 #pragma endregion
 
 #pragma region FLAGS:
