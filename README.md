@@ -139,8 +139,6 @@ query.ForEach([](decs::Entity& e, Component1& c1, Component2& c2, Component3& c3
 ```
 
 During iteration with methods **ForEach** and **ForEachBackward** is possible:
-* create new entites. 
-* adding and removing components from currently iterated entity
 * destroying currently iterated entity
 
 Things like:
@@ -149,7 +147,7 @@ Things like:
 
 are undefined behavior.
 
-During Iteration with **ForEachForward** method component setups of existing entities can not be changed and existing entities cannot be destroyed. New entities can be created.
+During Iteration with **ForEachForward** method component setups of existing entities can not be changed and existing entities cannot be destroyed.
 
 **Query** can be used to iterate from multiple threads. To be able to iterate from multiple threads, first we need create batch iterators from **Query** with method:
 ```cpp
