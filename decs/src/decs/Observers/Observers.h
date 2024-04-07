@@ -10,6 +10,10 @@ namespace decs
 	public:
 		virtual ~CreateEntityObserver() = default;
 
+		/// <summary>
+		/// In this method modifying or changing component setup of any entity is forbidden because it lead to undefined behavior. New entities cannot be created. Existing entities can be destroyed.
+		/// </summary>
+		/// <param name="entity"></param>
 		virtual void OnCreateEntity(const Entity& entity) = 0;
 	};
 

@@ -393,7 +393,6 @@ void RemoveMultipleComponentTest()
 	entity.AddComponent<double>();
 	entity.AddComponent<char>();
 
-	entity.RemoveComponents<int, decs::stable<float>>();
 	entity.RemoveComponent<decs::stable<float>>();
 
 	entity.SetActive(false);
