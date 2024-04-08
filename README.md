@@ -79,15 +79,15 @@ bool isActive = entity.IsActive();
 ```cpp
 // Iterates over entities in archetypes from first to last
 template<typename Callable
-Query::ForEachForward(Callable&& func);
+Query::ForEach(Callable&& func);
 
 // Iterates over entities in archetypes form last to first
 template<typename Callable
 Query::ForEachBackward(Callable&& func);
 
-// It works exactly like ForEachBackward
+// Iterates over entities in archetypes form last to first
 template<typename Callable
-Query::ForEach(Callable&& func);
+Query::ForEachSafe(Callable&& func);
 
 ```
 
@@ -137,17 +137,6 @@ query.ForEach([](decs::Entity& e, Component1& c1, Component2& c2, Component3& c3
 	// doing stuff with components and entity
 });
 ```
-
-During iteration with methods **ForEach** and **ForEachBackward** is possible:
-* destroying currently iterated entity
-
-Things like:
-* destroying other entites
-* adding and removing component from entities different than currently iterated entity
-
-are undefined behavior.
-
-During Iteration with **ForEachForward** method component setups of existing entities can not be changed and existing entities cannot be destroyed.
 
 **Query** can be used to iterate from multiple threads. To be able to iterate from multiple threads, first we need create batch iterators from **Query** with method:
 ```cpp
