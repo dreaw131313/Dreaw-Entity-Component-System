@@ -3,6 +3,8 @@
 
 #include "decs/decs.h"
 
+#include "decs/Containers/small_vector.h"
+
 void PrintLine(std::string message = "")
 {
 	std::cout << message << "\n";
@@ -249,8 +251,9 @@ void BaseTest()
 		PrintLine("Query contain prefab!");
 	}
 
-	query.ForEachForward(lambda);
+	query.ForEach(lambda);
 	query.ForEachBackward(lambda);
+	query.ForEachSafe(lambda);
 
 	std::vector<QueryType::BatchIterator> iterators;
 	query.CreateBatchIterators(iterators, 2, 4);
@@ -281,9 +284,11 @@ void BaseTest()
 
 	PrintLine("");
 	PrintLine("Multi Query foreach forward:");
-	testMultiQuery.ForEachForward(queryLambda);
-	PrintLine("Multi Query foreach backwards:");
 	testMultiQuery.ForEach(queryLambda);
+	PrintLine("Multi Query foreach backwards:");
+	testMultiQuery.ForEachBackward(queryLambda);
+	PrintLine("Multi Query foreach safe:");
+	testMultiQuery.ForEachSafe(queryLambda);
 
 	std::vector<MultiQueryType::BatchIterator> multiQueryIterators;
 	testMultiQuery.CreateBatchIterators(multiQueryIterators, 3, 3);
@@ -363,46 +368,43 @@ void ObservatorOrderTest()
 {
 	decs::EntityManager entityManager = {};
 
-	for (int i = 0; i < 100; i++)
-	{
-		decs::Container container = decs::Container(&entityManager, 1000);
-		auto prefab = container.CreateEntity();
-		prefab.AddComponent<float>();
-		prefab.AddComponent<int>();
-		prefab.AddStableComponent<Position>();
+	decs::Container container = decs::Container(&entityManager, 1000);
+	auto prefab = container.CreateEntity();
+	prefab.AddComponent<float>();
+	prefab.AddComponent<int>();
+	prefab.AddStableComponent<Position>();
 
-		container.Spawn(prefab, 5, true);
-		//container.Spawn(prefab, 10, true);
+	container.Spawn(prefab, 5, true);
+	//container.Spawn(prefab, 10, true);
 
-		EntityCreateObserver entityCreateObserver{};
-		EntityDesxtroyObserver entityDestroyObserver{};
+	EntityCreateObserver entityCreateObserver{};
+	EntityDesxtroyObserver entityDestroyObserver{};
 
-		FloatObserver floatObserver = {};
-		IntObserver intObserver = {};
-		PositionObserver positionObserver = {};
+	FloatObserver floatObserver = {};
+	IntObserver intObserver = {};
+	PositionObserver positionObserver = {};
 
-		decs::ObserversManager observerManager = {};
+	decs::ObserversManager observerManager = {};
 
-		observerManager.SetEntityCreationObserver(&entityCreateObserver);
-		observerManager.SetEntityDestructionObserver(&entityDestroyObserver);
+	observerManager.SetEntityCreationObserver(&entityCreateObserver);
+	observerManager.SetEntityDestructionObserver(&entityDestroyObserver);
 
-		observerManager.SetComponentCreateObserver<float>(&floatObserver);
-		observerManager.SetComponentDestroyObserver<float>(&floatObserver);
-		observerManager.SetComponentCreateObserver<int>(&intObserver);
-		observerManager.SetComponentDestroyObserver<int>(&intObserver);
+	observerManager.SetComponentCreateObserver<float>(&floatObserver);
+	observerManager.SetComponentDestroyObserver<float>(&floatObserver);
+	observerManager.SetComponentCreateObserver<int>(&intObserver);
+	observerManager.SetComponentDestroyObserver<int>(&intObserver);
 
-		observerManager.SetComponentCreateObserver<decs::stable<Position>>(&positionObserver);
-		observerManager.SetComponentDestroyObserver<decs::stable<Position>>(&positionObserver);
+	observerManager.SetComponentCreateObserver<decs::stable<Position>>(&positionObserver);
+	observerManager.SetComponentDestroyObserver<decs::stable<Position>>(&positionObserver);
 
-		container.SetObserversManager(&observerManager);
+	container.SetObserversManager(&observerManager);
 
-		container.SetComponentOrder<float>(0);
-		container.SetComponentOrder<int>(-1);
+	container.SetComponentOrder<float>(0);
+	container.SetComponentOrder<int>(-1);
 
-		container.InvokeEntitesOnCreateListeners();
-		PrintLine();
-		container.InvokeEntitesOnDestroyListeners();
-	}
+	container.InvokeEntitesOnCreateListeners();
+	PrintLine();
+	container.InvokeEntitesOnDestroyListeners();
 	//container.SetComponentOrder<float>(0);
 	//container.SetComponentOrder<int>(1);
 
@@ -428,6 +430,14 @@ void RemoveMultipleComponentTest()
 
 }
 
+template<typename T>
+struct small_vector
+{
+	T* ptr;
+	uint32_t size;
+	uint32_t capacity;
+};
+
 void StructsSizeTest()
 {
 	PrintLine(std::format("Sizeof of decs::Query<int>: {} bytes", sizeof(decs::Query<int>)));
@@ -442,15 +452,86 @@ void StructsSizeTest()
 	std::cout << "decs::ComponentRef<Position> size: " << sizeof(decs::ComponentRef<Position>) << " bytes" << "\n";
 	std::cout << "decs::Archetype size: " << sizeof(decs::Archetype) << " bytes" << "\n";
 	std::cout << "decs::ComponentRefAsVoid size: " << sizeof(decs::ComponentRefAsVoid) << " bytes" << "\n";
+
+	PrintLine();
+	std::cout << "sizeof(std::vector<int>): " << sizeof(std::vector<int>) << " bytes" << "\n";
+	std::cout << "sizeof(small_vector<int>): " << sizeof(small_vector<int>) << " bytes" << "\n";
+}
+
+void SmallVectorTest()
+{
+	struct TestStruct
+	{
+	public:
+		int i = 0;
+	public:
+		TestStruct()
+		{
+			PrintLine("Default constructor");
+		}
+		
+		TestStruct(int value):
+			i(value)
+		{
+			PrintLine("Default constructor");
+		}
+
+		~TestStruct()
+		{
+			PrintLine("Destructor");
+		}
+
+		TestStruct(const TestStruct& other)
+		{
+			PrintLine("Copy constructor");
+		}
+		
+		TestStruct(TestStruct&& other) noexcept
+		{
+			PrintLine("Move constructor");
+		}
+
+		
+		TestStruct& operator=(const TestStruct& other)
+		{
+			PrintLine("Copy assignment");
+
+			return*this;
+		}
+		
+		TestStruct& operator=(TestStruct&& other) noexcept
+		{
+			PrintLine("Move assignment");
+
+			return*this;
+		}
+
+
+	};
+
+	// Test structure:
+	{
+		decs::small_vector<TestStruct> v = {};
+		//std::vector<TestStruct> v = {};
+
+		v.push_back({});
+		v.resize(4);
+		v.reserve(10);
+		v.shrink_to_fit();
+		v.emplace_back(10);
+		v.emplace_back();
+		v.clear();
+	}
 }
 
 int main()
 {
 	//StructsSizeTest();
 	//BaseTest();
-	ObservatorOrderTest();
+	//ObservatorOrderTest();
 	//RemoveMultipleComponentTest();
 
+	SmallVectorTest();
 
 	return 0;
 }

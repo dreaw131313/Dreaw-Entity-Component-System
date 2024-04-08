@@ -11,6 +11,8 @@
 
 #include "traits.h"
 
+//#include "decs/Containers//small_vector.h"
+
 namespace decs
 {
 #if defined _MSC_VER
@@ -35,6 +37,9 @@ className& operator=(const className&) = delete;	\
 className(className&&) = delete;			\
 className& operator=(className&&) = delete;	\
 
+	//template<typename Value>
+	//using ecsSmallVector = decs::small_vector<Value>;
+	
 	template<typename Key, typename Value>
 	using ecsMap = std::unordered_map<Key, Value>;
 

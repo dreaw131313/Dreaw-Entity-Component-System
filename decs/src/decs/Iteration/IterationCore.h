@@ -12,11 +12,22 @@ namespace decs
 	public:
 		Archetype* Arch = nullptr;
 		PackedContainerBase* m_Containers[elementsCount] = { nullptr };
+		int64_t m_CachedEntityCount = 0;
 
 	public:
 		inline uint64_t GetEntityCount() const
 		{
 			return Arch->EntityCount();
+		}
+
+		inline int64_t GetCachedEntityCount() const
+		{
+			return m_CachedEntityCount;
+		}
+
+		inline void ValidateCachedEntityCount()
+		{
+			m_CachedEntityCount = Arch->EntityCount();
 		}
 	};
 
@@ -87,6 +98,15 @@ namespace decs
 		bool Contain(const decs::Entity& entity)
 		{
 			return m_ContainedArchetypes.find(entity.GetArchetype()) != m_ContainedArchetypes.end();
+		}
+
+		void ValidateCachedEntityCount()
+		{
+			const uint64_t ctxCount = m_ArchetypesContexts.size();
+			for (uint64_t i = 0; i < ctxCount; i++)
+			{
+				m_ArchetypesContexts[i].ValidateCachedEntityCount();
+			}
 		}
 
 	private:
