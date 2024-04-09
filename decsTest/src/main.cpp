@@ -3,8 +3,6 @@
 
 #include "decs/decs.h"
 
-#include "decs/Containers/small_vector.h"
-
 void PrintLine(std::string message = "")
 {
 	std::cout << message << "\n";
@@ -455,83 +453,14 @@ void StructsSizeTest()
 
 	PrintLine();
 	std::cout << "sizeof(std::vector<int>): " << sizeof(std::vector<int>) << " bytes" << "\n";
-	std::cout << "sizeof(small_vector<int>): " << sizeof(small_vector<int>) << " bytes" << "\n";
-}
-
-void SmallVectorTest()
-{
-	struct TestStruct
-	{
-	public:
-		int i = 0;
-	public:
-		TestStruct()
-		{
-			PrintLine("Default constructor");
-		}
-		
-		TestStruct(int value):
-			i(value)
-		{
-			PrintLine("Default constructor");
-		}
-
-		~TestStruct()
-		{
-			PrintLine("Destructor");
-		}
-
-		TestStruct(const TestStruct& other)
-		{
-			PrintLine("Copy constructor");
-		}
-		
-		TestStruct(TestStruct&& other) noexcept
-		{
-			PrintLine("Move constructor");
-		}
-
-		
-		TestStruct& operator=(const TestStruct& other)
-		{
-			PrintLine("Copy assignment");
-
-			return*this;
-		}
-		
-		TestStruct& operator=(TestStruct&& other) noexcept
-		{
-			PrintLine("Move assignment");
-
-			return*this;
-		}
-
-
-	};
-
-	// Test structure:
-	{
-		decs::small_vector<TestStruct> v = {};
-		//std::vector<TestStruct> v = {};
-
-		v.push_back({});
-		v.resize(4);
-		v.reserve(10);
-		v.shrink_to_fit();
-		v.emplace_back(10);
-		v.emplace_back();
-		v.clear();
-	}
 }
 
 int main()
 {
-	//StructsSizeTest();
-	//BaseTest();
-	//ObservatorOrderTest();
-	//RemoveMultipleComponentTest();
-
-	SmallVectorTest();
+	StructsSizeTest();
+	BaseTest();
+	ObservatorOrderTest();
+	RemoveMultipleComponentTest();
 
 	return 0;
 }

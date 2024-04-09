@@ -44,7 +44,7 @@ namespace decs
 			m_Capacity(capacity)
 		{
 			m_AllocationFlags = new bool[capacity]();
-			m_Data = (DataType*)::operator new[](capacity * sizeof(DataType));
+			m_Data = (DataType*)::operator new(capacity * sizeof(DataType));
 		}
 
 		~Chunk()
@@ -60,7 +60,7 @@ namespace decs
 				}
 			}
 
-			::operator delete[](m_Data);
+			::operator delete(m_Data, static_cast<uint64_t>(m_Capacity) * sizeof(DataType));
 			delete[] m_AllocationFlags;
 		}
 
