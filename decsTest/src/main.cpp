@@ -249,6 +249,7 @@ void BaseTest()
 		PrintLine("Query contain prefab!");
 	}
 
+	query.With<float>();
 	query.ForEach(lambda);
 	query.ForEachBackward(lambda);
 	query.ForEachSafe(lambda);
@@ -265,6 +266,7 @@ void BaseTest()
 
 	using MultiQueryType = decs::MultiQuery<Position>;
 	MultiQueryType testMultiQuery = {};
+	testMultiQuery.Without<float>();
 	testMultiQuery.AddContainer(&container, true);
 	testMultiQuery.AddContainer(&prefabContainer, true);
 

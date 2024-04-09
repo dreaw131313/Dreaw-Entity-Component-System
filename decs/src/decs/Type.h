@@ -151,49 +151,26 @@ namespace decs
 	const std::type_info* Type<T>::m_TypeInfo = &typeid(T);
 #endif
 
-	template<typename T = void, typename... Args>
-	void findIdsInVector(std::vector<decs::TypeID>& ids)
-	{
-		ids.push_back(decs::Type<T>::ID());
-		if (sizeof ... (Args) == 0)
-			return;
-		else
-			findIdsInVector<Args...>(ids);
-	}
 
 	template<typename T = void, typename... Args>
-	void findIds_InArray(decs::TypeID ids[], uint64_t index)
+	void find_type_ids_impl(TypeID* idArray, uint64_t idx)
 	{
-		ids[index] = decs::Type<T>::ID();
+		idArray[idx] = decs::Type<T>::ID();
+
 		if (sizeof ... (Args) == 0)
 			return;
-		else
-			findIds_InArray<Args...>(ids, index + 1);
-	}
-	template<typename... Args>
-	void findIds(std::vector<TypeID>& ids)
-	{
-		constexpr uint64_t typeCount = sizeof...(Args);
-		if (typeCount == 0)
-		{
-			return;
-		}
-		if (ids.capacity() != typeCount)
-		{
-			ids.reserve(typeCount);
-		}
-		findIdsInVector<Args...>(ids);
+
+		find_type_ids_impl<Args...>(idArray, idx + 1);
 	}
 
 	template<typename... Args>
-	void findIds(TypeID ids[sizeof...(Args)])
+	void find_type_ids(TypeID* idArray)
 	{
-		if (sizeof...(Args) == 0)
+		if constexpr (sizeof...(Args) == 0)
 		{
 			return;
 		}
-
-		findIds_InArray<Args...>(ids, 0);
+		find_type_ids_impl<Args...>(idArray, 0);
 	}
 
 	template<typename... Args>
@@ -202,13 +179,23 @@ namespace decs
 	public:
 		TypeGroup()
 		{
-			findIds<Args...>(m_TypesIDs);
+			find_type_ids<Args...>(m_TypesIDs);
 		}
 
-		TypeID operator[](const uint64_t index) const { return m_TypesIDs[index]; }
+		TypeID operator[](const uint64_t index) const
+		{
+			return m_TypesIDs[index];
+		}
 
-		inline const TypeID* IDs() const { return m_TypesIDs; }
-		constexpr uint64_t Size() const { return sizeof...(Args); }
+		inline const TypeID* IDs() const
+		{
+			return m_TypesIDs;
+		}
+
+		constexpr uint64_t Size() const
+		{
+			return sizeof...(Args);
+		}
 
 	private:
 		TypeID m_TypesIDs[sizeof...(Args)];

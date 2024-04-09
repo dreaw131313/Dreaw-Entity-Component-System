@@ -44,8 +44,15 @@ namespace decs
 		Query& Without()
 		{
 			m_IsDirty = true;
-			m_Without.clear();
-			findIds<ComponentsTypes...>(m_Without);
+			if constexpr (sizeof...(ComponentsTypes) == 0)
+			{
+				m_Without.clear();
+			}
+			else
+			{
+				m_Without.resize(sizeof...(ComponentsTypes));
+				find_type_ids<ComponentsTypes...>(m_Without.data());
+			}
 			return *this;
 		}
 
@@ -53,8 +60,15 @@ namespace decs
 		Query& WithAnyFrom()
 		{
 			m_IsDirty = true;
-			m_WithAnyOf.clear();
-			findIds<ComponentsTypes...>(m_WithAnyOf);
+			if constexpr (sizeof...(ComponentsTypes) == 0)
+			{
+				m_WithAnyOf.clear();
+			}
+			else
+			{
+				m_WithAnyOf.resize(sizeof...(ComponentsTypes));
+				find_type_ids<ComponentsTypes...>(m_WithAnyOf.data());
+			}
 			return *this;
 		}
 
@@ -62,8 +76,15 @@ namespace decs
 		Query& With()
 		{
 			m_IsDirty = true;
-			m_WithAll.clear();
-			findIds<ComponentsTypes...>(m_WithAll);
+			if constexpr (sizeof...(ComponentsTypes) == 0)
+			{
+				m_WithAll.clear();
+			}
+			else
+			{
+				m_WithAll.resize(sizeof...(ComponentsTypes));
+				find_type_ids<ComponentsTypes...>(m_WithAll.data());
+			}
 			return *this;
 		}
 
