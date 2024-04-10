@@ -459,10 +459,23 @@ void StructsSizeTest()
 
 int main()
 {
-	StructsSizeTest();
-	BaseTest();
-	ObservatorOrderTest();
-	RemoveMultipleComponentTest();
+	//StructsSizeTest();
+	//BaseTest();
+	//ObservatorOrderTest();
+	//RemoveMultipleComponentTest();
+
+	decs::ConstEntity constEntity = {};
+	decs::Entity entity = {};
+
+	if (entity == constEntity)
+	{
+		std::cout << "Entity equal" << std::endl;
+	}
+
+	if (constEntity == entity)
+	{
+		std::cout << "Entity equal" << std::endl;
+	}
 
 	return 0;
 }

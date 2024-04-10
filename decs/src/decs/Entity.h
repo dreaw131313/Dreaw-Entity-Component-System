@@ -252,6 +252,112 @@ namespace decs
 		}
 
 	};
+
+	class ConstEntity final
+	{
+		friend struct std::hash<decs::ConstEntity>;
+
+	public:
+		ConstEntity()
+		{
+
+		}
+
+		ConstEntity(const Entity& entity):
+			m_Entity(entity)
+		{
+
+		}
+
+		bool operator==(const ConstEntity& rhs)const
+		{
+			return rhs.m_Entity == m_Entity;
+		}
+		
+		bool operator==(const Entity& rhs)const
+		{
+			return rhs == m_Entity;
+		}
+
+		inline bool IsValid() const
+		{
+			return m_Entity.IsValid();
+		}
+
+		inline bool IsNull() const
+		{
+			return m_Entity.IsNull();
+		}
+
+		inline bool IsActive() const
+		{
+			return m_Entity.IsActive();
+		}
+
+		inline EntityID GetID() const
+		{
+			return m_Entity.GetID();
+		}
+
+		inline Container* GetContainer() const
+		{
+			return m_Entity.GetContainer();
+		}
+
+		template<typename T>
+		inline bool HasComponent() const
+		{
+			return m_Entity.HasComponent<T>();
+		}
+
+		template<typename T>
+		inline bool HasStableComponent() const
+		{
+			return m_Entity.HasStableComponent<T>();
+		}
+
+		template<typename T>
+		inline typename component_type<T>::Type* GetComponent() const
+		{
+			return m_Entity.GetComponent<T>();
+		}
+
+		template<typename T>
+		inline typename component_type<T>::Type* GetStableComponent() const
+		{
+			return m_Entity.GetStableComponent<T>();
+		}
+
+		template<typename T>
+		inline bool TryGetComponent(typename component_type<T>::Type*& component) const
+		{
+			return m_Entity.TryGetComponent(component);
+		}
+
+		template<typename T>
+		inline bool TryGetStableComponent(typename component_type<T>::Type*& component) const
+		{
+			return m_Entity.TryGetStableComponent(component);
+		}
+
+		inline EntityVersion GetVersion() const
+		{
+			return m_Entity.GetVersion();
+		}
+
+		inline uint32_t ComponentCount() const
+		{
+			return m_Entity.ComponentCount();
+		}
+
+		const Archetype* GetArchetype() const
+		{
+			return m_Entity.GetArchetype();
+		}
+
+	private:
+		Entity m_Entity = {};
+	};
 }
 
 template<>
@@ -263,5 +369,14 @@ struct std::hash<decs::Entity>
 		uint64_t entityVersionHash = std::hash<decs::EntityVersion>{}(entity.GetVersion());
 
 		return entityDataHash ^ (entityVersionHash + 0x9e3779b9 + (entityDataHash << 6) + (entityDataHash >> 2));
+	}
+};
+
+template<>
+struct std::hash<decs::ConstEntity>
+{
+	std::size_t operator()(const decs::ConstEntity& entity) const
+	{
+		return std::hash<decs::Entity>{}(entity.m_Entity);
 	}
 };
