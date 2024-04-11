@@ -23,6 +23,8 @@ namespace decs
 		friend class ContainerSerializerComplex;
 		friend class ContainerIterator;
 
+		friend class ConstEntity;
+
 		friend struct std::hash<decs::Entity>;
 
 	public:
@@ -202,7 +204,7 @@ namespace decs
 			return 0;
 		}
 
-		const Archetype* GetArchetype() const
+		inline const Archetype* GetArchetype() const
 		{
 			if (IsValid())
 			{
@@ -219,7 +221,7 @@ namespace decs
 		mutable EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
 
 	private:
-		void Set(EntityID id, Container* container)
+		inline void Set(EntityID id, Container* container)
 		{
 			m_ID = id;
 			m_Container = container;
@@ -227,7 +229,7 @@ namespace decs
 			m_Version = m_EntityData->GetVersion();
 		}
 
-		void Set(EntityData& data, Container* container)
+		inline void Set(EntityData& data, Container* container)
 		{
 			m_ID = data.GetID();
 			m_Container = container;
@@ -235,7 +237,7 @@ namespace decs
 			m_Version = data.GetVersion();
 		}
 
-		void Set(EntityData* data, Container* container)
+		inline void Set(EntityData* data, Container* container)
 		{
 			m_ID = data->GetID();
 			m_Container = container;
@@ -255,6 +257,19 @@ namespace decs
 
 	class ConstEntity final
 	{
+		template<typename ...>
+		friend class Query;
+		template<typename ...>
+		friend class MultiQuery;
+		friend class Container;
+		template<typename ComponentType>
+		friend class ComponentRef;
+		friend class ComponentRefAsVoid;
+		template<typename>
+		friend class ContainerSerializer;
+		friend class ContainerSerializerComplex;
+		friend class ContainerIterator;
+
 		friend struct std::hash<decs::ConstEntity>;
 
 	public:
@@ -263,7 +278,7 @@ namespace decs
 
 		}
 
-		ConstEntity(const Entity& entity):
+		ConstEntity(const Entity& entity) :
 			m_Entity(entity)
 		{
 
@@ -273,7 +288,7 @@ namespace decs
 		{
 			return rhs.m_Entity == m_Entity;
 		}
-		
+
 		bool operator==(const Entity& rhs)const
 		{
 			return rhs == m_Entity;
@@ -350,13 +365,39 @@ namespace decs
 			return m_Entity.ComponentCount();
 		}
 
-		const Archetype* GetArchetype() const
+		inline const Archetype* GetArchetype() const
 		{
 			return m_Entity.GetArchetype();
 		}
 
+		inline bool Destroy() const
+		{
+			return m_Entity.Destroy();
+		}
+
 	private:
 		Entity m_Entity = {};
+
+	private:
+		inline void Set(EntityID id, Container* container)
+		{
+			m_Entity.Set(id, container);
+		}
+
+		inline void Set(EntityData& data, Container* container)
+		{
+			m_Entity.Set(data, container);
+		}
+
+		inline void Set(EntityData* data, Container* container)
+		{
+			m_Entity.Set(data, container);
+		}
+
+		inline void Invalidate() const
+		{
+			m_Entity.Invalidate();
+		}
 	};
 }
 
