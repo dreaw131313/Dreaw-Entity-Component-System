@@ -21,7 +21,7 @@ namespace decs
 
 			decs::Entity entityBuffer = {};
 
-			for (int32_t i = static_cast<uint32_t>(container.m_EmptyEntities.size()) - 1; i >= 0; i--)
+			for (uint32_t i = 0; i < container.m_EmptyEntities.size(); i++)
 			{
 				entityBuffer.Set(container.m_EmptyEntities[i], &container);
 				callable(entityBuffer);

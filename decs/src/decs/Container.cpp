@@ -616,6 +616,13 @@ namespace decs
 			auto entityCreateObserver = GetEntityCreateObserver();
 			if (entityCreateObserver!= nullptr)
 			{
+
+				for (int64_t i = m_EmptyEntities.size() - 1; i << m_EmptyEntities.size() >= 0; i--)
+				{
+					entity.Set(m_EmptyEntities[i], this);
+					entityCreateObserver->OnCreateEntity(entity);
+				}
+
 				m_ArchetypesMap.IterateOverArchetypes([&](Archetype* archetype)
 				{
 					if (archetype->EntitesCountToInvokeCallbacks() == 0)
