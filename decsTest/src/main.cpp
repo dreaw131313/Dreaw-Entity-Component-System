@@ -464,18 +464,15 @@ int main()
 	//ObservatorOrderTest();
 	//RemoveMultipleComponentTest();
 
-	decs::ConstEntity constEntity = {};
-	decs::Entity entity = {};
+	decs::Container c = {};
 
-	if (entity == constEntity)
-	{
-		std::cout << "Entity equal" << std::endl;
-	}
+	auto e = c.CreateEntity();
+	e.AddComponent<float>();
 
-	if (constEntity == entity)
+	c.ForEach<float>([](const decs::Entity& entity, float f)
 	{
-		std::cout << "Entity equal" << std::endl;
-	}
+		PrintLine("Float component!");
+	});
 
 	return 0;
 }
