@@ -73,6 +73,23 @@ namespace decs
 		}
 	}
 
+	void ArchetypesMap::FullClear()
+	{
+		m_Archetypes.Clear();
+		m_SingleComponentArchetypes.clear();
+		m_ArchetypesGroupedByComponentsCount.clear();
+		m_ArchetrypesGroupsByOneTypeVector.Clear();
+		m_ArchetypesGroupedByOneType.clear();
+	}
+
+	void ArchetypesMap::ClearEntityDataAndComponents()
+	{
+		IterateOverArchetypes([](Archetype* arch)
+		{
+			arch->ClearEntityDataAndComponents();
+		});
+	}
+
 	void ArchetypesMap::MakeArchetypeEdges(Archetype& archetype)
 	{
 		// edges with archetypes with less components:

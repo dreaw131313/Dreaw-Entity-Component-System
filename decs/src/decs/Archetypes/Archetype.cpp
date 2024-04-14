@@ -34,6 +34,18 @@ namespace decs
 		return it->second;
 	}
 
+	void Archetype::ClearEntityDataAndComponents()
+	{
+		m_EntitiesData.clear();
+		for (uint32_t i = 0; i < m_TypeData.size(); i++)
+		{
+			auto& typeData = m_TypeData[i];
+			typeData.m_PackedContainer->Clear();
+		}
+		m_EntitiesCount = 0;
+		m_EntitesCountToInitialize = 0;
+	}
+
 	void Archetype::UpdateOrderOfComponentContexts()
 	{
 		static auto sortLambda = [](OrderData& lhs, OrderData& rhs)

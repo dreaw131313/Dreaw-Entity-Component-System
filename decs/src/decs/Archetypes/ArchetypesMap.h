@@ -225,10 +225,14 @@ namespace decs
 			}
 		}
 
+		void FullClear();
+
+		void ClearEntityDataAndComponents();
+
 	private:
 		TChunkedVector<Archetype> m_Archetypes = { 100 };
-		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes;
-		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount;
+		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes = {};
+		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount = {};
 
 		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeVector = { 100 };
 		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType;

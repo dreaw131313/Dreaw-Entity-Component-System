@@ -512,12 +512,15 @@ namespace decs
 		{
 			for (auto& [key, value] : m_Containers)
 			{
-				value.second->Clear();
+				if (value.second != nullptr)
+				{
+					value.second->Clear();
+				}
 			}
 		}
 
 	private:
-		ecsMap<TypeID, std::pair<uint32_t, StableContainerBase*>> m_Containers;// pair: uint32_t is chunk size of container
+		ecsMap<TypeID, std::pair<uint32_t, StableContainerBase*>> m_Containers = {};// pair: uint32_t is chunk size of container
 		uint32_t m_DefaultChunkSize = 1000;
 
 	private:

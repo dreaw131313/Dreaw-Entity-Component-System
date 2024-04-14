@@ -249,7 +249,6 @@ void BaseTest()
 		PrintLine("Query contain prefab!");
 	}
 
-	query.With<float>();
 	query.ForEach(lambda);
 	query.ForEachBackward(lambda);
 	query.ForEachSafe(lambda);

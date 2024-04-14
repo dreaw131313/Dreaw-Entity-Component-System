@@ -64,7 +64,6 @@ namespace decs
 		m_CanRemoveComponents = true;
 
 		m_SpawnData.Clear();
-
 		m_DelayedEntitiesToDestroy.clear();
 		m_ArchetypesRecordsToDelayedRemove.clear();
 
@@ -87,6 +86,20 @@ namespace decs
 			m_StableContainers.SetDefaultChunkSize(stableComponentDefaultChunkSize);
 			//m_EmptyEntities = { emptyEntitiesChunkSize };
 		}
+	}
+
+	void Container::Clear()
+	{
+		ReturnOwnedEntitiesToEntityManager();
+
+		m_DelayedEntitiesToDestroy.clear();
+		m_ArchetypesRecordsToDelayedRemove.clear();
+		m_ActivationChangeComponentRefs.clear();
+		m_SpawnData.Clear();
+		m_EmptyEntities.clear();
+		m_ArchetypesMap.ClearEntityDataAndComponents();
+		m_StableContainers.ClearContainers();
+		m_EntiesCount = 0;
 	}
 
 	Entity Container::CreateEntity(bool isActive)
@@ -250,14 +263,14 @@ namespace decs
 
 	void Container::ReturnOwnedEntitiesToEntityManager()
 	{
-		ContainerIterator iterator = {};
-		iterator.Foreach(*this, [this](const decs::Entity& entity)
-		{
-			m_EntityManager->ForceDestroyEntity(*entity.m_EntityData);
-		});
-
 		if (m_EntityManager != nullptr)
 		{
+			ContainerIterator iterator = {};
+			iterator.Foreach(*this, [this](const decs::Entity& entity)
+			{
+				m_EntityManager->ForceDestroyEntity(*entity.m_EntityData);
+			});
+
 			FreeReservedEntities();
 		}
 	}
@@ -614,7 +627,7 @@ namespace decs
 		// invoking entity creation observers:
 		{
 			auto entityCreateObserver = GetEntityCreateObserver();
-			if (entityCreateObserver!= nullptr)
+			if (entityCreateObserver != nullptr)
 			{
 
 				for (int64_t i = m_EmptyEntities.size() - 1; i << m_EmptyEntities.size() >= 0; i--)

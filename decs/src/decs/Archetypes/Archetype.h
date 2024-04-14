@@ -230,6 +230,8 @@ namespace decs
 		}
 
 	private:
+		void ClearEntityDataAndComponents();
+
 		// instead of using "m_TypeData.emplace_back"
 		inline ArchetypeTypeData& AddTypeData(
 			TypeID typeID,
