@@ -89,6 +89,25 @@ namespace decs
 			return *this;
 		}
 
+		void ClearFilters()
+		{
+			if (m_WithAll.size() > 0)
+			{
+				m_IsDirty = true;
+				m_WithAll.clear();
+			}
+			if (m_WithAnyOf.size() > 0)
+			{
+				m_IsDirty = true;
+				m_WithAnyOf.clear();
+			}
+			if (m_Without.size() > 0)
+			{
+				m_IsDirty = true;
+				m_Without.clear();
+			}
+		}
+
 		/// <summary>
 		/// Iterates over entities in archetypes from first to last. During iteration with this method creating, destroying and adding or removing component is forbidden on all entities, because it can cause undefined behavior. 
 		/// Destroying entites and adding or removing component to any entity, can cause that iteration index will go out of bound. 
@@ -332,18 +351,6 @@ namespace decs
 			return false;
 		}
 
-	private:
-		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
-		TypeGroup<ComponentsTypes...> m_Includes = {};
-		std::vector<TypeID> m_Without;
-		std::vector<TypeID> m_WithAnyOf;
-		std::vector<TypeID> m_WithAll;
-
-		std::vector<ContainerContextType> m_ContainerContexts = {};
-
-		bool m_IsDirty = true;
-
-	private:
 		void Fetch()
 		{
 			uint64_t containerContextsSize = m_ContainerContexts.size();
@@ -379,6 +386,18 @@ namespace decs
 				}
 			}
 		}
+	private:
+		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
+		TypeGroup<ComponentsTypes...> m_Includes = {};
+		std::vector<TypeID> m_Without;
+		std::vector<TypeID> m_WithAnyOf;
+		std::vector<TypeID> m_WithAll;
+
+		std::vector<ContainerContextType> m_ContainerContexts = {};
+
+		bool m_IsDirty = true;
+
+	private:
 
 		void CollectArchetypesEntityCount()
 		{

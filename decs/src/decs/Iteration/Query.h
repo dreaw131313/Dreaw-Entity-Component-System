@@ -19,8 +19,8 @@ namespace decs
 
 		}
 
-		Query(Container& container) :
-			m_Container(&container)
+		Query(Container* container) :
+			m_Container(container)
 		{
 
 		}
@@ -30,10 +30,14 @@ namespace decs
 
 		}
 
-		inline void SetContainer(Container& container)
+		inline void SetContainer(Container* container)
 		{
-			m_IsDirty = &container != m_Container;
-			m_Container = &container;
+			if (container != m_Container)
+			{
+				m_IsDirty = true;
+				m_Container = container;
+				Invalidate();
+			}
 		}
 
 		inline Container* GetContainer() const { return m_Container; }
@@ -88,6 +92,25 @@ namespace decs
 			return *this;
 		}
 
+		void ClearFilters()
+		{
+			if (m_WithAll.size() > 0)
+			{
+				m_IsDirty = true;
+				m_WithAll.clear();
+			}
+			if (m_WithAnyOf.size() > 0)
+			{
+				m_IsDirty = true;
+				m_WithAnyOf.clear();
+			}
+			if (m_Without.size() > 0)
+			{
+				m_IsDirty = true;
+				m_Without.clear();
+			}
+		}
+
 		/// <summary>
 		/// Iterates over entities in archetypes from first to last. During iteration with this method creating, destroying and adding or removing component is forbidden on all entities, because it can cause undefined behavior. 
 		/// Destroying entites and adding or removing component to any entity, can cause that iteration index will go out of bound. 
@@ -99,7 +122,7 @@ namespace decs
 		inline void ForEach(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
-			Fetch();
+			FetchInternal();
 
 			Entity entityBuffor = {};
 			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
@@ -146,7 +169,7 @@ namespace decs
 		void ForEachBackward(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
-			Fetch();
+			FetchInternal();
 
 			Entity entityBuffor = {};
 			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
@@ -197,7 +220,7 @@ namespace decs
 		void ForEachSafe(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
-			Fetch();
+			FetchInternal();
 			CollectArchetypesEntityCount();
 
 			Entity entityBuffor = {};
@@ -232,38 +255,10 @@ namespace decs
 			}
 		}
 
-		void Fetch()
+		inline void Fetch()
 		{
-			if (m_IsDirty)
-			{
-				m_IsDirty = false;
-				Invalidate();
-			}
-
-			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.ArchetypesCount();
-			if (m_ArchetypesCountDirty != containerArchetypesCount)
-			{
-				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
-				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
-
-				ArchetypesMap& map = m_Container->m_ArchetypesMap;
-				uint64_t maxComponentsInArchetype = map.MaxNumberOfTypesInArchetype();
-				if (maxComponentsInArchetype < minComponentsCountInArchetype) return;
-
-				if (newArchetypesCount > m_ArchetypesContexts.size())
-				{
-					// performing normal finding of archetypes
-					auto group = GetBestArchetypesGroup();
-					FetchArchetypesFromArchetypesGroup(group);
-				}
-				else
-				{
-					// checking only new archetypes:
-					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, minComponentsCountInArchetype);
-				}
-
-				m_ArchetypesCountDirty = containerArchetypesCount;
-			}
+			if (!IsValid()) return;
+			FetchInternal();
 		}
 
 		/// <summary>
@@ -296,6 +291,40 @@ namespace decs
 		bool m_IsDirty = true;
 
 	private:
+		void FetchInternal()
+		{
+			if (m_IsDirty)
+			{
+				m_IsDirty = false;
+				Invalidate();
+			}
+
+			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.ArchetypesCount();
+			if (m_ArchetypesCountDirty != containerArchetypesCount)
+			{
+				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
+				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
+
+				const ArchetypesMap& map = m_Container->m_ArchetypesMap;
+				uint64_t maxComponentsInArchetype = map.MaxNumberOfTypesInArchetype();
+				if (maxComponentsInArchetype < minComponentsCountInArchetype) return;
+
+				if (newArchetypesCount > m_ArchetypesContexts.size())
+				{
+					// performing normal finding of archetypes
+					auto group = GetBestArchetypesGroup();
+					FetchArchetypesFromArchetypesGroup(group);
+				}
+				else
+				{
+					// checking only new archetypes:
+					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, minComponentsCountInArchetype);
+				}
+
+				m_ArchetypesCountDirty = containerArchetypesCount;
+			}
+		}
+
 		void CollectArchetypesEntityCount()
 		{
 			const uint64_t ctxCount = m_ArchetypesContexts.size();
@@ -431,7 +460,7 @@ namespace decs
 		}
 
 		void AddingArchetypesWithCheckingOnlyNewArchetypes(
-			ArchetypesMap& map,
+			const ArchetypesMap& map,
 			uint64_t startArchetypesIndex,
 			uint64_t minRequiredComponentsCount
 		)

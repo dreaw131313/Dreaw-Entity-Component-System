@@ -230,7 +230,7 @@ void BaseTest()
 
 
 	using QueryType = decs::Query<Position>;
-	QueryType query = { container };
+	QueryType query = { &container };
 
 	query.With();
 
@@ -460,19 +460,9 @@ void StructsSizeTest()
 int main()
 {
 	//StructsSizeTest();
-	//BaseTest();
+	BaseTest();
 	//ObservatorOrderTest();
 	//RemoveMultipleComponentTest();
-
-	decs::Container c = {};
-
-	auto e = c.CreateEntity();
-	e.AddComponent<float>();
-
-	c.ForEach<float>([](const decs::Entity& entity, float f)
-	{
-		PrintLine("Float component!");
-	});
 
 	return 0;
 }
