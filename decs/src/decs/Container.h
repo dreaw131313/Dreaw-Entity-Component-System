@@ -333,57 +333,58 @@ namespace decs
 		{
 			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<ComponentType>::ID();
 
-			if (entityData.IsValidToPerformComponentOperation())
+			if (!entityData.IsValidToPerformComponentOperation())
 			{
-				auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
-				if (currentComponent != nullptr)
+				return nullptr;
+			}
+
+			auto currentComponent = GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
+			if (currentComponent != nullptr)
+			{
+				return currentComponent;
+			}
+
+			uint32_t componentContainerIndex = 0;
+			Archetype* entityNewArchetype = GetArchetypeAfterAddUnstableComponent<ComponentType>(
+				entityData.m_Archetype,
+				componentContainerIndex
+			);
+
+			ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
+			PackedContainer<ComponentType>* container = static_cast<PackedContainer<ComponentType>*>(archetypeTypeData.m_PackedContainer);
+			ComponentType* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
+
+			uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
+			if (entityData.m_Archetype != nullptr)
+			{
+				if (m_PerformDelayedDestruction)
 				{
-					return currentComponent;
-				}
-
-				uint32_t componentContainerIndex = 0;
-				Archetype* entityNewArchetype = GetArchetypeAfterAddUnstableComponent<ComponentType>(
-					entityData.m_Archetype,
-					componentContainerIndex
-				);
-
-				ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
-				PackedContainer<ComponentType>* container = static_cast<PackedContainer<ComponentType>*>(archetypeTypeData.m_PackedContainer);
-				ComponentType* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
-
-				uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
-				if (entityData.m_Archetype != nullptr)
-				{
-					if (m_PerformDelayedDestruction)
-					{
-						AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
-						entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
-							entityData.m_Archetype,
-							entityData.m_IndexInArchetype,
-							copmonentTypeID,
-							&entityData
-						);
-					}
-					else
-					{
-						entityNewArchetype->MoveEntityComponentsAfterAddComponent<ComponentType>(
-							entityData.m_Archetype,
-							entityData.m_IndexInArchetype,
-							&entityData
-						);
-					}
+					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
+					entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
+						entityData.m_Archetype,
+						entityData.m_IndexInArchetype,
+						copmonentTypeID,
+						&entityData
+					);
 				}
 				else
 				{
-					RemoveFromEmptyEntities(entityData);
-					entityNewArchetype->AddEntityData(&entityData);
+					entityNewArchetype->MoveEntityComponentsAfterAddComponent<ComponentType>(
+						entityData.m_Archetype,
+						entityData.m_IndexInArchetype,
+						&entityData
+					);
 				}
-
-				archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent(createdComponent, entity);
-
-				return createdComponent;
 			}
-			return nullptr;
+			else
+			{
+				RemoveFromEmptyEntities(entityData);
+				entityNewArchetype->AddEntityData(&entityData);
+			}
+
+			archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent(createdComponent, entity);
+
+			return createdComponent;
 		}
 
 		template<typename ComponentType, typename ...Args>
@@ -391,62 +392,63 @@ namespace decs
 		{
 			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<stable<ComponentType>>::ID();
 
-			if (entityData.IsValidToPerformComponentOperation())
+			if (!entityData.IsValidToPerformComponentOperation())
 			{
-				auto currentComponent = GetStableComponentWithoutCheckingIsAlive<ComponentType>(entityData);
-				if (currentComponent != nullptr)
+				return nullptr;
+			}
+
+			auto currentComponent = GetStableComponentWithoutCheckingIsAlive<ComponentType>(entityData);
+			if (currentComponent != nullptr)
+			{
+				return currentComponent;
+			}
+
+			uint32_t componentContainerIndex = 0;
+			Archetype* entityNewArchetype = GetArchetypeAfterAddStableComponent<ComponentType>(entityData.m_Archetype, componentContainerIndex);
+			ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
+
+			// Adding component to stable component container
+			StableContainer<ComponentType>* stableContainer = static_cast<StableContainer<ComponentType>*>(archetypeTypeData.m_StableContainer);
+			StableComponentRef componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
+
+			//StableComponentRef componentNodeInfo = {};
+			// Adding component pointer to packed container in archetype
+			archetypeTypeData.m_PackedContainer->EmplaceFromVoid(&componentNodeInfo);
+
+			ComponentType* componentPtr = static_cast<ComponentType*>(componentNodeInfo.m_ComponentPtr);
+
+			// Adding entity to archetype
+			uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
+			if (entityData.m_Archetype != nullptr)
+			{
+				if (m_PerformDelayedDestruction)
 				{
-					return currentComponent;
-				}
-
-				uint32_t componentContainerIndex = 0;
-				Archetype* entityNewArchetype = GetArchetypeAfterAddStableComponent<ComponentType>(entityData.m_Archetype, componentContainerIndex);
-				ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
-
-				// Adding component to stable component container
-				StableContainer<ComponentType>* stableContainer = static_cast<StableContainer<ComponentType>*>(archetypeTypeData.m_StableContainer);
-				StableComponentRef componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
-
-				//StableComponentRef componentNodeInfo = {};
-				// Adding component pointer to packed container in archetype
-				archetypeTypeData.m_PackedContainer->EmplaceFromVoid(&componentNodeInfo);
-
-				ComponentType* componentPtr = static_cast<ComponentType*>(componentNodeInfo.m_ComponentPtr);
-
-				// Adding entity to archetype
-				uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
-				if (entityData.m_Archetype != nullptr)
-				{
-					if (m_PerformDelayedDestruction)
-					{
-						AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
-						entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
-							entityData.m_Archetype,
-							entityData.m_IndexInArchetype,
-							copmonentTypeID,
-							&entityData
-						);
-					}
-					else
-					{
-						entityNewArchetype->MoveEntityComponentsAfterAddComponent<stable<ComponentType>>(
-							entityData.m_Archetype,
-							entityData.m_IndexInArchetype,
-							&entityData
-						);
-					}
+					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
+					entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
+						entityData.m_Archetype,
+						entityData.m_IndexInArchetype,
+						copmonentTypeID,
+						&entityData
+					);
 				}
 				else
 				{
-					RemoveFromEmptyEntities(entityData);
-					entityNewArchetype->AddEntityData(&entityData);
+					entityNewArchetype->MoveEntityComponentsAfterAddComponent<stable<ComponentType>>(
+						entityData.m_Archetype,
+						entityData.m_IndexInArchetype,
+						&entityData
+					);
 				}
-
-				archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent(componentPtr, entity);
-
-				return componentPtr;
 			}
-			return nullptr;
+			else
+			{
+				RemoveFromEmptyEntities(entityData);
+				entityNewArchetype->AddEntityData(&entityData);
+			}
+
+			archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent(componentPtr, entity);
+
+			return componentPtr;
 		}
 
 		template<typename ComponentType>
@@ -517,7 +519,7 @@ namespace decs
 
 			if (newArchetype == currentArchetype)
 			{
-				// archetype not changed 
+				// archetype not changed
 				return  0;
 			}
 
@@ -792,9 +794,9 @@ namespace decs
 	public:
 		bool SetObserversManager(ObserversManager* observersManager);
 
-		void InvokeEntitesOnCreateListeners();
+		void InvokeEntitesOnCreateListeners(bool bForceSetEntitesAlive = true);
 
-		void InvokeEntitesOnDestroyListeners();
+		void InvokeEntitesOnDestroyListeners(bool bForceSetEntitiesDead = true);
 
 		/// <summary>
 		/// Changes order of invoking function of component observers. Callback for component with lower order will be invoked first.

@@ -11,8 +11,6 @@
 
 #include "traits.h"
 
-namespace decs
-{
 #if defined _MSC_VER
 #   define FULL_FUNCTION_NAME __FUNCSIG__
 #elif defined __clang__ || (defined __GNUC__)
@@ -35,6 +33,8 @@ className& operator=(const className&) = delete;	\
 className(className&&) = delete;			\
 className& operator=(className&&) = delete;	\
 
+namespace decs
+{
 	template<typename Key, typename Value>
 	using ecsMap = std::unordered_map<Key, Value>;
 

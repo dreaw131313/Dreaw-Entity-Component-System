@@ -103,6 +103,8 @@ namespace decs
 
 		void SetState(EntityState state);
 
+		void SetStateRaw(EntityState state);
+
 		uint32_t ComponentCount() const;
 
 		void SetActiveState(bool state);

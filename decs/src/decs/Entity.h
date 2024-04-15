@@ -69,13 +69,12 @@ namespace decs
 
 		inline bool IsValid() const
 		{
-			return m_EntityData != nullptr && m_Version == m_EntityData->GetVersion();
+			return m_EntityData != nullptr && m_Version == m_EntityData->GetVersion() && m_EntityData->IsAlive();
 		}
 
 		inline bool IsNull() const
 		{
-			return !IsValid() ||
-				!m_EntityData->IsAlive();
+			return !IsValid();
 		}
 
 		inline bool IsActive() const
@@ -174,6 +173,11 @@ namespace decs
 		inline bool RemoveComponent() const
 		{
 			return IsValid() && m_Container->RemoveComponent<T>(*this);
+		}
+
+		inline bool RemoveComponent(TypeID componentTypeID) const
+		{
+			return IsValid() && m_Container->RemoveComponent(*this, componentTypeID);
 		}
 
 		template<typename T>

@@ -606,7 +606,7 @@ namespace decs
 		return m_ComponentContextManager.SetObserversManager(observersManager);
 	}
 
-	void Container::InvokeEntitesOnCreateListeners()
+	void Container::InvokeEntitesOnCreateListeners(bool bForceSetEntitesAlive)
 	{
 		if (m_IsInvokingObserversCallbacks) return;
 		BoolSwitch invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
@@ -629,30 +629,60 @@ namespace decs
 			auto entityCreateObserver = GetEntityCreateObserver();
 			if (entityCreateObserver != nullptr)
 			{
-
-				for (int64_t i = m_EmptyEntities.size() - 1; i << m_EmptyEntities.size() >= 0; i--)
+				if (bForceSetEntitesAlive)
 				{
-					entity.Set(m_EmptyEntities[i], this);
-					entityCreateObserver->OnCreateEntity(entity);
-				}
-
-				m_ArchetypesMap.IterateOverArchetypes([&](Archetype* archetype)
-				{
-					if (archetype->EntitesCountToInvokeCallbacks() == 0)
+					for (int64_t i = m_EmptyEntities.size() - 1; i << m_EmptyEntities.size() >= 0; i--)
 					{
-						return;
+						entity.Set(m_EmptyEntities[i], this);
+						entity.m_EntityData->SetStateRaw( EntityState::Alive);
+						entityCreateObserver->OnCreateEntity(entity);
 					}
-					const auto& entitiesData = archetype->m_EntitiesData;
-					for (int64_t idx = static_cast<int64_t>(archetype->EntitesCountToInvokeCallbacks()) - 1; idx >= 0; idx--)
+
+					m_ArchetypesMap.IterateOverArchetypes([&](Archetype* archetype)
 					{
-						const auto& entityData = entitiesData[idx];
-						if (!entityData.IsIntendedToDelayedDestroy())
+						if (archetype->EntitesCountToInvokeCallbacks() == 0)
 						{
-							entity.Set(entityData.m_EntityData, this);
-							entityCreateObserver->OnCreateEntity(entity);
+							return;
 						}
+						const auto& entitiesData = archetype->m_EntitiesData;
+						for (int64_t idx = static_cast<int64_t>(archetype->EntitesCountToInvokeCallbacks()) - 1; idx >= 0; idx--)
+						{
+							const auto& entityData = entitiesData[idx];
+							if (!entityData.IsIntendedToDelayedDestroy())
+							{
+								entity.m_EntityData->SetStateRaw(EntityState::Alive);
+								entity.Set(entityData.m_EntityData, this);
+								entityCreateObserver->OnCreateEntity(entity);
+							}
+						}
+					});
+				}
+				else
+				{
+					for (int64_t i = m_EmptyEntities.size() - 1; i << m_EmptyEntities.size() >= 0; i--)
+					{
+						entity.Set(m_EmptyEntities[i], this);
+						entityCreateObserver->OnCreateEntity(entity);
 					}
-				});
+
+					m_ArchetypesMap.IterateOverArchetypes([&](Archetype* archetype)
+					{
+						if (archetype->EntitesCountToInvokeCallbacks() == 0)
+						{
+							return;
+						}
+						const auto& entitiesData = archetype->m_EntitiesData;
+						for (int64_t idx = static_cast<int64_t>(archetype->EntitesCountToInvokeCallbacks()) - 1; idx >= 0; idx--)
+						{
+							const auto& entityData = entitiesData[idx];
+							if (!entityData.IsIntendedToDelayedDestroy())
+							{
+								entity.Set(entityData.m_EntityData, this);
+								entityCreateObserver->OnCreateEntity(entity);
+							}
+						}
+					});
+				}
 			}
 		}
 
@@ -704,7 +734,7 @@ namespace decs
 		PerformDelayedDestruction();
 	}
 
-	void Container::InvokeEntitesOnDestroyListeners()
+	void Container::InvokeEntitesOnDestroyListeners(bool bForceSetEntitiesDead)
 	{
 		if (m_IsInvokingObserversCallbacks) return;
 		BoolSwitch invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
@@ -753,10 +783,21 @@ namespace decs
 		// invoking entity creation observers:
 		{
 			ContainerIterator iterator = {};
-			iterator.Foreach(*this, [this](const decs::Entity& entity)
+			if (bForceSetEntitiesDead)
 			{
-				InvokeEntityDestructionObservers(entity);
-			});
+				iterator.Foreach(*this, [this](const decs::Entity& entity)
+				{
+					InvokeEntityDestructionObservers(entity);
+					entity.m_EntityData->SetStateRaw(EntityState::Dead);
+				});
+			}
+			else
+			{
+				iterator.Foreach(*this, [this](const decs::Entity& entity)
+				{
+					InvokeEntityDestructionObservers(entity);
+				});
+			}
 		}
 	}
 

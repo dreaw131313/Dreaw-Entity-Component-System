@@ -27,6 +27,11 @@ namespace decs
 		}
 	}
 
+	void EntityData::SetStateRaw(EntityState state)
+	{
+		m_State = state;
+	}
+
 	uint32_t EntityData::ComponentCount() const
 	{
 		if (m_Archetype == nullptr) return 0;
