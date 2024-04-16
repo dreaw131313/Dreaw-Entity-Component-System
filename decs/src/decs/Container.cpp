@@ -90,7 +90,7 @@ namespace decs
 
 	void Container::Clear()
 	{
-		ReturnOwnedEntitiesToEntityManager();
+		ReturnOwnedEntitiesToEntityManager_Internal(false);
 
 		m_DelayedEntitiesToDestroy.clear();
 		m_ArchetypesRecordsToDelayedRemove.clear();
@@ -100,6 +100,30 @@ namespace decs
 		m_ArchetypesMap.ClearEntityDataAndComponents();
 		m_StableContainers.ClearContainers();
 		m_EntiesCount = 0;
+	}
+
+	void Container::ReturnOwnedEntitiesToEntityManager()
+	{
+		ReturnOwnedEntitiesToEntityManager_Internal(true);
+	}
+
+	void Container::ReturnOwnedEntitiesToEntityManager_Internal(bool bNullEntityManagerIfIsNotHisOwner)
+	{
+		if (m_EntityManager != nullptr)
+		{
+			ContainerIterator iterator = {};
+			iterator.Foreach(*this, [this](const decs::Entity& entity)
+			{
+				m_EntityManager->ForceDestroyEntity(*entity.m_EntityData);
+			});
+
+			FreeReservedEntities();
+
+			if (bNullEntityManagerIfIsNotHisOwner && !m_HaveOwnEntityManager)
+			{
+				m_EntityManager = nullptr;
+			}
+		}
 	}
 
 	Entity Container::CreateEntity(bool isActive)
@@ -261,19 +285,6 @@ namespace decs
 		}
 	}
 
-	void Container::ReturnOwnedEntitiesToEntityManager()
-	{
-		if (m_EntityManager != nullptr)
-		{
-			ContainerIterator iterator = {};
-			iterator.Foreach(*this, [this](const decs::Entity& entity)
-			{
-				m_EntityManager->ForceDestroyEntity(*entity.m_EntityData);
-			});
-
-			FreeReservedEntities();
-		}
-	}
 
 	void Container::ReserveEntities(uint32_t entitiesToReserve)
 	{
@@ -650,7 +661,7 @@ namespace decs
 							const auto& entityData = entitiesData[idx];
 							if (!entityData.IsIntendedToDelayedDestroy())
 							{
-								entity.m_EntityData->SetStateRaw(EntityState::Alive);
+								entityData.m_EntityData->SetStateRaw(EntityState::Alive);
 								entity.Set(entityData.m_EntityData, this);
 								entityCreateObserver->OnCreateEntity(entity);
 							}

@@ -27,7 +27,7 @@ namespace decs
 
 		uint64_t GetFreeEntitiesCount() const
 		{
-			return m_FreeEntitiesCount;
+			return m_FreeEntities.size();
 		}
 
 		EntityData* CreateEntity(bool isActive = true);
@@ -54,7 +54,6 @@ namespace decs
 		std::vector<EntityData*> m_FreeEntities;
 
 		EntityID m_CreatedEntitiesCount = 0;
-		uint64_t m_FreeEntitiesCount = 0;
 
 	};
 }

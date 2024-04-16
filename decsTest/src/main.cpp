@@ -459,8 +459,8 @@ void StructsSizeTest()
 int main()
 {
 	//StructsSizeTest();
-	BaseTest();
-	//ObservatorOrderTest();
+	//BaseTest();
+	ObservatorOrderTest();
 	//RemoveMultipleComponentTest();
 
 	return 0;

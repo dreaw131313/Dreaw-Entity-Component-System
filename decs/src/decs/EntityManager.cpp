@@ -21,22 +21,22 @@ namespace decs
 	EntityData* EntityManager::CreateEntity(bool isActive)
 	{
 		m_CreatedEntitiesCount += 1;
-		if (m_FreeEntitiesCount > 0)
+		if (GetFreeEntitiesCount() > 0)
 		{
-			m_FreeEntitiesCount -= 1;
-
 			auto it = m_FreeEntities.begin();
 
 			EntityData* entityData = m_FreeEntities.back();
 			m_FreeEntities.pop_back();
 			entityData->SetState(EntityState::Alive);
 			entityData->SetIsActive(isActive);
+			entityData->SetIsInManager(false);
 
 			return entityData;
 		}
 		else
 		{
 			EntityData& entityData = m_EntityData.EmplaceBack((EntityID)m_EntityData.Size(), isActive);
+			entityData.SetIsInManager(false);
 			return &entityData;
 		}
 	}
@@ -46,9 +46,9 @@ namespace decs
 		if (!entityData.IsDead())
 		{
 			m_CreatedEntitiesCount -= 1;
-			m_FreeEntitiesCount += 1;
 
 			m_FreeEntities.push_back(&entityData);
+			entityData.SetIsInManager(true);
 
 			entityData.OnDestroyByEntityManager();
 			return true;
@@ -59,12 +59,15 @@ namespace decs
 
 	void EntityManager::ForceDestroyEntity(EntityData& entityData)
 	{
-		m_CreatedEntitiesCount -= 1;
-		m_FreeEntitiesCount += 1;
+		if (!entityData.IsInManager())
+		{
+			m_CreatedEntitiesCount -= 1;
 
-		m_FreeEntities.push_back(&entityData);
+			m_FreeEntities.push_back(&entityData);
+			entityData.SetIsInManager(true);
 
-		entityData.OnDestroyByEntityManager();
+			entityData.OnDestroyByEntityManager();
+		}
 	}
 
 	void EntityManager::CreateReservedEntityData(uint32_t entitesToReserve, std::vector<EntityData*>& reservedEntityData)
@@ -75,12 +78,13 @@ namespace decs
 			{
 				EntityData* data = m_FreeEntities.back();
 				m_FreeEntities.pop_back();
+				data->SetIsInManager(false);
 				reservedEntityData.push_back(data);
-				m_FreeEntitiesCount -= 1;
 			}
 			else
 			{
 				EntityData& data = m_EntityData.EmplaceBack((EntityID)m_EntityData.Size(), false);
+				data.SetIsInManager(false);
 				reservedEntityData.push_back(&data);
 			}
 		}
@@ -96,10 +100,11 @@ namespace decs
 	void EntityManager::ReturnReservedEntityData(std::vector<EntityData*> reservedEntityData)
 	{
 		uint64_t entitiesToReturn = reservedEntityData.size();
-		m_FreeEntitiesCount += entitiesToReturn;
 		for (uint64_t idx = 0; idx < entitiesToReturn; idx++)
 		{
-			m_FreeEntities.push_back(reservedEntityData[idx]);
+			auto entityData = reservedEntityData[idx];
+			entityData->SetIsInManager(true);
+			m_FreeEntities.push_back(entityData);
 		}
 	}
 }

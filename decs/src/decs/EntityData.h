@@ -33,7 +33,7 @@ namespace decs
 		EntityState m_State = EntityState::Alive;
 		bool m_bIsActive = false;
 		bool m_bIsUsedAsPrefab = false;
-		bool m_bCanBeDestroyed = true;
+		bool m_bIsInManager = true;
 
 	public:
 		EntityData()
@@ -41,10 +41,9 @@ namespace decs
 
 		}
 
-		EntityData(EntityID id, bool bIsActive, bool bCanBeDestroyed = true) :
+		EntityData(EntityID id, bool bIsActive) :
 			m_ID(id),
-			m_bIsActive(bIsActive),
-			m_bCanBeDestroyed(bCanBeDestroyed)
+			m_bIsActive(bIsActive)
 		{
 
 		}
@@ -109,12 +108,22 @@ namespace decs
 
 		void SetActiveState(bool state);
 
+		inline bool IsInManager() const 
+		{
+			return m_bIsInManager;
+		}
+
 	private:
 		inline void OnDestroyByEntityManager()
 		{
 			m_Archetype = nullptr;
 			m_Version += 1;
 			m_State = EntityState::Dead;
+		}
+
+		void SetIsInManager(bool bIsInManager)
+		{
+			m_bIsInManager = bIsInManager;
 		}
 	};
 
