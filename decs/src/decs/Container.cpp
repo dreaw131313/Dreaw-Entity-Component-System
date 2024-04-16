@@ -634,7 +634,7 @@ namespace decs
 					for (int64_t i = m_EmptyEntities.size() - 1; i << m_EmptyEntities.size() >= 0; i--)
 					{
 						entity.Set(m_EmptyEntities[i], this);
-						entity.m_EntityData->SetStateRaw( EntityState::Alive);
+						entity.m_EntityData->SetStateRaw(EntityState::Alive);
 						entityCreateObserver->OnCreateEntity(entity);
 					}
 
@@ -683,6 +683,14 @@ namespace decs
 						}
 					});
 				}
+			}
+			else if (bForceSetEntitesAlive)
+			{
+				ContainerIterator iterator = {};
+				iterator.Foreach(*this, [](const decs::Entity& e)
+				{
+					e.m_EntityData->SetStateRaw(EntityState::Alive);
+				});
 			}
 		}
 
@@ -782,20 +790,32 @@ namespace decs
 
 		// invoking entity creation observers:
 		{
-			ContainerIterator iterator = {};
-			if (bForceSetEntitiesDead)
+			auto entityDestroyObserver = GetEntityDestroyObserver();
+			if (entityDestroyObserver != nullptr)
 			{
-				iterator.Foreach(*this, [this](const decs::Entity& entity)
+				ContainerIterator iterator = {};
+				if (bForceSetEntitiesDead)
 				{
-					InvokeEntityDestructionObservers(entity);
-					entity.m_EntityData->SetStateRaw(EntityState::Dead);
-				});
+					iterator.Foreach(*this, [&](const decs::Entity& entity)
+					{
+						entityDestroyObserver->OnDestroyEntity(entity);
+						entity.m_EntityData->SetStateRaw(EntityState::Dead);
+					});
+				}
+				else
+				{
+					iterator.Foreach(*this, [&](const decs::Entity& entity)
+					{
+						entityDestroyObserver->OnDestroyEntity(entity);
+					});
+				}
 			}
-			else
+			else if (bForceSetEntitiesDead)
 			{
-				iterator.Foreach(*this, [this](const decs::Entity& entity)
+				ContainerIterator iterator = {};
+				iterator.Foreach(*this, [](const decs::Entity& e)
 				{
-					InvokeEntityDestructionObservers(entity);
+					e.m_EntityData->SetStateRaw(EntityState::Dead);
 				});
 			}
 		}
