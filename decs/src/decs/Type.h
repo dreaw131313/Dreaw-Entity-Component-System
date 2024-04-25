@@ -66,7 +66,7 @@ namespace decs
 	public:
 
 #ifdef USE_CONSTEXPR_TYPE_ID
-		inline static constexpr TypeID ID()
+		inline static consteval TypeID ID()
 		{
 			return Type_Base<T, TypeID>::ID();
 		}
