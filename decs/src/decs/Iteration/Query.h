@@ -470,7 +470,7 @@ namespace decs
 			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
 			{
 				Archetype& arch = archetypes[i];
-				if (arch.ComponentCount() < minRequiredComponentsCount)
+				if (arch.ComponentCount() >= minRequiredComponentsCount)
 				{
 					TryAddArchetypeFromGroup(arch);
 				}
