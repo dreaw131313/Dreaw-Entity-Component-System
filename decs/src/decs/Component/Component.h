@@ -4,27 +4,18 @@
 
 namespace decs
 {
+	/// <summary>
+	/// Component must have one public static fiel:
+	///		- inline static constexpr bool IsStable = true/false;
+	/// If it is true component pointer will never change its position in memory, if false component will be moved in memory.
+	/// </summary>
 	class ComponentBase
 	{
 		friend class Component;
 		friend class StableComponent;
 
-	private:
+	public:
 		virtual ~ComponentBase() = default;
-	};
-
-	class Component : public ComponentBase
-	{
-	public:
-		inline static constexpr bool IsStable = false;
-
-	};
-
-	class StableComponent : public ComponentBase
-	{
-	public:
-		inline static constexpr bool IsStable = true;
-
 	};
 
 }

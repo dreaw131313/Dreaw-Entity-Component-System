@@ -8,8 +8,13 @@ void PrintLine(std::string message = "")
 	std::cout << message << "\n";
 }
 
-struct Position : public decs::StableComponent
+
+#define STABLE_COMPONENT() public: inline constexpr static bool IsStable = true;
+#define COMPONENT()public: inline constexpr static bool IsStable = false;
+
+struct Position : public decs::ComponentBase
 {
+	STABLE_COMPONENT()
 public:
 	float X = 0;
 	float Y = 0;
@@ -32,15 +37,17 @@ public:
 	}
 };
 
-struct TestComponent : public decs::Component
+struct TestComponent : public decs::ComponentBase
 {
+	COMPONENT()
 public:
 	int table[10];
 
 };
 
-struct Renderer :public decs::StableComponent
+struct Renderer :public decs::ComponentBase
 {
+	COMPONENT()
 public:
 	double mesh;
 };
