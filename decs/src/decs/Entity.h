@@ -108,6 +108,20 @@ namespace decs
 			return nullptr;
 		}
 
+		/// <summary>
+		/// Iterates over all components on entity and use dynamic cast. If casted component is not nullptr returns it.
+		/// </summary>
+		/// <typeparam name="TComponent"></typeparam>
+		/// <returns></returns>
+		template<typename TComponent>
+		inline TComponent* GetComponentDynamic() const
+		{
+			if (IsValid())
+				return m_Container->GetComponentDynamic<TComponent>(*m_EntityData);
+
+			return nullptr;
+		}
+
 		template<typename TComponent>
 		inline bool HasComponent() const
 		{
@@ -288,11 +302,16 @@ namespace decs
 			return m_Entity.HasComponent<TComponent>();
 		}
 
-
 		template<typename TComponent>
 		inline TComponent* GetComponent() const
 		{
 			return m_Entity.GetComponent<TComponent>();
+		}
+
+		template<typename TComponent>
+		inline TComponent* GetComponentDynamic() const
+		{
+			return m_Entity->GetComponentDynamic<TComponent>();
 		}
 
 		template<typename TComponent>

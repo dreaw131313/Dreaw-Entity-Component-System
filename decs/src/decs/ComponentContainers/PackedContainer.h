@@ -42,7 +42,7 @@ namespace decs
 		/// <returns>Component size in bytes.</returns>
 		inline virtual uint64_t GetComponentSize() const = 0;
 
-		inline virtual ComponentBase* GetComponentPtrAsVoid(uint64_t index) = 0;
+		inline virtual ComponentBase* GetComponentBasePtr(uint64_t index) = 0;
 
 		inline virtual StableComponentRef* GetStableComponentRef(uint64_t index) = 0;
 
@@ -135,7 +135,7 @@ namespace decs
 			m_Data.reserve(newCapacity);
 		}
 
-		inline virtual ComponentBase* GetComponentPtrAsVoid(uint64_t index)  override
+		inline virtual ComponentBase* GetComponentBasePtr(uint64_t index)  override
 		{
 			return &m_Data[index];
 		}
@@ -243,7 +243,7 @@ namespace decs
 			m_Data.reserve(newCapacity);
 		}
 
-		inline virtual ComponentBase* GetComponentPtrAsVoid(uint64_t index)  override
+		inline virtual ComponentBase* GetComponentBasePtr(uint64_t index)  override
 		{
 			return m_Data[index].m_ComponentPtr;
 		}

@@ -274,7 +274,7 @@ namespace decs
 			else
 			{
 				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
-					updatetFromArchetypeData.m_PackedContainer->GetComponentPtrAsVoid(fromIndex)
+					updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
 				);
 			}
 			updatetFromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
@@ -319,7 +319,7 @@ namespace decs
 				else
 				{
 					thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
-						fromArchetypeData.m_PackedContainer->GetComponentPtrAsVoid(fromIndex)
+						fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
 					);
 				}
 
@@ -378,7 +378,7 @@ namespace decs
 			else
 			{
 				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
-					updatetFromArchetypeData.m_PackedContainer->GetComponentPtrAsVoid(fromIndex)
+					updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
 				);
 			}
 
@@ -454,7 +454,7 @@ namespace decs
 			else
 			{
 				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
-					fromArchetypeData.m_PackedContainer->GetComponentPtrAsVoid(fromIndex)
+					fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
 				);
 			}
 

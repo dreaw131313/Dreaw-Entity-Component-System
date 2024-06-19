@@ -56,7 +56,7 @@ namespace decs
 
 										SerializeComponent(
 											entityBuffer,
-											archetypeComponentData.m_PackedContainer->GetComponentPtrAsVoid(entityIdx),
+											archetypeComponentData.m_PackedContainer->GetComponentBasePtr(entityIdx),
 											archetypeComponentData.m_PackedContainer->GetComponentSize(),
 											archetypeComponentData.m_TypeID,
 											componentIdx

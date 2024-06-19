@@ -32,7 +32,7 @@ namespace decs
 				}
 				if (m_PackedContainer != nullptr)
 				{
-					return m_PackedContainer->GetComponentPtrAsVoid(m_EntityData->m_IndexInArchetype);
+					return m_PackedContainer->GetComponentBasePtr(m_EntityData->m_IndexInArchetype);
 				}
 			}
 			return nullptr;

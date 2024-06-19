@@ -139,7 +139,7 @@ namespace decs
 									BeginComponentSerialize(entityBuffer, componentSerializerData.m_Serializer, serializerData);
 									{
 										componentSerializerData.m_Serializer->SerializeComponentFromVoid(
-											componentSerializerData.m_PackedContainer->GetComponentPtrAsVoid(entityIdx),
+											componentSerializerData.m_PackedContainer->GetComponentBasePtr(entityIdx),
 											serializerData
 										);
 									}

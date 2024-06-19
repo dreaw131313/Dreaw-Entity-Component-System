@@ -58,7 +58,7 @@ int main()
 
 	Position* position = entity.GetComponent<Position>();
 	TestComponent* testComp = entity.GetComponent<TestComponent>();
-	Renderer* renderer = entity.GetComponent<Renderer>();
+	Renderer* renderer = entity.GetComponentDynamic<Renderer>();
 
 	//container.Spawn(entity, 10, true);
 

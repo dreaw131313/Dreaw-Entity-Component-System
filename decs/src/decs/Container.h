@@ -586,6 +586,29 @@ namespace decs
 		}
 
 		template<typename TComponent>
+		TComponent* GetComponentDynamic(EntityData& entityData)
+		{
+			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
+			{
+				uint32_t archetypeComponentCount = entityData.m_Archetype->ComponentCount();
+				const auto& typeDataVector = entityData.m_Archetype->m_TypeData;
+				for (uint32_t i = 0; i < archetypeComponentCount; i++)
+				{
+					auto& componentData = typeDataVector[i];
+					auto componentPtr = componentData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
+
+					TComponent* casted = dynamic_cast<TComponent*>(componentPtr);
+					if (casted != nullptr)
+					{
+						return casted;
+					}
+				}
+			}
+
+			return nullptr;
+		}
+
+		template<typename TComponent>
 		TComponent* GetComponentWithoutCheckingIsAlive(EntityData& entityData) const
 		{
 			if (entityData.m_Archetype != nullptr)
@@ -707,7 +730,7 @@ namespace decs
 				{
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<TComponent>(
 						m_ComponentContextManager.GetOrCreateComponentContext<TComponent>(),
-						TComponent::IsStable? m_StableContainers.GetOrCreateStableContainer<TComponent>() : nullptr
+						TComponent::IsStable ? m_StableContainers.GetOrCreateStableContainer<TComponent>() : nullptr
 					);
 				}
 			}
@@ -1016,11 +1039,11 @@ namespace decs
 						if constexpr (std::is_invocable<Callable, Entity&, TComponent&>())
 						{
 							entityBuffor.Set(entityData.m_EntityData, this);
-							func(entityBuffor, *static_cast<TComponent*>(packedContainer->GetComponentPtrAsVoid(idx)));
+							func(entityBuffor, *static_cast<TComponent*>(packedContainer->GetComponentBasePtr(idx)));
 						}
 						else
 						{
-							func(*static_cast<TComponent*>(packedContainer->GetComponentPtrAsVoid(idx)));
+							func(*static_cast<TComponent*>(packedContainer->GetComponentBasePtr(idx)));
 						}
 					}
 				}

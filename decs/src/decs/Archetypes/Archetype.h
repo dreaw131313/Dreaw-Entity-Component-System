@@ -440,7 +440,7 @@ namespace decs
 				else
 				{
 					thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
-						fromArchetypeData.m_PackedContainer->GetComponentPtrAsVoid(fromIndex)
+						fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
 					);
 				}
 				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
