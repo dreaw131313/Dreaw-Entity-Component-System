@@ -273,8 +273,7 @@ namespace decs
 		Archetype* GetOrCreateMatchedArchetype(
 			Archetype& fromArchetype,
 			ComponentContextsManager* componentContextsManager,
-			StableContainersManager* stableContainersManager,
-			ObserversManager* observerManager
+			StableContainersManager* stableContainersManager
 		);
 
 		void AddArchetypeToGroups(Archetype* arch)

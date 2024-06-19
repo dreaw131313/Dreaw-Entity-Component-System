@@ -7,7 +7,6 @@
 #include "ComponentContext\ComponentContextsManager.h"
 
 #include "Observers\Observers.h"
-#include "Observers\ObserversManager.h"
 
 #include "decs\ComponentContainers\PackedContainer.h"
 #include "decs\ComponentContainers\StableContainer.h"
@@ -800,8 +799,6 @@ namespace decs
 
 #pragma region OBSERVERS
 	public:
-		bool SetObserversManager(ObserversManager* observersManager);
-
 		void InvokeEntitesOnCreateListeners(bool bForceSetEntitesAlive = true);
 
 		void InvokeEntitesOnDestroyListeners(bool bForceSetEntitiesDead = true);
@@ -837,49 +834,123 @@ namespace decs
 
 		inline bool HasEntityCreateObserver() const
 		{
-			return m_ComponentContextManager.m_ObserversManager != nullptr && m_ComponentContextManager.m_ObserversManager->m_EntityCreationObserver != nullptr;
+			return m_CreateEntityObserver != nullptr;
 		}
 
 		inline decs::CreateEntityObserver* GetEntityCreateObserver()
 		{
-			if (HasEntityCreateObserver())
-			{
-				return m_ComponentContextManager.m_ObserversManager->m_EntityCreationObserver;
-			}
-			return nullptr;
+			return m_CreateEntityObserver;
 		}
 
 		inline bool HasEntityDestroyObserver() const
 		{
-			return m_ComponentContextManager.m_ObserversManager != nullptr && m_ComponentContextManager.m_ObserversManager->m_EntityDestructionObserver != nullptr;
+			return m_DestroyEntityObserver != nullptr;
 		}
 
 		inline decs::DestroyEntityObserver* GetEntityDestroyObserver()
 		{
-			if (HasEntityDestroyObserver())
-			{
-				return m_ComponentContextManager.m_ObserversManager->m_EntityDestructionObserver;
-			}
-			return nullptr;
+			return m_DestroyEntityObserver;
+		}
+
+		inline void SetCreateEntityObserver(CreateEntityObserver* createEntityObserver)
+		{
+			m_CreateEntityObserver = createEntityObserver;
+		}
+
+		inline void SetDestroyEntityObserver(DestroyEntityObserver* destroyEntityObserver)
+		{
+			m_DestroyEntityObserver = destroyEntityObserver;
+		}
+
+		inline void SetEnableEntityObserver(EnableEntityObserver* enableEntityObserver)
+		{
+			m_EnableEntityObserver = enableEntityObserver;
+		}
+
+		inline void SetDisableEntityObserver(DisableEntityObserver* disableEntityObserver)
+		{
+			m_DisableEntityObserver = disableEntityObserver;
+		}
+
+		inline void SetEntityObservers(
+			CreateEntityObserver* createEntityObserver,
+			DestroyEntityObserver* destroyEntityObserver,
+			EnableEntityObserver* enableEntityObserver,
+			DisableEntityObserver* disableEntityObserver
+		)
+		{
+			m_CreateEntityObserver = createEntityObserver;
+			m_DestroyEntityObserver = destroyEntityObserver;
+			m_EnableEntityObserver = enableEntityObserver;
+			m_DisableEntityObserver = disableEntityObserver;
+		}
+
+		template<typename TComponent>
+		void SetComponentObservers(
+			CreateComponentObserver<TComponent>* createObserver,
+			DestroyComponentObserver<TComponent>* destroyObserver,
+			EnableComponentObserver<TComponent>* enableObserver,
+			DisableComponentObserver<TComponent>* disableObserver
+		)
+		{
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			componentContext->m_Observers.m_CreateObserver = createObserver;
+			componentContext->m_Observers.m_DestroyObserver = destroyObserver;
+			componentContext->m_Observers.m_EnableObserver = enableObserver;
+			componentContext->m_Observers.m_DisableObserver = disableObserver;
+		}
+
+		template<typename TComponent>
+		void SetCreateComponentObserver(CreateComponentObserver<TComponent>* createObserver)
+		{
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			componentContext->m_Observers.m_CreateObserver = createObserver;
+		}
+
+		template<typename TComponent>
+		void SetDestroyComponentObserver(DestroyComponentObserver<TComponent>* destroyObserver)
+		{
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			componentContext->m_Observers.m_DestroyObserver = destroyObserver;
+		}
+
+		template<typename TComponent>
+		void SetEnableComponentObserver(EnableComponentObserver<TComponent>* enableObserver)
+		{
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			componentContext->m_Observers.m_EnableObserver = enableObserver;
+		}
+
+		template<typename TComponent>
+		void SetDisableComponentObserver(DisableComponentObserver<TComponent>* disableObserver)
+		{
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			componentContext->m_Observers.m_DisableObserver = disableObserver;
 		}
 
 	private:
 		std::vector<ComponentRefAsVoid> m_ActivationChangeComponentRefs = {};
 
+		CreateEntityObserver* m_CreateEntityObserver = nullptr;
+		DestroyEntityObserver* m_DestroyEntityObserver = nullptr;
+		EnableEntityObserver* m_EnableEntityObserver = nullptr;
+		DisableEntityObserver* m_DisableEntityObserver = nullptr;
+
+
 	private:
 		inline void InvokeEntityCreationObservers(const Entity& entity)
 		{
-			if (m_ComponentContextManager.m_ObserversManager != nullptr)
+			if (m_CreateEntityObserver != nullptr)
 			{
-				m_ComponentContextManager.m_ObserversManager->InvokeEntityCreationObservers(entity);
+				m_CreateEntityObserver->OnCreateEntity(entity);
 			}
 		}
 
 		inline void InvokeEntityDestructionObservers(const Entity& entity)
 		{
-			if (m_ComponentContextManager.m_ObserversManager != nullptr)
+			if (m_DestroyEntityObserver != nullptr)
 			{
-				m_ComponentContextManager.m_ObserversManager->InvokeEntityDestructionObservers(entity);
+				m_DestroyEntityObserver->OnDestroyEntity(entity);
 			}
 		}
 

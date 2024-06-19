@@ -1,149 +1,48 @@
 #pragma once
-#include "decs\Core.h"
-#include "decs\Type.h"
 
 #include "Observers.h"
+#include "Container.h"
 
 namespace decs
 {
-	class Entity;
-
-	class ComponentObserversGroupBase
-	{
-	public:
-		virtual ~ComponentObserversGroupBase() = default;
-	};
-
-	template<typename ComponentType>
-	class ComponentObserversGroup final : public ComponentObserversGroupBase
-	{
-	public:
-		CreateComponentObserver<ComponentType>* m_CreateObserver = nullptr;
-		DestroyComponentObserver<ComponentType>* m_DestroyObserver = nullptr;
-	};
-
 	class ObserversManager
 	{
-		friend class Container;
 	public:
-		ObserversManager()
+		inline void SetCreateEntityObserver(CreateEntityObserver* createEntityObserver)
 		{
-
+			m_CreateEntityObserver = createEntityObserver;
 		}
 
-		~ObserversManager()
+		inline void SetDestroyEntityObserver(DestroyEntityObserver* destroyEntityObserver)
 		{
-			for (auto& [key, value] : m_ComponentObserverGroups)
-			{
-				delete value;
-			}
+			m_DestroyEntityObserver = destroyEntityObserver;
 		}
 
-#pragma region ENTITY OBSERVERS:
-	private:
-		CreateEntityObserver* m_EntityCreationObserver = nullptr;
-		DestroyEntityObserver* m_EntityDestructionObserver = nullptr;
-
-		ActivateEntityObserver* m_EntityActivateObserver = nullptr;
-		DeactivateEntityObserver* m_EntityDeactivateObserver = nullptr;
-	public:
-
-		bool SetEntityCreationObserver(CreateEntityObserver* observer)
+		inline void SetEnableEntityObserver(EnableEntityObserver* enableEntityObserver)
 		{
-			if (observer == nullptr) return false;
-			m_EntityCreationObserver = observer;
-			return true;
+			m_EnableEntityObserver = enableEntityObserver;
 		}
 
-		bool SetEntityDestructionObserver(DestroyEntityObserver* observer)
+		inline void SetDisableEntityObserver(DisableEntityObserver* disableEntityObserver)
 		{
-			if (observer == nullptr) return false;
-			m_EntityDestructionObserver = observer;
-			return true;
+			m_DisableEntityObserver = disableEntityObserver;
 		}
 
-		bool SetEntityActivationObserver(ActivateEntityObserver* observer)
+		void FillContainerObservers(Container& container)
 		{
-			if (observer == nullptr) return false;
-			m_EntityActivateObserver = observer;
-			return true;
-		}
-
-		bool SetEntityDeactivationObserver(DeactivateEntityObserver* observer)
-		{
-			if (observer == nullptr) return false;
-			m_EntityDeactivateObserver = observer;
-			return true;
-		}
-
-		inline void InvokeEntityCreationObservers(const Entity& entity)
-		{
-			if (m_EntityCreationObserver != nullptr)
-			{
-				m_EntityCreationObserver->OnCreateEntity(entity);
-			}
-		}
-
-		inline void InvokeEntityDestructionObservers(const Entity& entity)
-		{
-			if (m_EntityDestructionObserver != nullptr)
-			{
-				m_EntityDestructionObserver->OnDestroyEntity(entity);
-			}
-		}
-
-		inline void InvokeEntityActivationObservers(const Entity& entity)
-		{
-			if (m_EntityActivateObserver != nullptr)
-			{
-				m_EntityActivateObserver->OnSetEntityActive(entity);
-			}
-		}
-
-		inline void InvokeEntityDeactivationObservers(const Entity& entity)
-		{
-			if (m_EntityDeactivateObserver != nullptr)
-			{
-				m_EntityDeactivateObserver->OnSetEntityInactive(entity);
-			}
-		}
-
-#pragma endregion
-
-#pragma region COMPONENTS OBSERVERS
-	public:
-		template<typename ComponentType>
-		ComponentObserversGroup<ComponentType>* GetComponentObserverGroup()
-		{
-			ComponentObserversGroupBase*& observer = m_ComponentObserverGroups[Type<ComponentType>::ID()];
-			if (observer == nullptr)
-			{
-				observer = new ComponentObserversGroup<ComponentType>();
-			}
-			ComponentObserversGroup<ComponentType>* finalObserver = dynamic_cast<ComponentObserversGroup<ComponentType>*>(observer);
-			if (finalObserver == nullptr)
-			{
-				throw std::runtime_error("Failed to create component observer group!");
-			}
-			return finalObserver;
-		}
-
-		template<typename ComponentType>
-		void SetComponentCreateObserver(CreateComponentObserver<ComponentType>* observer)
-		{
-			auto componentObserver = GetComponentObserverGroup<ComponentType>();
-			componentObserver->m_CreateObserver = observer;
-		}
-
-		template<typename ComponentType>
-		void SetComponentDestroyObserver(DestroyComponentObserver<ComponentType>* observer)
-		{
-			auto componentObserver = GetComponentObserverGroup<ComponentType>();
-			componentObserver->m_DestroyObserver = observer;
+			container.SetEntityObservers(
+				m_CreateEntityObserver,
+				m_DestroyEntityObserver,
+				m_EnableEntityObserver,
+				m_DisableEntityObserver
+			);
 		}
 
 	private:
-		ecsMap<TypeID, ComponentObserversGroupBase*> m_ComponentObserverGroups;
-#pragma endregion
+		CreateEntityObserver* m_CreateEntityObserver = nullptr;
+		DestroyEntityObserver* m_DestroyEntityObserver = nullptr;
+		EnableEntityObserver* m_EnableEntityObserver = nullptr;
+		DisableEntityObserver* m_DisableEntityObserver = nullptr;
+
 	};
 }

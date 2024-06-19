@@ -100,6 +100,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\decs\Containers\TOrderedList.h" />
+    <ClInclude Include="src\decs\Observers\ObserversManager.h" />
     <ClInclude Include="src\decs\Utils\ContainerIterator.h" />
     <ClInclude Include="src\decs\Utils\ContainerSerializer.h" />
     <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h" />
@@ -119,7 +120,6 @@
     <ClInclude Include="src\decs\EntityData.h" />
     <ClInclude Include="src\decs\Iteration\IterationCore.h" />
     <ClInclude Include="src\decs\Observers\Observers.h" />
-    <ClInclude Include="src\decs\Observers\ObserversManager.h" />
     <ClInclude Include="src\decs\traits.h" />
     <ClInclude Include="src\decs\Type.h" />
     <ClInclude Include="src\decs\Iteration\Query.h" />

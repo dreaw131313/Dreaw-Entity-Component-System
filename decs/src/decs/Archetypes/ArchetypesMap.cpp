@@ -275,8 +275,7 @@ namespace decs
 	Archetype* ArchetypesMap::GetOrCreateMatchedArchetype(
 		Archetype& fromArchetype,
 		ComponentContextsManager* componentContextsManager,
-		StableContainersManager* stableContainersManager,
-		ObserversManager* observerManager
+		StableContainersManager* stableContainersManager
 	)
 	{
 		auto pair = FindMatchingArchetype(&fromArchetype);
@@ -295,7 +294,7 @@ namespace decs
 				auto& contextRecord = componentContextsManager->m_Contexts[fromArchetypeTypeData.m_TypeID];
 				if (contextRecord.m_Context == nullptr)
 				{
-					contextRecord.m_Context = fromArchetypeTypeData.m_ComponentContext->Clone(observerManager);
+					contextRecord.m_Context = fromArchetypeTypeData.m_ComponentContext->Clone();
 				}
 
 				if (fromArchetypeTypeData.m_StableContainer != nullptr)

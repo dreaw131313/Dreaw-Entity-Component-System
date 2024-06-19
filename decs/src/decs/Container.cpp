@@ -449,8 +449,7 @@ namespace decs
 			spawnedEntityArchetype = m_ArchetypesMap.GetOrCreateMatchedArchetype(
 				*prefabEntityData.m_Archetype,
 				&m_ComponentContextManager,
-				&m_StableContainers,
-				m_ComponentContextManager.m_ObserversManager
+				&m_StableContainers
 			);
 		}
 		m_SpawnData.m_SpawnArchetypes.push_back(spawnedEntityArchetype);
@@ -610,11 +609,6 @@ namespace decs
 			}
 		}
 
-	}
-
-	bool Container::SetObserversManager(ObserversManager* observersManager)
-	{
-		return m_ComponentContextManager.SetObserversManager(observersManager);
 	}
 
 	void Container::InvokeEntitesOnCreateListeners(bool bForceSetEntitesAlive)
@@ -834,9 +828,9 @@ namespace decs
 
 	void Container::InvokeEntityActivationObservers(const Entity& entity)
 	{
-		if (m_ComponentContextManager.m_ObserversManager != nullptr)
+		if (m_EnableEntityObserver != nullptr)
 		{
-			m_ComponentContextManager.m_ObserversManager->InvokeEntityActivationObservers(entity);
+			m_EnableEntityObserver->OnEnableEntity(entity);
 		}
 
 		// TODO: add components activation listeners invoking
@@ -878,9 +872,9 @@ namespace decs
 
 	void Container::InvokeEntityDeactivationObservers(const Entity& entity)
 	{
-		if (m_ComponentContextManager.m_ObserversManager != nullptr)
+		if (m_DisableEntityObserver != nullptr)
 		{
-			m_ComponentContextManager.m_ObserversManager->InvokeEntityDeactivationObservers(entity);
+			m_DisableEntityObserver->OnDisableEntity(entity);
 		}
 
 		// TODO: add components deactivation listeners invoking

@@ -25,31 +25,9 @@ namespace decs
 
 		}
 
-		ComponentContextsManager(ObserversManager* observersManager) :
-			m_ObserversManager(observersManager)
-		{
-
-		}
-
 		~ComponentContextsManager()
 		{
 			DestroyComponentsContexts();
-		}
-
-		bool SetObserversManager(ObserversManager* observersManager)
-		{
-			if (observersManager == m_ObserversManager) return false;
-
-			m_ObserversManager = observersManager;
-			for (auto& [typeID, contextRecord] : m_Contexts)
-			{
-				if (contextRecord.m_Context != nullptr)
-				{
-					contextRecord.m_Context->SetObserverManager(m_ObserversManager);
-				}
-			}
-
-			return true;
 		}
 
 		template<typename ComponentType>
@@ -60,15 +38,7 @@ namespace decs
 			auto& contextRecord = m_Contexts[id];
 			if (contextRecord.m_Context == nullptr)
 			{
-				ComponentContext<ComponentType>* context = nullptr;
-				if (m_ObserversManager != nullptr)
-				{
-					context = new ComponentContext<ComponentType>(m_ObserversManager->GetComponentObserverGroup<ComponentType>(), contextRecord.m_Order);
-				}
-				else
-				{
-					context = new ComponentContext<ComponentType>(nullptr, contextRecord.m_Order);
-				}
+				ComponentContext<ComponentType>* context = new ComponentContext<ComponentType>(contextRecord.m_Order);
 				contextRecord.m_Context = context;
 
 				OnSetComponentTypeOrder(contextRecord);
@@ -162,7 +132,6 @@ namespace decs
 		ecsMap<TypeID, ComponentContextRecord> m_Contexts = {};
 		std::vector<ComponentContextBase*> m_ComponentContextsInOrder = {};
 
-		ObserversManager* m_ObserversManager = nullptr;
 		int64_t m_IterationIndex = std::numeric_limits<int64_t>::max();
 
 	private:

@@ -6,7 +6,6 @@
 #include "Iteration/Query.h"
 #include "Iteration/MultiQuery.h"
 #include "Observers/Observers.h"
-#include "Observers/ObserversManager.h"
 #include "ComponentRefs/ComponentRef.h"
 #include "ComponentRefs/ComponentRefAsVoid.h"
 #include "Utils/ContainerSerializer.h"

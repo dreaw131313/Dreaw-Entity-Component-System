@@ -25,20 +25,20 @@ namespace decs
 		virtual void OnDestroyEntity(const Entity& entity) = 0;
 	};
 
-	class ActivateEntityObserver
+	class EnableEntityObserver
 	{
 	public:
-		virtual ~ActivateEntityObserver() = default;
+		virtual ~EnableEntityObserver() = default;
 
-		virtual void OnSetEntityActive(const Entity& entity) = 0;
+		virtual void OnEnableEntity(const Entity& entity) = 0;
 	};
 
-	class DeactivateEntityObserver
+	class DisableEntityObserver
 	{
 	public:
-		virtual ~DeactivateEntityObserver() = default;
+		virtual ~DisableEntityObserver() = default;
 
-		virtual void OnSetEntityInactive(const Entity& entity) = 0;;
+		virtual void OnDisableEntity(const Entity& entity) = 0;;
 	};
 
 	template<typename ComponentType>
@@ -65,21 +65,32 @@ namespace decs
 	};
 
 	template<typename ComponentType>
-	class ActivateEntityComponentObserver
+	class EnableComponentObserver
 	{
 	public:
-		virtual ~ActivateEntityComponentObserver() = default;
+		virtual ~EnableComponentObserver() = default;
 
-		virtual void OnSetEntityActive(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
+		virtual void OnEnableEntity(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
 	};
 
 	template<typename ComponentType>
-	class EntityDisableComponentObserver
+	class DisableComponentObserver
 	{
 	public:
-		virtual ~EntityDisableComponentObserver() = default;
+		virtual ~DisableComponentObserver() = default;
 
 		virtual void OnDisableEntity(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
+	};
+
+
+	template<typename TComponent>
+	struct ComponentObserversGroup
+	{
+	public:
+		CreateComponentObserver<TComponent>* m_CreateObserver = nullptr;
+		DestroyComponentObserver<TComponent>* m_DestroyObserver = nullptr;
+		EnableComponentObserver<TComponent>* m_EnableObserver = nullptr;
+		DisableComponentObserver<TComponent>* m_DisableObserver = nullptr;
 	};
 
 }

@@ -141,7 +141,7 @@ class IntObserver : public decs::CreateComponentObserver<int>, public decs::Dest
 	{
 		PrintLine("Int creation");
 
-		entity.RemoveComponent<float>();
+		//entity.RemoveComponent<float>();
 	}
 
 	// Inherited via DestroyComponentObserver
@@ -383,20 +383,16 @@ void ObservatorOrderTest()
 	IntObserver intObserver = {};
 	PositionObserver positionObserver = {};
 
-	decs::ObserversManager observerManager = {};
+	container.SetCreateEntityObserver(&entityCreateObserver);
+	container.SetDestroyEntityObserver(&entityDestroyObserver);
 
-	observerManager.SetEntityCreationObserver(&entityCreateObserver);
-	observerManager.SetEntityDestructionObserver(&entityDestroyObserver);
+	container.SetCreateComponentObserver<float>(&floatObserver);
+	container.SetDestroyComponentObserver<float>(&floatObserver);
+	container.SetCreateComponentObserver<int>(&intObserver);
+	container.SetDestroyComponentObserver<int>(&intObserver);
 
-	observerManager.SetComponentCreateObserver<float>(&floatObserver);
-	observerManager.SetComponentDestroyObserver<float>(&floatObserver);
-	observerManager.SetComponentCreateObserver<int>(&intObserver);
-	observerManager.SetComponentDestroyObserver<int>(&intObserver);
-
-	observerManager.SetComponentCreateObserver<decs::stable<Position>>(&positionObserver);
-	observerManager.SetComponentDestroyObserver<decs::stable<Position>>(&positionObserver);
-
-	container.SetObserversManager(&observerManager);
+	container.SetCreateComponentObserver<decs::stable<Position>>(&positionObserver);
+	container.SetDestroyComponentObserver<decs::stable<Position>>(&positionObserver);
 
 	container.SetComponentOrder<float>(0);
 	container.SetComponentOrder<int>(-1);
@@ -458,8 +454,8 @@ void StructsSizeTest()
 
 int main()
 {
-	StructsSizeTest();
-	BaseTest();
+	//StructsSizeTest();
+	//BaseTest();
 	ObservatorOrderTest();
 	//RemoveMultipleComponentTest();
 
