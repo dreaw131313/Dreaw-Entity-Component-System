@@ -1,6 +1,8 @@
+#pragma once
+
 namespace decs
 {
-	template<typename T>
+	/*template<typename T>
 	struct stable
 	{
 	};
@@ -50,6 +52,6 @@ namespace decs
 	{
 	public:
 		static constexpr bool value = true;
-	};
+	};*/
 
 }

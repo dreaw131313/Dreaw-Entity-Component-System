@@ -3,6 +3,8 @@
 #include "Containers/TChunkedVector.h"
 #include "StableContainer.h"
 
+#include "Component/Component.h"
+
 namespace decs
 {
 	class PackedContainerBase
@@ -18,14 +20,21 @@ namespace decs
 
 		}
 
-		inline virtual PackedContainerBase* Clone() const noexcept = 0;
+		inline virtual PackedContainerBase* Clone() const = 0;
 
 		inline virtual void PopBack() = 0;
+
 		inline virtual void Clear() = 0;
+
 		inline virtual void ShrinkToFit() = 0;
+
 		inline virtual uint64_t Capacity() = 0;
+
 		inline virtual uint64_t Size() = 0;
+
 		inline virtual void Reserve(uint64_t newCapacity) = 0;
+
+		inline virtual bool HasStableComponents() const = 0;
 
 		/// <summary>
 		/// 
@@ -33,22 +42,29 @@ namespace decs
 		/// <returns>Component size in bytes.</returns>
 		inline virtual uint64_t GetComponentSize() const = 0;
 
-		inline virtual void* GetComponentPtrAsVoid(uint64_t index) noexcept = 0;
+		inline virtual ComponentBase* GetComponentPtrAsVoid(uint64_t index) = 0;
 
-		inline virtual void* GetComponentDataAsVoid(uint64_t index) noexcept = 0;
+		inline virtual StableComponentRef* GetStableComponentRef(uint64_t index) = 0;
 
-		inline virtual void RemoveSwapBack(uint64_t index) noexcept = 0;
-		inline virtual void EmplaceFromVoid(void* data) noexcept = 0;
-		inline virtual void MoveEmplaceBackFromVoid(void* data) noexcept = 0;
+		inline virtual void RemoveSwapBack(uint64_t index) = 0;
+
+		inline virtual void EmplaceFromVoid(ComponentBase* data) = 0;
+
+		inline virtual void MoveEmplaceBackFromVoid(ComponentBase* data) = 0;
+
+		inline virtual void EmplaceFromVoid(StableComponentRef* componentRef) = 0;
+
+		inline virtual void MoveEmplaceBackFromVoid(StableComponentRef* componentRef) = 0;
+
 	};
 
-	template<typename ComponentType>
+	template<typename TComponent>
 	class PackedContainer final : public PackedContainerBase
 	{
 		friend class Container;
 		friend class Archetype;
 	private:
-		std::vector<ComponentType> m_Data;
+		std::vector<TComponent> m_Data;
 
 	public:
 		PackedContainer()
@@ -61,22 +77,27 @@ namespace decs
 
 		}
 
+		inline virtual bool HasStableComponents() const override
+		{
+			return false;
+		}
+
 		inline virtual uint64_t GetComponentSize() const override
 		{
-			return sizeof(ComponentType);
+			return sizeof(TComponent);
 		}
 
-		virtual PackedContainerBase* Clone() const noexcept override
+		virtual PackedContainerBase* Clone() const  override
 		{
-			return new PackedContainer<ComponentType>();
+			return new PackedContainer<TComponent>();
 		}
 
-		inline ComponentType& GetAsRef(uint64_t index) noexcept
+		inline TComponent& GetAsRef(uint64_t index) 
 		{
 			return m_Data[index];
 		}
 
-		inline ComponentType* GetAsPtr(uint64_t index)
+		inline TComponent* GetAsPtr(uint64_t index)
 		{
 			return &m_Data[index];
 		}
@@ -114,22 +135,23 @@ namespace decs
 			m_Data.reserve(newCapacity);
 		}
 
-		inline virtual void* GetComponentPtrAsVoid(uint64_t index) noexcept override
+		inline virtual ComponentBase* GetComponentPtrAsVoid(uint64_t index)  override
 		{
 			return &m_Data[index];
 		}
 
-		inline virtual void* GetComponentDataAsVoid(uint64_t index) noexcept override
+		inline virtual StableComponentRef* GetStableComponentRef(uint64_t index) override
 		{
-			return &m_Data[index];
+			throw std::runtime_error("Packed container must not use methods with StableComponentRef");
+			return nullptr;
 		}
 
-		inline virtual void EmplaceFromVoid(void* data)  noexcept override
+		inline virtual void EmplaceFromVoid(ComponentBase* data)   override
 		{
-			m_Data.emplace_back(*static_cast<ComponentType*>(data));
+			m_Data.emplace_back(*static_cast<TComponent*>(data));
 		}
 
-		inline virtual void RemoveSwapBack(uint64_t index)noexcept override
+		inline virtual void RemoveSwapBack(uint64_t index)override
 		{
 			if (m_Data.size() > 0)
 			{
@@ -138,14 +160,24 @@ namespace decs
 			}
 		}
 
-		inline virtual void MoveEmplaceBackFromVoid(void* data) noexcept override
+		inline virtual void MoveEmplaceBackFromVoid(ComponentBase* data) override
 		{
-			m_Data.push_back(std::move(*static_cast<ComponentType*>(data)));
+			m_Data.push_back(std::move(*static_cast<TComponent*>(data)));
+		}
+
+		inline virtual void EmplaceFromVoid(StableComponentRef* componentRef) override
+		{
+			throw std::runtime_error("Packed container must not use methods with StableComponentRef");
+		}
+
+		inline virtual void MoveEmplaceBackFromVoid(StableComponentRef* componentRef) override
+		{
+			throw std::runtime_error("Packed container must not use methods with StableComponentRef");
 		}
 	};
 
-	template<typename ComponentType>
-	class PackedContainer<decs::stable<ComponentType>> final : public PackedContainerBase
+	template<typename TComponent>
+	class StablePackedContainer final : public PackedContainerBase
 	{
 		friend class Container;
 		friend class Archetype;
@@ -153,24 +185,29 @@ namespace decs
 		std::vector<StableComponentRef> m_Data;
 
 	public:
-		PackedContainer()
+		StablePackedContainer()
 		{
 
 		}
 
-		~PackedContainer()
+		~StablePackedContainer()
 		{
 
+		}
+
+		inline virtual bool HasStableComponents() const override
+		{
+			return true;
 		}
 
 		inline virtual uint64_t GetComponentSize() const override
 		{
-			return sizeof(ComponentType);
+			return sizeof(TComponent);
 		}
 
-		virtual PackedContainerBase* Clone() const noexcept override
+		virtual PackedContainerBase* Clone() const  override
 		{
-			return new PackedContainer<decs::stable<ComponentType>>();
+			return new StablePackedContainer<TComponent>();
 		}
 
 		inline virtual void PopBack() override
@@ -206,29 +243,37 @@ namespace decs
 			m_Data.reserve(newCapacity);
 		}
 
-		inline virtual void* GetComponentPtrAsVoid(uint64_t index) noexcept override
+		inline virtual ComponentBase* GetComponentPtrAsVoid(uint64_t index)  override
 		{
 			return m_Data[index].m_ComponentPtr;
 		}
 
-		inline virtual void* GetComponentDataAsVoid(uint64_t index) noexcept override
+		inline virtual StableComponentRef* GetStableComponentRef(uint64_t index)  override
 		{
 			return &m_Data[index];
 		}
 
-		inline virtual void EmplaceFromVoid(void* data) noexcept override
+		inline virtual void EmplaceFromVoid(ComponentBase* data) override
 		{
-			StableComponentRef* newElement = static_cast<StableComponentRef*>(data);
-			m_Data.emplace_back(newElement->m_ComponentPtr, newElement->m_ChunkIndex, newElement->m_Index);
+			throw std::runtime_error("Stable Packed container must not use methods with ComponentBase");
 		}
 
-		inline virtual void MoveEmplaceBackFromVoid(void* data) noexcept override
+		inline virtual void MoveEmplaceBackFromVoid(ComponentBase* data) override
 		{
-			StableComponentRef* newElement = static_cast<StableComponentRef*>(data);
-			m_Data.emplace_back(newElement->m_ComponentPtr, newElement->m_ChunkIndex, newElement->m_Index);
+			throw std::runtime_error("Stable Packed container must not use methods with ComponentBase");
 		}
 
-		inline virtual void RemoveSwapBack(uint64_t index)noexcept override
+		inline virtual void EmplaceFromVoid(StableComponentRef* componentRef) override
+		{
+			m_Data.emplace_back(componentRef->m_ComponentPtr, componentRef->m_ChunkIndex, componentRef->m_Index);
+		}
+
+		inline virtual void MoveEmplaceBackFromVoid(StableComponentRef* componentRef) override
+		{
+			m_Data.emplace_back(componentRef->m_ComponentPtr, componentRef->m_ChunkIndex, componentRef->m_Index);
+		}
+
+		inline virtual void RemoveSwapBack(uint64_t index) override
 		{
 			uint64_t dataSize = m_Data.size();
 			if (dataSize > 0)
@@ -241,17 +286,17 @@ namespace decs
 			}
 		}
 
-		inline ComponentType& GetAsRef(uint64_t index) noexcept
+		inline TComponent& GetAsRef(uint64_t index) 
 		{
-			return *static_cast<ComponentType*>(m_Data[index].m_ComponentPtr);
+			return *static_cast<TComponent*>(m_Data[index].m_ComponentPtr);
 		}
 
-		inline ComponentType* GetAsPtr(uint64_t index)
+		inline TComponent* GetAsPtr(uint64_t index)
 		{
-			return static_cast<ComponentType*>(m_Data[index].m_ComponentPtr);
+			return static_cast<TComponent*>(m_Data[index].m_ComponentPtr);
 		}
 
-		inline StableComponentRef& EmplaceBack(ComponentType* componentPtr, uint64_t chunkIndex, uint64_t elementIndex)
+		inline StableComponentRef& EmplaceBack(TComponent* componentPtr, uint64_t chunkIndex, uint64_t elementIndex)
 		{
 			return m_Data.emplace_back(componentPtr, chunkIndex, elementIndex);
 		}

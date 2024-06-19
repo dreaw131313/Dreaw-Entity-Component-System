@@ -8,7 +8,7 @@ void PrintLine(std::string message = "")
 	std::cout << message << "\n";
 }
 
-struct Position
+struct Position : public decs::StableComponent
 {
 public:
 	float X = 0;
@@ -39,36 +39,6 @@ public:
 	virtual void SerializeComponent(const Position& component, int& serializerData) const override
 	{
 		PrintLine(std::format("\tPosition: X: {0}, Y: {1}", component.X, component.Y));
-	}
-};
-
-class FloatSerializer : public decs::ComponentSerializer<decs::stable<float>, int>
-{
-public:
-	// Inherited via ComponentSerializer
-	virtual void SerializeComponent(const float& component, int& serializerData)const override
-	{
-		PrintLine(std::format("\tFloat: {0}", component));
-	}
-};
-
-class IntSerializer : public decs::ComponentSerializer< decs::stable<int>, int>
-{
-public:
-	// Inherited via ComponentSerializer
-	virtual void SerializeComponent(const int& component, int& serializerData)const override
-	{
-		PrintLine(std::format("\tInt: {0}", component));
-	}
-};
-
-class DoubleSerializer : public decs::ComponentSerializer< decs::stable<double>, int>
-{
-public:
-	// Inherited via ComponentSerializer
-	virtual void SerializeComponent(const double& component, int& serializerData)const override
-	{
-		PrintLine(std::format("\tDouble: {0}", component));
 	}
 };
 
@@ -120,38 +90,8 @@ class EntityDesxtroyObserver : public decs::DestroyEntityObserver
 	}
 };
 
-class FloatObserver : public decs::CreateComponentObserver<float>, public decs::DestroyComponentObserver<float>
-{
-	// Inherited via CreateComponentObserver
-	virtual void OnCreateComponent(float& component, const decs::Entity& entity) override
-	{
-		PrintLine("Float creation");
-	}
-	// Inherited via DestroyComponentObserver
-	virtual void OnDestroyComponent(float& component, const decs::Entity& entity) override
-	{
-		PrintLine("Float destruction");
-	}
-};
 
-class IntObserver : public decs::CreateComponentObserver<int>, public decs::DestroyComponentObserver<int>
-{
-	// Inherited via CreateComponentObserver
-	virtual void OnCreateComponent(int& component, const decs::Entity& entity) override
-	{
-		PrintLine("Int creation");
-
-		//entity.RemoveComponent<float>();
-	}
-
-	// Inherited via DestroyComponentObserver
-	virtual void OnDestroyComponent(int& component, const decs::Entity& entity) override
-	{
-		PrintLine("Int destruction");
-	}
-};
-
-class PositionObserver : public decs::CreateComponentObserver<decs::stable<Position>>, public decs::DestroyComponentObserver<decs::stable<Position>>
+class PositionObserver : public decs::CreateComponentObserver<Position>, public decs::DestroyComponentObserver<Position>
 {
 	// Inherited via CreateComponentObserver
 	virtual void OnCreateComponent(Position& component, const decs::Entity& entity) override
@@ -176,17 +116,8 @@ void BaseTest()
 	decs::Container prefabContainer = {};
 	decs::Container container = {};
 
-	container.SetStableComponentChunkSize<float>(100);
-
 	auto prefab = prefabContainer.CreateEntity();
-	prefab.AddStableComponent<float>();
-	prefab.AddStableComponent<int>();
-	prefab.AddStableComponent<double>();
-	prefab.AddComponent<uint64_t>();
 	prefab.AddComponent<Position>(1.f, 2.f);
-
-	prefab.RemoveStableComponent<float>();
-	prefab.RemoveComponent<uint64_t>();
 
 	// print prefab components names
 	{
@@ -204,17 +135,12 @@ void BaseTest()
 	std::hash<decs::Entity>{}(prefab);
 
 	//prefabContainer.Spawn(entity1, 3, true);
-	container.SetStableComponentChunkSize<double>(100);
-	container.SetStableComponentChunkSize<int>(100);
+	//container.SetStableComponentChunkSize<double>(100);
+	//container.SetStableComponentChunkSize<int>(100);
 	container.SetStableComponentChunkSize(decs::Type<Position>::ID(), 100);
 
 	container.Spawn(prefab, 1, true);
 
-	float* floatCompPtr = nullptr;
-	if (prefab.HasStableComponent<float>() && prefab.TryGetStableComponent<float>(floatCompPtr))
-	{
-		PrintLine("Prefab has stable float component");
-	}
 
 	decs::ComponentRef<Position> compPosRef = { prefab };
 	if (!compPosRef.IsNull())
@@ -312,14 +238,8 @@ void BaseTest()
 	// Serializer test:
 	TestSerializer serializer = {};
 	PositionSerializer positionSerializer = {};
-	FloatSerializer floatSerializer = {};
-	IntSerializer intSerializer = {};
-	DoubleSerializer doubleSerializer = {};
 
 	serializer.SetComponentSerializer(&positionSerializer);
-	serializer.SetComponentSerializer(&floatSerializer);
-	serializer.SetComponentSerializer(&intSerializer);
-	serializer.SetComponentSerializer(&doubleSerializer);
 
 	int  serializerInt = 0;
 	PrintLine();
@@ -369,9 +289,7 @@ void ObservatorOrderTest()
 
 	decs::Container container = decs::Container(&entityManager, 1000);
 	auto prefab = container.CreateEntity();
-	prefab.AddComponent<float>();
-	prefab.AddComponent<int>();
-	prefab.AddStableComponent<Position>();
+	prefab.AddComponent<Position>();
 
 	container.Spawn(prefab, 5, true);
 	//container.Spawn(prefab, 10, true);
@@ -379,8 +297,6 @@ void ObservatorOrderTest()
 	EntityCreateObserver entityCreateObserver{};
 	EntityDesxtroyObserver entityDestroyObserver{};
 
-	FloatObserver floatObserver = {};
-	IntObserver intObserver = {};
 	PositionObserver positionObserver = {};
 
 	decs::ObserversManager observerManager = {};
@@ -388,20 +304,10 @@ void ObservatorOrderTest()
 	observerManager.SetCreateEntityObserver(&entityCreateObserver);
 	observerManager.SetDestroyEntityObserver(&entityDestroyObserver);
 
-	observerManager.SetCreateDestroyComponentObservers(
-		&floatObserver,
-		&floatObserver
-	);
-	observerManager.SetCreateDestroyComponentObservers(
-		&intObserver, 
-		&intObserver
-	);
-	observerManager.SetCreateDestroyComponentObservers<decs::stable<Position>>(
+	observerManager.SetCreateDestroyComponentObservers<Position>(
 		&positionObserver, 
 		&positionObserver
 	);
-	container.SetComponentOrder<float>(0);
-	container.SetComponentOrder<int>(-1);
 
 	observerManager.FillContainerObservers(container);
 
@@ -417,22 +323,6 @@ void ObservatorOrderTest()
 
 }
 
-void RemoveMultipleComponentTest()
-{
-	decs::Container container = {};
-
-	auto entity = container.CreateEntity();
-	entity.AddComponent<int>();
-	entity.AddComponent<decs::stable<float>>();
-	entity.AddComponent<double>();
-	entity.AddComponent<char>();
-
-	entity.RemoveComponent<decs::stable<float>>();
-
-	entity.SetActive(false);
-
-}
-
 template<typename T>
 struct small_vector
 {
@@ -443,9 +333,7 @@ struct small_vector
 
 void StructsSizeTest()
 {
-	PrintLine(std::format("Sizeof of decs::Query<int>: {} bytes", sizeof(decs::Query<int>)));
-	PrintLine(std::format("Sizeof of decs::Query<int, float>: {} bytes", sizeof(decs::Query<int, float>)));
-	PrintLine(std::format("Sizeof of decs::Multi Query<int>: {} bytes", sizeof(decs::MultiQuery<int>)));
+	PrintLine(std::format("Sizeof of decs::Multi Query<int>: {} bytes", sizeof(decs::MultiQuery<Position>)));
 	PrintLine(std::format("Sizeof of decs::StableComponentRef: {} bytes", sizeof(decs::StableComponentRef)));
 	PrintLine();
 
@@ -462,9 +350,10 @@ void StructsSizeTest()
 
 int main()
 {
+
 	//StructsSizeTest();
-	//BaseTest();
-	ObservatorOrderTest();
+	BaseTest();
+	//ObservatorOrderTest();
 	//RemoveMultipleComponentTest();
 
 

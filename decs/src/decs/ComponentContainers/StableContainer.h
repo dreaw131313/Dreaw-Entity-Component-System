@@ -3,6 +3,8 @@
 #include "decs/Containers/TChunkedVector.h"
 #include "decs/Type.h"
 
+#include "Component/Component.h"
+
 namespace decs
 {
 	template<typename DataType>
@@ -145,7 +147,7 @@ namespace decs
 	class StableComponentRef
 	{
 	public:
-		void* m_ComponentPtr = nullptr;
+		ComponentBase* m_ComponentPtr = nullptr;
 		uint32_t m_ChunkIndex = std::numeric_limits<uint32_t>::max();
 		uint32_t m_Index = std::numeric_limits<uint32_t>::max();
 
@@ -156,7 +158,7 @@ namespace decs
 		}
 
 		StableComponentRef(
-			void* componentPtr,
+			ComponentBase* componentPtr,
 			uint32_t chunkIndex,
 			uint32_t index
 		) :
@@ -179,7 +181,7 @@ namespace decs
 		virtual StableContainerBase* Clone(uint32_t withChunkSize) = 0;
 
 		virtual bool Remove(uint32_t chunkIndex, uint32_t elementIndex) = 0;
-		virtual StableComponentRef EmplaceFromVoid(void* ptr) = 0;
+		virtual StableComponentRef EmplaceFromVoid(ComponentBase* ptr) = 0;
 		virtual uint32_t GetChunkSize() const noexcept = 0;
 		virtual void Clear() = 0;
 	};
@@ -214,7 +216,7 @@ namespace decs
 			}
 		}
 
-		virtual TypeID GetTypeID()const noexcept override { return Type<stable<DataType>>::ID(); }
+		virtual TypeID GetTypeID()const noexcept override { return Type<DataType>::ID(); }
 
 		virtual StableContainerBase* Clone(uint32_t withChunkSize) override
 		{
@@ -262,7 +264,7 @@ namespace decs
 			return false;
 		}
 
-		virtual StableComponentRef EmplaceFromVoid(void* ptr)override
+		virtual StableComponentRef EmplaceFromVoid(ComponentBase* ptr)override
 		{
 			return Emplace(*static_cast<DataType*>(ptr));
 		}
@@ -406,7 +408,12 @@ namespace decs
 		template<typename T>
 		bool SetStableComponentChunkSize(uint32_t chunkSize)
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<stable<T>>::ID();
+			if constexpr (!T::IsStable)
+			{
+				return false;
+			}
+
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
 			auto& container = m_Containers[typeID];
 
 			if (container.second == nullptr)
@@ -434,7 +441,7 @@ namespace decs
 		template<typename T>
 		uint32_t GetStableComponentChunkSize()
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<stable<T>>::ID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
 			auto it = m_Containers.find(typeID);
 
 			if (it != m_Containers.end())
@@ -484,7 +491,7 @@ namespace decs
 		template<typename T>
 		StableContainer<T>* GetOrCreateStableContainer()
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<stable<T>>::ID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
 			auto& containerPair = m_Containers[typeID];
 
 			if (containerPair.first == 0)

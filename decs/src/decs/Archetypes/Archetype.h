@@ -298,18 +298,29 @@ namespace decs
 			}
 		}
 
-		template<typename ComponentType>
+		template<typename TComponent>
 		void AddTypeID(ComponentContextBase* componentContext, StableContainerBase* stableContainer)
 		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::ID();
+			TYPE_ID_CONSTEXPR TypeID id = Type<TComponent>::ID();
 			auto it = m_TypeIDsIndexes.find(id);
 			if (it == m_TypeIDsIndexes.end())
 			{
 				m_ComponentsCount += 1;
 				m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
+
+				PackedContainerBase* packedContainer;
+				if constexpr (TComponent::IsStable)
+				{
+					packedContainer = new StablePackedContainer<TComponent>();
+				}
+				else
+				{
+					packedContainer = new PackedContainer<TComponent>();
+				}
+
 				AddTypeData(
 					id,
-					new PackedContainer<ComponentType>(),
+					packedContainer,
 					componentContext,
 					stableContainer
 				);
@@ -337,10 +348,10 @@ namespace decs
 
 		void SetRecordAsIntendedToDelayedDestroy(uint64_t index);
 
-		template<typename ComponentType>
-		inline PackedContainer<ComponentType>* GetContainerAt(uint64_t index)
+		template<typename TComponent>
+		inline PackedContainer<TComponent>* GetContainerAt(uint64_t index)
 		{
-			return dynamic_cast<PackedContainer<ComponentType>*>(m_TypeData[index].m_PackedContainer);
+			return dynamic_cast<PackedContainer<TComponent>*>(m_TypeData[index].m_PackedContainer);
 		}
 
 		inline PackedContainerBase* GetPackedContainerAt(uint64_t index)
@@ -384,7 +395,7 @@ namespace decs
 			uint64_t fromIndex,
 			EntityData* entityData
 		);
-		
+
 		void RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(uint64_t entityIndex, TypeID removedComponentTypeID);
 
 		void MoveEntityAfterAddComponentWithoutDestroyingFromSource(
@@ -400,10 +411,10 @@ namespace decs
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <param name="fromArchetype"></param>
 		/// <param name="fromIndex"></param>
-		template<typename ComponentType>
+		template<typename TComponent>
 		void MoveEntityComponentsAfterAddComponent(Archetype* fromArchetype, uint64_t fromIndex, EntityData* entityData)
 		{
-			TYPE_ID_CONSTEXPR TypeID newComponentTypeID = Type<ComponentType>::ID();
+			TYPE_ID_CONSTEXPR TypeID newComponentTypeID = Type<TComponent>::ID();
 
 			this->AddEntityData(entityData);
 
@@ -419,9 +430,19 @@ namespace decs
 				}
 
 				ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
-					fromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex)
-				);
+
+				if (thisTypeData.m_PackedContainer->HasStableComponents())
+				{
+					thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+						fromArchetypeData.m_PackedContainer->GetStableComponentRef(fromIndex)
+					);
+				}
+				else
+				{
+					thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+						fromArchetypeData.m_PackedContainer->GetComponentPtrAsVoid(fromIndex)
+					);
+				}
 				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
 
 				fromArchetypeIndex++;
@@ -433,10 +454,10 @@ namespace decs
 		void ShrinkToFit();
 
 		// Edges utility functions:
-		template<typename ComponentType>
+		template<typename TComponent>
 		void AddEdge(Archetype* archetype, EComponentEdgeType edgeType)
 		{
-			auto& edge = m_Edges[Type<ComponentType>::ID()];
+			auto& edge = m_Edges[Type<TComponent>::ID()];
 			if (!edge.IsValid())
 			{
 				edge.m_Archetype = archetype;
@@ -454,10 +475,10 @@ namespace decs
 			}
 		}
 
-		template<typename ComponentType>
+		template<typename TComponent>
 		ArchetypeEdge GetEdge() const
 		{
-			auto it = m_Edges.find(Type<ComponentType>::ID());
+			auto it = m_Edges.find(Type<TComponent>::ID());
 			if (it != m_Edges.end())
 			{
 				return it->second;

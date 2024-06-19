@@ -4,6 +4,8 @@
 #include "decs/EntityData.h"
 #include "Archetypes/Archetype.h"
 
+#include "Component/Component.h"
+
 namespace decs
 {
 	class Entity;
@@ -20,7 +22,7 @@ namespace decs
 
 		ComponentRefAsVoid(TypeID typeID, Entity& entity);
 
-		inline void* Get()
+		inline ComponentBase* Get()
 		{
 			if (m_EntityData != nullptr && IsEntityVersionValid())
 			{

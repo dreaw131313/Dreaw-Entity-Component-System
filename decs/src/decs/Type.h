@@ -147,8 +147,8 @@ namespace decs
 	};
 
 #ifndef USE_CONSTEXPR_TYPE_ID
-	template<typename T>
-	const std::type_info* Type<T>::m_TypeInfo = &typeid(T);
+	template<typename TComponent>
+	const std::type_info* Type<TComponent>::m_TypeInfo = &typeid(TComponent);
 #endif
 
 

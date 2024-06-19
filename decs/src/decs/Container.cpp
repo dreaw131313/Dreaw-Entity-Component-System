@@ -508,7 +508,7 @@ namespace decs
 			uint32_t componentIdx = orderData.m_ComponentIndex;
 
 			auto& componentRef = m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx + componentIdx];
-			void* componentVoidPtr = componentRef.Get();
+			ComponentBase* componentVoidPtr = componentRef.Get();
 			if (componentVoidPtr != nullptr)
 			{
 				orderData.m_ComponentContext->InvokeOnCreateComponent(componentVoidPtr, entity);
@@ -857,7 +857,7 @@ namespace decs
 			{
 				auto& orderData = componentOrderData[idx];
 				auto& compRef = m_ActivationChangeComponentRefs[startRefsIdx + orderData.m_ComponentIndex];
-				void* compPtr = compRef.Get();
+				ComponentBase* compPtr = compRef.Get();
 				if (compPtr != nullptr)
 				{
 					// invoke activation listener:
@@ -900,7 +900,7 @@ namespace decs
 			{
 				auto& orderData = componentOrderData[idx];
 				auto& compRef = m_ActivationChangeComponentRefs[startRefsIdx + orderData.m_ComponentIndex];
-				void* compPtr = compRef.Get();
+				ComponentBase* compPtr = compRef.Get();
 				if (compPtr != nullptr)
 				{
 					orderData.m_ComponentContext->InvokeOnOnDisableEntity(compPtr, entity);
@@ -942,7 +942,7 @@ namespace decs
 			{
 				const auto& orderData = orderDatas[i];
 				auto& compRef = componentRefsToInvokeObserverCallbacks[orderData.m_ComponentIndex];
-				void* componentVoidPtr = compRef.Get();
+				ComponentBase* componentVoidPtr = compRef.Get();
 				if (componentVoidPtr != nullptr)
 				{
 					orderData.m_ComponentContext->InvokeOnCreateComponent(componentVoidPtr, entity);

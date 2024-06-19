@@ -2,6 +2,8 @@
 #include "decs\Type.h"
 #include "decs\Observers\Observers.h"
 
+#include "Component/Component.h"
+
 namespace decs
 {
 	class Entity;
@@ -30,27 +32,27 @@ namespace decs
 			m_ObserverOrder = order;
 		}
 
-		virtual void InvokeOnCreateComponent(void* component, const Entity& entity) = 0;
+		virtual void InvokeOnCreateComponent(ComponentBase* component, const Entity& entity) = 0;
 
-		virtual void InvokeOnDestroyComponent(void* component, const Entity& entity) = 0;
+		virtual void InvokeOnDestroyComponent(ComponentBase* component, const Entity& entity) = 0;
 
 		/// <summary>
 		/// This function tries invoke Create observer without checking if observer is valid.
 		/// </summary>
 		/// <param name="component"></param>
 		/// <param name="entity"></param>
-		virtual void InvokeOnCreateComponentRaw(void* component, const Entity& entity) = 0;
+		virtual void InvokeOnCreateComponentRaw(ComponentBase* component, const Entity& entity) = 0;
 
 		/// <summary>
 		/// This function tries invoke Destroy observer without checking if observer is valid.
 		/// </summary>
 		/// <param name="component"></param>
 		/// <param name="entity"></param>
-		virtual void InvokeOnDestroyComponentRaw(void* component, const Entity& entity) = 0;
+		virtual void InvokeOnDestroyComponentRaw(ComponentBase* component, const Entity& entity) = 0;
 
-		virtual void InvokeOnEnableEntity(void* component, const Entity& entity) = 0;
+		virtual void InvokeOnEnableEntity(ComponentBase* component, const Entity& entity) = 0;
 
-		virtual void InvokeOnOnDisableEntity(void* component, const  Entity& entity) = 0;
+		virtual void InvokeOnOnDisableEntity(ComponentBase* component, const  Entity& entity) = 0;
 
 		void SetCanInvokeCreateObservers(bool bCanInvokeObservers)
 		{
@@ -73,12 +75,10 @@ namespace decs
 		bool m_bCanInvokeCreateObservers = true;
 	};
 
-	template<typename T>
+	template<typename TComponent>
 	class ComponentContext : public ComponentContextBase
 	{
 		friend class Container;
-
-		using TComponentType = component_type<T>::Type;
 
 	public:
 		ComponentContext(int order) :
@@ -94,7 +94,7 @@ namespace decs
 
 		inline TypeID GetComponentTypeID() const override
 		{
-			return Type<T>::ID();
+			return Type<TComponent>::ID();
 		}
 
 		/// <summary>
@@ -103,7 +103,7 @@ namespace decs
 		/// <returns>Name of component if coponent is stable (T = decs::stable<ComponentType>) it will return name of ComponentType without decs::stable</returns>
 		inline std::string GetComponentName() const override
 		{
-			return decs::Type<TComponentType>::Name();
+			return decs::Type<TComponent>::Name();
 		}
 
 		inline bool HasCreateObserver() const override
@@ -118,52 +118,52 @@ namespace decs
 
 		ComponentContextBase* Clone() override
 		{
-			return new ComponentContext<T>(GetObserverOrder());
+			return new ComponentContext<TComponent>(GetObserverOrder());
 		}
 
-		void InvokeOnCreateComponent(void* component, const Entity& entity)override
+		void InvokeOnCreateComponent(ComponentBase* component, const Entity& entity)override
 		{
 			if (CanInvokeCreateObservers() && m_Observers.m_CreateObserver)
 			{
-				m_Observers.m_CreateObserver->OnCreateComponent(*static_cast<TComponentType*>(component), entity);
+				m_Observers.m_CreateObserver->OnCreateComponent(*static_cast<TComponent*>(component), entity);
 			}
 		}
 
-		void InvokeOnDestroyComponent(void* component, const Entity& entity)override
+		void InvokeOnDestroyComponent(ComponentBase* component, const Entity& entity)override
 		{
 			if (CanInvokeCreateObservers() && m_Observers.m_DestroyObserver != nullptr)
 			{
-				m_Observers.m_DestroyObserver->OnDestroyComponent(*static_cast<TComponentType*>(component), entity);
+				m_Observers.m_DestroyObserver->OnDestroyComponent(*static_cast<TComponent*>(component), entity);
 			}
 		}
 
-		void InvokeOnCreateComponentRaw(void* component, const Entity& entity) override
+		void InvokeOnCreateComponentRaw(ComponentBase* component, const Entity& entity) override
 		{
-			m_Observers.m_CreateObserver->OnCreateComponent(*static_cast<TComponentType*>(component), entity);
+			m_Observers.m_CreateObserver->OnCreateComponent(*static_cast<TComponent*>(component), entity);
 		}
 
-		void InvokeOnDestroyComponentRaw(void* component, const Entity& entity) override
+		void InvokeOnDestroyComponentRaw(ComponentBase* component, const Entity& entity) override
 		{
-			m_Observers.m_DestroyObserver->OnDestroyComponent(*static_cast<TComponentType*>(component), entity);
+			m_Observers.m_DestroyObserver->OnDestroyComponent(*static_cast<TComponent*>(component), entity);
 		}
 
-		void InvokeOnEnableEntity(void* component, const Entity& entity) override
+		void InvokeOnEnableEntity(ComponentBase* component, const Entity& entity) override
 		{
 			if (CanInvokeCreateObservers() && m_Observers.m_EnableObserver)
 			{
-				m_Observers.m_EnableObserver->OnEnableEntity(*static_cast<TComponentType*>(component), entity);
+				m_Observers.m_EnableObserver->OnEnableEntity(*static_cast<TComponent*>(component), entity);
 			}
 		}
 
-		void InvokeOnOnDisableEntity(void* component, const Entity& entity) override
+		void InvokeOnOnDisableEntity(ComponentBase* component, const Entity& entity) override
 		{
 			if (CanInvokeCreateObservers() && m_Observers.m_DisableObserver)
 			{
-				m_Observers.m_DisableObserver->OnDisableEntity(*static_cast<TComponentType*>(component), entity);
+				m_Observers.m_DisableObserver->OnDisableEntity(*static_cast<TComponent*>(component), entity);
 			}
 		}
 
 	private:
-		ComponentObserversGroup<T> m_Observers = {};
+		ComponentObserversGroup<TComponent> m_Observers = {};
 	};
 }

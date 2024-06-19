@@ -5,6 +5,8 @@
 #include "Container.h"
 #include "Entity.h"
 
+#include "Component/Component.h"
+
 
 namespace decs
 {
@@ -23,37 +25,37 @@ namespace decs
 		inline virtual std::string GetComponentTypeNameWithoutNamespace() const = 0;
 
 	protected:
-		virtual void SerializeComponentFromVoid(void* component, SerializerData& serializerData) const = 0;
+		virtual void SerializeComponentFromVoid(ComponentBase* component, SerializerData& serializerData) const = 0;
 
 	};
 
-	template<typename ComponentType, typename SerializerData>
+	template<typename TComponent, typename SerializerData>
 	class ComponentSerializer : ComponentSerializerBase<SerializerData>
 	{
 		template<typename>
 		friend class ContainerSerializer;
 	public:
-		virtual void SerializeComponent(const typename component_type<ComponentType>::Type& component, SerializerData& serializerData) const = 0;
+		virtual void SerializeComponent(const TComponent& component, SerializerData& serializerData) const = 0;
 
 		inline virtual TypeID GetComponentTypeID() const override final
 		{
-			return Type<ComponentType>::ID();
+			return Type<TComponent>::ID();
 		}
 
 		inline virtual std::string GetComponentTypeName() const override final
 		{
-			return Type<ComponentType>::Name();
+			return Type<TComponent>::Name();
 		}
 
 		inline virtual std::string GetComponentTypeNameWithoutNamespace() const override final
 		{
-			return Type<ComponentType>::NameWithoutNamespace();
+			return Type<TComponent>::NameWithoutNamespace();
 		}
 
 	private:
-		virtual void SerializeComponentFromVoid(void* component, SerializerData& serializerData) const override final
+		virtual void SerializeComponentFromVoid(ComponentBase* component, SerializerData& serializerData) const override final
 		{
-			SerializeComponent(*static_cast<typename component_type<ComponentType>::Type*>(component), serializerData);
+			SerializeComponent(*static_cast<TComponent*>(component), serializerData);
 		}
 	};
 
@@ -79,10 +81,10 @@ namespace decs
 
 		}
 
-		template<typename ComponentType>
-		void SetComponentSerializer(ComponentSerializer<ComponentType, SerializerData>* serializer)
+		template<typename TComponent>
+		void SetComponentSerializer(ComponentSerializer<TComponent, SerializerData>* serializer)
 		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::ID();
+			TYPE_ID_CONSTEXPR TypeID id = Type<TComponent>::ID();
 			m_ComponentSerializers[id] = serializer;
 		}
 

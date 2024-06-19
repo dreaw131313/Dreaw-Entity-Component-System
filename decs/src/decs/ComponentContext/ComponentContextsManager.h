@@ -30,15 +30,15 @@ namespace decs
 			DestroyComponentsContexts();
 		}
 
-		template<typename ComponentType>
-		ComponentContext<ComponentType>* GetOrCreateComponentContext()
+		template<typename TComponent>
+		ComponentContext<TComponent>* GetOrCreateComponentContext()
 		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::ID();
+			TYPE_ID_CONSTEXPR TypeID id = Type<TComponent>::ID();
 
 			auto& contextRecord = m_Contexts[id];
 			if (contextRecord.m_Context == nullptr)
 			{
-				ComponentContext<ComponentType>* context = new ComponentContext<ComponentType>(contextRecord.m_Order);
+				ComponentContext<TComponent>* context = new ComponentContext<TComponent>(contextRecord.m_Order);
 				contextRecord.m_Context = context;
 
 				OnSetComponentTypeOrder(contextRecord);
@@ -46,11 +46,11 @@ namespace decs
 			}
 			else
 			{
-				ComponentContext<ComponentType>* containedContext = dynamic_cast<ComponentContext<ComponentType>*>(contextRecord.m_Context);
+				ComponentContext<TComponent>* containedContext = dynamic_cast<ComponentContext<TComponent>*>(contextRecord.m_Context);
 
 				if (containedContext == nullptr)
 				{
-					std::string errorMessage = "decs::Container contains component context with id " + std::to_string(id) + " to type other than " + Type<ComponentType>::Name();
+					std::string errorMessage = "decs::Container contains component context with id " + std::to_string(id) + " to type other than " + Type<TComponent>::Name();
 					throw std::runtime_error(errorMessage.c_str());
 				}
 				return containedContext;
@@ -80,11 +80,11 @@ namespace decs
 			return false;
 		}
 
-		template<typename ComponentType>
+		template<typename TComponent>
 		bool SetComponentOrder(int order)
 		{
-			GetOrCreateComponentContext<ComponentType>();
-			return SetComponentOrder(Type<ComponentType>::ID(), order);
+			GetOrCreateComponentContext<TComponent>();
+			return SetComponentOrder(Type<TComponent>::ID(), order);
 		}
 
 		uint32_t SetComponentsOrder(const std::vector<std::pair<TypeID, int>>& componentOrders)

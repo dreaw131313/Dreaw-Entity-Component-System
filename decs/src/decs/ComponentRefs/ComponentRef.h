@@ -5,7 +5,7 @@
 
 namespace decs
 {
-	template<typename ComponentType>
+	template<typename TComponent>
 	class ComponentRef final
 	{
 	public:
@@ -42,7 +42,7 @@ namespace decs
 			return Get() != nullptr;
 		}
 
-		inline typename component_type<ComponentType>::Type* Get()
+		inline typename TComponent* Get()
 		{
 			if (m_EntityData != nullptr && IsEntityVersionValid())
 			{
@@ -60,7 +60,7 @@ namespace decs
 
 		inline operator bool() { return Get() != nullptr; }
 
-		inline typename component_type<ComponentType>::Type* operator->()
+		inline typename TComponent* operator->()
 		{
 			return Get();
 		}
@@ -76,7 +76,7 @@ namespace decs
 	private:
 		EntityData* m_EntityData = nullptr;
 		Archetype* m_Archetype = nullptr;
-		PackedContainer<ComponentType>* m_PackedContainer = nullptr;
+		PackedContainer<TComponent>* m_PackedContainer = nullptr;
 		EntityVersion m_EntityVersion = std::numeric_limits<EntityVersion>::max();
 
 	private:
@@ -93,11 +93,11 @@ namespace decs
 		inline void FetchWhenIsInvalid()
 		{
 			m_Archetype = m_EntityData->m_Archetype;
-			uint32_t compIndex = m_Archetype->FindTypeIndex<ComponentType>();
+			uint32_t compIndex = m_Archetype->FindTypeIndex<TComponent>();
 
 			if (m_Archetype != nullptr && compIndex != Limits::MaxComponentCount)
 			{
-				m_PackedContainer = dynamic_cast<PackedContainer<ComponentType>*>(m_Archetype->m_TypeData[compIndex].m_PackedContainer);
+				m_PackedContainer = dynamic_cast<PackedContainer<TComponent>*>(m_Archetype->m_TypeData[compIndex].m_PackedContainer);
 			}
 			else
 			{

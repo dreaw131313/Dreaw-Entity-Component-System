@@ -28,6 +28,9 @@ namespace decs
 		using ArchetypeContextType = IterationArchetypeContext<sizeof...(ComponentsTypes)>;
 		using ContainerContextType = IterationContainerContext<ArchetypeContextType, ComponentsTypes...>;
 
+		template<typename TComponent>
+		using PackedContainerType = std::conditional< TComponent::IsStable, StablePackedContainer<TComponent>*, PackedContainer<TComponent>*>::type;
+
 	public:
 		MultiQuery()
 		{
@@ -121,7 +124,7 @@ namespace decs
 			Fetch();
 
 			decs::Entity entityBuffor = {};
-			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
+			std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
@@ -149,14 +152,17 @@ namespace decs
 						const auto& entityData = entitiesData[idx];
 						if (entityData.IsActive())
 						{
-							if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
+							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
 								entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
-								func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+								func(
+									entityBuffor,
+									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
+								);
 							}
 							else
 							{
-								func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+								func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
 							}
 						}
 					}
@@ -181,7 +187,7 @@ namespace decs
 			Fetch();
 
 			decs::Entity entityBuffor = {};
-			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
+			std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
@@ -209,14 +215,17 @@ namespace decs
 						const auto& entityData = entitiesData[idx];
 						if (entityData.IsActive())
 						{
-							if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
+							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
 								entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
-								func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+								func(
+									entityBuffor,
+									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
+								);
 							}
 							else
 							{
-								func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+								func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
 							}
 						}
 					}
@@ -244,7 +253,7 @@ namespace decs
 			CollectArchetypesEntityCount();
 
 			decs::Entity entityBuffor = {};
-			std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
+			std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
@@ -272,14 +281,17 @@ namespace decs
 						const auto& entityData = entitiesData[idx];
 						if (entityData.IsActive())
 						{
-							if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
+							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
 								entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
-								func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+								func(
+									entityBuffor,
+									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
+								);
 							}
 							else
 							{
-								func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+								func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
 							}
 						}
 					}
@@ -426,12 +438,12 @@ namespace decs
 
 		template<typename T = void, typename... Args>
 		void CreatePackedContainersTuple(
-			std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
+			std::tuple<PackedContainerType<ComponentsTypes>...>& containersTuple,
 			const ArchetypeContextType& context
 		) const noexcept
 		{
 			constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
-			std::get<PackedContainer<T>*>(containersTuple) = (static_cast<PackedContainer<T>*>(context.m_Containers[compIdx]));
+			std::get<PackedContainerType<T>>(containersTuple) = (static_cast<PackedContainerType<T>>(context.m_Containers[compIdx]));
 
 			if constexpr (sizeof...(Args) == 0) return;
 
@@ -443,7 +455,7 @@ namespace decs
 
 		template<>
 		void CreatePackedContainersTuple<void>(
-			std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
+			std::tuple<PackedContainerType<ComponentsTypes>...>& containersTuple,
 			const ArchetypeContextType& context
 		) const noexcept
 		{
@@ -483,7 +495,7 @@ namespace decs
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
 				decs::Entity entityBuffor = {};
-				std::tuple<PackedContainer<ComponentsTypes>*...> containersTuple = {};
+				std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
 
 				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
@@ -540,14 +552,17 @@ namespace decs
 							const auto& entityData = entitiesData[idx];
 							if (entityData.IsActive())
 							{
-								if constexpr (std::is_invocable<Callable, Entity&, typename component_type<ComponentsTypes>::Type&...>())
+								if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 								{
 									entityBuffor.Set(entityData.m_EntityData, containerContext.m_Container);
-									func(entityBuffor, std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+									func(
+										entityBuffor,
+										std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
+									);
 								}
 								else
 								{
-									func(std::get<PackedContainer<ComponentsTypes>*>(containersTuple)->GetAsRef(idx)...);
+									func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
 								}
 							}
 						}
@@ -570,12 +585,12 @@ namespace decs
 		private:
 			template<typename T = void, typename... Args>
 			void CreatePackedContainersTuple(
-				std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
+				std::tuple<PackedContainerType<ComponentsTypes>...>& containersTuple,
 				const ArchetypeContextType& context
 			) const noexcept
 			{
 				constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
-				std::get<PackedContainer<T>*>(containersTuple) = (static_cast<PackedContainer<T>*>(context.m_Containers[compIdx]));
+				std::get<PackedContainerType<T>>(containersTuple) = (static_cast<PackedContainerType<T>>(context.m_Containers[compIdx]));
 
 				if constexpr (sizeof...(Args) == 0) return;
 				CreatePackedContainersTuple<Args...>(
@@ -586,7 +601,7 @@ namespace decs
 
 			template<>
 			void CreatePackedContainersTuple<void>(
-				std::tuple<PackedContainer<ComponentsTypes>*...>& containersTuple,
+				std::tuple<PackedContainerType<ComponentsTypes>...>& containersTuple,
 				const ArchetypeContextType& context
 			) const noexcept
 			{

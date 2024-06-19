@@ -173,10 +173,10 @@ namespace decs
 			return m_Archetypes;
 		}
 
-		template<typename ComponentType>
+		template<typename TComponent>
 		void UpdateOrderInAllArchetypesWithComponentType()
 		{
-			auto it = m_ArchetypesGroupedByOneType.find(Type<ComponentType>::ID());
+			auto it = m_ArchetypesGroupedByOneType.find(Type<TComponent>::ID());
 			if (it != m_ArchetypesGroupedByOneType.end())
 			{
 				it->second->IterateOverAllArchetypes([](Archetype* arch)
@@ -289,23 +289,23 @@ namespace decs
 
 		// CREATING ARCHETYPES
 	private:
-		template<typename ComponentType>
+		template<typename TComponent>
 		Archetype* GetSingleComponentArchetype()
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<ComponentType>::ID();
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<TComponent>::ID();
 			auto it = m_SingleComponentArchetypes.find(typeID);
 
 			return it != m_SingleComponentArchetypes.end() ? it->second : nullptr;
 		}
 
-		template<typename ComponentType>
+		template<typename TComponent>
 		Archetype* CreateSingleComponentArchetype(ComponentContextBase* componentContext, StableContainerBase* stableContainer)
 		{
-			TYPE_ID_CONSTEXPR uint64_t typeID = Type<ComponentType>::ID();
+			TYPE_ID_CONSTEXPR uint64_t typeID = Type<TComponent>::ID();
 			auto& archetype = m_SingleComponentArchetypes[typeID];
 			if (archetype != nullptr) return archetype;
 			archetype = &m_Archetypes.EmplaceBack();
-			archetype->AddTypeID<ComponentType>(componentContext, stableContainer);
+			archetype->AddTypeID<TComponent>(componentContext, stableContainer);
 			AddArchetypeToCorrectContainers(*archetype, false);
 			MakeArchetypeEdges(*archetype);
 			return archetype;

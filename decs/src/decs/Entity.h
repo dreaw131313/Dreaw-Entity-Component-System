@@ -15,7 +15,7 @@ namespace decs
 		template<typename ...>
 		friend class MultiQuery;
 		friend class Container;
-		template<typename ComponentType>
+		template<typename TComponent>
 		friend class ComponentRef;
 		friend class ComponentRefAsVoid;
 		template<typename>
@@ -99,91 +99,50 @@ namespace decs
 			return false;
 		}
 
-		template<typename T>
-		inline typename component_type<T>::Type* GetComponent() const
+		template<typename TComponent>
+		inline TComponent* GetComponent() const
 		{
 			if (IsValid())
-				return m_Container->GetComponent<T>(*m_EntityData);
+				return m_Container->GetComponent<TComponent>(*m_EntityData);
 
 			return nullptr;
 		}
 
-		template<typename T>
-		inline typename component_type<T>::Type* GetStableComponent() const
-		{
-			if (IsValid())
-				return m_Container->GetComponent<decs::stable<T>>(*m_EntityData);
-
-			return nullptr;
-		}
-
-		template<typename T>
+		template<typename TComponent>
 		inline bool HasComponent() const
 		{
-			return IsValid() && m_Container->HasComponent<T>(*m_EntityData);
+			return IsValid() && m_Container->HasComponent<TComponent>(*m_EntityData);
 		}
 
-		template<typename T>
-		inline bool HasStableComponent() const
-		{
-			return IsValid() && m_Container->HasComponent<decs::stable<T>>(*m_EntityData);
-		}
-
-		template<typename T>
-		inline bool TryGetComponent(typename component_type<T>::Type*& component) const
+		template<typename TComponent>
+		inline bool TryGetComponent(TComponent*& component) const
 		{
 			if (IsValid())
-				component = m_Container->GetComponent<T>(*m_EntityData);
+				component = m_Container->GetComponent<TComponent>(*m_EntityData);
 			else
 				component = nullptr;
 
 			return component != nullptr;
 		}
 
-		template<typename T>
-		inline bool TryGetStableComponent(typename component_type<T>::Type*& component) const
+		template<typename TComponent, typename... Args>
+		inline typename TComponent* AddComponent(Args&&... args) const
 		{
 			if (IsValid())
-				component = m_Container->GetComponent<decs::stable<T>>(*m_EntityData);
-			else
-				component = nullptr;
-
-			return component != nullptr;
-		}
-
-		template<typename T, typename... Args>
-		inline typename component_type<T>::Type* AddComponent(Args&&... args) const
-		{
-			if (IsValid())
-				return m_Container->AddComponent<T>(*this, *m_EntityData, std::forward<Args>(args)...);
+				return m_Container->AddComponent<TComponent>(*this, *m_EntityData, std::forward<Args>(args)...);
 
 			return nullptr;
 		}
 
-		template<typename T, typename... Args>
-		inline typename component_type<T>::Type* AddStableComponent(Args&&... args) const
-		{
-			if (IsValid())
-				return m_Container->AddComponent<decs::stable<T>>(*this, *m_EntityData, std::forward<Args>(args)...);
-
-			return nullptr;
-		}
-
-		template<typename T>
+		template<typename TComponent>
 		inline bool RemoveComponent() const
 		{
-			return IsValid() && m_Container->RemoveComponent<T>(*this);
+			return IsValid() && m_Container->RemoveComponent<TComponent>(*this);
 		}
 
 		inline bool RemoveComponent(TypeID componentTypeID) const
 		{
 			return IsValid() && m_Container->RemoveComponent(*this, componentTypeID);
-		}
-
-		template<typename T>
-		inline bool RemoveStableComponent() const
-		{
-			return IsValid() && m_Container->RemoveComponent<decs::stable<T>>(*this);
 		}
 
 		/*template<typename... Ts>
@@ -266,7 +225,7 @@ namespace decs
 		template<typename ...>
 		friend class MultiQuery;
 		friend class Container;
-		template<typename ComponentType>
+		template<typename TComponent>
 		friend class ComponentRef;
 		friend class ComponentRefAsVoid;
 		template<typename>
@@ -323,40 +282,23 @@ namespace decs
 			return m_Entity.GetContainer();
 		}
 
-		template<typename T>
+		template<typename TComponent>
 		inline bool HasComponent() const
 		{
-			return m_Entity.HasComponent<T>();
+			return m_Entity.HasComponent<TComponent>();
 		}
 
-		template<typename T>
-		inline bool HasStableComponent() const
+
+		template<typename TComponent>
+		inline TComponent* GetComponent() const
 		{
-			return m_Entity.HasStableComponent<T>();
+			return m_Entity.GetComponent<TComponent>();
 		}
 
-		template<typename T>
-		inline typename component_type<T>::Type* GetComponent() const
-		{
-			return m_Entity.GetComponent<T>();
-		}
-
-		template<typename T>
-		inline typename component_type<T>::Type* GetStableComponent() const
-		{
-			return m_Entity.GetStableComponent<T>();
-		}
-
-		template<typename T>
-		inline bool TryGetComponent(typename component_type<T>::Type*& component) const
+		template<typename TComponent>
+		inline bool TryGetComponent(typename TComponent*& component) const
 		{
 			return m_Entity.TryGetComponent(component);
-		}
-
-		template<typename T>
-		inline bool TryGetStableComponent(typename component_type<T>::Type*& component) const
-		{
-			return m_Entity.TryGetStableComponent(component);
 		}
 
 		inline EntityVersion GetVersion() const

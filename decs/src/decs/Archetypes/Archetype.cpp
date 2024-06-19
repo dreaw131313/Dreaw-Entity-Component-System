@@ -121,7 +121,7 @@ namespace decs
 				auto& typeData = m_TypeData[i];
 				if (typeData.m_StableContainer != nullptr)
 				{
-					StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetComponentDataAsVoid(index));
+					StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetStableComponentRef(index));
 					typeData.m_StableContainer->Remove(compRef->m_ChunkIndex, compRef->m_Index);
 				}
 
@@ -136,7 +136,7 @@ namespace decs
 				auto& typeData = m_TypeData[i];
 				if (typeData.m_StableContainer != nullptr)
 				{
-					StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetComponentDataAsVoid(index));
+					StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetStableComponentRef(index));
 					typeData.m_StableContainer->Remove(compRef->m_ChunkIndex, compRef->m_Index);
 				}
 
@@ -255,7 +255,7 @@ namespace decs
 			{
 				if (fromArchetypeData.m_StableContainer != nullptr)
 				{
-					StableComponentRef* componentRef = static_cast<StableComponentRef*>(fromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex));
+					StableComponentRef* componentRef = fromArchetypeData.m_PackedContainer->GetStableComponentRef(fromIndex);
 					fromArchetypeData.m_StableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_Index);
 				}
 
@@ -265,9 +265,18 @@ namespace decs
 			}
 
 			ArchetypeTypeData& updatetFromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-			thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
-				updatetFromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex)
-			);
+			if (thisTypeData.m_PackedContainer->HasStableComponents())
+			{
+				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+					updatetFromArchetypeData.m_PackedContainer->GetStableComponentRef(fromIndex)
+				);
+			}
+			else
+			{
+				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+					updatetFromArchetypeData.m_PackedContainer->GetComponentPtrAsVoid(fromIndex)
+				);
+			}
 			updatetFromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
 		}
 
@@ -291,7 +300,7 @@ namespace decs
 				// if component is stable we must free component from stable container
 				if (fromArchetypeData.m_StableContainer != nullptr)
 				{
-					StableComponentRef* componentRef = static_cast<StableComponentRef*>(fromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex));
+					StableComponentRef* componentRef = fromArchetypeData.m_PackedContainer->GetStableComponentRef(fromIndex);
 					fromArchetypeData.m_StableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_Index);
 				}
 
@@ -301,9 +310,19 @@ namespace decs
 			}
 			else
 			{
-				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
-					fromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex)
-				);
+				if (thisTypeData.m_PackedContainer->HasStableComponents())
+				{
+					thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+						fromArchetypeData.m_PackedContainer->GetStableComponentRef(fromIndex)
+					);
+				}
+				else
+				{
+					thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+						fromArchetypeData.m_PackedContainer->GetComponentPtrAsVoid(fromIndex)
+					);
+				}
+
 				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
 
 				thisArchetypeIndex += 1;
@@ -317,7 +336,7 @@ namespace decs
 			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
 			if (fromArchetypeData.m_StableContainer != nullptr)
 			{
-				StableComponentRef* componentRef = static_cast<StableComponentRef*>(fromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex));
+				StableComponentRef* componentRef = fromArchetypeData.m_PackedContainer->GetStableComponentRef(fromIndex);
 				fromArchetypeData.m_StableContainer->Remove(componentRef->m_ChunkIndex, componentRef->m_Index);
 			}
 
@@ -349,9 +368,20 @@ namespace decs
 			}
 
 			ArchetypeTypeData& updatetFromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-			thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
-				updatetFromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex)
-			);
+
+			if (thisTypeData.m_PackedContainer->HasStableComponents())
+			{
+				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+					updatetFromArchetypeData.m_PackedContainer->GetStableComponentRef(fromIndex)
+				);
+			}
+			else
+			{
+				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+					updatetFromArchetypeData.m_PackedContainer->GetComponentPtrAsVoid(fromIndex)
+				);
+			}
+
 		}
 
 		fromArchetype->m_EntitiesData[fromIndex].m_bIsActive = false;
@@ -371,7 +401,7 @@ namespace decs
 				auto& typeData = m_TypeData[i];
 				if (removedComponentTypeID == typeData.m_TypeID && typeData.m_StableContainer != nullptr)
 				{
-					StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetComponentDataAsVoid(entityIndex));
+					StableComponentRef* compRef = typeData.m_PackedContainer->GetStableComponentRef(entityIndex);
 					typeData.m_StableContainer->Remove(compRef->m_ChunkIndex, compRef->m_Index);
 				}
 
@@ -386,7 +416,7 @@ namespace decs
 				auto& typeData = m_TypeData[i];
 				if (removedComponentTypeID == typeData.m_TypeID && typeData.m_StableContainer != nullptr)
 				{
-					StableComponentRef* compRef = static_cast<StableComponentRef*>(typeData.m_PackedContainer->GetComponentDataAsVoid(entityIndex));
+					StableComponentRef* compRef = typeData.m_PackedContainer->GetStableComponentRef(entityIndex);
 					typeData.m_StableContainer->Remove(compRef->m_ChunkIndex, compRef->m_Index);
 				}
 
@@ -414,9 +444,19 @@ namespace decs
 			}
 
 			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-			thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
-				fromArchetypeData.m_PackedContainer->GetComponentDataAsVoid(fromIndex)
-			);
+
+			if (thisTypeData.m_PackedContainer->HasStableComponents())
+			{
+				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+					fromArchetypeData.m_PackedContainer->GetStableComponentRef(fromIndex)
+				);
+			}
+			else
+			{
+				thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+					fromArchetypeData.m_PackedContainer->GetComponentPtrAsVoid(fromIndex)
+				);
+			}
 
 			fromArchetypeIndex++;
 		}

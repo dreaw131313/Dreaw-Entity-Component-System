@@ -4,6 +4,8 @@
 #include "Container.h"
 #include "Entity.h"
 
+#include "Component/Component.h"
+
 namespace decs
 {
 	class ContainerSerializerComplex
@@ -84,7 +86,7 @@ namespace decs
 
 		virtual void EndEntitySerialize(const Entity& entity) = 0;
 
-		virtual void SerializeComponent(const Entity& entity, void* component, uint64_t componentSize, TypeID componentTypeID, uint64_t componentIndexInArchetype) = 0;
+		virtual void SerializeComponent(const Entity& entity, ComponentBase* component, uint64_t componentSize, TypeID componentTypeID, uint64_t componentIndexInArchetype) = 0;
 
 	};
 }
