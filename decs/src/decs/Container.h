@@ -114,7 +114,7 @@ namespace decs
 		}
 
 	private:
-		ComponentBase* m_ExtensionData = nullptr;
+		void* m_ExtensionData = nullptr;
 
 #pragma endregion 
 
