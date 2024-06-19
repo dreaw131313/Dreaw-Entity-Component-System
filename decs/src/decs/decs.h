@@ -1,5 +1,6 @@
 #pragma once
 #include "Core.h"
+#include "Component/Component.h"
 #include "Entity.h"
 #include "EntityManager.h"
 #include "Container.h"
