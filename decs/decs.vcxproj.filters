@@ -48,7 +48,7 @@
     <ClInclude Include="src\decs\ComponentRefs\ComponentRef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\ComponentRefs\ComponentRefAsVoid.h">
+    <ClInclude Include="src\decs\ComponentRefs\ComponentBaseRef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h">
@@ -101,7 +101,7 @@
     <ClCompile Include="src\decs\EntityManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp">
+    <ClCompile Include="src\decs\ComponentRefs\ComponentBaseRef.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\decs\Iteration\MultiQuery.h">

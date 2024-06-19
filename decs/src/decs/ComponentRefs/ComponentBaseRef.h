@@ -10,17 +10,17 @@ namespace decs
 {
 	class Entity;
 
-	class ComponentRefAsVoid final
+	class ComponentBaseRef final
 	{
 		friend class Container;
 	public:
-		ComponentRefAsVoid() {}
+		ComponentBaseRef() {}
 
-		ComponentRefAsVoid(TypeID typeID, EntityData& entityData);
+		ComponentBaseRef(TypeID typeID, EntityData& entityData);
 
-		ComponentRefAsVoid(TypeID typeID, EntityData& entityData, uint32_t componentIndex);
+		ComponentBaseRef(TypeID typeID, EntityData& entityData, uint32_t componentIndex);
 
-		ComponentRefAsVoid(TypeID typeID, Entity& entity);
+		ComponentBaseRef(TypeID typeID, Entity& entity);
 
 		inline ComponentBase* Get()
 		{

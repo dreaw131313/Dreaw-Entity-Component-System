@@ -46,9 +46,38 @@ public:
 };
 
 
+class TestComponetObserver :
+	public decs::CreateComponentObserver<TestComponent>,
+	public decs::DestroyComponentObserver<TestComponent>
+{
+public:
+
+	// Inherited via CreateComponentObserver
+	void OnCreateComponent(TestComponent& component, const decs::Entity& entity) override
+	{
+		PrintLine("TestComponent on create");
+	}
+
+	// Inherited via DestroyComponentObserver
+	void OnDestroyComponent(TestComponent& component, const decs::Entity& entity) override
+	{
+		PrintLine("TestComponent on destroy");
+	}
+
+};
+
 int main()
 {
+	TestComponetObserver testComponentObserver = {};
+
+	decs::ObserversManager observerManager = {};
+	{
+		observerManager.SetCreateDestroyComponentObservers(&testComponentObserver, &testComponentObserver);
+	}
+
 	decs::Container container = {};
+
+	observerManager.FillContainerObservers(container);
 
 	auto entity = container.CreateEntity();
 
@@ -62,20 +91,44 @@ int main()
 
 	//container.Spawn(entity, 10, true);
 
+	PrintLine();
+
 	decs::Query<Position> testQuery = { &container };
 
 	testQuery.ForEach([&](Position& pos)
 	{
-		PrintLine("ForEach");
+		PrintLine("decs::Query::ForEach");
 	});
 	testQuery.ForEachBackward([&](decs::Entity& e, Position& pos)
 	{
-		PrintLine("ForEachBackward");
+		PrintLine("decs::Query::ForEachBackward");
 	});
 	testQuery.ForEachSafe([&](Position& pos)
 	{
-		PrintLine("ForEachSafe");
+		PrintLine("decs::Query::ForEachSafe");
 	});
+
+	decs::MultiQuery<TestComponent> testMultiQuery = {};
+	testMultiQuery.AddContainer(&container);
+
+	PrintLine();
+
+	testMultiQuery.ForEach([&](TestComponent& pos)
+	{
+		PrintLine("decs::MultiQuery::ForEach");
+	});
+	testMultiQuery.ForEachBackward([&](decs::Entity& e, TestComponent& pos)
+	{
+		PrintLine("decs::MultiQuery::ForEachBackward");
+	});
+	testMultiQuery.ForEachSafe([&](TestComponent& pos)
+	{
+		PrintLine("decs::MultiQuery::ForEachSafe");
+	});
+
+	PrintLine();
+
+	entity.Destroy();
 
 	return 0;
 }

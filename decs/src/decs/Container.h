@@ -12,7 +12,7 @@
 
 #include "decs\ComponentContainers\PackedContainer.h"
 #include "decs\ComponentContainers\StableContainer.h"
-#include "ComponentRefs\ComponentRefAsVoid.h"
+#include "ComponentRefs\ComponentBaseRef.h"
 
 namespace decs
 {
@@ -203,7 +203,7 @@ namespace decs
 		public:
 			bool m_IsStable = false;
 			StableContainerBase* m_StableContainer = nullptr;
-			ComponentRefAsVoid m_ComponentRef;
+			ComponentBaseRef m_ComponentRef;
 
 		public:
 			SpawnComponentRefData()
@@ -228,7 +228,7 @@ namespace decs
 		public:
 			std::vector<SpawnComponentRefData> m_PrefabComponentRefs;
 			std::vector <Archetype*> m_SpawnArchetypes;
-			std::vector<ComponentRefAsVoid> m_SpawnedEntityComponentRefs;
+			std::vector<ComponentBaseRef> m_SpawnedEntityComponentRefs;
 
 		public:
 			void Reserve(uint64_t size)
@@ -886,7 +886,7 @@ namespace decs
 		}
 
 	private:
-		std::vector<ComponentRefAsVoid> m_ActivationChangeComponentRefs = {};
+		std::vector<ComponentBaseRef> m_ActivationChangeComponentRefs = {};
 
 		CreateEntityObserver* m_CreateEntityObserver = nullptr;
 		DestroyEntityObserver* m_DestroyEntityObserver = nullptr;
@@ -915,7 +915,7 @@ namespace decs
 
 		void InvokeEntityDeactivationObservers(const Entity& entity);
 
-		void InvokeArchetypeOnCreateListeners(Archetype& archetype, std::vector<ComponentRefAsVoid>& componentRefsToInvokeObserverCallbacks);
+		void InvokeArchetypeOnCreateListeners(Archetype& archetype, std::vector<ComponentBaseRef>& componentRefsToInvokeObserverCallbacks);
 
 		void InvokeArchetypeOnDestroyListeners(Archetype& archetype);
 

@@ -1,10 +1,10 @@
 #pragma once
-#include "ComponentRefAsVoid.h"
+#include "ComponentBaseRef.h"
 #include "decs\Entity.h"
 
 namespace decs
 {
-	ComponentRefAsVoid::ComponentRefAsVoid(TypeID typeID, EntityData& entityData) :
+	ComponentBaseRef::ComponentBaseRef(TypeID typeID, EntityData& entityData) :
 		m_TypeID(typeID),
 		m_EntityData(&entityData),
 		m_EntityVersion(entityData.GetVersion())
@@ -15,7 +15,7 @@ namespace decs
 		}
 	}
 
-	ComponentRefAsVoid::ComponentRefAsVoid(TypeID typeID, EntityData& entityData, uint32_t componentIndex) :
+	ComponentBaseRef::ComponentBaseRef(TypeID typeID, EntityData& entityData, uint32_t componentIndex) :
 		m_TypeID(typeID),
 		m_EntityData(&entityData),
 		m_EntityVersion(entityData.GetVersion())
@@ -26,7 +26,7 @@ namespace decs
 		}
 	}
 
-	ComponentRefAsVoid::ComponentRefAsVoid(TypeID typeID, Entity& entity) :
+	ComponentBaseRef::ComponentBaseRef(TypeID typeID, Entity& entity) :
 		m_TypeID(typeID),
 		m_EntityData(entity.m_EntityData),
 		m_EntityVersion(entity.m_EntityData->GetVersion())
@@ -37,7 +37,7 @@ namespace decs
 		}
 	}
 
-	void ComponentRefAsVoid::Set(TypeID typeID, EntityData& entityData, uint32_t componentIndex)
+	void ComponentBaseRef::Set(TypeID typeID, EntityData& entityData, uint32_t componentIndex)
 	{
 		m_TypeID = typeID;
 		m_EntityData = &entityData;

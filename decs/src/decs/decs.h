@@ -8,7 +8,7 @@
 #include "Observers/Observers.h"
 #include "Observers/ObserversManager.h"
 #include "ComponentRefs/ComponentRef.h"
-#include "ComponentRefs/ComponentRefAsVoid.h"
+#include "ComponentRefs/ComponentBaseRef.h"
 #include "Utils/ContainerSerializer.h"
 #include "Utils/ContainerSerializerComplex.h"
 #include "Utils/ContainerIterator.h"

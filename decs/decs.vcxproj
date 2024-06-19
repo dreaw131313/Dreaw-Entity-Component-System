@@ -109,7 +109,7 @@
     <ClInclude Include="src\decs\ComponentContainers\StableContainer.h" />
     <ClInclude Include="src\decs\ComponentContext\ComponentContext.h" />
     <ClInclude Include="src\decs\ComponentContext\ComponentContextsManager.h" />
-    <ClInclude Include="src\decs\ComponentRefs\ComponentRefAsVoid.h" />
+    <ClInclude Include="src\decs\ComponentRefs\ComponentBaseRef.h" />
     <ClInclude Include="src\decs\ComponentRefs\ComponentRef.h" />
     <ClInclude Include="src\decs\EntityManager.h" />
     <ClInclude Include="src\decs\Archetypes\Archetype.h" />
@@ -129,7 +129,7 @@
   <ItemGroup>
     <ClCompile Include="src\decs\Archetypes\Archetype.cpp" />
     <ClCompile Include="src\decs\Archetypes\ArchetypesMap.cpp" />
-    <ClCompile Include="src\decs\ComponentRefs\ComponentRefAsVoid.cpp" />
+    <ClCompile Include="src\decs\ComponentRefs\ComponentBaseRef.cpp" />
     <ClCompile Include="src\decs\Container.cpp" />
     <ClCompile Include="src\decs\EntityData.cpp" />
     <ClCompile Include="src\decs\Iteration\MultiQuery.h" />

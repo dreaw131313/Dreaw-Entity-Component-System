@@ -912,7 +912,7 @@ namespace decs
 		}
 	}
 
-	void Container::InvokeArchetypeOnCreateListeners(Archetype& archetype, std::vector<ComponentRefAsVoid>& componentRefsToInvokeObserverCallbacks)
+	void Container::InvokeArchetypeOnCreateListeners(Archetype& archetype, std::vector<ComponentBaseRef>& componentRefsToInvokeObserverCallbacks)
 	{
 		auto& entitesData = archetype.m_EntitiesData;
 		const uint64_t archetypeComponentsCount = archetype.ComponentCount();

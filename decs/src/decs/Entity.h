@@ -17,7 +17,7 @@ namespace decs
 		friend class Container;
 		template<typename TComponent>
 		friend class ComponentRef;
-		friend class ComponentRefAsVoid;
+		friend class ComponentBaseRef;
 		template<typename>
 		friend class ContainerSerializer;
 		friend class ContainerSerializerComplex;
@@ -109,7 +109,7 @@ namespace decs
 		}
 
 		/// <summary>
-		/// Iterates over all components on entity and use dynamic cast. If casted component is not nullptr returns it.
+		/// Iterates over all components on entity and use dynamic cast. If casted component is not nullptr returns it. If none of componets can be casted to TComponent returns nullptr.
 		/// </summary>
 		/// <typeparam name="TComponent"></typeparam>
 		/// <returns></returns>
@@ -241,7 +241,7 @@ namespace decs
 		friend class Container;
 		template<typename TComponent>
 		friend class ComponentRef;
-		friend class ComponentRefAsVoid;
+		friend class ComponentBaseRef;
 		template<typename>
 		friend class ContainerSerializer;
 		friend class ContainerSerializerComplex;
