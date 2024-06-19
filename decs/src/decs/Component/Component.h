@@ -4,6 +4,9 @@
 
 namespace decs
 {
+#define STABLE_COMPONENT() public: inline constexpr static bool IsStable = true;
+#define COMPONENT()public: inline constexpr static bool IsStable = false;
+
 	/// <summary>
 	/// Component must have one public static fiel:
 	///		- inline static constexpr bool IsStable = true/false;

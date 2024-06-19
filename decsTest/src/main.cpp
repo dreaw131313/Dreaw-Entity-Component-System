@@ -9,9 +9,6 @@ void PrintLine(std::string message = "")
 }
 
 
-#define STABLE_COMPONENT() public: inline constexpr static bool IsStable = true;
-#define COMPONENT()public: inline constexpr static bool IsStable = false;
-
 struct Position : public decs::ComponentBase
 {
 	STABLE_COMPONENT()
@@ -96,9 +93,21 @@ int main()
 	TestComponent* testComp = entity.GetComponent<TestComponent>();
 	Renderer* renderer = entity.GetComponentDynamic<Renderer>();
 
-	//container.Spawn(entity, 10, true);
+	container.Spawn(entity, 3, true);
 
 	PrintLine();
+
+	container.ForEach<Position>([](const decs::Entity& e, Position& p)
+	{
+		p.X += e.GetID();
+		p.Y += 2 * e.GetID();
+	});
+
+	container.ForEach<Position>([](const decs::Entity& e, Position& p)
+	{
+		PrintLine(std::format("X: {0}, Y: {1}", p.X, p.Y));
+	});
+
 
 	decs::Query<Position> testQuery = { &container };
 
