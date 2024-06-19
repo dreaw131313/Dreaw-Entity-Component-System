@@ -433,13 +433,13 @@ namespace decs
 
 				if (thisTypeData.m_PackedContainer->HasStableComponents())
 				{
-					thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+					thisTypeData.m_PackedContainer->MoveEmplaceBackFromStableComponentRef(
 						fromArchetypeData.m_PackedContainer->GetStableComponentRef(fromIndex)
 					);
 				}
 				else
 				{
-					thisTypeData.m_PackedContainer->MoveEmplaceBackFromVoid(
+					thisTypeData.m_PackedContainer->MoveEmplaceBackFromComponentBase(
 						fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
 					);
 				}

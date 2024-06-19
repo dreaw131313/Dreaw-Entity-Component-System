@@ -14,9 +14,6 @@ namespace decs
 	/// </summary>
 	class ComponentBase
 	{
-		friend class Component;
-		friend class StableComponent;
-
 	public:
 		virtual ~ComponentBase() = default;
 	};

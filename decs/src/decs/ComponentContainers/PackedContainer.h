@@ -50,11 +50,11 @@ namespace decs
 
 		inline virtual void EmplaceFromVoid(ComponentBase* data) = 0;
 
-		inline virtual void MoveEmplaceBackFromVoid(ComponentBase* data) = 0;
+		inline virtual void MoveEmplaceBackFromComponentBase(ComponentBase* data) = 0;
 
 		inline virtual void EmplaceFromVoid(StableComponentRef* componentRef) = 0;
 
-		inline virtual void MoveEmplaceBackFromVoid(StableComponentRef* componentRef) = 0;
+		inline virtual void MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) = 0;
 
 	};
 
@@ -160,7 +160,7 @@ namespace decs
 			}
 		}
 
-		inline virtual void MoveEmplaceBackFromVoid(ComponentBase* data) override
+		inline virtual void MoveEmplaceBackFromComponentBase(ComponentBase* data) override
 		{
 			m_Data.push_back(std::move(*static_cast<TComponent*>(data)));
 		}
@@ -170,7 +170,7 @@ namespace decs
 			throw std::runtime_error("Packed container must not use methods with StableComponentRef");
 		}
 
-		inline virtual void MoveEmplaceBackFromVoid(StableComponentRef* componentRef) override
+		inline virtual void MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) override
 		{
 			throw std::runtime_error("Packed container must not use methods with StableComponentRef");
 		}
@@ -258,7 +258,7 @@ namespace decs
 			throw std::runtime_error("Stable Packed container must not use methods with ComponentBase");
 		}
 
-		inline virtual void MoveEmplaceBackFromVoid(ComponentBase* data) override
+		inline virtual void MoveEmplaceBackFromComponentBase(ComponentBase* data) override
 		{
 			throw std::runtime_error("Stable Packed container must not use methods with ComponentBase");
 		}
@@ -268,7 +268,7 @@ namespace decs
 			m_Data.emplace_back(componentRef->m_ComponentPtr, componentRef->m_ChunkIndex, componentRef->m_Index);
 		}
 
-		inline virtual void MoveEmplaceBackFromVoid(StableComponentRef* componentRef) override
+		inline virtual void MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) override
 		{
 			m_Data.emplace_back(componentRef->m_ComponentPtr, componentRef->m_ChunkIndex, componentRef->m_Index);
 		}
