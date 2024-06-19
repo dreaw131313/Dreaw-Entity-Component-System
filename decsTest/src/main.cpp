@@ -383,19 +383,27 @@ void ObservatorOrderTest()
 	IntObserver intObserver = {};
 	PositionObserver positionObserver = {};
 
-	container.SetCreateEntityObserver(&entityCreateObserver);
-	container.SetDestroyEntityObserver(&entityDestroyObserver);
+	decs::ObserversManager observerManager = {};
 
-	container.SetCreateComponentObserver<float>(&floatObserver);
-	container.SetDestroyComponentObserver<float>(&floatObserver);
-	container.SetCreateComponentObserver<int>(&intObserver);
-	container.SetDestroyComponentObserver<int>(&intObserver);
+	observerManager.SetCreateEntityObserver(&entityCreateObserver);
+	observerManager.SetDestroyEntityObserver(&entityDestroyObserver);
 
-	container.SetCreateComponentObserver<decs::stable<Position>>(&positionObserver);
-	container.SetDestroyComponentObserver<decs::stable<Position>>(&positionObserver);
-
+	observerManager.SetCreateDestroyComponentObservers(
+		&floatObserver,
+		&floatObserver
+	);
+	observerManager.SetCreateDestroyComponentObservers(
+		&intObserver, 
+		&intObserver
+	);
+	observerManager.SetCreateDestroyComponentObservers<decs::stable<Position>>(
+		&positionObserver, 
+		&positionObserver
+	);
 	container.SetComponentOrder<float>(0);
 	container.SetComponentOrder<int>(-1);
+
+	observerManager.FillContainerObservers(container);
 
 	container.InvokeEntitesOnCreateListeners();
 	PrintLine();
