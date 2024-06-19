@@ -41,7 +41,7 @@ namespace decs
 		virtual void OnDisableEntity(const Entity& entity) = 0;;
 	};
 
-	template<typename ComponentType>
+	template<typename TComponent>
 	class CreateComponentObserver
 	{
 	public:
@@ -52,34 +52,34 @@ namespace decs
 		/// </summary>
 		/// <param name="component"></param>
 		/// <param name="entity"></param>
-		virtual void OnCreateComponent(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
+		virtual void OnCreateComponent(component_type<TComponent>::Type& component, const Entity& entity) = 0;
 	};
 
-	template<typename ComponentType>
+	template<typename TComponent>
 	class DestroyComponentObserver
 	{
 	public:
 		virtual ~DestroyComponentObserver() = default;
 
-		virtual void OnDestroyComponent(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
+		virtual void OnDestroyComponent(component_type<TComponent>::Type& component, const Entity& entity) = 0;
 	};
 
-	template<typename ComponentType>
+	template<typename TComponent>
 	class EnableComponentObserver
 	{
 	public:
 		virtual ~EnableComponentObserver() = default;
 
-		virtual void OnEnableEntity(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
+		virtual void OnEnableEntity(component_type<TComponent>::Type& component, const Entity& entity) = 0;
 	};
 
-	template<typename ComponentType>
+	template<typename TComponent>
 	class DisableComponentObserver
 	{
 	public:
 		virtual ~DisableComponentObserver() = default;
 
-		virtual void OnDisableEntity(component_type<ComponentType>::Type& component, const Entity& entity) = 0;
+		virtual void OnDisableEntity(component_type<TComponent>::Type& component, const Entity& entity) = 0;
 	};
 
 
