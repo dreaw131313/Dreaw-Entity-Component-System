@@ -32,330 +32,50 @@ public:
 	}
 };
 
-class PositionSerializer : public decs::ComponentSerializer<Position, int>
+struct TestComponent : public decs::Component
 {
 public:
-	// Inherited via ComponentSerializer
-	virtual void SerializeComponent(const Position& component, int& serializerData) const override
-	{
-		PrintLine(std::format("\tPosition: X: {0}, Y: {1}", component.X, component.Y));
-	}
+	int table[10];
+
 };
 
-
-class TestSerializer : public decs::ContainerSerializer<int>
+struct Renderer :public decs::StableComponent
 {
 public:
-
-protected:
-	// Inherited via ContainerSerializer
-	virtual bool BeginEntitySerialize(const decs::Entity& entity, int& serializerData) override
-	{
-		PrintLine(std::format("Entity ID: {0}, is active: {1}", entity.GetID(), entity.IsActive()));
-
-		return true;
-	}
-
-	virtual void EndEntitySerialize(const decs::Entity& entity, int& serializerData) override
-	{
-	}
-
-	// Inherited via ContainerSerializer
-	void BeginComponentSerialize(const decs::Entity& entity, const decs::ComponentSerializerBase<int>* componentSerializer, int& serializerData) override
-	{
-		std::cout << "Begin component: " << componentSerializer->GetComponentTypeName() << std::endl;
-	}
-
-	void EndComponentSerialize(const decs::Entity& entity, const decs::ComponentSerializerBase<int>* componentSerializer, int& serializerData) override
-	{
-		std::cout << "End component: " << componentSerializer->GetComponentTypeName() << std::endl;
-	}
+	double mesh;
 };
 
-class EntityCreateObserver : public decs::CreateEntityObserver
-{
-	// Inherited via CreateEntityObserver
-	void OnCreateEntity(const decs::Entity& entity) override
-	{
-		PrintLine(std::format("Create Entity {0}", entity.GetID()));
-	}
-};
-
-class EntityDesxtroyObserver : public decs::DestroyEntityObserver
-{
-	// Inherited via DestroyEntityObserver
-	void OnDestroyEntity(const decs::Entity& entity) override
-	{
-		PrintLine(std::format("Destroy Entity {0}", entity.GetID()));
-	}
-};
-
-
-class PositionObserver : public decs::CreateComponentObserver<Position>, public decs::DestroyComponentObserver<Position>
-{
-	// Inherited via CreateComponentObserver
-	virtual void OnCreateComponent(Position& component, const decs::Entity& entity) override
-	{
-		PrintLine("Position creation");
-	}
-
-	// Inherited via DestroyComponentObserver
-	virtual void OnDestroyComponent(Position& component, const decs::Entity& entity) override
-	{
-		PrintLine("Position destruction");
-	}
-};
-
-void BaseTest()
-{
-	PrintLine();
-
-	//decs::Container* c1 = new decs::Container();
-	//decs::Container* c2 = new decs::Container();
-
-	decs::Container prefabContainer = {};
-	decs::Container container = {};
-
-	auto prefab = prefabContainer.CreateEntity();
-	prefab.AddComponent<Position>(1.f, 2.f);
-
-	// print prefab components names
-	{
-		PrintLine();
-		PrintLine("Prefab component names:");
-		for (uint32_t i = 0; i < prefab.GetArchetype()->ComponentCount(); i++)
-		{
-			std::cout << "\t" << i + 1 << ". " << prefab.GetArchetype()->GetComponentTypeName(i) << "\n";
-		}
-
-		PrintLine();
-	}
-
-
-	std::hash<decs::Entity>{}(prefab);
-
-	//prefabContainer.Spawn(entity1, 3, true);
-	//container.SetStableComponentChunkSize<double>(100);
-	//container.SetStableComponentChunkSize<int>(100);
-	container.SetStableComponentChunkSize(decs::Type<Position>::ID(), 100);
-
-	container.Spawn(prefab, 1, true);
-
-
-	decs::ComponentRef<Position> compPosRef = { prefab };
-	if (!compPosRef.IsNull())
-	{
-		compPosRef->X = 11.f;
-		compPosRef->Y = 22.f;
-	}
-
-	container.Spawn(prefab, 3, true);
-	/*auto e2 = container.CreateEntity();
-	e2.AddComponent<Position>();
-	e2.AddComponent<decs::stable<float>>();*/
-
-
-	using QueryType = decs::Query<Position>;
-	QueryType query = { &container };
-
-	query.With();
-
-	uint64_t iterationCount = 0;
-	auto lambda = [&](const decs::Entity& e, Position& pos)
-	{
-		PrintLine("Enityt ID: " + std::to_string(e.GetID()) + " pos: " + std::to_string(pos.X) + ", " + std::to_string(pos.Y));
-
-	};
-
-	PrintLine();
-	PrintLine("Query foreach:");
-
-	if (query.Contain(prefab))
-	{
-		PrintLine("Query contain prefab!");
-	}
-
-	query.ForEach(lambda);
-	query.ForEachBackward(lambda);
-	query.ForEachSafe(lambda);
-
-	std::vector<QueryType::BatchIterator> iterators;
-	query.CreateBatchIterators(iterators, 2, 4);
-
-	PrintLine();
-	PrintLine("Query iterators:");
-	for (auto& it : iterators)
-	{
-		it.ForEach(lambda);
-	}
-
-	using MultiQueryType = decs::MultiQuery<Position>;
-	MultiQueryType testMultiQuery = {};
-	testMultiQuery.Without<float>();
-	testMultiQuery.AddContainer(&container, true);
-	testMultiQuery.AddContainer(&prefabContainer, true);
-
-	auto queryLambda = [&](decs::Entity& e, Position& pos)
-	{
-		//std::cout << "Query lambda -> Entity ID: " << e.ID() << ". Container ptr:"<< e.GetContainer() << "\n";
-		std::cout << "Query lambda -> Entity ID: " << e.GetID() << ". Hash: " << std::hash<decs::Entity>{}(e) << "\n";
-	};
-
-
-	if (testMultiQuery.Contain(prefab))
-	{
-		PrintLine("testMultiQuery contain prefab!");
-	}
-
-	PrintLine("");
-	PrintLine("Multi Query foreach forward:");
-	testMultiQuery.ForEach(queryLambda);
-	PrintLine("Multi Query foreach backwards:");
-	testMultiQuery.ForEachBackward(queryLambda);
-	PrintLine("Multi Query foreach safe:");
-	testMultiQuery.ForEachSafe(queryLambda);
-
-	std::vector<MultiQueryType::BatchIterator> multiQueryIterators;
-	testMultiQuery.CreateBatchIterators(multiQueryIterators, 3, 3);
-	PrintLine("");
-	PrintLine("Multi Query itertotrs:");
-
-	for (uint64_t i = 0; i < multiQueryIterators.size(); i++)
-	{
-		auto& it = multiQueryIterators[i];
-		PrintLine("Iterator " + std::to_string(i + 1));
-		it.ForEach(queryLambda);
-	}
-
-	PrintLine("Iteration over containers:");
-	decs::ContainerIterator iterator = {};
-	iterator.Foreach(container, [](const decs::Entity& e)
-	{
-		std::cout << "Entity_" << e.GetID() << std::endl;
-	});
-
-#pragma region Container serializator test:
-	// Serializer test:
-	TestSerializer serializer = {};
-	PositionSerializer positionSerializer = {};
-
-	serializer.SetComponentSerializer(&positionSerializer);
-
-	int  serializerInt = 0;
-	PrintLine();
-	PrintLine("Serialization: Container");
-	serializer.Serialize(container, serializerInt);
-	PrintLine();
-	PrintLine("Serialization: Prefab Container");
-	serializer.Serialize(prefabContainer, serializerInt);
-
-#pragma endregion
-}
-
-struct TestComp
-{
-public:
-	TestComp()
-	{
-		PrintLine("Default constructor");
-	}
-
-	TestComp(const TestComp& other)
-	{
-		PrintLine("Copy constructor");
-	}
-
-	TestComp(TestComp&& other) noexcept
-	{
-		PrintLine("Move constructor");
-	}
-
-	TestComp& operator=(const TestComp& other)
-	{
-		PrintLine("Copy assignment");
-		return *this;
-	}
-
-	TestComp& operator=(TestComp&& other)noexcept
-	{
-		PrintLine("Move assignment");
-		return *this;
-	}
-};
-
-void ObservatorOrderTest()
-{
-	decs::EntityManager entityManager = {};
-
-	decs::Container container = decs::Container(&entityManager, 1000);
-	auto prefab = container.CreateEntity();
-	prefab.AddComponent<Position>();
-
-	container.Spawn(prefab, 5, true);
-	//container.Spawn(prefab, 10, true);
-
-	EntityCreateObserver entityCreateObserver{};
-	EntityDesxtroyObserver entityDestroyObserver{};
-
-	PositionObserver positionObserver = {};
-
-	decs::ObserversManager observerManager = {};
-
-	observerManager.SetCreateEntityObserver(&entityCreateObserver);
-	observerManager.SetDestroyEntityObserver(&entityDestroyObserver);
-
-	observerManager.SetCreateDestroyComponentObservers<Position>(
-		&positionObserver, 
-		&positionObserver
-	);
-
-	observerManager.FillContainerObservers(container);
-
-	container.InvokeEntitesOnCreateListeners();
-	PrintLine();
-	container.InvokeEntitesOnDestroyListeners();
-	//container.SetComponentOrder<float>(0);
-	//container.SetComponentOrder<int>(1);
-
-	//PrintLine();
-	//container.InvokeEntitesOnCreateListeners();
-	//container.InvokeEntitesOnDestroyListeners();
-
-}
-
-template<typename T>
-struct small_vector
-{
-	T* ptr;
-	uint32_t size;
-	uint32_t capacity;
-};
-
-void StructsSizeTest()
-{
-	PrintLine(std::format("Sizeof of decs::Multi Query<int>: {} bytes", sizeof(decs::MultiQuery<Position>)));
-	PrintLine(std::format("Sizeof of decs::StableComponentRef: {} bytes", sizeof(decs::StableComponentRef)));
-	PrintLine();
-
-	std::cout << "decs::Container size = " << sizeof(decs::Container) << " bytes" << "\n";
-	std::cout << "decs::EntityData size = " << sizeof(decs::EntityData) << " bytes" << "\n";
-	std::cout << "decs::Entity size = " << sizeof(decs::Entity) << " bytes" << "\n";
-	std::cout << "decs::ComponentRef<Position> size: " << sizeof(decs::ComponentRef<Position>) << " bytes" << "\n";
-	std::cout << "decs::Archetype size: " << sizeof(decs::Archetype) << " bytes" << "\n";
-	std::cout << "decs::ComponentRefAsVoid size: " << sizeof(decs::ComponentRefAsVoid) << " bytes" << "\n";
-
-	PrintLine();
-	std::cout << "sizeof(std::vector<int>): " << sizeof(std::vector<int>) << " bytes" << "\n";
-}
 
 int main()
 {
+	decs::Container container = {};
 
-	//StructsSizeTest();
-	BaseTest();
-	//ObservatorOrderTest();
-	//RemoveMultipleComponentTest();
+	auto entity = container.CreateEntity();
 
+	auto pos = entity.AddComponent<Position>();
+	auto test = entity.AddComponent<TestComponent>();
+	auto rend = entity.AddComponent<Renderer>();
+
+	Position* position = entity.GetComponent<Position>();
+	TestComponent* testComp = entity.GetComponent<TestComponent>();
+	Renderer* renderer = entity.GetComponent<Renderer>();
+
+	//container.Spawn(entity, 10, true);
+
+	decs::Query<Position> testQuery = { &container };
+
+	testQuery.ForEach([&](Position& pos)
+	{
+		PrintLine("ForEach");
+	});
+	testQuery.ForEachBackward([&](decs::Entity& e, Position& pos)
+	{
+		PrintLine("ForEachBackward");
+	});
+	testQuery.ForEachSafe([&](Position& pos)
+	{
+		PrintLine("ForEachSafe");
+	});
 
 	return 0;
 }
