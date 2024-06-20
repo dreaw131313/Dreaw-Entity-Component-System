@@ -872,6 +872,17 @@ namespace decs
 		}
 
 		template<typename TComponent>
+		void SetCreateDestroyComponentObservers(
+			CreateComponentObserver<TComponent>* createObserver,
+			DestroyComponentObserver<TComponent>* destroyObserver
+		)
+		{
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			componentContext->m_Observers.m_CreateObserver = createObserver;
+			componentContext->m_Observers.m_DestroyObserver = destroyObserver;
+		}
+
+		template<typename TComponent>
 		void SetEnableComponentObserver(EnableComponentObserver<TComponent>* enableObserver)
 		{
 			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
@@ -885,6 +896,16 @@ namespace decs
 			componentContext->m_Observers.m_DisableObserver = disableObserver;
 		}
 
+		template<typename TComponent>
+		void SetEnableDisableComponentObservers(
+			EnableComponentObserver<TComponent>* enableObserver,
+			DisableComponentObserver<TComponent>* disableObserver
+		)
+		{
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			componentContext->m_Observers.m_EnableObserver = enableObserver;
+			componentContext->m_Observers.m_DisableObserver = disableObserver;
+		}
 	private:
 		std::vector<ComponentBaseRef> m_ActivationChangeComponentRefs = {};
 
