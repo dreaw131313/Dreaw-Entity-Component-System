@@ -154,7 +154,6 @@ namespace decs
 
 		std::vector<OrderData> m_ComponentContextsInOrder = {};
 
-		uint32_t m_EntitesCountToInitialize = 0;
 		uint32_t m_ComponentsCount = 0; // number of components for each entity
 		uint32_t m_EntitiesCount = 0;
 
@@ -190,11 +189,6 @@ namespace decs
 		inline uint32_t EntityCount() const
 		{
 			return m_EntitiesCount;
-		}
-
-		inline uint32_t EntitesCountToInvokeCallbacks() const
-		{
-			return m_EntitesCountToInitialize;
 		}
 
 		inline float GetLoadFactor()const
@@ -362,11 +356,6 @@ namespace decs
 		void ReserveSpaceInArchetype(uint64_t desiredCapacity);
 
 		void Reset();
-
-		inline void ValidateEntitiesCountToInitialize()
-		{
-			m_EntitesCountToInitialize = m_EntitiesCount;
-		}
 
 		void InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts, StableContainersManager* stableComponentsManager);
 

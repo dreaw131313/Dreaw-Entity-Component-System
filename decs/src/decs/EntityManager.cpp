@@ -31,12 +31,16 @@ namespace decs
 			entityData->SetState(EEntityState::Alive);
 			entityData->SetIsActive(isActive);
 			entityData->SetIsInManager(false);
+			entityData->m_bIsCreatedByContainer = false;
+			entityData->m_bIsEnabledByContainer = false;
 
 			return entityData;
 		}
 		else
 		{
 			EntityData& entityData = m_EntityData.EmplaceBack((EntityID)m_EntityData.Size(), isActive);
+			entityData.m_bIsCreatedByContainer = false;
+			entityData.m_bIsEnabledByContainer = false;
 			entityData.SetIsInManager(false);
 			return &entityData;
 		}
@@ -97,6 +101,8 @@ namespace decs
 		entityData->SetIsActive(bIsActive);
 		entityData->SetState(EEntityState::Alive);
 		entityData->SetEntityCallbackState(EEntityCallbackState::None);
+		entityData->m_bIsCreatedByContainer = false;
+		entityData->m_bIsEnabledByContainer = false;
 	}
 
 	void EntityManager::ReturnReservedEntityData(std::vector<EntityData*> reservedEntityData)

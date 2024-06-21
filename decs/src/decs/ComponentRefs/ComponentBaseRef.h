@@ -40,6 +40,22 @@ namespace decs
 
 		operator bool() { return Get() != nullptr; }
 
+		inline ComponentBase* GetUnsafe()
+		{
+			if (IsEntityVersionValid())
+			{
+				if (m_EntityData->m_Archetype != m_Archetype)
+				{
+					FetchWhenArchetypeIsInvalid();
+				}
+				if (m_PackedContainer != nullptr)
+				{
+					return m_PackedContainer->GetComponentBasePtr(m_EntityData->m_IndexInArchetype);
+				}
+			}
+			return nullptr;
+		}
+
 	private:
 		EntityData* m_EntityData = nullptr;
 		Archetype* m_Archetype = nullptr;
@@ -79,14 +95,18 @@ namespace decs
 		inline void FetchWithoutGettingComponentIndex(uint32_t componentIndex)
 		{
 			m_Archetype = m_EntityData->m_Archetype;
-			if (m_Archetype != nullptr && componentIndex != Limits::MaxComponentCount)
+
+			if (m_Archetype != nullptr && componentIndex < m_Archetype->ComponentCount())
 			{
-				m_PackedContainer = m_Archetype->m_TypeData[componentIndex].m_PackedContainer;
+				auto& archTypeData = m_Archetype->m_TypeData[componentIndex];
+				if (archTypeData.m_TypeID == m_TypeID)
+				{
+					m_PackedContainer = archTypeData.m_PackedContainer;
+					return;
+				}
 			}
-			else
-			{
-				m_PackedContainer = nullptr;
-			}
+
+			m_PackedContainer = nullptr;
 		}
 	};
 }

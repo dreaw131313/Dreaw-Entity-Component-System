@@ -41,9 +41,13 @@ namespace decs
 		EntityVersion m_Version = 1;
 		EEntityState m_State = EEntityState::Alive;
 		EEntityCallbackState m_EntityCallbackState = EEntityCallbackState::None;
+
+		bool m_bCanPerformOperation = false;
 		bool m_bIsActive = false;
 		bool m_bIsUsedAsPrefab = false;
 		bool m_bIsInManager = true;
+		bool m_bIsCreatedByContainer = false;
+		bool m_bIsEnabledByContainer = false;
 
 	public:
 		EntityData()

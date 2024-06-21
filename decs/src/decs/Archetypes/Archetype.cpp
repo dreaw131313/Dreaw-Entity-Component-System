@@ -43,7 +43,6 @@ namespace decs
 			typeData.m_PackedContainer->Clear();
 		}
 		m_EntitiesCount = 0;
-		m_EntitesCountToInitialize = 0;
 	}
 
 	void Archetype::UpdateOrderOfComponentContexts()

@@ -22,7 +22,7 @@ namespace decs
 		virtual ~ComponentBase() = default;
 
 	private:
-		bool m_bIsCreatedByECS = false;
+		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByECS = false;
 	};
 

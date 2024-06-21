@@ -149,7 +149,6 @@ int main()
 	}
 	*/
 
-
 	// NO CALLBACK:
 	{
 		auto entity_nc = container.CreateEntity_NoCallbacks();
