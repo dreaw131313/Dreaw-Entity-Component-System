@@ -4,7 +4,7 @@
 
 namespace decs
 {
-	void EntityData::SetState(EntityState state)
+	void EntityData::SetState(EEntityState state)
 	{
 		if (state != m_State)
 		{
@@ -12,13 +12,13 @@ namespace decs
 
 			switch (state)
 			{
-				case EntityState::Alive:
+				case EEntityState::Alive:
 				{
 					break;
 				}
-				case EntityState::Dead:
-				case EntityState::InDestruction:
-				case EntityState::DelayedToDestruction:
+				case EEntityState::Dead:
+				case EEntityState::InDestruction:
+				case EEntityState::DelayedToDestruction:
 				{
 					SetActiveState(false);
 					break;
@@ -27,7 +27,7 @@ namespace decs
 		}
 	}
 
-	void EntityData::SetStateRaw(EntityState state)
+	void EntityData::SetStateRaw(EEntityState state)
 	{
 		m_State = state;
 	}

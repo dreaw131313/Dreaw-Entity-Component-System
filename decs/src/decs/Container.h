@@ -168,7 +168,7 @@ namespace decs
 		}
 
 	private:
-		bool DestroyEntityInternal(Entity entity);
+		bool DestroyEntityInternal(Entity entity, bool bInvokeObservers);
 
 		void SetEntityActive(const Entity& entity, bool bIsActive);
 
@@ -291,13 +291,13 @@ namespace decs
 
 		bool Spawn(
 			const Entity& prefab,
-			std::vector<Entity>& spawnedEntities,
 			uint64_t spawnCount,
 			bool areActive = true
 		);
 
 		bool Spawn(
 			const Entity& prefab,
+			std::vector<Entity>& spawnedEntities,
 			uint64_t spawnCount,
 			bool areActive = true
 		);
@@ -916,7 +916,7 @@ namespace decs
 
 
 	private:
-		inline void InvokeEntityCreationObservers(const Entity& entity)
+		inline void InvokeEntityCreationObserver(const Entity& entity)
 		{
 			if (m_CreateEntityObserver != nullptr)
 			{
@@ -924,17 +924,33 @@ namespace decs
 			}
 		}
 
-		inline void InvokeEntityDestructionObservers(const Entity& entity)
+		inline void InvokeEntityDestroyObserver(const Entity& entity)
 		{
 			if (m_DestroyEntityObserver != nullptr)
 			{
 				m_DestroyEntityObserver->OnDestroyEntity(entity);
 			}
 		}
+		
+		inline void InvokeEntityEnableObserver(const Entity& entity)
+		{
+			if (m_EnableEntityObserver != nullptr)
+			{
+				m_EnableEntityObserver->OnEnableEntity(entity);
+			}
+		}
 
-		void InvokeEntityActivationObservers(const Entity& entity);
+		inline void InvokeEntityDisableObserver(const Entity& entity)
+		{
+			if (m_DisableEntityObserver != nullptr)
+			{
+				m_DisableEntityObserver->OnDisableEntity(entity);
+			}
+		}
 
-		void InvokeEntityDeactivationObservers(const Entity& entity);
+		void InvokeEntityAndComponentEnableObservers(const Entity& entity);
+
+		void InvokeEntityAndComponentsDisableObservers(const Entity& entity);
 
 		void InvokeArchetypeOnCreateListeners(Archetype& archetype, std::vector<ComponentBaseRef>& componentRefsToInvokeObserverCallbacks);
 
@@ -944,7 +960,14 @@ namespace decs
 
 #pragma region DELAYED DESTROY:
 	private:
-		std::vector<EntityData*> m_DelayedEntitiesToDestroy;
+		struct DelayedEntityToDestroy
+		{
+		public:
+			EntityData* entityData = nullptr;
+			bool bInvokeCallbacks = true;
+		};
+
+		std::vector<DelayedEntityToDestroy> m_DelayedEntitiesToDestroy;
 
 		struct ArchetypeRecordDelayedDestroyData
 		{
@@ -965,9 +988,9 @@ namespace decs
 
 		void RemoveArchetypesRecordsDelayedToRemove();
 
-		void DestroyDelayedEntity(const Entity& entity);
+		void DestroyDelayedEntity(const Entity& entity, bool bInvokeCallbacks);
 
-		void AddEntityToDelayedDestroy(const Entity& entity);
+		void AddEntityToDelayedDestroy(const Entity& entity, bool bInvokeCallbacks);
 
 		void AddArchetypeRecordToDelayedRemove(Archetype* archetype, uint32_t index, bool bRemove, TypeID removedComponentTypeID)
 		{
@@ -1070,6 +1093,182 @@ namespace decs
 				}
 			});
 		}
+
+#pragma endregion
+
+#pragma region NO CALLBACKS methods:
+		public:
+			Entity CreateEntity_NoCallbacks(bool bIsActive = true);
+
+			bool DestroyEntity_NoCallback(const Entity& entity);
+
+		private:
+			void SetEntityActive_NoCallback(const Entity& entity, bool bIsActive);
+
+			Entity Spawn_NoCallback(
+				const Entity& prefab,
+				bool isActive = true
+			);
+
+			bool Spawn_NoCallback(
+				const Entity& prefab,
+				uint64_t spawnCount,
+				bool areActive = true
+			);
+
+			bool Spawn_NoCallback(
+				const Entity& prefab,
+				std::vector<Entity>& spawnedEntities,
+				uint64_t spawnCount,
+				bool areActive = true
+			);
+
+			template<typename TComponent, typename ...Args>
+			inline TComponent* AddComponent_NoCallback(Entity entity, EntityData& entityData, Args&&... args)
+			{
+				if (!m_CanAddComponents) return nullptr;
+
+				if constexpr (TComponent::IsStable)
+				{
+					return AddStableComponent_NoCallback<TComponent>(entity, entityData, std::forward<Args>(args)...);
+				}
+				else
+				{
+					return AddUnstableComponent_NoCallback<TComponent>(entity, entityData, std::forward<Args>(args)...);
+				}
+			}
+
+			template<typename TComponent, typename ...Args>
+			TComponent* AddUnstableComponent_NoCallback(const Entity& entity, EntityData& entityData, Args&&... args)
+			{
+				TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<TComponent>::ID();
+
+				if (!entityData.IsValidToPerformComponentOperation())
+				{
+					return nullptr;
+				}
+
+				auto currentComponent = GetComponentWithoutCheckingIsAlive<TComponent>(entityData);
+				if (currentComponent != nullptr)
+				{
+					return currentComponent;
+				}
+
+				uint32_t componentContainerIndex = 0;
+				Archetype* entityNewArchetype = GetArchetypeAfterAddComponent<TComponent>(
+					entityData.m_Archetype,
+					componentContainerIndex
+				);
+
+				ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
+				PackedContainer<TComponent>* container = static_cast<PackedContainer<TComponent>*>(archetypeTypeData.m_PackedContainer);
+				TComponent* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
+
+				uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
+				if (entityData.m_Archetype != nullptr)
+				{
+					if (m_PerformDelayedDestruction)
+					{
+						AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
+						entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
+							entityData.m_Archetype,
+							entityData.m_IndexInArchetype,
+							copmonentTypeID,
+							&entityData
+						);
+					}
+					else
+					{
+						entityNewArchetype->MoveEntityComponentsAfterAddComponent<TComponent>(
+							entityData.m_Archetype,
+							entityData.m_IndexInArchetype,
+							&entityData
+						);
+					}
+				}
+				else
+				{
+					RemoveFromEmptyEntities(entityData);
+					entityNewArchetype->AddEntityData(&entityData);
+				}
+
+				return createdComponent;
+			}
+
+			template<typename TComponent, typename ...Args>
+			TComponent* AddStableComponent_NoCallback(const Entity& entity, EntityData& entityData, Args&&... args)
+			{
+				TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<TComponent>::ID();
+
+				if (!entityData.IsValidToPerformComponentOperation())
+				{
+					return nullptr;
+				}
+
+				auto currentComponent = GetStableComponentWithoutCheckingIsAlive<TComponent>(entityData);
+				if (currentComponent != nullptr)
+				{
+					return currentComponent;
+				}
+
+				uint32_t componentContainerIndex = 0;
+				Archetype* entityNewArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype, componentContainerIndex);
+				ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
+
+				// Adding component to stable component container
+				StableContainer<TComponent>* stableContainer = static_cast<StableContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
+				StableComponentRef componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
+
+				//StableComponentRef componentNodeInfo = {};
+				// Adding component pointer to packed container in archetype
+				archetypeTypeData.m_PackedContainer->EmplaceFromVoid(&componentNodeInfo);
+
+				TComponent* componentPtr = static_cast<TComponent*>(componentNodeInfo.m_ComponentPtr);
+
+				// Adding entity to archetype
+				uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
+				if (entityData.m_Archetype != nullptr)
+				{
+					if (m_PerformDelayedDestruction)
+					{
+						AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
+						entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
+							entityData.m_Archetype,
+							entityData.m_IndexInArchetype,
+							copmonentTypeID,
+							&entityData
+						);
+					}
+					else
+					{
+						entityNewArchetype->MoveEntityComponentsAfterAddComponent<TComponent>(
+							entityData.m_Archetype,
+							entityData.m_IndexInArchetype,
+							&entityData
+						);
+					}
+				}
+				else
+				{
+					RemoveFromEmptyEntities(entityData);
+					entityNewArchetype->AddEntityData(&entityData);
+				}
+
+				return componentPtr;
+			}
+
+			template<typename TComponent>
+			bool RemoveComponent_NoCallback(Entity entity)
+			{
+				if (!m_CanRemoveComponents)
+				{
+					return false;
+				}
+
+				return RemoveComponent_NoCallback(entity, Type<TComponent>::ID());
+			}
+
+			bool RemoveComponent_NoCallback(const Entity& entity, TypeID componentTypeID);
 
 #pragma endregion
 

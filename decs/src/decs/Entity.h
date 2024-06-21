@@ -85,14 +85,16 @@ namespace decs
 		inline void SetActive(const bool& isActive) const
 		{
 			if (IsValid())
+			{
 				m_Container->SetEntityActive(*this, isActive);
+			}
 		}
 
 		inline bool Destroy() const
 		{
 			if (IsValid())
 			{
-				m_Container->DestroyEntityInternal(*this);
+				m_Container->DestroyEntityInternal(*this, true);
 				Invalidate();
 				return true;
 			}
@@ -190,6 +192,69 @@ namespace decs
 
 			return nullptr;
 		}
+
+#pragma region NO CALLBACK METHODS:
+	public:
+		/// <summary>
+		/// Enable and disable observers of entity and components are not invoked.
+		/// </summary>
+		/// <param name="isActive"></param>
+		inline void SetActive_NoCallback(const bool& isActive) const
+		{
+			if (IsValid())
+			{
+				m_Container->SetEntityActive_NoCallback(*this, isActive);
+			}
+		}
+
+		/// <summary>
+		/// Destroy observers of entity and components are not invoked.
+		/// </summary>
+		/// <returns></returns>
+		inline bool Destroy_NoCallback() const
+		{
+			if (IsValid())
+			{
+				m_Container->DestroyEntityInternal(*this, false);
+				Invalidate();
+				return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Add component observers are not invoked.
+		/// </summary>
+		/// <returns></returns>
+		template<typename TComponent, typename... Args>
+		inline typename TComponent* AddComponent_NoCallback(Args&&... args) const
+		{
+			if (IsValid())
+				return m_Container->AddComponent_NoCallback<TComponent>(*this, *m_EntityData, std::forward<Args>(args)...);
+
+			return nullptr;
+		}
+
+		/// <summary>
+		/// Remove component observers are not invoked.
+		/// </summary>
+		/// <returns></returns>
+		template<typename TComponent>
+		inline bool RemoveComponent_NoCallback() const
+		{
+			return IsValid() && m_Container->RemoveComponent_NoCallback<TComponent>(*this);
+		}
+
+		/// <summary>
+		/// Remove component observers are not invoked.
+		/// </summary>
+		/// <returns></returns>
+		inline bool RemoveComponent_NoCallback(TypeID componentTypeID) const
+		{
+			return IsValid() && m_Container->RemoveComponent_NoCallback(*this, componentTypeID);
+		}
+
+#pragma endregion
 
 	private:
 		mutable Container* m_Container = nullptr;

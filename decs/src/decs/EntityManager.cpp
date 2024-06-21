@@ -27,7 +27,8 @@ namespace decs
 
 			EntityData* entityData = m_FreeEntities.back();
 			m_FreeEntities.pop_back();
-			entityData->SetState(EntityState::Alive);
+			entityData->SetEntityCallbackState(EEntityCallbackState::None);
+			entityData->SetState(EEntityState::Alive);
 			entityData->SetIsActive(isActive);
 			entityData->SetIsInManager(false);
 
@@ -94,7 +95,8 @@ namespace decs
 	{
 		m_CreatedEntitiesCount += 1;
 		entityData->SetIsActive(bIsActive);
-		entityData->SetState(EntityState::Alive);
+		entityData->SetState(EEntityState::Alive);
+		entityData->SetEntityCallbackState(EEntityCallbackState::None);
 	}
 
 	void EntityManager::ReturnReservedEntityData(std::vector<EntityData*> reservedEntityData)

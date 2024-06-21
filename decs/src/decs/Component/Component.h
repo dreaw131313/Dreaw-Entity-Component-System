@@ -14,8 +14,16 @@ namespace decs
 	/// </summary>
 	class ComponentBase
 	{
+		friend class Container;
+		template<typename>
+		friend class ComponentContext;
+
 	public:
 		virtual ~ComponentBase() = default;
+
+	private:
+		bool m_bIsCreatedByECS = false;
+		bool m_bIsEnabledByECS = false;
 	};
 
 }

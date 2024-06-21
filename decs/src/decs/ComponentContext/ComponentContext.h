@@ -52,7 +52,11 @@ namespace decs
 
 		virtual void InvokeOnEnableEntity(ComponentBase* component, const Entity& entity) = 0;
 
-		virtual void InvokeOnOnDisableEntity(ComponentBase* component, const  Entity& entity) = 0;
+		virtual void InvokeOnDisableEntity(ComponentBase* component, const  Entity& entity) = 0;
+
+		virtual void InvokeOnEnableEntityRaw(ComponentBase* component, const Entity& entity) = 0;
+
+		virtual void InvokeOnDisableEntityRaw(ComponentBase* component, const Entity& entity) = 0;
 
 		void SetCanInvokeCreateObservers(bool bCanInvokeObservers)
 		{
@@ -123,42 +127,84 @@ namespace decs
 
 		void InvokeOnCreateComponent(ComponentBase* component, const Entity& entity)override
 		{
-			if (CanInvokeCreateObservers() && m_Observers.m_CreateObserver)
+			if (!component->m_bIsCreatedByECS)
 			{
-				m_Observers.m_CreateObserver->OnCreateComponent(*static_cast<TComponent*>(component), entity);
+				component->m_bIsCreatedByECS = true;
+				if (CanInvokeCreateObservers() && m_Observers.m_CreateObserver != nullptr)
+				{
+					m_Observers.m_CreateObserver->OnCreateComponent(*static_cast<TComponent*>(component), entity);
+				}
 			}
 		}
 
 		void InvokeOnDestroyComponent(ComponentBase* component, const Entity& entity)override
 		{
-			if (CanInvokeCreateObservers() && m_Observers.m_DestroyObserver != nullptr)
+			if (component->m_bIsCreatedByECS)
 			{
-				m_Observers.m_DestroyObserver->OnDestroyComponent(*static_cast<TComponent*>(component), entity);
+				component->m_bIsCreatedByECS = false;
+				if (CanInvokeCreateObservers() && m_Observers.m_DestroyObserver != nullptr)
+				{
+					m_Observers.m_DestroyObserver->OnDestroyComponent(*static_cast<TComponent*>(component), entity);
+				}
 			}
 		}
 
 		void InvokeOnCreateComponentRaw(ComponentBase* component, const Entity& entity) override
 		{
-			m_Observers.m_CreateObserver->OnCreateComponent(*static_cast<TComponent*>(component), entity);
+			if (!component->m_bIsCreatedByECS)
+			{
+				component->m_bIsCreatedByECS = true;
+				m_Observers.m_CreateObserver->OnCreateComponent(*static_cast<TComponent*>(component), entity);
+			}
 		}
 
 		void InvokeOnDestroyComponentRaw(ComponentBase* component, const Entity& entity) override
 		{
-			m_Observers.m_DestroyObserver->OnDestroyComponent(*static_cast<TComponent*>(component), entity);
+			if (component->m_bIsCreatedByECS)
+			{
+				component->m_bIsCreatedByECS = false;
+				m_Observers.m_DestroyObserver->OnDestroyComponent(*static_cast<TComponent*>(component), entity);
+			}
 		}
 
 		void InvokeOnEnableEntity(ComponentBase* component, const Entity& entity) override
 		{
-			if (CanInvokeCreateObservers() && m_Observers.m_EnableObserver)
+			if (!component->m_bIsEnabledByECS)
 			{
+				component->m_bIsEnabledByECS = true;
+				if (CanInvokeCreateObservers() && m_Observers.m_EnableObserver != nullptr)
+				{
+					m_Observers.m_EnableObserver->OnEnableEntity(*static_cast<TComponent*>(component), entity);
+				}
+			}
+		}
+
+		void InvokeOnDisableEntity(ComponentBase* component, const Entity& entity) override
+		{
+			if (component->m_bIsEnabledByECS)
+			{
+				component->m_bIsEnabledByECS = false;
+				if (CanInvokeCreateObservers() && m_Observers.m_DisableObserver != nullptr)
+				{
+					m_Observers.m_DisableObserver->OnDisableEntity(*static_cast<TComponent*>(component), entity);
+				}
+			}
+		}
+
+		void InvokeOnEnableEntityRaw(ComponentBase* component, const Entity& entity) override
+		{
+			if (!component->m_bIsEnabledByECS)
+			{
+				component->m_bIsEnabledByECS = true;
 				m_Observers.m_EnableObserver->OnEnableEntity(*static_cast<TComponent*>(component), entity);
 			}
 		}
 
-		void InvokeOnOnDisableEntity(ComponentBase* component, const Entity& entity) override
+		void InvokeOnDisableEntityRaw(ComponentBase* component, const Entity& entity) override
 		{
-			if (CanInvokeCreateObservers() && m_Observers.m_DisableObserver)
+			if (component->m_bIsEnabledByECS)
 			{
+				component->m_bIsEnabledByECS = false;
 				m_Observers.m_DisableObserver->OnDisableEntity(*static_cast<TComponent*>(component), entity);
 			}
 		}

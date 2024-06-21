@@ -83,68 +83,83 @@ int main()
 
 	observerManager.FillContainerObservers(container);
 
-	auto entity = container.CreateEntity();
-
-	auto pos = entity.AddComponent<Position>();
-	auto test = entity.AddComponent<TestComponent>();
-	auto rend = entity.AddComponent<Renderer>();
-
-	Position* position = entity.GetComponent<Position>();
-	TestComponent* testComp = entity.GetComponent<TestComponent>();
-	Renderer* renderer = entity.GetComponentDynamic<Renderer>();
-
-	container.Spawn(entity, 3, true);
-
-	PrintLine();
-
-	container.ForEach<Position>([](const decs::Entity& e, Position& p)
+	/*
 	{
-		p.X += e.GetID();
-		p.Y += 2 * e.GetID();
-	});
+		auto entity = container.CreateEntity();
 
-	container.ForEach<Position>([](const decs::Entity& e, Position& p)
+		auto pos = entity.AddComponent<Position>();
+		auto test = entity.AddComponent<TestComponent>();
+		auto rend = entity.AddComponent<Renderer>();
+
+		Position* position = entity.GetComponent<Position>();
+		TestComponent* testComp = entity.GetComponent<TestComponent>();
+		Renderer* renderer = entity.GetComponentDynamic<Renderer>();
+
+		container.Spawn(entity, 3, true);
+
+		PrintLine();
+
+		container.ForEach<Position>([](const decs::Entity& e, Position& p)
+		{
+			p.X += e.GetID();
+			p.Y += 2 * e.GetID();
+		});
+
+		container.ForEach<Position>([](const decs::Entity& e, Position& p)
+		{
+			PrintLine(std::format("X: {0}, Y: {1}", p.X, p.Y));
+		});
+
+		decs::Query<Position> testQuery = { &container };
+
+		testQuery.ForEach([&](Position& pos)
+		{
+			PrintLine("decs::Query::ForEach");
+		});
+		testQuery.ForEachBackward([&](decs::Entity& e, Position& pos)
+		{
+			PrintLine("decs::Query::ForEachBackward");
+		});
+		testQuery.ForEachSafe([&](Position& pos)
+		{
+			PrintLine("decs::Query::ForEachSafe");
+		});
+
+		decs::MultiQuery<TestComponent> testMultiQuery = {};
+		testMultiQuery.AddContainer(&container);
+
+		PrintLine();
+
+		testMultiQuery.ForEach([&](TestComponent& pos)
+		{
+			PrintLine("decs::MultiQuery::ForEach");
+		});
+		testMultiQuery.ForEachBackward([&](decs::Entity& e, TestComponent& pos)
+		{
+			PrintLine("decs::MultiQuery::ForEachBackward");
+		});
+		testMultiQuery.ForEachSafe([&](TestComponent& pos)
+		{
+			PrintLine("decs::MultiQuery::ForEachSafe");
+		});
+
+		PrintLine();
+
+		entity.Destroy();
+	}
+	*/
+
+
+	// NO CALLBACK:
 	{
-		PrintLine(std::format("X: {0}, Y: {1}", p.X, p.Y));
-	});
+		auto entity_nc = container.CreateEntity_NoCallbacks();
 
+		auto comp = entity_nc.AddComponent_NoCallback<TestComponent>();
+		entity_nc.RemoveComponent_NoCallback<TestComponent>();
+		entity_nc.AddComponent<TestComponent>();
 
-	decs::Query<Position> testQuery = { &container };
-
-	testQuery.ForEach([&](Position& pos)
-	{
-		PrintLine("decs::Query::ForEach");
-	});
-	testQuery.ForEachBackward([&](decs::Entity& e, Position& pos)
-	{
-		PrintLine("decs::Query::ForEachBackward");
-	});
-	testQuery.ForEachSafe([&](Position& pos)
-	{
-		PrintLine("decs::Query::ForEachSafe");
-	});
-
-	decs::MultiQuery<TestComponent> testMultiQuery = {};
-	testMultiQuery.AddContainer(&container);
-
-	PrintLine();
-
-	testMultiQuery.ForEach([&](TestComponent& pos)
-	{
-		PrintLine("decs::MultiQuery::ForEach");
-	});
-	testMultiQuery.ForEachBackward([&](decs::Entity& e, TestComponent& pos)
-	{
-		PrintLine("decs::MultiQuery::ForEachBackward");
-	});
-	testMultiQuery.ForEachSafe([&](TestComponent& pos)
-	{
-		PrintLine("decs::MultiQuery::ForEachSafe");
-	});
-
-	PrintLine();
-
-	entity.Destroy();
+		entity_nc.Destroy_NoCallback();
+	}
 
 	return 0;
 }
