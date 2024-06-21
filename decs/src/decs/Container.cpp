@@ -99,7 +99,7 @@ namespace decs
 		m_EmptyEntities.clear();
 		m_ArchetypesMap.ClearEntityDataAndComponents();
 		m_StableContainers.ClearContainers();
-		m_EntiesCount = 0;
+		m_EntityCount = 0;
 	}
 
 	void Container::ReturnOwnedEntitiesToEntityManager()
@@ -134,7 +134,6 @@ namespace decs
 			Entity e(entityData, this);
 			AddToEmptyEntitiesRightAfterNewEntityCreation(*e.m_EntityData);
 			InvokeEntityCreationObservers(e);
-			m_EntiesCount += 1;
 			return e;
 		}
 		return Entity();
@@ -191,7 +190,7 @@ namespace decs
 
 			m_EntityManager->DestroyEntity(entityData);
 
-			m_EntiesCount -= 1;
+			m_EntityCount -= 1;
 
 			return true;
 		}
@@ -271,6 +270,8 @@ namespace decs
 
 	EntityData* Container::CreateAliveEntityData(bool bIsActive)
 	{
+		m_EntityCount += 1;
+
 		if (m_ReservedEntitiesCount > 0)
 		{
 			m_ReservedEntitiesCount -= 1;

@@ -148,15 +148,15 @@ namespace decs
 	private:
 		std::vector<EntityData*> m_EmptyEntities = {}; //TODO: change to std::vector
 		EntityManager* m_EntityManager = nullptr;
-		uint32_t m_EntiesCount = 0;
+		uint32_t m_EntityCount = 0;
 		bool m_HaveOwnEntityManager = false;
 
 	public:
 		Entity CreateEntity(bool isActive = true);
 
-		inline uint32_t GetEntitesCount() const
+		inline uint32_t GetEntityCount() const
 		{
-			return m_EntiesCount;
+			return m_EntityCount;
 		}
 
 	public:
