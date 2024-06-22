@@ -322,6 +322,18 @@ namespace decs
 		ComponentContextsManager m_ComponentContextManager = {};
 
 	private:
+		void OnAddComponentInvokeObservers(
+			const Entity& entity, 
+			ComponentContextBase* componentContext, 
+			PackedContainerBase* packedContainer
+			);
+
+		void OnRemoveComponentInvokeObservers(
+			const Entity& entity,
+			ComponentContextBase* componentContext,
+			PackedContainerBase* packedContainer
+		);
+
 		template<typename TComponent, typename ...Args>
 		inline TComponent* AddComponent(Entity entity, EntityData& entityData, Args&&... args)
 		{
@@ -391,9 +403,7 @@ namespace decs
 				entityNewArchetype->AddEntityData(&entityData);
 			}
 
-			archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent(createdComponent, entity);
-			archetypeTypeData.m_ComponentContext->InvokeOnEnableComponent(createdComponent, entity);
-			
+			OnAddComponentInvokeObservers(entity, archetypeTypeData.m_ComponentContext, archetypeTypeData.m_PackedContainer);
 
 			return createdComponent;
 		}
@@ -457,7 +467,7 @@ namespace decs
 				entityNewArchetype->AddEntityData(&entityData);
 			}
 
-			archetypeTypeData.m_ComponentContext->InvokeOnCreateComponent(componentPtr, entity);
+			OnAddComponentInvokeObservers(entity, archetypeTypeData.m_ComponentContext, archetypeTypeData.m_PackedContainer);
 
 			return componentPtr;
 		}

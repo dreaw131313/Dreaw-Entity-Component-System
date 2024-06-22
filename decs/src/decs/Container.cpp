@@ -155,11 +155,6 @@ namespace decs
 		{
 			EntityID entityID = entity.GetID();
 			EntityData& entityData = *entity.m_EntityData;
-			if (entityData.GetEntityCallbackState() != EEntityCallbackState::None)
-			{
-				return false;
-			}
-
 			if (!entityData.CanBeDestructed())
 			{
 				return false;
@@ -181,7 +176,6 @@ namespace decs
 			// Destroy callbacks:
 			if (bInvokeObservers)
 			{
-				entityData.SetEntityCallbackState(EEntityCallbackState::Destroy);
 				if (currentArchetype != nullptr)
 				{
 					const uint32_t indexInArchetype = entityData.m_IndexInArchetype;
@@ -191,8 +185,6 @@ namespace decs
 				InvokeEntityDisableObserver(entity);
 				InvokeEntityDestroyObserver(entity);
 			}
-
-			entityData.SetEntityCallbackState(EEntityCallbackState::None);
 
 			if (currentArchetype != nullptr)
 			{
@@ -219,22 +211,18 @@ namespace decs
 		if (entity.m_Container == this
 			&& entity.m_EntityData->IsAlive()
 			&& entity.m_EntityData->IsActive() != isActive
-			&& entity.m_EntityData->GetEntityCallbackState() == EEntityCallbackState::None
 			)
 		{
 			entity.m_EntityData->SetActiveState(isActive);
 			if (isActive)
 			{
-				entity.m_EntityData->SetEntityCallbackState(EEntityCallbackState::Enable);
 				InvokeEntityAndComponentEnableObservers(entity);
 			}
 			else
 			{
-				entity.m_EntityData->SetEntityCallbackState(EEntityCallbackState::Disable);
 				InvokeEntityAndComponentsDisableObservers(entity);
 			}
 
-			entity.m_EntityData->SetEntityCallbackState(EEntityCallbackState::None);
 		}
 	}
 
@@ -355,14 +343,12 @@ namespace decs
 		{
 			AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntityData);
 
-			spawnedEntityData->SetEntityCallbackState(EEntityCallbackState::Create);
 			InvokeEntityCreateObserver(spawnedEntity);
 
 			if (spawnedEntity.IsActive())
 			{
 				InvokeEntityEnableObserver(spawnedEntity);
 			}
-			spawnedEntityData->SetEntityCallbackState(EEntityCallbackState::None);
 
 			return spawnedEntity;
 		}
@@ -373,7 +359,6 @@ namespace decs
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
 		CreateEntityFromSpawnData(*spawnedEntityData, spawnState);
 
-		spawnedEntityData->SetEntityCallbackState(EEntityCallbackState::Create);
 		InvokeEntityCreateObserver(spawnedEntity);
 		if (isActive)
 		{
@@ -381,7 +366,6 @@ namespace decs
 		}
 		InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
 
-		spawnedEntityData->SetEntityCallbackState(EEntityCallbackState::None);
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
 
@@ -407,13 +391,11 @@ namespace decs
 				spawnedEntity.Set(entityData, this);
 				AddToEmptyEntitiesRightAfterNewEntityCreation(*entityData);
 
-				entityData->SetEntityCallbackState(EEntityCallbackState::Create);
 				InvokeEntityCreateObserver(spawnedEntity);
 				if (areActive)
 				{
 					InvokeEntityEnableObserver(spawnedEntity);
 				}
-				entityData->SetEntityCallbackState(EEntityCallbackState::None);
 			}
 			return true;
 		}
@@ -433,15 +415,12 @@ namespace decs
 
 			CreateEntityFromSpawnData(*entityData, spawnState);
 
-			entityData->SetEntityCallbackState(EEntityCallbackState::Create);
 			InvokeEntityCreateObserver(spawnedEntity);
 			if (areActive)
 			{
 				InvokeEntityEnableObserver(spawnedEntity);
 			}
 			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
-
-			entityData->SetEntityCallbackState(EEntityCallbackState::None);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -468,14 +447,11 @@ namespace decs
 				Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
 				AddToEmptyEntitiesRightAfterNewEntityCreation(*entityData);
 
-				entityData->SetEntityCallbackState(EEntityCallbackState::Create);
 				InvokeEntityCreateObserver(spawnedEntity);
-				if (areActive)
+				if (spawnedEntity.IsActive())
 				{
 					InvokeEntityEnableObserver(spawnedEntity);
 				}
-
-				entityData->SetEntityCallbackState(EEntityCallbackState::None);
 			}
 			return true;
 		}
@@ -495,15 +471,13 @@ namespace decs
 
 			CreateEntityFromSpawnData(*entityData, spawnState);
 
-			entityData->SetEntityCallbackState(EEntityCallbackState::Create);
 			InvokeEntityCreateObserver(spawnedEntity);
-			if (areActive)
+			if (spawnedEntity.IsActive())
 			{
 				InvokeEntityEnableObserver(spawnedEntity);
 			}
-			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
 
-			entityData->SetEntityCallbackState(EEntityCallbackState::None);
+			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -620,6 +594,44 @@ namespace decs
 		}
 	}
 
+	void Container::OnAddComponentInvokeObservers(
+		const Entity& entity,
+		ComponentContextBase* componentContext,
+		PackedContainerBase* packedContainer
+	)
+	{
+		auto entityData = entity.m_EntityData;
+		entityData->SetCanPerformAnyComponentOperation(false);
+		{
+			componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
+
+			if (entity.IsActive())
+			{
+				componentContext->InvokeOnEnableComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
+			}
+		}
+		entityData->SetCanPerformAnyComponentOperation(true);
+	}
+
+	void Container::OnRemoveComponentInvokeObservers(
+		const Entity& entity,
+		ComponentContextBase* componentContext,
+		PackedContainerBase* packedContainer
+	)
+	{
+		auto entityData = entity.m_EntityData;
+
+		entityData->SetCanPerformAnyComponentOperation(false);
+		{
+			if (entity.IsActive())
+			{
+				componentContext->InvokeOnDisableComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
+			}
+			componentContext->InvokeOnDestroyComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
+		}
+		entityData->SetCanPerformAnyComponentOperation(true);
+	}
+
 	bool Container::RemoveComponent(const Entity& entity, TypeID componentTypeID)
 	{
 		if (entity.m_Container != this) return false;
@@ -655,10 +667,7 @@ namespace decs
 			AddToEmptyEntities(entityData);
 		}
 
-		archetypeTypeData.m_ComponentContext->InvokeOnDestroyComponent(
-			packedContainer->GetComponentBasePtr(entityIndexInOldArchetype),
-			entity
-		);
+		OnRemoveComponentInvokeObservers(entity, archetypeTypeData.m_ComponentContext, packedContainer);
 
 		if (m_PerformDelayedDestruction)
 		{
@@ -1023,7 +1032,6 @@ namespace decs
 
 		if (bInvokeCallbacks)
 		{
-			entityData.SetEntityCallbackState(EEntityCallbackState::Destroy);
 			if (currentArchetype != nullptr)
 			{
 				InvokeEntityComponentDestructionObservers(entity);
@@ -1031,8 +1039,6 @@ namespace decs
 
 			InvokeEntityDisableObserver(entity);
 			InvokeEntityDestroyObserver(entity);
-
-			entityData.SetEntityCallbackState(EEntityCallbackState::None);
 		}
 
 		if (currentArchetype != nullptr)
@@ -1081,9 +1087,7 @@ namespace decs
 	{
 		if (entity.m_Container == this
 			&& entity.m_EntityData->IsAlive()
-			&& entity.m_EntityData->IsActive() != bIsActive
-			&& entity.m_EntityData->GetEntityCallbackState() == EEntityCallbackState::None
-			)
+			&& entity.m_EntityData->IsActive() != bIsActive)
 		{
 			entity.m_EntityData->SetActiveState(bIsActive);
 		}

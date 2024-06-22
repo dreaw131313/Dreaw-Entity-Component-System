@@ -36,27 +36,9 @@ namespace decs
 
 		virtual void InvokeOnDestroyComponent(ComponentBase* component, const Entity& entity) = 0;
 
-		/// <summary>
-		/// This function tries invoke Create observer without checking if observer is valid.
-		/// </summary>
-		/// <param name="component"></param>
-		/// <param name="entity"></param>
-		virtual void InvokeOnCreateComponentRaw(ComponentBase* component, const Entity& entity) = 0;
-
-		/// <summary>
-		/// This function tries invoke Destroy observer without checking if observer is valid.
-		/// </summary>
-		/// <param name="component"></param>
-		/// <param name="entity"></param>
-		virtual void InvokeOnDestroyComponentRaw(ComponentBase* component, const Entity& entity) = 0;
-
 		virtual void InvokeOnEnableComponent(ComponentBase* component, const Entity& entity) = 0;
 
 		virtual void InvokeOnDisableComponent(ComponentBase* component, const  Entity& entity) = 0;
-
-		virtual void InvokeOnEnableEntityRaw(ComponentBase* component, const Entity& entity) = 0;
-
-		virtual void InvokeOnDisableEntityRaw(ComponentBase* component, const Entity& entity) = 0;
 
 		void SetCanInvokeCreateObservers(bool bCanInvokeObservers)
 		{
@@ -149,24 +131,6 @@ namespace decs
 			}
 		}
 
-		void InvokeOnCreateComponentRaw(ComponentBase* component, const Entity& entity) override
-		{
-			if (!component->m_bIsCreatedByContainer)
-			{
-				component->m_bIsCreatedByContainer = true;
-				m_Observers.m_CreateObserver->OnCreateComponent(*static_cast<TComponent*>(component), entity);
-			}
-		}
-
-		void InvokeOnDestroyComponentRaw(ComponentBase* component, const Entity& entity) override
-		{
-			if (component->m_bIsCreatedByContainer)
-			{
-				component->m_bIsCreatedByContainer = false;
-				m_Observers.m_DestroyObserver->OnDestroyComponent(*static_cast<TComponent*>(component), entity);
-			}
-		}
-
 		void InvokeOnEnableComponent(ComponentBase* component, const Entity& entity) override
 		{
 			if (!component->m_bIsEnabledByECS)
@@ -188,24 +152,6 @@ namespace decs
 				{
 					m_Observers.m_DisableObserver->OnDisableEntity(*static_cast<TComponent*>(component), entity);
 				}
-			}
-		}
-
-		void InvokeOnEnableEntityRaw(ComponentBase* component, const Entity& entity) override
-		{
-			if (!component->m_bIsEnabledByECS)
-			{
-				component->m_bIsEnabledByECS = true;
-				m_Observers.m_EnableObserver->OnEnableEntity(*static_cast<TComponent*>(component), entity);
-			}
-		}
-
-		void InvokeOnDisableEntityRaw(ComponentBase* component, const Entity& entity) override
-		{
-			if (component->m_bIsEnabledByECS)
-			{
-				component->m_bIsEnabledByECS = false;
-				m_Observers.m_DisableObserver->OnDisableEntity(*static_cast<TComponent*>(component), entity);
 			}
 		}
 

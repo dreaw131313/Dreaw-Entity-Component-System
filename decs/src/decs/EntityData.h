@@ -14,15 +14,6 @@ namespace decs
 		DelayedToDestruction = 3,
 	};
 
-	enum class EEntityCallbackState : uint8_t
-	{
-		None = 0, // every operation on entity can be performed
-		Create, // cannot destroy entity
-		Destroy, // cannont do anything
-		Disable,
-		Enable
-	};
-	
 	class EntityData
 	{
 		friend class EntityManager;
@@ -40,9 +31,8 @@ namespace decs
 	private:
 		EntityVersion m_Version = 1;
 		EEntityState m_State = EEntityState::Alive;
-		EEntityCallbackState m_EntityCallbackState = EEntityCallbackState::None;
 
-		bool m_bCanPerformOperation = false;
+		bool m_bCanPerformComponentOperation = true;
 		bool m_bIsActive = false;
 		bool m_bIsUsedAsPrefab = false;
 		bool m_bIsInManager = true;
@@ -96,7 +86,7 @@ namespace decs
 
 		inline bool IsValidToPerformComponentOperation() const
 		{
-			return m_State == EEntityState::Alive && !m_bIsUsedAsPrefab;
+			return m_State == EEntityState::Alive && !m_bIsUsedAsPrefab && m_bCanPerformComponentOperation;
 		}
 
 		inline bool CanBeDestructed() const
@@ -127,14 +117,9 @@ namespace decs
 			return m_bIsInManager;
 		}
 
-		EEntityCallbackState GetEntityCallbackState() const
+		void SetCanPerformAnyComponentOperation(bool bCanPerformComponentOperation)
 		{
-			return m_EntityCallbackState;
-		}
-
-		void SetEntityCallbackState(EEntityCallbackState callbackState)
-		{
-			m_EntityCallbackState = callbackState;
+			m_bCanPerformComponentOperation = bCanPerformComponentOperation;
 		}
 
 	private:
