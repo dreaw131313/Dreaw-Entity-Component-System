@@ -398,7 +398,7 @@ namespace decs
 				entityNewArchetype->AddEntityData(&entityData);
 			}
 
-			OnAddComponentInvokeObservers(entity, archetypeTypeData.m_ComponentContext, archetypeTypeData.m_PackedContainer);
+			OnAddComponentInvokeObservers(entity, archetypeTypeData.m_ComponentContext, archetypeTypeData.m_PackedContainer, copmonentTypeID);
 
 			return createdComponent;
 		}

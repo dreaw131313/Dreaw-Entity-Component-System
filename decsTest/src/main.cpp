@@ -36,7 +36,7 @@ public:
 
 struct TestComponent : public decs::ComponentBase
 {
-	DECS_STABLE_COMPONENT()
+	DECS_COMPONENT()
 public:
 	int table[10];
 
@@ -44,7 +44,7 @@ public:
 
 struct Renderer :public decs::ComponentBase
 {
-	DECS_STABLE_COMPONENT()
+	DECS_COMPONENT()
 public:
 	double mesh;
 };
@@ -62,8 +62,6 @@ public:
 	void OnCreateComponent(TestComponent& component, const decs::Entity& entity) override
 	{
 		PrintLine("TestComponent on create");
-
-		entity.RemoveComponent<TestComponent>();
 	}
 
 	// Inherited via DestroyComponentObserver
@@ -100,7 +98,6 @@ int main()
 
 	observerManager.FillContainerObservers(container);
 
-	/*
 	{
 		auto entity = container.CreateEntity();
 
@@ -164,17 +161,17 @@ int main()
 
 		entity.Destroy();
 	}
-	*/
+	
 
 	// NO CALLBACK:
-	{
-		auto entity_nc = container.CreateEntity();
-
-		entity_nc.AddComponent_NoCallback<TestComponent>();
-
-		container.InvokeEntitesOnCreateListeners();
-		container.InvokeEntitesOnDestroyListeners();
-	}
+	//{
+	//	auto entity_nc = container.CreateEntity();
+	//
+	//	entity_nc.AddComponent_NoCallback<TestComponent>();
+	//
+	//	container.InvokeEntitesOnCreateListeners();
+	//	container.InvokeEntitesOnDestroyListeners();
+	//}
 
 	return 0;
 }
