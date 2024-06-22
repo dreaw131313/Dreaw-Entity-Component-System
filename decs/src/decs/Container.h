@@ -334,7 +334,73 @@ namespace decs
 		{
 			if (!m_CanAddComponents) return nullptr;
 
-			return AddStableComponent<TComponent>(entity, entityData, std::forward<Args>(args)...);
+			if constexpr (TComponent::IsStable)
+			{
+				return AddStableComponent<TComponent>(entity, entityData, std::forward<Args>(args)...);
+			}
+			else
+			{
+				return AddUnstableComponent<TComponent>(entity, entityData, std::forward<Args>(args)...);
+			}
+		}
+
+		template<typename TComponent, typename ...Args>
+		TComponent* AddUnstableComponent(const Entity& entity, EntityData& entityData, Args&&... args)
+		{
+			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<TComponent>::ID();
+
+			if (!entityData.IsValidToPerformComponentOperation())
+			{
+				return nullptr;
+			}
+
+			auto currentComponent = GetComponentWithoutCheckingIsAlive<TComponent>(entityData);
+			if (currentComponent != nullptr)
+			{
+				return currentComponent;
+			}
+
+			uint32_t componentContainerIndex = 0;
+			Archetype* entityNewArchetype = GetArchetypeAfterAddComponent<TComponent>(
+				entityData.m_Archetype,
+				componentContainerIndex
+			);
+
+			ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
+			PackedContainer<TComponent>* container = static_cast<PackedContainer<TComponent>*>(archetypeTypeData.m_PackedContainer);
+			TComponent* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
+
+			uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
+			if (entityData.m_Archetype != nullptr)
+			{
+				if (m_PerformDelayedDestruction)
+				{
+					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
+					entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
+						entityData.m_Archetype,
+						entityData.m_IndexInArchetype,
+						copmonentTypeID,
+						&entityData
+					);
+				}
+				else
+				{
+					entityNewArchetype->MoveEntityComponentsAfterAddComponent<TComponent>(
+						entityData.m_Archetype,
+						entityData.m_IndexInArchetype,
+						&entityData
+					);
+				}
+			}
+			else
+			{
+				RemoveFromEmptyEntities(entityData);
+				entityNewArchetype->AddEntityData(&entityData);
+			}
+
+			OnAddComponentInvokeObservers(entity, archetypeTypeData.m_ComponentContext, archetypeTypeData.m_PackedContainer);
+
+			return createdComponent;
 		}
 
 		template<typename TComponent, typename ...Args>
@@ -511,8 +577,16 @@ namespace decs
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
 				if (findTypeIndex != Limits::MaxComponentCount)
 				{
-					StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
-					return static_cast<TComponent*>(container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr);
+					if constexpr (TComponent::IsStable)
+					{
+						StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
+						return static_cast<TComponent*>(container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr);
+					}
+					else
+					{
+						PackedContainer<TComponent>* container = static_cast<PackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
+						return &container->m_Data[entityData.m_IndexInArchetype];
+					}
 				}
 			}
 			return nullptr;
@@ -549,8 +623,16 @@ namespace decs
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
 				if (findTypeIndex != Limits::MaxComponentCount)
 				{
-					StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
-					return static_cast<TComponent*>(container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr);
+					if constexpr (TComponent::IsStable)
+					{
+						StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
+						return static_cast<TComponent*>(container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr);
+					}
+					else
+					{
+						PackedContainer<TComponent>* container = (PackedContainer<TComponent>*)entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer;
+						return &container->m_Data[entityData.m_IndexInArchetype];
+					}
 				}
 			}
 			return nullptr;
@@ -653,7 +735,7 @@ namespace decs
 				{
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<TComponent>(
 						m_ComponentContextManager.GetOrCreateComponentContext<TComponent>(),
-						m_StableContainers.GetOrCreateStableContainer<TComponent>()
+						TComponent::IsStable ? m_StableContainers.GetOrCreateStableContainer<TComponent>() : nullptr
 					);
 				}
 			}
@@ -665,7 +747,7 @@ namespace decs
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<TComponent>(
 						*toArchetype,
 						m_ComponentContextManager.GetOrCreateComponentContext<TComponent>(),
-						m_StableContainers.GetOrCreateStableContainer<TComponent>()
+						TComponent::IsStable ? m_StableContainers.GetOrCreateStableContainer<TComponent>() : nullptr
 					);
 				}
 
@@ -1030,7 +1112,71 @@ namespace decs
 		{
 			if (!m_CanAddComponents) return nullptr;
 
-			return AddStableComponent_NoCallback<TComponent>(entity, entityData, std::forward<Args>(args)...);
+			if constexpr (TComponent::IsStable)
+			{
+				return AddStableComponent_NoCallback<TComponent>(entity, entityData, std::forward<Args>(args)...);
+			}
+			else
+			{
+				return AddUnstableComponent_NoCallback<TComponent>(entity, entityData, std::forward<Args>(args)...);
+			}
+		}
+
+		template<typename TComponent, typename ...Args>
+		TComponent* AddUnstableComponent_NoCallback(const Entity& entity, EntityData& entityData, Args&&... args)
+		{
+			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<TComponent>::ID();
+
+			if (!entityData.IsValidToPerformComponentOperation())
+			{
+				return nullptr;
+			}
+
+			auto currentComponent = GetComponentWithoutCheckingIsAlive<TComponent>(entityData);
+			if (currentComponent != nullptr)
+			{
+				return currentComponent;
+			}
+
+			uint32_t componentContainerIndex = 0;
+			Archetype* entityNewArchetype = GetArchetypeAfterAddComponent<TComponent>(
+				entityData.m_Archetype,
+				componentContainerIndex
+			);
+
+			ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
+			PackedContainer<TComponent>* container = static_cast<PackedContainer<TComponent>*>(archetypeTypeData.m_PackedContainer);
+			TComponent* createdComponent = &container->m_Data.emplace_back(std::forward<Args>(args)...);
+
+			uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
+			if (entityData.m_Archetype != nullptr)
+			{
+				if (m_PerformDelayedDestruction)
+				{
+					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
+					entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
+						entityData.m_Archetype,
+						entityData.m_IndexInArchetype,
+						copmonentTypeID,
+						&entityData
+					);
+				}
+				else
+				{
+					entityNewArchetype->MoveEntityComponentsAfterAddComponent<TComponent>(
+						entityData.m_Archetype,
+						entityData.m_IndexInArchetype,
+						&entityData
+					);
+				}
+			}
+			else
+			{
+				RemoveFromEmptyEntities(entityData);
+				entityNewArchetype->AddEntityData(&entityData);
+			}
+
+			return createdComponent;
 		}
 
 		template<typename TComponent, typename ...Args>

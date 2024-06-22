@@ -29,7 +29,7 @@ namespace decs
 		using ContainerContextType = IterationContainerContext<ArchetypeContextType, ComponentsTypes...>;
 
 		template<typename TComponent>
-		using PackedContainerType = StablePackedContainer<TComponent>;
+		using PackedContainerType = std::conditional< TComponent::IsStable, StablePackedContainer<TComponent>*, PackedContainer<TComponent>*>::type;
 
 	public:
 		MultiQuery()

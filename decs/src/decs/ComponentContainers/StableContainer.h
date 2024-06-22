@@ -408,6 +408,11 @@ namespace decs
 		template<typename T>
 		bool SetStableComponentChunkSize(uint32_t chunkSize)
 		{
+			if constexpr (!T::IsStable)
+			{
+				return false;
+			}
+
 			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
 			auto& container = m_Containers[typeID];
 

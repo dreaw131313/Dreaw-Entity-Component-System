@@ -15,7 +15,7 @@ namespace decs
 		using ArchetypeContextType = IterationArchetypeContext<sizeof...(ComponentsTypes)>;
 
 		template<typename TComponent>
-		using PackedContainerType = StablePackedContainer<TComponent>*;
+		using PackedContainerType = std::conditional< TComponent::IsStable, StablePackedContainer<TComponent>*, PackedContainer<TComponent>*>::type;
 
 	public:
 		Query()
