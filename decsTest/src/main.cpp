@@ -49,7 +49,9 @@ public:
 
 class TestComponetObserver :
 	public decs::CreateComponentObserver<TestComponent>,
-	public decs::DestroyComponentObserver<TestComponent>
+	public decs::DestroyComponentObserver<TestComponent>,
+	public decs::EnableComponentObserver<TestComponent>,
+	public decs::DisableComponentObserver<TestComponent>
 {
 public:
 
@@ -57,6 +59,7 @@ public:
 	void OnCreateComponent(TestComponent& component, const decs::Entity& entity) override
 	{
 		PrintLine("TestComponent on create");
+		entity.AddComponent<Renderer>();
 	}
 
 	// Inherited via DestroyComponentObserver
@@ -65,6 +68,19 @@ public:
 		PrintLine("TestComponent on destroy");
 	}
 
+
+	// Inherited via EnableComponentObserver
+	void OnEnableEntity(TestComponent& component, const decs::Entity& entity) override
+	{
+		PrintLine("TestComponent on enable");
+	}
+
+
+	// Inherited via DisableComponentObserver
+	void OnDisableEntity(TestComponent& component, const decs::Entity& entity) override
+	{
+		PrintLine("TestComponent on disable");
+	}
 };
 
 int main()
@@ -73,7 +89,7 @@ int main()
 
 	decs::ObserversManager observerManager = {};
 	{
-		observerManager.SetCreateDestroyComponentObservers(&testComponentObserver, &testComponentObserver);
+		observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
 	}
 
 	decs::Container container = {};
@@ -148,13 +164,16 @@ int main()
 
 	// NO CALLBACK:
 	{
-		auto entity_nc = container.CreateEntity_NoCallbacks();
+		auto entity_nc = container.CreateEntity();
 
-		auto comp = entity_nc.AddComponent_NoCallback<TestComponent>();
-		entity_nc.RemoveComponent_NoCallback<TestComponent>();
 		entity_nc.AddComponent<TestComponent>();
+		PrintLine();
+		entity_nc.SetActive(false);
+		PrintLine();
+		entity_nc.SetActive(true);
+		PrintLine();
 
-		entity_nc.Destroy_NoCallback();
+		entity_nc.Destroy();
 	}
 
 	return 0;

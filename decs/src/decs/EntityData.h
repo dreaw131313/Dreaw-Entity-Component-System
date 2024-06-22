@@ -32,7 +32,6 @@ namespace decs
 		EntityVersion m_Version = 1;
 		EEntityState m_State = EEntityState::Alive;
 
-		bool m_bCanPerformComponentOperation = true;
 		bool m_bIsActive = false;
 		bool m_bIsUsedAsPrefab = false;
 		bool m_bIsInManager = true;
@@ -64,11 +63,6 @@ namespace decs
 			return m_bIsActive;
 		}
 
-		inline void SetIsActive(bool bIsActive)
-		{
-			m_bIsActive = bIsActive;
-		}
-
 		inline bool IsAlive() const noexcept
 		{
 			return m_State != EEntityState::Dead;
@@ -86,12 +80,17 @@ namespace decs
 
 		inline bool IsValidToPerformComponentOperation() const
 		{
-			return m_State == EEntityState::Alive && !m_bIsUsedAsPrefab && m_bCanPerformComponentOperation;
+			return m_State == EEntityState::Alive && !m_bIsUsedAsPrefab;
+		}
+
+		inline bool IsValidToChangeActiveState()
+		{
+			return m_State == EEntityState::Alive;
 		}
 
 		inline bool CanBeDestructed() const
 		{
-			return m_State != EEntityState::InDestruction && m_State != EEntityState::Dead && !m_bIsUsedAsPrefab;
+			return m_State == EEntityState::Alive && !m_bIsUsedAsPrefab;
 		}
 
 		inline bool IsDelayedToDestruction() const
@@ -112,14 +111,9 @@ namespace decs
 
 		void SetActiveState(bool state);
 
-		inline bool IsInManager() const 
+		inline bool IsInManager() const
 		{
 			return m_bIsInManager;
-		}
-
-		void SetCanPerformAnyComponentOperation(bool bCanPerformComponentOperation)
-		{
-			m_bCanPerformComponentOperation = bCanPerformComponentOperation;
 		}
 
 	private:

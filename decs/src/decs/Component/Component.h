@@ -21,6 +21,7 @@ namespace decs
 	private:
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByECS = false;
+		bool m_bIsDestroyed = false; // if is destroyed cant perform any operation on this component
 	};
 
 }

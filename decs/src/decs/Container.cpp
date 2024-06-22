@@ -209,7 +209,7 @@ namespace decs
 	void Container::SetEntityActive(const Entity& entity, bool isActive)
 	{
 		if (entity.m_Container == this
-			&& entity.m_EntityData->IsAlive()
+			&& entity.m_EntityData->IsValidToChangeActiveState()
 			&& entity.m_EntityData->IsActive() != isActive
 			)
 		{
@@ -597,39 +597,36 @@ namespace decs
 	void Container::OnAddComponentInvokeObservers(
 		const Entity& entity,
 		ComponentContextBase* componentContext,
-		PackedContainerBase* packedContainer
+		PackedContainerBase* packedContainer,
+		TypeID compTypeID
 	)
 	{
 		auto entityData = entity.m_EntityData;
-		entityData->SetCanPerformAnyComponentOperation(false);
 		{
+			Archetype* currentArch = entityData->m_Archetype;
 			componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
 
-			if (entity.IsActive())
+			// All this checks are here to check if this entity containe components after OnCreateMethod
+			Archetype* newArch = entityData->m_Archetype;
+			if (newArch != nullptr && entity.IsActive())
 			{
-				componentContext->InvokeOnEnableComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
+				if (currentArch != newArch)
+				{
+					uint32_t compIndex = newArch->FindTypeIndex(compTypeID);
+					if (compIndex < newArch->ComponentCount())
+					{
+						componentContext->InvokeOnEnableComponent(
+							newArch->m_TypeData[compIndex].m_PackedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype),
+							entity
+						);
+					}
+				}
+				else
+				{
+					componentContext->InvokeOnEnableComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
+				}
 			}
 		}
-		entityData->SetCanPerformAnyComponentOperation(true);
-	}
-
-	void Container::OnRemoveComponentInvokeObservers(
-		const Entity& entity,
-		ComponentContextBase* componentContext,
-		PackedContainerBase* packedContainer
-	)
-	{
-		auto entityData = entity.m_EntityData;
-
-		entityData->SetCanPerformAnyComponentOperation(false);
-		{
-			if (entity.IsActive())
-			{
-				componentContext->InvokeOnDisableComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
-			}
-			componentContext->InvokeOnDestroyComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
-		}
-		entityData->SetCanPerformAnyComponentOperation(true);
 	}
 
 	bool Container::RemoveComponent(const Entity& entity, TypeID componentTypeID)
@@ -646,7 +643,7 @@ namespace decs
 		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
 
 		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
-		auto& packedContainer = archetypeTypeData.m_PackedContainer;
+		auto packedContainer = archetypeTypeData.m_PackedContainer;
 
 		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
 			*entityData.m_Archetype,
@@ -667,7 +664,16 @@ namespace decs
 			AddToEmptyEntities(entityData);
 		}
 
-		OnRemoveComponentInvokeObservers(entity, archetypeTypeData.m_ComponentContext, packedContainer);
+		// Invoking remove observers:
+		{
+			auto compPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
+			auto componentContext = archetypeTypeData.m_ComponentContext;
+			if (entity.IsActive())
+			{
+				componentContext->InvokeOnDisableComponent(compPtr, entity);
+			}
+			componentContext->InvokeOnDestroyComponent(compPtr, entity);
+		}
 
 		if (m_PerformDelayedDestruction)
 		{
@@ -988,6 +994,10 @@ namespace decs
 			// erase used component refs:
 			m_ActivationChangeComponentRefs.erase(m_ActivationChangeComponentRefs.begin() + startRefsIdx, m_ActivationChangeComponentRefs.end());
 		}
+	}
+
+	void Container::PerformDelayedDestroy(uint64_t maxEntitiesToDestroy)
+	{
 	}
 
 	void Container::PerformDelayedDestruction()

@@ -20,7 +20,10 @@ namespace decs
 				case EEntityState::InDestruction:
 				case EEntityState::DelayedToDestruction:
 				{
-					SetActiveState(false);
+					if (m_Archetype != nullptr)
+					{
+						m_Archetype->SetEntityActiveState(m_IndexInArchetype, false);
+					}
 					break;
 				}
 			}

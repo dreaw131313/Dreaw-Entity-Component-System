@@ -28,11 +28,10 @@ namespace decs
 			EntityData* entityData = m_FreeEntities.back();
 			m_FreeEntities.pop_back();
 			entityData->SetState(EEntityState::Alive);
-			entityData->SetIsActive(isActive);
+			entityData->SetActiveState(isActive);
 			entityData->SetIsInManager(false);
 			entityData->m_bIsCreatedByContainer = false;
 			entityData->m_bIsEnabledByContainer = false;
-			entityData->SetCanPerformAnyComponentOperation(true);
 
 			return entityData;
 		}
@@ -96,11 +95,10 @@ namespace decs
 	void EntityManager::CreateEntityFromReservedEntityData(EntityData* entityData, bool bIsActive)
 	{
 		m_CreatedEntitiesCount += 1;
-		entityData->SetIsActive(bIsActive);
+		entityData->SetActiveState(bIsActive);
 		entityData->SetState(EEntityState::Alive);
 		entityData->m_bIsCreatedByContainer = false;
 		entityData->m_bIsEnabledByContainer = false;
-		entityData->SetCanPerformAnyComponentOperation(true);
 	}
 
 	void EntityManager::ReturnReservedEntityData(std::vector<EntityData*> reservedEntityData)

@@ -75,7 +75,7 @@ namespace decs
 			DisableComponentObserver<TComponent>* disableObserver
 		)
 		{
-			auto group = GetComponentObserverGroupSetter();
+			auto group = GetComponentObserverGroupSetter<TComponent>();
 			group->m_CreateObserver = createObserver;
 			group->m_DestroyObserver = destroyObserver;
 			group->m_EnableObserver = enableObserver;

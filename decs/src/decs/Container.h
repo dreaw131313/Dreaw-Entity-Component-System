@@ -325,13 +325,8 @@ namespace decs
 		void OnAddComponentInvokeObservers(
 			const Entity& entity,
 			ComponentContextBase* componentContext,
-			PackedContainerBase* packedContainer
-		);
-
-		void OnRemoveComponentInvokeObservers(
-			const Entity& entity,
-			ComponentContextBase* componentContext,
-			PackedContainerBase* packedContainer
+			PackedContainerBase* packedContainer,
+			TypeID compTypeID
 		);
 
 		template<typename TComponent, typename ...Args>
@@ -401,7 +396,7 @@ namespace decs
 				entityNewArchetype->AddEntityData(&entityData);
 			}
 
-			OnAddComponentInvokeObservers(entity, archetypeTypeData.m_ComponentContext, archetypeTypeData.m_PackedContainer);
+			OnAddComponentInvokeObservers(entity, archetypeTypeData.m_ComponentContext, archetypeTypeData.m_PackedContainer, copmonentTypeID);
 
 			return componentPtr;
 		}
@@ -859,6 +854,13 @@ namespace decs
 #pragma endregion
 
 #pragma region DELAYED DESTROY:
+	public:
+		/// <summary>
+		/// This function clean all entites which was destroyed. It do not invoke any callback observers it only cleans records in archetypes.
+		/// </summary>
+		/// <param name="maxEntitiesToDestroy"></param>
+		void PerformDelayedDestroy(uint64_t maxEntitiesToDestroy = 0);
+
 	private:
 		struct DelayedEntityToDestroy
 		{
