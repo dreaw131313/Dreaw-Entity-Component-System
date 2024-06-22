@@ -42,7 +42,7 @@ namespace decs
 						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 						{
 							auto& archetypeEntityData = archetype.m_EntitiesData[entityIdx];
-							if (!archetypeEntityData.IsIntendedToDelayedDestroy())
+							if (archetypeEntityData.IsValid())
 							{
 								entityBuffer.Set(archetypeEntityData.m_EntityData, &container);
 								callable(entityBuffer);

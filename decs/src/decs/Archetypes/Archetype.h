@@ -32,7 +32,7 @@ namespace decs
 		{
 
 		}
-
+		 
 		inline EntityData* GetEntityData()
 		{
 			return m_EntityData;
@@ -43,13 +43,13 @@ namespace decs
 			return m_bIsActive;
 		}
 
-		inline void SetIntendedToDelayedDestroy()
+		inline void Invalidate()
 		{
 			m_bIsActive = false;
 			m_EntityData = nullptr;
 		}
 
-		inline bool IsIntendedToDelayedDestroy() const
+		inline bool IsValid() const
 		{
 			return m_EntityData == nullptr;
 		}

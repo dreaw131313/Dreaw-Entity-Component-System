@@ -111,7 +111,7 @@ int main()
 
 		auto spawnedEntity = container.Spawn(entity, true);
 
-		entity.RemoveComponent<Position>();
+		entity.RemoveComponent<TestComponent>();
 
 		PrintLine();
 

@@ -470,11 +470,6 @@ namespace decs
 		template<typename TComponent>
 		bool RemoveComponent(Entity entity)
 		{
-			if (!m_CanRemoveComponents)
-			{
-				return false;
-			}
-
 			return RemoveComponent(entity, Type<TComponent>::ID());
 		}
 

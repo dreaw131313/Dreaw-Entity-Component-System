@@ -624,6 +624,11 @@ namespace decs
 
 	bool Container::RemoveComponent(const Entity& entity, TypeID componentTypeID)
 	{
+		if (!m_CanRemoveComponents)
+		{
+			return false;
+		}
+
 		if (entity.m_Container != this) return false;
 
 		EntityData& entityData = *entity.m_EntityData;
@@ -718,12 +723,12 @@ namespace decs
 				for (int64_t idx = static_cast<int64_t>(archetype->EntityCount()) - 1; idx >= 0; idx--)
 				{
 					const auto& archetypeEntityData = entitiesData[idx];
-					if (!archetypeEntityData.IsIntendedToDelayedDestroy())
+					if (archetypeEntityData.IsValid())
 					{
 						entity.Set(archetypeEntityData.m_EntityData, this);
 
 						InvokeEntityCreateObserver(entity);
-						if (entity.IsActive() && !archetypeEntityData.IsIntendedToDelayedDestroy())
+						if (entity.IsActive())
 						{
 							InvokeEntityEnableObserver(entity);
 						}
@@ -757,7 +762,7 @@ namespace decs
 					for (int64_t idx = static_cast<int64_t>(entitiesCountToInvokeCallbacks) - 1; idx >= 0; idx--)
 					{
 						const auto& archetypeEntityData = entityDataArray[idx];
-						if (!archetypeEntityData.IsIntendedToDelayedDestroy())
+						if (archetypeEntityData.IsValid())
 						{
 							auto entityData = archetypeEntityData.m_EntityData;
 							entity.Set(entityData, this);
@@ -828,7 +833,7 @@ namespace decs
 					for (int64_t idx = 0; idx < (int64_t)entityCount; idx++)
 					{
 						const auto& archetypeEntityData = entityData[idx];
-						if (!archetypeEntityData.IsIntendedToDelayedDestroy())
+						if (archetypeEntityData.IsValid())
 						{
 							entity.Set(archetypeEntityData.m_EntityData, this);
 							auto compPtr = packedContainer->GetComponentBasePtr(idx);

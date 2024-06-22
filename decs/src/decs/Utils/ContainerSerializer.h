@@ -130,22 +130,26 @@ namespace decs
 
 						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 						{
-							entityBuffer.Set(archetype.m_EntitiesData[entityIdx].m_EntityData, &container);
-							if (BeginEntitySerialize(entityBuffer, serializerData))
+							auto& archetypeEntityData = archetype.m_EntitiesData[entityIdx];
+							if (archetypeEntityData.IsValid())
 							{
-								for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
+								entityBuffer.Set(archetype.m_EntitiesData[entityIdx].m_EntityData, &container);
+								if (BeginEntitySerialize(entityBuffer, serializerData))
 								{
-									auto& componentSerializerData = componentSerializersData[componentIdx];
-									BeginComponentSerialize(entityBuffer, componentSerializerData.m_Serializer, serializerData);
+									for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
 									{
-										componentSerializerData.m_Serializer->SerializeComponentFromVoid(
-											componentSerializerData.m_PackedContainer->GetComponentBasePtr(entityIdx),
-											serializerData
-										);
+										auto& componentSerializerData = componentSerializersData[componentIdx];
+										BeginComponentSerialize(entityBuffer, componentSerializerData.m_Serializer, serializerData);
+										{
+											componentSerializerData.m_Serializer->SerializeComponentFromVoid(
+												componentSerializerData.m_PackedContainer->GetComponentBasePtr(entityIdx),
+												serializerData
+											);
+										}
+										EndComponentSerialize(entityBuffer, componentSerializerData.m_Serializer, serializerData);
 									}
-									EndComponentSerialize(entityBuffer, componentSerializerData.m_Serializer, serializerData);
+									EndEntitySerialize(entityBuffer, serializerData);
 								}
-								EndEntitySerialize(entityBuffer, serializerData);
 							}
 						}
 					}

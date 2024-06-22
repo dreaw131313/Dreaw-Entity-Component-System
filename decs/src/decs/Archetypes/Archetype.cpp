@@ -101,7 +101,7 @@ namespace decs
 		{
 			auto& backEntityData = m_EntitiesData.back();
 			m_EntitiesData[index] = backEntityData;
-			if (!backEntityData.IsIntendedToDelayedDestroy())
+			if (backEntityData.IsValid())
 			{
 				m_EntitiesData[index].m_EntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
 			}
@@ -170,7 +170,7 @@ namespace decs
 		else
 		{
 			auto& backEntityData = m_EntitiesData.back();
-			if (!backEntityData.IsIntendedToDelayedDestroy())
+			if (backEntityData.IsValid())
 			{
 				backEntityData.m_EntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
 			}
@@ -193,7 +193,7 @@ namespace decs
 		{
 			return;
 		}
-		m_EntitiesData[index].SetIntendedToDelayedDestroy();
+		m_EntitiesData[index].Invalidate();
 	}
 
 	void Archetype::ReserveSpaceInArchetype(uint64_t desiredCapacity)
