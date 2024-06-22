@@ -17,7 +17,6 @@ namespace decs
 	public:
 		EntityData* m_EntityData = nullptr;
 		bool m_bIsActive = false;
-		bool m_bIsIntendedToDelayedRemove = false;
 
 	public:
 		ArchetypeEntityData()
@@ -47,12 +46,12 @@ namespace decs
 		inline void SetIntendedToDelayedDestroy()
 		{
 			m_bIsActive = false;
-			m_bIsIntendedToDelayedRemove = true;
+			m_EntityData = nullptr;
 		}
 
 		inline bool IsIntendedToDelayedDestroy() const
 		{
-			return m_bIsIntendedToDelayedRemove;
+			return m_EntityData == nullptr;
 		}
 	};
 
@@ -485,5 +484,20 @@ namespace decs
 			return {};
 		}
 
+		/// <summary>
+		/// Used only when calling on destroy and on disable observers when removing components
+		/// </summary>
+		/// <param name="entityData"></param>
+		/// <param name="index"></param>
+		/// <returns></returns>
+		bool SetPlaceHolderEntityData(EntityData* entityData, uint32_t index)
+		{
+			if (index < m_EntitiesCount)
+			{
+				m_EntitiesData[index].m_EntityData = entityData;
+				return true;
+			}
+			return false;
+		}
 	};
 }

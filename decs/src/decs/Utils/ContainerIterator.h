@@ -41,8 +41,12 @@ namespace decs
 					{
 						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 						{
-							entityBuffer.Set(archetype.m_EntitiesData[entityIdx].m_EntityData, &container);
-							callable(entityBuffer);
+							auto& archetypeEntityData = archetype.m_EntitiesData[entityIdx];
+							if (!archetypeEntityData.IsIntendedToDelayedDestroy())
+							{
+								entityBuffer.Set(archetypeEntityData.m_EntityData, &container);
+								callable(entityBuffer);
+							}
 						}
 					}
 				}

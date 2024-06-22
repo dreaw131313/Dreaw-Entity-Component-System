@@ -109,7 +109,9 @@ int main()
 		TestComponent* testComp = entity.GetComponent<TestComponent>();
 		Renderer* renderer = entity.GetComponentDynamic<Renderer>();
 
-		container.Spawn(entity, 3, true);
+		auto spawnedEntity = container.Spawn(entity, true);
+
+		entity.RemoveComponent<Position>();
 
 		PrintLine();
 

@@ -659,13 +659,20 @@ namespace decs
 
 		// Invoking remove observers:
 		{
+			EntityData placeHolderEntityData = entityData;
+			placeHolderEntityData.m_Archetype = oldArchetype;
+			placeHolderEntityData.m_IndexInArchetype = static_cast<uint32_t>(entityIndexInOldArchetype);
+			oldArchetype->SetPlaceHolderEntityData(&placeHolderEntityData, static_cast<uint32_t>(entityIndexInOldArchetype));
+
 			auto compPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
 			auto componentContext = archetypeTypeData.m_ComponentContext;
 			if (entity.IsActive())
 			{
-				componentContext->InvokeOnDisableComponent(compPtr, entity);
+				componentContext->InvokeOnDisableComponent(packedContainer->GetComponentBasePtr(entityIndexInOldArchetype), entity);
 			}
-			componentContext->InvokeOnDestroyComponent(compPtr, entity);
+			componentContext->InvokeOnDestroyComponent(packedContainer->GetComponentBasePtr(placeHolderEntityData.m_IndexInArchetype), entity);
+
+			oldArchetype->SetPlaceHolderEntityData(nullptr, static_cast<uint32_t>(entityIndexInOldArchetype));
 		}
 
 		if (m_PerformDelayedDestruction)
@@ -821,13 +828,16 @@ namespace decs
 					for (int64_t idx = 0; idx < (int64_t)entityCount; idx++)
 					{
 						const auto& archetypeEntityData = entityData[idx];
-						entity.Set(archetypeEntityData.m_EntityData, this);
-						auto compPtr = packedContainer->GetComponentBasePtr(idx);
-						if (entity.IsActive())
+						if (!archetypeEntityData.IsIntendedToDelayedDestroy())
 						{
-							componentContext->InvokeOnDisableComponent(compPtr, entity);
+							entity.Set(archetypeEntityData.m_EntityData, this);
+							auto compPtr = packedContainer->GetComponentBasePtr(idx);
+							if (entity.IsActive())
+							{
+								componentContext->InvokeOnDisableComponent(compPtr, entity);
+							}
+							componentContext->InvokeOnDestroyComponent(compPtr, entity);
 						}
-						componentContext->InvokeOnDestroyComponent(compPtr, entity);
 					}
 				});
 			});
@@ -1010,7 +1020,7 @@ namespace decs
 	{
 		for (const auto& record : m_ArchetypesRecordsToDelayedRemove)
 		{
-			if (record.bRemove)
+			if (record.bRemoveAfterRemoveComponent)
 			{
 				record.archetype->RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(static_cast<uint64_t>(record.index), record.removedComponentTypeID);
 			}

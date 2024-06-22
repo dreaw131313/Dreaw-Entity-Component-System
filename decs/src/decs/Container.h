@@ -958,7 +958,8 @@ namespace decs
 			Archetype* archetype;
 			TypeID removedComponentTypeID;
 			uint32_t index;
-			bool bRemove;
+			// if true then stable component of type  "removedComponentTypeID" is also destroyed, if false (after adding component) removed are only record from archetype 
+			bool bRemoveAfterRemoveComponent; 
 		};
 
 		std::vector<ArchetypeRecordDelayedDestroyData> m_ArchetypesRecordsToDelayedRemove = {};
@@ -976,11 +977,11 @@ namespace decs
 
 		void AddEntityToDelayedDestroy(const Entity& entity, bool bInvokeCallbacks);
 
-		void AddArchetypeRecordToDelayedRemove(Archetype* archetype, uint32_t index, bool bRemove, TypeID removedComponentTypeID)
+		void AddArchetypeRecordToDelayedRemove(Archetype* archetype, uint32_t index, bool bRemoveAfterRemoveComponent, TypeID removedComponentTypeID)
 		{
 			archetype->SetRecordAsIntendedToDelayedDestroy(index);
 
-			m_ArchetypesRecordsToDelayedRemove.push_back({ archetype, removedComponentTypeID, index, bRemove });
+			m_ArchetypesRecordsToDelayedRemove.push_back({ archetype, removedComponentTypeID, index, bRemoveAfterRemoveComponent });
 		}
 
 #pragma endregion

@@ -99,8 +99,13 @@ namespace decs
 
 		if (index < (m_EntitiesCount - 1))
 		{
-			m_EntitiesData[index] = m_EntitiesData.back();
-			m_EntitiesData[index].m_EntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
+			auto& backEntityData = m_EntitiesData.back();
+			m_EntitiesData[index] = backEntityData;
+			if (!backEntityData.IsIntendedToDelayedDestroy())
+			{
+				m_EntitiesData[index].m_EntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
+			}
+
 		}
 		m_EntitiesData.pop_back();
 		m_EntitiesCount -= 1;
