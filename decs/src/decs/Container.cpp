@@ -66,13 +66,6 @@ namespace decs
 		m_SpawnData.Clear();
 		m_DelayedEntitiesToDestroy.clear();
 		m_ArchetypesRecordsToDelayedRemove.clear();
-
-
-		m_ComponentContextManager.IterateOverComponentContexts([](ComponentContextBase* componentContext)
-		{
-			componentContext->SetCanInvokeCreateObservers(true);
-		});
-
 	}
 
 	void Container::SetDataIfCreatedInvalid(
@@ -695,11 +688,6 @@ namespace decs
 
 		Entity entity = {};
 
-		m_ComponentContextManager.IterateOverComponentContexts([](ComponentContextBase* componentContext)
-		{
-			componentContext->SetCanInvokeCreateObservers(false);
-		});
-
 		// invoking entity creation observers:
 		{
 			for (int64_t i = m_EmptyEntities.size() - 1; i << m_EmptyEntities.size() >= 0; i--)
@@ -743,12 +731,6 @@ namespace decs
 
 			m_ComponentContextManager.IterateOverComponentContexts([&](ComponentContextBase* componentContext)
 			{
-				componentContext->SetCanInvokeCreateObservers(true);
-				if (!componentContext->HasCreateObserver())
-				{
-					return;
-				}
-
 				TypeID componentTypeID = componentContext->GetComponentTypeID();
 
 				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&](Archetype* archetype)

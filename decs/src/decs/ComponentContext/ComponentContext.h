@@ -40,16 +40,6 @@ namespace decs
 
 		virtual void InvokeOnDisableComponent(ComponentBase* component, const  Entity& entity) = 0;
 
-		void SetCanInvokeCreateObservers(bool bCanInvokeObservers)
-		{
-			m_bCanInvokeCreateObservers = bCanInvokeObservers;
-		}
-
-		inline bool CanInvokeCreateObservers() const
-		{
-			return m_bCanInvokeCreateObservers;
-		}
-
 		inline virtual bool HasCreateObserver() const = 0;
 
 		inline virtual bool HasDestroyObserver() const = 0;
@@ -58,7 +48,6 @@ namespace decs
 
 	private:
 		int m_ObserverOrder = 0;
-		bool m_bCanInvokeCreateObservers = true;
 	};
 
 	template<typename TComponent>
@@ -112,7 +101,7 @@ namespace decs
 			if (!component->m_bIsCreatedByContainer)
 			{
 				component->m_bIsCreatedByContainer = true;
-				if (CanInvokeCreateObservers() && m_Observers.m_CreateObserver != nullptr)
+				if (m_Observers.m_CreateObserver != nullptr)
 				{
 					m_Observers.m_CreateObserver->OnCreateComponent(*static_cast<TComponent*>(component), entity);
 				}
@@ -124,7 +113,7 @@ namespace decs
 			if (component->m_bIsCreatedByContainer)
 			{
 				component->m_bIsCreatedByContainer = false;
-				if (CanInvokeCreateObservers() && m_Observers.m_DestroyObserver != nullptr)
+				if (m_Observers.m_DestroyObserver != nullptr)
 				{
 					m_Observers.m_DestroyObserver->OnDestroyComponent(*static_cast<TComponent*>(component), entity);
 				}
@@ -136,7 +125,7 @@ namespace decs
 			if (!component->m_bIsEnabledByECS)
 			{
 				component->m_bIsEnabledByECS = true;
-				if (CanInvokeCreateObservers() && m_Observers.m_EnableObserver != nullptr)
+				if (m_Observers.m_EnableObserver != nullptr)
 				{
 					m_Observers.m_EnableObserver->OnEnableEntity(*static_cast<TComponent*>(component), entity);
 				}
@@ -148,7 +137,7 @@ namespace decs
 			if (component->m_bIsEnabledByECS)
 			{
 				component->m_bIsEnabledByECS = false;
-				if (CanInvokeCreateObservers() && m_Observers.m_DisableObserver != nullptr)
+				if (m_Observers.m_DisableObserver != nullptr)
 				{
 					m_Observers.m_DisableObserver->OnDisableEntity(*static_cast<TComponent*>(component), entity);
 				}

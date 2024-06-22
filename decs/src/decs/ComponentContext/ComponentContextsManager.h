@@ -166,16 +166,9 @@ namespace decs
 						contextRecord.m_OrderIndex = i;
 						RegenerateIndexes(i + 1);
 
-						if (IsIterating())
+						if (IsIterating() && m_IterationIndex >= static_cast<int64_t>(i))
 						{
-							if (m_IterationIndex >= (int64_t)i)
-							{
-								m_IterationIndex += 1;
-							}
-							else
-							{
-								contextRecord.m_Context->SetCanInvokeCreateObservers(false);
-							}
+							m_IterationIndex += 1;
 						}
 						return;
 					}
@@ -183,10 +176,6 @@ namespace decs
 
 				contextRecord.m_OrderIndex = m_ComponentContextsInOrder.size();
 				m_ComponentContextsInOrder.push_back(contextRecord.m_Context);
-				if (IsIterating())
-				{
-					contextRecord.m_Context->SetCanInvokeCreateObservers(false);
-				}
 			}
 		}
 
