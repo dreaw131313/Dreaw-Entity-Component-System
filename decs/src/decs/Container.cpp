@@ -763,25 +763,37 @@ namespace decs
 
 					const auto& typeData = archetype->m_TypeData[compIdx];
 					auto* packedContainer = typeData.m_PackedContainer;
-					const auto& entityData = archetype->m_EntitiesData;
+					const auto& entityDataArray = archetype->m_EntitiesData;
 
 					for (int64_t idx = static_cast<int64_t>(entitiesCountToInvokeCallbacks) - 1; idx >= 0; idx--)
 					{
-						const auto& archetypeEntityData = entityData[idx];
+						const auto& archetypeEntityData = entityDataArray[idx];
 						if (!archetypeEntityData.IsIntendedToDelayedDestroy())
 						{
-							entity.Set(archetypeEntityData.m_EntityData, this);
-							compRef.Set(componentTypeID, *archetypeEntityData.m_EntityData, static_cast<uint32_t>(compIdx));
+							auto entityData = archetypeEntityData.m_EntityData;
+							entity.Set(entityData, this);
 
-							auto compPtr = packedContainer->GetComponentBasePtr(idx);
-							componentContext->InvokeOnCreateComponent(compPtr, entity);
+							Archetype* currentArch = entityData->m_Archetype;
+							componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
 
-							if (entity.IsActive())
+							// All this checks are here to check if this entity containe components after OnCreateMethod
+							Archetype* newArch = entityData->m_Archetype;
+							if (newArch != nullptr && entity.IsActive())
 							{
-								auto compPtr = compRef.GetUnsafe();
-								if (compPtr != nullptr)
+								if (currentArch != newArch)
 								{
-									componentContext->InvokeOnEnableComponent(compPtr, entity);
+									uint32_t compIndex = newArch->FindTypeIndex(componentTypeID);
+									if (compIndex < newArch->ComponentCount())
+									{
+										componentContext->InvokeOnEnableComponent(
+											newArch->m_TypeData[compIndex].m_PackedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype),
+											entity
+										);
+									}
+								}
+								else
+								{
+									componentContext->InvokeOnEnableComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
 								}
 							}
 						}
@@ -809,11 +821,6 @@ namespace decs
 			m_ComponentContextManager.IterateOverComponentContextsForDestryObservers([&](ComponentContextBase* componentContext)
 			{
 				TypeID componentTypeID = componentContext->GetComponentTypeID();
-
-				if (!componentContext->HasDestroyObserver())
-				{
-					return;
-				}
 
 				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&](Archetype* archetype)
 				{

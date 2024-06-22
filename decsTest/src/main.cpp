@@ -59,7 +59,8 @@ public:
 	void OnCreateComponent(TestComponent& component, const decs::Entity& entity) override
 	{
 		PrintLine("TestComponent on create");
-		entity.AddComponent<Renderer>();
+
+		entity.RemoveComponent<TestComponent>();
 	}
 
 	// Inherited via DestroyComponentObserver
@@ -166,14 +167,10 @@ int main()
 	{
 		auto entity_nc = container.CreateEntity();
 
-		entity_nc.AddComponent<TestComponent>();
-		PrintLine();
-		entity_nc.SetActive(false);
-		PrintLine();
-		entity_nc.SetActive(true);
-		PrintLine();
+		entity_nc.AddComponent_NoCallback<TestComponent>();
 
-		entity_nc.Destroy();
+		container.InvokeEntitesOnCreateListeners();
+		container.InvokeEntitesOnDestroyListeners();
 	}
 
 	return 0;
