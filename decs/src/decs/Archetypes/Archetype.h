@@ -302,19 +302,9 @@ namespace decs
 				m_ComponentsCount += 1;
 				m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
 
-				PackedContainerBase* packedContainer;
-				if constexpr (TComponent::IsStable)
-				{
-					packedContainer = new StablePackedContainer<TComponent>();
-				}
-				else
-				{
-					packedContainer = new PackedContainer<TComponent>();
-				}
-
 				AddTypeData(
 					id,
-					packedContainer,
+					new StablePackedContainer<TComponent>(),
 					componentContext,
 					stableContainer
 				);
@@ -343,9 +333,9 @@ namespace decs
 		void SetRecordAsIntendedToDelayedDestroy(uint64_t index);
 
 		template<typename TComponent>
-		inline PackedContainer<TComponent>* GetContainerAt(uint64_t index)
+		inline StablePackedContainer<TComponent>* GetContainerAt(uint64_t index)
 		{
-			return dynamic_cast<PackedContainer<TComponent>*>(m_TypeData[index].m_PackedContainer);
+			return dynamic_cast<StablePackedContainer<TComponent>*>(m_TypeData[index].m_PackedContainer);
 		}
 
 		inline PackedContainerBase* GetPackedContainerAt(uint64_t index)

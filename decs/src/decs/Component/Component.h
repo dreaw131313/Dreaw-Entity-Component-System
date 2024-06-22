@@ -2,9 +2,6 @@
 
 #include "traits.h"
 
-#define DECS_COMPONENT() public: inline constexpr static bool IsStable = false;
-#define DECS_STABLE_COMPONENT() public: inline constexpr static bool IsStable = true;
-
 namespace decs
 {
 	/// <summary>

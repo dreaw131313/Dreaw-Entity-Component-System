@@ -76,7 +76,7 @@ namespace decs
 	private:
 		EntityData* m_EntityData = nullptr;
 		Archetype* m_Archetype = nullptr;
-		PackedContainer<TComponent>* m_PackedContainer = nullptr;
+		StablePackedContainer<TComponent>* m_PackedContainer = nullptr;
 		EntityVersion m_EntityVersion = std::numeric_limits<EntityVersion>::max();
 
 	private:
@@ -97,7 +97,7 @@ namespace decs
 
 			if (m_Archetype != nullptr && compIndex != Limits::MaxComponentCount)
 			{
-				m_PackedContainer = dynamic_cast<PackedContainer<TComponent>*>(m_Archetype->m_TypeData[compIndex].m_PackedContainer);
+				m_PackedContainer = dynamic_cast<StablePackedContainer<TComponent>*>(m_Archetype->m_TypeData[compIndex].m_PackedContainer);
 			}
 			else
 			{
