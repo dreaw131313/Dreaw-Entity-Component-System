@@ -532,12 +532,14 @@ namespace decs
 
 			if (spawnRefData.m_IsStable)
 			{
-				StableComponentRef compNodeInfo = spawnRefData.m_StableContainer->EmplaceFromVoid(spawnRefData.m_ComponentRef.Get());
-				currentTypeData.m_PackedContainer->EmplaceFromVoid(&compNodeInfo);
+				StableComponentRef compNodeInfo = spawnRefData.m_StableContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentRef.Get());
+				compNodeInfo.m_ComponentPtr->SetDefaultFlags();
+				currentTypeData.m_PackedContainer->EmplaceFromBaseComponent(&compNodeInfo);
 			}
 			else
 			{
-				currentTypeData.m_PackedContainer->EmplaceFromVoid(spawnRefData.m_ComponentRef.Get());
+				auto ptr = currentTypeData.m_PackedContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentRef.Get());
+				ptr->SetDefaultFlags();
 			}
 			m_SpawnData.m_SpawnedEntityComponentRefs[i].Set(currentTypeData.m_TypeID, spawnedEntityData, i);
 		}
@@ -559,7 +561,8 @@ namespace decs
 				if (componentVoidPtr != nullptr)
 				{
 					orderData.m_ComponentContext->InvokeOnCreateComponent(componentVoidPtr, entity);
-					if (entity.m_EntityData->IsActive())
+					componentVoidPtr = componentRef.Get();
+					if (entity.IsActive() && componentVoidPtr != nullptr)
 					{
 						orderData.m_ComponentContext->InvokeOnEnableComponent(componentVoidPtr, entity);
 					}

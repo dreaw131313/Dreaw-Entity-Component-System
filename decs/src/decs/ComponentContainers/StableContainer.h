@@ -181,7 +181,7 @@ namespace decs
 		virtual StableContainerBase* Clone(uint32_t withChunkSize) = 0;
 
 		virtual bool Remove(uint32_t chunkIndex, uint32_t elementIndex) = 0;
-		virtual StableComponentRef EmplaceFromVoid(ComponentBase* ptr) = 0;
+		virtual StableComponentRef EmplaceFromBaseComponent(ComponentBase* ptr) = 0;
 		virtual uint32_t GetChunkSize() const noexcept = 0;
 		virtual void Clear() = 0;
 	};
@@ -264,7 +264,7 @@ namespace decs
 			return false;
 		}
 
-		virtual StableComponentRef EmplaceFromVoid(ComponentBase* ptr)override
+		virtual StableComponentRef EmplaceFromBaseComponent(ComponentBase* ptr)override
 		{
 			return Emplace(*static_cast<DataType*>(ptr));
 		}

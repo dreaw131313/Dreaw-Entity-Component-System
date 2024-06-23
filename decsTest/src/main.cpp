@@ -99,7 +99,18 @@ int main()
 
 	observerManager.FillContainerObservers(container);
 
-	{
+	auto entity = container.CreateEntity();
+
+	entity.AddComponent<TestComponent>();
+	entity.AddComponent<Position>();
+	entity.AddComponent<Renderer>();
+
+	entity.RemoveComponent<Position>();
+	entity.RemoveComponent<Renderer>();
+	
+
+
+	/*{
 		auto entity = container.CreateEntity();
 
 		auto pos = entity.AddComponent<Position>();
@@ -173,7 +184,7 @@ int main()
 		PrintLine();
 
 		entity.Destroy();
-	}
+	}*/
 	
 
 	// NO CALLBACK:

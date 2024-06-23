@@ -19,11 +19,20 @@ namespace decs
 		friend class ComponentContext;
 
 	public:
+		ComponentBase() = default;
+
 		virtual ~ComponentBase() = default;
 
 	private:
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByECS = false;
+
+	private:
+		void SetDefaultFlags()
+		{
+			m_bIsCreatedByContainer = false;
+			m_bIsEnabledByECS = false;
+		}
 	};
 
 }

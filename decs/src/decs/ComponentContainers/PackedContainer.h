@@ -48,13 +48,13 @@ namespace decs
 
 		inline virtual void RemoveSwapBack(uint64_t index) = 0;
 
-		inline virtual void EmplaceFromVoid(ComponentBase* data) = 0;
+		inline virtual ComponentBase* EmplaceFromBaseComponent(ComponentBase* data) = 0;
 
-		inline virtual void MoveEmplaceBackFromComponentBase(ComponentBase* data) = 0;
+		inline virtual ComponentBase* MoveEmplaceBackFromComponentBase(ComponentBase* data) = 0;
 
-		inline virtual void EmplaceFromVoid(StableComponentRef* componentRef) = 0;
+		inline virtual ComponentBase* EmplaceFromBaseComponent(StableComponentRef* componentRef) = 0;
 
-		inline virtual void MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) = 0;
+		inline virtual ComponentBase* MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) = 0;
 
 	};
 
@@ -92,7 +92,7 @@ namespace decs
 			return new PackedContainer<TComponent>();
 		}
 
-		inline TComponent& GetAsRef(uint64_t index) 
+		inline TComponent& GetAsRef(uint64_t index)
 		{
 			return m_Data[index];
 		}
@@ -146,11 +146,6 @@ namespace decs
 			return nullptr;
 		}
 
-		inline virtual void EmplaceFromVoid(ComponentBase* data)   override
-		{
-			m_Data.emplace_back(*static_cast<TComponent*>(data));
-		}
-
 		inline virtual void RemoveSwapBack(uint64_t index)override
 		{
 			if (m_Data.size() > 0)
@@ -160,17 +155,22 @@ namespace decs
 			}
 		}
 
-		inline virtual void MoveEmplaceBackFromComponentBase(ComponentBase* data) override
+		inline virtual ComponentBase* EmplaceFromBaseComponent(ComponentBase* data)   override
 		{
-			m_Data.push_back(std::move(*static_cast<TComponent*>(data)));
+			return &m_Data.emplace_back(*static_cast<TComponent*>(data));
 		}
 
-		inline virtual void EmplaceFromVoid(StableComponentRef* componentRef) override
+		inline virtual ComponentBase* MoveEmplaceBackFromComponentBase(ComponentBase* data) override
+		{
+			return &m_Data.emplace_back(std::move(*static_cast<TComponent*>(data)));
+		}
+
+		inline virtual ComponentBase* EmplaceFromBaseComponent(StableComponentRef* componentRef) override
 		{
 			throw std::runtime_error("Packed container must not use methods with StableComponentRef");
 		}
 
-		inline virtual void MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) override
+		inline virtual ComponentBase* MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) override
 		{
 			throw std::runtime_error("Packed container must not use methods with StableComponentRef");
 		}
@@ -253,26 +253,6 @@ namespace decs
 			return &m_Data[index];
 		}
 
-		inline virtual void EmplaceFromVoid(ComponentBase* data) override
-		{
-			throw std::runtime_error("Stable Packed container must not use methods with ComponentBase");
-		}
-
-		inline virtual void MoveEmplaceBackFromComponentBase(ComponentBase* data) override
-		{
-			throw std::runtime_error("Stable Packed container must not use methods with ComponentBase");
-		}
-
-		inline virtual void EmplaceFromVoid(StableComponentRef* componentRef) override
-		{
-			m_Data.emplace_back(componentRef->m_ComponentPtr, componentRef->m_ChunkIndex, componentRef->m_Index);
-		}
-
-		inline virtual void MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) override
-		{
-			m_Data.emplace_back(componentRef->m_ComponentPtr, componentRef->m_ChunkIndex, componentRef->m_Index);
-		}
-
 		inline virtual void RemoveSwapBack(uint64_t index) override
 		{
 			uint64_t dataSize = m_Data.size();
@@ -286,7 +266,29 @@ namespace decs
 			}
 		}
 
-		inline TComponent& GetAsRef(uint64_t index) 
+		inline virtual ComponentBase* EmplaceFromBaseComponent(ComponentBase* data) override
+		{
+			throw std::runtime_error("Stable Packed container must not use methods with ComponentBase");
+		}
+
+		inline virtual ComponentBase* MoveEmplaceBackFromComponentBase(ComponentBase* data) override
+		{
+			throw std::runtime_error("Stable Packed container must not use methods with ComponentBase");
+		}
+
+		inline virtual ComponentBase* EmplaceFromBaseComponent(StableComponentRef* componentRef) override
+		{
+			m_Data.emplace_back(componentRef->m_ComponentPtr, componentRef->m_ChunkIndex, componentRef->m_Index);
+			return componentRef->m_ComponentPtr;
+		}
+
+		inline virtual ComponentBase* MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) override
+		{
+			m_Data.emplace_back(componentRef->m_ComponentPtr, componentRef->m_ChunkIndex, componentRef->m_Index);
+			return componentRef->m_ComponentPtr;
+		}
+
+		inline TComponent& GetAsRef(uint64_t index)
 		{
 			return *static_cast<TComponent*>(m_Data[index].m_ComponentPtr);
 		}

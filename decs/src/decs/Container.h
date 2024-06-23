@@ -429,7 +429,7 @@ namespace decs
 
 			//StableComponentRef componentNodeInfo = {};
 			// Adding component pointer to packed container in archetype
-			archetypeTypeData.m_PackedContainer->EmplaceFromVoid(&componentNodeInfo);
+			archetypeTypeData.m_PackedContainer->EmplaceFromBaseComponent(&componentNodeInfo);
 
 			TComponent* componentPtr = static_cast<TComponent*>(componentNodeInfo.m_ComponentPtr);
 
@@ -1201,7 +1201,7 @@ namespace decs
 
 			//StableComponentRef componentNodeInfo = {};
 			// Adding component pointer to packed container in archetype
-			archetypeTypeData.m_PackedContainer->EmplaceFromVoid(&componentNodeInfo);
+			archetypeTypeData.m_PackedContainer->EmplaceFromBaseComponent(&componentNodeInfo);
 
 			TComponent* componentPtr = static_cast<TComponent*>(componentNodeInfo.m_ComponentPtr);
 
