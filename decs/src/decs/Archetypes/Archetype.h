@@ -51,7 +51,7 @@ namespace decs
 
 		inline bool IsValid() const
 		{
-			return m_EntityData == nullptr;
+			return m_EntityData != nullptr;
 		}
 	};
 
