@@ -728,8 +728,9 @@ namespace decs
 				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype<TComponent>();
 				if (entityNewArchetype == nullptr)
 				{
+					auto compCtx = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<TComponent>(
-						m_ComponentContextManager.GetOrCreateComponentContext<TComponent>(),
+						compCtx,
 						TComponent::IsStable ? m_StableContainers.GetOrCreateStableContainer<TComponent>() : nullptr
 					);
 				}
@@ -739,9 +740,10 @@ namespace decs
 				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<TComponent>(*toArchetype);
 				if (entityNewArchetype == nullptr)
 				{
+					auto compCtx = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<TComponent>(
 						*toArchetype,
-						m_ComponentContextManager.GetOrCreateComponentContext<TComponent>(),
+						compCtx,
 						TComponent::IsStable ? m_StableContainers.GetOrCreateStableContainer<TComponent>() : nullptr
 					);
 				}
