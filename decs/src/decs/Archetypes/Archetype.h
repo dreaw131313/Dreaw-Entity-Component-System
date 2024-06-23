@@ -32,7 +32,7 @@ namespace decs
 		{
 
 		}
-		 
+
 		inline EntityData* GetEntityData()
 		{
 			return m_EntityData;
@@ -494,7 +494,9 @@ namespace decs
 		{
 			if (index < m_EntitiesCount)
 			{
-				m_EntitiesData[index].m_EntityData = entityData;
+				auto& archetypeEntityData = m_EntitiesData[index];
+				archetypeEntityData.m_EntityData = entityData;
+				archetypeEntityData.m_bIsActive = false;
 				return true;
 			}
 			return false;

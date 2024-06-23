@@ -668,15 +668,15 @@ namespace decs
 			placeHolderEntityData.m_Archetype = oldArchetype;
 			placeHolderEntityData.m_IndexInArchetype = static_cast<uint32_t>(entityIndexInOldArchetype);
 			oldArchetype->SetPlaceHolderEntityData(&placeHolderEntityData, static_cast<uint32_t>(entityIndexInOldArchetype));
-
-			auto compPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
-			auto componentContext = archetypeTypeData.m_ComponentContext;
-			if (entity.IsActive())
 			{
-				componentContext->InvokeOnDisableComponent(packedContainer->GetComponentBasePtr(entityIndexInOldArchetype), entity);
+				auto compPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
+				auto componentContext = archetypeTypeData.m_ComponentContext;
+				if (entity.IsActive())
+				{
+					componentContext->InvokeOnDisableComponent(packedContainer->GetComponentBasePtr(entityIndexInOldArchetype), entity);
+				}
+				componentContext->InvokeOnDestroyComponent(packedContainer->GetComponentBasePtr(placeHolderEntityData.m_IndexInArchetype), entity);
 			}
-			componentContext->InvokeOnDestroyComponent(packedContainer->GetComponentBasePtr(placeHolderEntityData.m_IndexInArchetype), entity);
-
 			oldArchetype->SetPlaceHolderEntityData(nullptr, static_cast<uint32_t>(entityIndexInOldArchetype));
 		}
 
