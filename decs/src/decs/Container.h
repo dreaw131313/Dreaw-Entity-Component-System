@@ -319,7 +319,7 @@ namespace decs
 
 #pragma region COMPONENTS:
 	private:
-		ComponentContextsManager m_ComponentContextManager = {};
+		ComponentContextsManager m_ComponentContextManager = { 1000 };
 
 	private:
 		void OnAddComponentInvokeObservers(
@@ -666,29 +666,27 @@ namespace decs
 #pragma endregion
 
 #pragma region STABLE COMPONENTS
-	private:
-		StableContainersManager m_StableContainers = { 1000 };
 	public:
 		template<typename T>
 		bool SetStableComponentChunkSize(uint32_t chunkSize)
 		{
-			return m_StableContainers.SetStableComponentChunkSize<T>(chunkSize);
+			return m_ComponentContextManager.SetStableComponentChunkSize<T>(chunkSize);
 		}
 
 		bool SetStableComponentChunkSize(TypeID typeID, uint32_t chunkSize)
 		{
-			return m_StableContainers.SetStableComponentChunkSize(typeID, chunkSize);
+			return m_ComponentContextManager.SetStableComponentChunkSize(typeID, chunkSize);
 		}
 
 		template<typename T>
 		uint64_t GetStableComponentChunkSize()
 		{
-			return m_StableContainers.GetStableComponentChunkSize<T>();
+			return m_ComponentContextManager.GetStableComponentChunkSize<T>();
 		}
 
 		uint64_t GetStableComponentChunkSize(TypeID typeID)
 		{
-			return m_StableContainers.GetStableComponentChunkSize(typeID);
+			return m_ComponentContextManager.GetStableComponentChunkSize(typeID);
 		}
 
 #pragma endregion
@@ -731,7 +729,7 @@ namespace decs
 					auto compCtx = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<TComponent>(
 						compCtx,
-						TComponent::IsStable ? m_StableContainers.GetOrCreateStableContainer<TComponent>() : nullptr
+						compCtx->GetStableContainer()
 					);
 				}
 			}
@@ -744,7 +742,7 @@ namespace decs
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<TComponent>(
 						*toArchetype,
 						compCtx,
-						TComponent::IsStable ? m_StableContainers.GetOrCreateStableContainer<TComponent>() : nullptr
+						compCtx->GetStableContainer()
 					);
 				}
 
@@ -956,7 +954,7 @@ namespace decs
 			TypeID removedComponentTypeID;
 			uint32_t index;
 			// if true then stable component of type  "removedComponentTypeID" is also destroyed, if false (after adding component) removed are only record from archetype 
-			bool bRemoveAfterRemoveComponent; 
+			bool bRemoveAfterRemoveComponent;
 		};
 
 		std::vector<ArchetypeRecordDelayedDestroyData> m_ArchetypesRecordsToDelayedRemove = {};

@@ -9,6 +9,7 @@ namespace decs
 	public:
 		ComponentContextBase* m_Context = nullptr;
 		uint64_t m_OrderIndex = std::numeric_limits<uint64_t>::max();
+		uint32_t m_StableComponentChunkSize = 0;
 		int m_Order = 0;
 	};
 
@@ -20,7 +21,8 @@ namespace decs
 		NON_COPYABLE(ComponentContextsManager);
 		NON_MOVEABLE(ComponentContextsManager);
 
-		ComponentContextsManager()
+		ComponentContextsManager(uint32_t defaultStableComponentChunkSize) :
+			m_DefaultStableComponentChunkSize(defaultStableComponentChunkSize)
 		{
 
 		}
@@ -38,7 +40,10 @@ namespace decs
 			auto& contextRecord = m_Contexts[id];
 			if (contextRecord.m_Context == nullptr)
 			{
-				ComponentContext<TComponent>* context = new ComponentContext<TComponent>(contextRecord.m_Order);
+				ComponentContext<TComponent>* context = new ComponentContext<TComponent>(
+					contextRecord.m_Order,
+					contextRecord.m_StableComponentChunkSize >= 0 ? contextRecord.m_StableComponentChunkSize : m_DefaultStableComponentChunkSize
+				);
 				contextRecord.m_Context = context;
 
 				OnSetComponentTypeOrder(contextRecord);
@@ -54,6 +59,26 @@ namespace decs
 					throw std::runtime_error(errorMessage.c_str());
 				}
 				return containedContext;
+			}
+		}
+
+		ComponentContextBase* GetOrCreateComponentContextFromOtherContext(ComponentContextBase* other)
+		{
+			auto& contextRecord = m_Contexts[other->GetComponentTypeID()];
+			if (contextRecord.m_Context == nullptr)
+			{
+				ComponentContextBase* newContext = other->Clone(
+					contextRecord.m_Order,
+					contextRecord.m_StableComponentChunkSize >= 0 ? contextRecord.m_StableComponentChunkSize : m_DefaultStableComponentChunkSize
+				);
+				contextRecord.m_Context = newContext;
+
+				OnSetComponentTypeOrder(contextRecord);
+				return newContext;
+			}
+			else
+			{
+				return contextRecord.m_Context;
 			}
 		}
 
@@ -128,11 +153,82 @@ namespace decs
 			}
 		}
 
+		bool SetStableComponentChunkSize(TypeID typeID, uint32_t chunkSize)
+		{
+			if (chunkSize == 0)
+			{
+				return false;
+			}
+
+			auto& contextRecord = m_Contexts[typeID];
+
+			if (contextRecord.m_Context != nullptr)
+			{
+				return false;
+			}
+
+			contextRecord.m_StableComponentChunkSize = chunkSize;
+			return true;
+		}
+
+		template<typename T>
+		bool SetStableComponentChunkSize(uint32_t chunkSize)
+		{
+			return SetStableComponentChunkSize(Type<T>::ID(), chunkSize);
+		}
+
+
+		uint64_t GetStableComponentChunkSize(TypeID typeID)
+		{
+			auto it = m_Contexts.find(typeID);
+			if (it == m_Contexts.end())
+			{
+				return 0;
+			}
+
+			auto& contextRecord = it->second;
+
+			if (contextRecord.m_Context == nullptr)
+			{
+				return contextRecord.m_StableComponentChunkSize;
+			}
+			else if (!contextRecord.m_Context->IsStableComponentContext())
+			{
+				return 0;
+			}
+			else
+			{
+				return contextRecord.m_Context->GetStableContainer()->GetChunkSize();
+			}
+		}
+
+		template<typename T>
+		uint64_t GetStableComponentChunkSize()
+		{
+			return GetStableComponentChunkSize(Type<T>::ID());
+		}
+
+		void SetDefaultStableComponentChunkSize(uint32_t chunkSize)
+		{
+			m_DefaultStableComponentChunkSize = chunkSize;
+		}
+
+		void ClearStableContainers()
+		{
+			for (auto compCtx : m_ComponentContextsInOrder)
+			{
+				if (compCtx != nullptr)
+				{
+					compCtx->ClearStableContainer();
+				}
+			}
+		}
 	private:
 		ecsMap<TypeID, ComponentContextRecord> m_Contexts = {};
 		std::vector<ComponentContextBase*> m_ComponentContextsInOrder = {};
 
 		int64_t m_IterationIndex = std::numeric_limits<int64_t>::max();
+		uint32_t m_DefaultStableComponentChunkSize = 1000;
 
 	private:
 		inline bool IsIterating() const
@@ -146,6 +242,7 @@ namespace decs
 			{
 				delete value.m_Context;
 			}
+			m_Contexts.clear();
 		}
 
 		void OnSetComponentTypeOrder(ComponentContextRecord& contextRecord)

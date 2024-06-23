@@ -95,6 +95,7 @@ int main()
 	}
 
 	decs::Container container = {};
+	decs::Container secondContainer = {};
 
 	observerManager.FillContainerObservers(container);
 
@@ -110,6 +111,8 @@ int main()
 		Renderer* renderer = entity.GetComponentDynamic<Renderer>();
 
 		auto spawnedEntity = container.Spawn(entity, true);
+		secondContainer.Spawn(entity);
+
 
 		entity.RemoveComponent<TestComponent>();
 
@@ -126,6 +129,14 @@ int main()
 			PrintLine(std::format("X: {0}, Y: {1}", p.X, p.Y));
 		});
 
+		PrintLine();
+		PrintLine("Second Container");
+		secondContainer.ForEach<Position>([](const decs::Entity& e, Position& p)
+		{
+			PrintLine(std::format("X: {0}, Y: {1}", p.X, p.Y));
+		});
+
+		PrintLine();
 		decs::Query<Position> testQuery = { &container };
 
 		testQuery.ForEach([&](Position& pos)

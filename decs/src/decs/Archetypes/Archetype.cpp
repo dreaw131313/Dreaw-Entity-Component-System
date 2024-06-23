@@ -62,8 +62,7 @@ namespace decs
 	void Archetype::AddTypeID(
 		const TypeID& id,
 		PackedContainerBase* frompackedContainer,
-		ComponentContextBase* componentContext,
-		StableContainerBase* stableContainer
+		ComponentContextBase* componentContext
 	)
 	{
 		auto it = m_TypeIDsIndexes.find(id);
@@ -74,8 +73,7 @@ namespace decs
 			AddTypeData(
 				id,
 				frompackedContainer->Clone(),
-				componentContext,
-				stableContainer
+				componentContext
 			);
 		}
 	}
@@ -219,7 +217,7 @@ namespace decs
 		}
 	}
 
-	void Archetype::InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts, StableContainersManager* stableComponentsManager)
+	void Archetype::InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts)
 	{
 		m_ComponentsCount = other.m_ComponentsCount;
 		m_TypeData.reserve(m_ComponentsCount);
@@ -233,8 +231,7 @@ namespace decs
 			AddTypeData(
 				otherTypeData.m_TypeID,
 				otherTypeData.m_PackedContainer->Clone(),
-				componentContexts->GetComponentContext(otherTypeData.m_TypeID),
-				stableComponentsManager->GetStableContainer(otherTypeData.m_TypeID)
+				componentContexts->GetComponentContext(otherTypeData.m_TypeID)
 			);
 		}
 	}

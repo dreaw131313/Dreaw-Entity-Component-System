@@ -229,12 +229,11 @@ namespace decs
 		inline ArchetypeTypeData& AddTypeData(
 			TypeID typeID,
 			PackedContainerBase* packedContainer,
-			ComponentContextBase* componentContext,
-			StableContainerBase* stableContainer
+			ComponentContextBase* componentContext
 		)
 		{
 			InsertComponentContextInCorrectPlace(componentContext, static_cast<uint32_t>(m_TypeData.size()));
-			return m_TypeData.emplace_back(typeID, packedContainer, componentContext, stableContainer);
+			return m_TypeData.emplace_back(typeID, packedContainer, componentContext, componentContext->GetStableContainer());
 		}
 
 		void UpdateOrderOfComponentContexts();
@@ -314,8 +313,7 @@ namespace decs
 				AddTypeData(
 					id,
 					packedContainer,
-					componentContext,
-					stableContainer
+					componentContext
 				);
 			}
 		}
@@ -323,8 +321,7 @@ namespace decs
 		void AddTypeID(
 			const TypeID& id,
 			PackedContainerBase* frompackedContainer,
-			ComponentContextBase* componentContext,
-			StableContainerBase* stableContainer
+			ComponentContextBase* componentContext
 		);
 
 		void AddEntityData(EntityData* entityData);
@@ -356,7 +353,7 @@ namespace decs
 
 		void Reset();
 
-		void InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts, StableContainersManager* stableComponentsManager);
+		void InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts);
 
 		/// <summary>
 		/// Moves entity components from "fromArchetype" to this archetype.

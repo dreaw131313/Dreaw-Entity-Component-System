@@ -19,7 +19,7 @@ namespace decs
 	) :
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(enititesChunkSize)),
-		m_StableContainers(stableComponentDefaultChunkSize)
+		m_ComponentContextManager(stableComponentDefaultChunkSize)
 	{
 	}
 
@@ -29,7 +29,7 @@ namespace decs
 	) :
 		m_HaveOwnEntityManager(entityManager == nullptr),
 		m_EntityManager(entityManager == nullptr ? new EntityManager(m_DefaultEntitiesChunkSize) : entityManager),
-		m_StableContainers(stableComponentDefaultChunkSize)
+		m_ComponentContextManager(stableComponentDefaultChunkSize)
 	{
 	}
 
@@ -50,8 +50,6 @@ namespace decs
 		{
 			ReturnOwnedEntitiesToEntityManager();
 		}
-
-		m_StableContainers.DestroyContainers();
 	}
 
 	void Container::ValidateInternalState()
@@ -76,7 +74,7 @@ namespace decs
 		if (m_EntityManager == nullptr)
 		{
 			m_EntityManager = entityManager;
-			m_StableContainers.SetDefaultChunkSize(stableComponentDefaultChunkSize);
+			m_ComponentContextManager.SetDefaultStableComponentChunkSize(stableComponentDefaultChunkSize);
 			//m_EmptyEntities = { emptyEntitiesChunkSize };
 		}
 	}
@@ -91,7 +89,7 @@ namespace decs
 		m_SpawnData.Clear();
 		m_EmptyEntities.clear();
 		m_ArchetypesMap.ClearEntityDataAndComponents();
-		m_StableContainers.ClearContainers();
+		m_ComponentContextManager.ClearStableContainers();
 		m_EntityCount = 0;
 	}
 
@@ -495,8 +493,7 @@ namespace decs
 		{
 			spawnedEntityArchetype = m_ArchetypesMap.GetOrCreateMatchedArchetype(
 				*prefabEntityData.m_Archetype,
-				&m_ComponentContextManager,
-				&m_StableContainers
+				&m_ComponentContextManager
 			);
 		}
 		m_SpawnData.m_SpawnArchetypes.push_back(spawnedEntityArchetype);

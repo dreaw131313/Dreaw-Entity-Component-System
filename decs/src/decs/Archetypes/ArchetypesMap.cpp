@@ -274,8 +274,7 @@ namespace decs
 
 	Archetype* ArchetypesMap::GetOrCreateMatchedArchetype(
 		Archetype& fromArchetype,
-		ComponentContextsManager* componentContextsManager,
-		StableContainersManager* stableContainersManager
+		ComponentContextsManager* componentContextsManager
 	)
 	{
 		auto pair = FindMatchingArchetype(&fromArchetype);
@@ -290,24 +289,10 @@ namespace decs
 			{
 				ArchetypeTypeData& fromArchetypeTypeData = fromArchetype.m_TypeData[i];
 
-				// TODO: change it with special method in ComponentContextsManager
-				auto& contextRecord = componentContextsManager->m_Contexts[fromArchetypeTypeData.m_TypeID];
-				if (contextRecord.m_Context == nullptr)
-				{
-					contextRecord.m_Context = fromArchetypeTypeData.m_ComponentContext->Clone();
-				}
-
-				if (fromArchetypeTypeData.m_StableContainer != nullptr)
-				{
-					StableContainerBase* stableContainer = stableContainersManager->GetStableContainer(fromArchetypeTypeData.m_TypeID);
-					if (stableContainer == nullptr)
-					{
-						stableContainersManager->CreateStableContainerFromOther(fromArchetypeTypeData.m_StableContainer);
-					}
-				}
+				componentContextsManager->GetOrCreateComponentContextFromOtherContext(fromArchetypeTypeData.m_ComponentContext);
 			}
 
-			archetype->InitEmptyFromOther(fromArchetype, componentContextsManager, stableContainersManager);
+			archetype->InitEmptyFromOther(fromArchetype, componentContextsManager);
 			AddArchetypeToCorrectContainers(*archetype, true);
 		}
 
@@ -351,16 +336,14 @@ namespace decs
 				newArchetype.AddTypeID(
 					addedComponentTypeID,
 					otherTypeData.m_PackedContainer,
-					otherTypeData.m_ComponentContext,
-					otherTypeData.m_StableContainer
+					otherTypeData.m_ComponentContext
 				);
 			}
 
 			newArchetype.AddTypeID(
 				currentTypeID,
 				toTypeData.m_PackedContainer,
-				toTypeData.m_ComponentContext,
-				toTypeData.m_StableContainer
+				toTypeData.m_ComponentContext
 			);
 		}
 
@@ -370,8 +353,7 @@ namespace decs
 			newArchetype.AddTypeID(
 				addedComponentTypeID,
 				otherTypeData.m_PackedContainer,
-				otherTypeData.m_ComponentContext,
-				otherTypeData.m_StableContainer
+				otherTypeData.m_ComponentContext
 			);
 		}
 
@@ -420,8 +402,7 @@ namespace decs
 				newArchetype.AddTypeID(
 					typeID,
 					fromArchetypeData.m_PackedContainer,
-					fromArchetypeData.m_ComponentContext,
-					fromArchetypeData.m_StableContainer
+					fromArchetypeData.m_ComponentContext
 				);
 			}
 		}

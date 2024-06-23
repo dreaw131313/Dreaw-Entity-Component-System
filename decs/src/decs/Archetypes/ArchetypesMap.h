@@ -272,8 +272,7 @@ namespace decs
 
 		Archetype* GetOrCreateMatchedArchetype(
 			Archetype& fromArchetype,
-			ComponentContextsManager* componentContextsManager,
-			StableContainersManager* stableContainersManager
+			ComponentContextsManager* componentContextsManager
 		);
 
 		void AddArchetypeToGroups(Archetype* arch)
@@ -375,7 +374,7 @@ namespace decs
 					newArchetype.AddTypeID<T>(componentContext, stableContainer);
 				}
 
-				newArchetype.AddTypeID(currentTypeID, toTypeData.m_PackedContainer, toTypeData.m_ComponentContext, toTypeData.m_StableContainer);
+				newArchetype.AddTypeID(currentTypeID, toTypeData.m_PackedContainer, toTypeData.m_ComponentContext);
 			}
 
 			if (!isNewComponentTypeAdded)

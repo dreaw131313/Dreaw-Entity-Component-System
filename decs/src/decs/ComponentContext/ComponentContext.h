@@ -3,6 +3,7 @@
 #include "decs\Observers\Observers.h"
 
 #include "Component/Component.h"
+#include "decs/ComponentContainers/StableContainer.h"
 
 namespace decs
 {
@@ -25,6 +26,8 @@ namespace decs
 
 		inline virtual std::string GetComponentName() const = 0;
 
+		inline virtual bool IsStableComponentContext() const = 0;
+
 		inline int GetObserverOrder() const { return m_ObserverOrder; }
 
 		inline void SetComponentOrder(int order)
@@ -44,7 +47,11 @@ namespace decs
 
 		inline virtual bool HasDestroyObserver() const = 0;
 
-		virtual ComponentContextBase* Clone() = 0;
+		virtual ComponentContextBase* Clone(int observerOrder, uint32_t stableComponentChunkSize) = 0;
+
+		virtual StableContainerBase* GetStableContainer() const = 0;
+
+		virtual void ClearStableContainer() = 0;
 
 	private:
 		int m_ObserverOrder = 0;
@@ -56,15 +63,21 @@ namespace decs
 		friend class Container;
 
 	public:
-		ComponentContext(int order) :
+		ComponentContext(int order, uint32_t stableComponentChunkSize) :
 			ComponentContextBase(order)
 		{
-
+			if constexpr (TComponent::IsStable)
+			{
+				m_StableContainer = new StableContainer<TComponent>(stableComponentChunkSize > 0 ? stableComponentChunkSize : 1000);
+			}
 		}
 
 		~ComponentContext()
 		{
-
+			if (m_StableContainer != nullptr)
+			{
+				delete m_StableContainer;
+			}
 		}
 
 		inline TypeID GetComponentTypeID() const override
@@ -81,6 +94,11 @@ namespace decs
 			return decs::Type<TComponent>::Name();
 		}
 
+		inline bool IsStableComponentContext() const override
+		{
+			return TComponent::IsStable;
+		}
+
 		inline bool HasCreateObserver() const override
 		{
 			return m_Observers.m_CreateObserver != nullptr;
@@ -91,9 +109,9 @@ namespace decs
 			return m_Observers.m_DestroyObserver != nullptr;
 		}
 
-		ComponentContextBase* Clone() override
+		ComponentContextBase* Clone(int observerOrder, uint32_t stableComponentChunkSize) override
 		{
-			return new ComponentContext<TComponent>(GetObserverOrder());
+			return new ComponentContext<TComponent>(observerOrder, stableComponentChunkSize);
 		}
 
 		void InvokeOnCreateComponent(ComponentBase* component, const Entity& entity)override
@@ -144,7 +162,20 @@ namespace decs
 			}
 		}
 
+		StableContainerBase* GetStableContainer() const override
+		{
+			return m_StableContainer;
+		}
+
+		virtual void ClearStableContainer() override
+		{
+			if (m_StableContainer != nullptr)
+			{
+				m_StableContainer->Clear();
+			}
+		}
 	private:
 		ComponentObserversGroup<TComponent> m_Observers = {};
+		StableContainer<TComponent>* m_StableContainer = nullptr;
 	};
 }
