@@ -8,16 +8,16 @@
 namespace decs
 {
 	template<typename DataType>
-	struct AllocationResult final
+	struct TChunkAllocationResult final
 	{
 	public:
 		DataType* Data = nullptr;
 		uint32_t Index = std::numeric_limits<uint32_t>::max();
 
 	public:
-		AllocationResult() {}
+		TChunkAllocationResult() {}
 
-		AllocationResult(
+		TChunkAllocationResult(
 			uint32_t index,
 			DataType* data
 		) :
@@ -36,7 +36,7 @@ namespace decs
 	template<typename DataType>
 	class Chunk final
 	{
-		using ChunkAllocationResult = AllocationResult<DataType>;
+		using AllocationResultType = TChunkAllocationResult<DataType>;
 	public:
 		uint32_t m_Index = 0;
 		uint32_t m_IndexInFreeSpaces = 0;
@@ -81,9 +81,9 @@ namespace decs
 		}
 
 		template<typename... Args>
-		ChunkAllocationResult Emplace(Args&&... args)
+		AllocationResultType Emplace(Args&&... args)
 		{
-			if (IsFull()) return ChunkAllocationResult();
+			if (IsFull()) return AllocationResultType();
 
 			m_Size += 1;
 
@@ -94,7 +94,7 @@ namespace decs
 				DataType* data = new(&m_Data[freeSpaceIndex])DataType(std::forward<Args>(args)...);
 
 				m_AllocationFlags[freeSpaceIndex] = true;
-				return ChunkAllocationResult(freeSpaceIndex, data);
+				return AllocationResultType(freeSpaceIndex, data);
 			}
 
 			uint32_t allocationIndex = m_CurrentAllocationOffset;
@@ -103,7 +103,7 @@ namespace decs
 
 			m_CurrentAllocationOffset += 1;
 
-			return ChunkAllocationResult(allocationIndex, data);
+			return AllocationResultType(allocationIndex, data);
 		}
 
 		bool RemoveAt(uint32_t index)
@@ -513,6 +513,7 @@ namespace decs
 			{
 				delete value.second;
 			}
+			m_Containers.clear();
 		}
 
 		inline void ClearContainers()
