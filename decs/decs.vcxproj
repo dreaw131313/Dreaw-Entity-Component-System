@@ -99,6 +99,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\Bitmask\Bitmask.h" />
     <ClInclude Include="src\decs\Component\Component.h" />
     <ClInclude Include="src\decs\Containers\TOrderedList.h" />
     <ClInclude Include="src\decs\Observers\ObserversManager.h" />
