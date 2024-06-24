@@ -316,7 +316,6 @@ namespace decs
 
 					m_Chunks.push_back(m_CurrentChunk);
 					m_ChunksWithFreeSpace.push_back(m_CurrentChunk);
-
 				}
 			}
 
