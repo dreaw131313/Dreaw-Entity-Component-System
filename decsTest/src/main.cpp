@@ -11,7 +11,6 @@ void PrintLine(std::string message = "")
 
 struct Position : public decs::ComponentBase
 {
-	DECS_STABLE_COMPONENT()
 public:
 	float X = 0;
 	float Y = 0;
@@ -36,7 +35,6 @@ public:
 
 struct TestComponent : public decs::ComponentBase
 {
-	DECS_COMPONENT()
 public:
 	int table[10];
 
@@ -46,7 +44,6 @@ public:
 
 struct Renderer :public decs::ComponentBase
 {
-	DECS_COMPONENT()
 public:
 	double mesh;
 };

@@ -503,7 +503,6 @@ namespace decs
 			ArchetypeTypeData& spawnedEntityArchetypeTypeData = spawnedEntityArchetype->m_TypeData[i];
 
 			m_SpawnData.m_PrefabComponentRefs.emplace_back(
-				spawnedEntityArchetypeTypeData.m_StableContainer != nullptr,
 				spawnedEntityArchetypeTypeData.m_StableContainer,
 				spawnedEntityArchetypeTypeData.m_TypeID,
 				prefabEntityData,
@@ -530,15 +529,9 @@ namespace decs
 			ArchetypeTypeData& currentTypeData = typeDataVector[i];
 			SpawnComponentRefData& spawnRefData = m_SpawnData.m_PrefabComponentRefs[i];
 
-			if (spawnRefData.m_IsStable)
-			{
-				StableComponentRef compNodeInfo = spawnRefData.m_StableContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentRef.Get());
-				currentTypeData.m_PackedContainer->EmplaceFromStableComponentRef(&compNodeInfo);
-			}
-			else
-			{
-				auto ptr = currentTypeData.m_PackedContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentRef.Get());
-			}
+			StableComponentRef compNodeInfo = spawnRefData.m_StableContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentRef.Get());
+			currentTypeData.m_PackedContainer->EmplaceFromStableComponentRef(&compNodeInfo);
+
 			m_SpawnData.m_SpawnedEntityComponentRefs[i].Set(currentTypeData.m_TypeID, spawnedEntityData, i);
 		}
 	}

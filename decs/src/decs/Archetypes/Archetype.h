@@ -300,16 +300,7 @@ namespace decs
 				m_ComponentsCount += 1;
 				m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
 
-				PackedContainerBase* packedContainer;
-				if constexpr (TComponent::IsStable)
-				{
-					packedContainer = new StablePackedContainer<TComponent>();
-				}
-				else
-				{
-					packedContainer = new PackedContainer<TComponent>();
-				}
-
+				PackedContainerBase* packedContainer = new StablePackedContainer<TComponent>();
 				AddTypeData(
 					id,
 					packedContainer,
@@ -337,12 +328,6 @@ namespace decs
 		void RemoveSwapBackRecordRaw(uint64_t index);
 
 		void SetRecordAsIntendedToDelayedDestroy(uint64_t index);
-
-		template<typename TComponent>
-		inline PackedContainer<TComponent>* GetContainerAt(uint64_t index)
-		{
-			return dynamic_cast<PackedContainer<TComponent>*>(m_TypeData[index].m_PackedContainer);
-		}
 
 		inline PackedContainerBase* GetPackedContainerAt(uint64_t index)
 		{
@@ -416,18 +401,10 @@ namespace decs
 
 				ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
 
-				if (thisTypeData.m_PackedContainer->HasStableComponents())
-				{
-					thisTypeData.m_PackedContainer->MoveEmplaceBackFromStableComponentRef(
-						fromArchetypeData.m_PackedContainer->GetStableComponentRef(fromIndex)
-					);
-				}
-				else
-				{
-					thisTypeData.m_PackedContainer->MoveEmplaceBackFromComponentBase(
-						fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
-					);
-				}
+				thisTypeData.m_PackedContainer->MoveEmplaceBackFromStableComponentRef(
+					fromArchetypeData.m_PackedContainer->GetStableComponentRef(fromIndex)
+				);
+
 				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
 
 				fromArchetypeIndex++;

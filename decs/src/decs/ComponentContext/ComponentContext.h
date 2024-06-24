@@ -26,8 +26,6 @@ namespace decs
 
 		inline virtual std::string GetComponentName() const = 0;
 
-		inline virtual bool IsStableComponentContext() const = 0;
-
 		inline int GetObserverOrder() const { return m_ObserverOrder; }
 
 		inline void SetComponentOrder(int order)
@@ -66,10 +64,7 @@ namespace decs
 		ComponentContext(int order, uint32_t stableComponentChunkSize) :
 			ComponentContextBase(order)
 		{
-			if constexpr (TComponent::IsStable)
-			{
-				m_StableContainer = new StableContainer<TComponent>(stableComponentChunkSize > 0 ? stableComponentChunkSize : 1000);
-			}
+			m_StableContainer = new StableContainer<TComponent>(stableComponentChunkSize > 0 ? stableComponentChunkSize : 1000);
 		}
 
 		~ComponentContext()
@@ -92,11 +87,6 @@ namespace decs
 		inline std::string GetComponentName() const override
 		{
 			return decs::Type<TComponent>::Name();
-		}
-
-		inline bool IsStableComponentContext() const override
-		{
-			return TComponent::IsStable;
 		}
 
 		inline bool HasCreateObserver() const override

@@ -192,10 +192,6 @@ namespace decs
 			{
 				return contextRecord.m_StableComponentChunkSize;
 			}
-			else if (!contextRecord.m_Context->IsStableComponentContext())
-			{
-				return 0;
-			}
 			else
 			{
 				return contextRecord.m_Context->GetStableContainer()->GetChunkSize();
