@@ -533,13 +533,11 @@ namespace decs
 			if (spawnRefData.m_IsStable)
 			{
 				StableComponentRef compNodeInfo = spawnRefData.m_StableContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentRef.Get());
-				compNodeInfo.m_ComponentPtr->SetDefaultFlags();
-				currentTypeData.m_PackedContainer->EmplaceFromBaseComponent(&compNodeInfo);
+				currentTypeData.m_PackedContainer->EmplaceFromStableComponentRef(&compNodeInfo);
 			}
 			else
 			{
 				auto ptr = currentTypeData.m_PackedContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentRef.Get());
-				ptr->SetDefaultFlags();
 			}
 			m_SpawnData.m_SpawnedEntityComponentRefs[i].Set(currentTypeData.m_TypeID, spawnedEntityData, i);
 		}

@@ -52,7 +52,7 @@ namespace decs
 
 		inline virtual ComponentBase* MoveEmplaceBackFromComponentBase(ComponentBase* data) = 0;
 
-		inline virtual ComponentBase* EmplaceFromBaseComponent(StableComponentRef* componentRef) = 0;
+		inline virtual ComponentBase* EmplaceFromStableComponentRef(StableComponentRef* componentRef) = 0;
 
 		inline virtual ComponentBase* MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) = 0;
 
@@ -148,9 +148,20 @@ namespace decs
 
 		inline virtual void RemoveSwapBack(uint64_t index)override
 		{
-			if (m_Data.size() > 0)
+			uint64_t size = m_Data.size();
+			if (index < size)
 			{
-				if (m_Data.size() > 1) m_Data[index] = std::move(m_Data.back());
+				if (index < (size - 1))
+				{
+					TComponent& back = m_Data.back();
+
+					bool bIsCreated = back.m_bIsCreatedByContainer;
+					bool bIsEnabled = back.m_bIsEnabledByECS;
+
+					TComponent& atIndex = m_Data[index];
+					atIndex = std::move(m_Data.back());
+					atIndex.SetFlags(bIsCreated, bIsEnabled);
+				}
 				m_Data.pop_back();
 			}
 		}
@@ -162,10 +173,15 @@ namespace decs
 
 		inline virtual ComponentBase* MoveEmplaceBackFromComponentBase(ComponentBase* data) override
 		{
-			return &m_Data.emplace_back(std::move(*static_cast<TComponent*>(data)));
+			bool bIsCreated = data->m_bIsCreatedByContainer;
+			bool bIsEnabled = data->m_bIsEnabledByECS;
+			TComponent* castedComponent = static_cast<TComponent*>(data);
+			auto& comp = m_Data.emplace_back(std::move(*castedComponent));
+			comp.SetFlags(bIsCreated, bIsEnabled);
+			return &comp;
 		}
 
-		inline virtual ComponentBase* EmplaceFromBaseComponent(StableComponentRef* componentRef) override
+		inline virtual ComponentBase* EmplaceFromStableComponentRef(StableComponentRef* componentRef) override
 		{
 			throw std::runtime_error("Packed container must not use methods with StableComponentRef");
 		}
@@ -258,7 +274,7 @@ namespace decs
 			uint64_t dataSize = m_Data.size();
 			if (dataSize > 0)
 			{
-				if (dataSize > 1)
+				if (index < (dataSize - 1))
 				{
 					m_Data[index] = m_Data.back();
 				}
@@ -276,7 +292,7 @@ namespace decs
 			throw std::runtime_error("Stable Packed container must not use methods with ComponentBase");
 		}
 
-		inline virtual ComponentBase* EmplaceFromBaseComponent(StableComponentRef* componentRef) override
+		inline virtual ComponentBase* EmplaceFromStableComponentRef(StableComponentRef* componentRef) override
 		{
 			m_Data.emplace_back(componentRef->m_ComponentPtr, componentRef->m_ChunkIndex, componentRef->m_Index);
 			return componentRef->m_ComponentPtr;

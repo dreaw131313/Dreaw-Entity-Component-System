@@ -17,9 +17,33 @@ namespace decs
 		friend class Container;
 		template<typename>
 		friend class ComponentContext;
+		template<typename>
+		friend class PackedContainer;
+		template<typename>
+		friend class StablePackedContainer;
 
 	public:
 		ComponentBase() = default;
+
+		ComponentBase(const ComponentBase& other)
+		{
+
+		}
+
+		ComponentBase(ComponentBase&& other) noexcept
+		{
+
+		}
+
+		ComponentBase& operator =(const ComponentBase& other)
+		{
+			return *this;
+		}
+
+		ComponentBase& operator =(ComponentBase&& other) noexcept
+		{
+			return *this;
+		}
 
 		virtual ~ComponentBase() = default;
 
@@ -28,10 +52,10 @@ namespace decs
 		bool m_bIsEnabledByECS = false;
 
 	private:
-		void SetDefaultFlags()
+		inline void SetFlags(bool bIsCreated, bool bIsEnabled)
 		{
-			m_bIsCreatedByContainer = false;
-			m_bIsEnabledByECS = false;
+			m_bIsCreatedByContainer = bIsCreated;
+			m_bIsEnabledByECS = bIsEnabled;
 		}
 	};
 

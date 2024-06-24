@@ -38,6 +38,9 @@ namespace decs
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByContainer = false;
 
+		bool m_bCanAddComponents = true;
+		bool m_bCanRemoveComponents = true;
+
 	public:
 		EntityData()
 		{
@@ -114,6 +117,26 @@ namespace decs
 		inline bool IsInManager() const
 		{
 			return m_bIsInManager;
+		}
+
+		inline bool CanAddComponents() const
+		{
+			return m_bCanAddComponents;
+		}
+
+		inline bool CanRemoveComponents() const
+		{
+			return m_bCanRemoveComponents;
+		}
+
+		inline void SetCanAddComponents(bool bCanAddComponents)
+		{
+			m_bCanAddComponents = bCanAddComponents;
+		}
+
+		inline void SetCanRemoveComponents(bool bCanRemoveComponents)
+		{
+			m_bCanRemoveComponents = bCanRemoveComponents;
 		}
 
 	private:
