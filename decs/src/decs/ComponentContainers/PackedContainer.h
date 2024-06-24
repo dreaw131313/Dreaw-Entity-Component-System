@@ -294,13 +294,13 @@ namespace decs
 
 		inline virtual ComponentBase* EmplaceFromStableComponentRef(StableComponentRef* componentRef) override
 		{
-			m_Data.emplace_back(componentRef->m_ComponentPtr, componentRef->m_ChunkIndex, componentRef->m_Index);
+			m_Data.emplace_back(*componentRef);
 			return componentRef->m_ComponentPtr;
 		}
 
 		inline virtual ComponentBase* MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) override
 		{
-			m_Data.emplace_back(componentRef->m_ComponentPtr, componentRef->m_ChunkIndex, componentRef->m_Index);
+			m_Data.emplace_back(*componentRef);
 			return componentRef->m_ComponentPtr;
 		}
 

@@ -33,8 +33,14 @@ namespace decs
 		}
 	};
 
+	class ChunkBase
+	{
+	public:
+		virtual uint32_t GetChunkIndex() const = 0;
+	};
+
 	template<typename DataType>
-	class Chunk final
+	class Chunk final : public ChunkBase
 	{
 		using AllocationResultType = TChunkAllocationResult<DataType>;
 	public:
@@ -64,6 +70,11 @@ namespace decs
 
 			::operator delete(m_Data, static_cast<uint64_t>(m_Capacity) * sizeof(DataType));
 			delete[] m_AllocationFlags;
+		}
+
+		virtual uint32_t GetChunkIndex() const override
+		{
+			return m_Index;
 		}
 
 		bool IsEmpty() const
@@ -148,7 +159,7 @@ namespace decs
 	{
 	public:
 		ComponentBase* m_ComponentPtr = nullptr;
-		uint32_t m_ChunkIndex = std::numeric_limits<uint32_t>::max();
+		ChunkBase* m_Chunk = nullptr;
 		uint32_t m_Index = std::numeric_limits<uint32_t>::max();
 
 	public:
@@ -159,10 +170,10 @@ namespace decs
 
 		StableComponentRef(
 			ComponentBase* componentPtr,
-			uint32_t chunkIndex,
+			ChunkBase* chunk,
 			uint32_t index
 		) :
-			m_ComponentPtr(componentPtr), m_ChunkIndex(chunkIndex), m_Index(index)
+			m_ComponentPtr(componentPtr), m_Chunk(chunk), m_Index(index)
 		{
 
 		}
@@ -180,7 +191,7 @@ namespace decs
 		inline virtual TypeID GetTypeID()const noexcept = 0;
 		virtual StableContainerBase* Clone(uint32_t withChunkSize) = 0;
 
-		virtual bool Remove(uint32_t chunkIndex, uint32_t elementIndex) = 0;
+		virtual bool Remove(const StableComponentRef& compRef) = 0;
 		virtual StableComponentRef EmplaceFromBaseComponent(ComponentBase* ptr) = 0;
 		virtual uint32_t GetChunkSize() const noexcept = 0;
 		virtual void Clear() = 0;
@@ -239,16 +250,17 @@ namespace decs
 				RemoveChunkFromFreeSpaces(chunk);
 			}
 
-			return StableComponentRef(result.Data, static_cast<uint32_t>(chunk->m_Index), result.Index);
+			return StableComponentRef(result.Data, chunk, result.Index);
 		}
 
-		bool Remove(uint32_t chunkIndex, uint32_t elementIndex) override
+		bool Remove(const StableComponentRef& compRef) override
 		{
-			if (chunkIndex < m_Chunks.size() && m_Chunks[chunkIndex] != nullptr)
+			uint32_t chunkIndex = compRef.m_Chunk->GetChunkIndex();
+			if (chunkIndex < m_Chunks.size() && m_Chunks[chunkIndex] == compRef.m_Chunk)
 			{
 				ChunkType* chunk = m_Chunks[chunkIndex];
 				bool wasChunkFull = chunk->IsFull();
-				if (chunk->RemoveAt(elementIndex))
+				if (chunk->RemoveAt(compRef.m_Index))
 				{
 					if (chunk->IsEmpty())
 					{
@@ -300,25 +312,11 @@ namespace decs
 					m_CurrentChunk = new ChunkType(m_ChunkCapacity);
 					m_CurrentChunk->m_IsInFreeSpaces = true;
 					m_CurrentChunk->m_IndexInFreeSpaces = static_cast<uint32_t>(m_ChunksWithFreeSpace.size());
+					m_CurrentChunk->m_Index = static_cast<uint32_t>(m_Chunks.size());
+
+					m_Chunks.push_back(m_CurrentChunk);
 					m_ChunksWithFreeSpace.push_back(m_CurrentChunk);
 
-					bool isChunkPlacedInChunks = false;
-					for (uint32_t i = 0; i < m_Chunks.size(); i++)
-					{
-						if (m_Chunks[i] == nullptr)
-						{
-							m_Chunks[i] = m_CurrentChunk;
-							m_CurrentChunk->m_Index = i;
-							isChunkPlacedInChunks = true;
-							break;
-						}
-					}
-
-					if (!isChunkPlacedInChunks)
-					{
-						m_CurrentChunk->m_Index = static_cast<uint32_t>(m_Chunks.size());
-						m_Chunks.push_back(m_CurrentChunk);
-					}
 				}
 			}
 
@@ -329,26 +327,13 @@ namespace decs
 		{
 			RemoveChunkFromFreeSpaces(chunk);
 
-			if (chunk == m_Chunks.back())
+			if (chunk != m_Chunks.back())
 			{
-				m_Chunks.pop_back();
-
-				for (int i = (int)m_Chunks.size() - 1; i > -1; i--)
-				{
-					if (m_Chunks[i] == nullptr)
-					{
-						m_Chunks.pop_back();
-					}
-					else
-					{
-						break;
-					}
-				}
+				auto lastChunk = m_Chunks.back();
+				m_Chunks[chunk->m_Index] = lastChunk;
+				lastChunk->m_Index = chunk->m_Index;
 			}
-			else
-			{
-				m_Chunks[chunk->m_Index] = nullptr;
-			}
+			m_Chunks.pop_back();
 
 			if (chunk == m_CurrentChunk)
 			{
