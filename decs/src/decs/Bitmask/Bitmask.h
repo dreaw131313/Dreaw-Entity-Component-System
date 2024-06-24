@@ -1,5 +1,4 @@
 #pragma once
-#include "decs.h"
 
 namespace decs
 {
@@ -16,6 +15,11 @@ namespace decs
 			m_Mask(maskValue)
 		{
 
+		}
+
+		constexpr operator bool() const 
+		{
+			return m_Mask;
 		}
 
 		constexpr bool operator ==(const BitMask& other)
