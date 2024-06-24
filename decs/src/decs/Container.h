@@ -541,25 +541,25 @@ namespace decs
 #pragma region STABLE COMPONENTS
 	public:
 		template<typename T>
-		bool SetStableComponentChunkSize(uint32_t chunkSize)
+		bool SetComponentChunkSize(uint32_t chunkSize)
 		{
-			return m_ComponentContextManager.SetStableComponentChunkSize<T>(chunkSize);
+			return m_ComponentContextManager.SetComponentChunkSize<T>(chunkSize);
 		}
 
-		bool SetStableComponentChunkSize(TypeID typeID, uint32_t chunkSize)
+		bool SetComponentChunkSize(TypeID typeID, uint32_t chunkSize)
 		{
-			return m_ComponentContextManager.SetStableComponentChunkSize(typeID, chunkSize);
+			return m_ComponentContextManager.SetComponentChunkSize(typeID, chunkSize);
 		}
 
 		template<typename T>
-		uint64_t GetStableComponentChunkSize()
+		uint64_t GetComponentChunkSize()
 		{
-			return m_ComponentContextManager.GetStableComponentChunkSize<T>();
+			return m_ComponentContextManager.GetComponentChunkSize<T>();
 		}
 
-		uint64_t GetStableComponentChunkSize(TypeID typeID)
+		uint64_t GetComponentChunkSize(TypeID typeID)
 		{
-			return m_ComponentContextManager.GetStableComponentChunkSize(typeID);
+			return m_ComponentContextManager.GetComponentChunkSize(typeID);
 		}
 
 #pragma endregion

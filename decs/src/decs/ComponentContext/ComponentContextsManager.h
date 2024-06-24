@@ -153,7 +153,7 @@ namespace decs
 			}
 		}
 
-		bool SetStableComponentChunkSize(TypeID typeID, uint32_t chunkSize)
+		bool SetComponentChunkSize(TypeID typeID, uint32_t chunkSize)
 		{
 			if (chunkSize == 0)
 			{
@@ -172,13 +172,13 @@ namespace decs
 		}
 
 		template<typename T>
-		bool SetStableComponentChunkSize(uint32_t chunkSize)
+		bool SetComponentChunkSize(uint32_t chunkSize)
 		{
-			return SetStableComponentChunkSize(Type<T>::ID(), chunkSize);
+			return SetComponentChunkSize(Type<T>::ID(), chunkSize);
 		}
 
 
-		uint64_t GetStableComponentChunkSize(TypeID typeID)
+		uint64_t GetComponentChunkSize(TypeID typeID)
 		{
 			auto it = m_Contexts.find(typeID);
 			if (it == m_Contexts.end())
@@ -199,9 +199,9 @@ namespace decs
 		}
 
 		template<typename T>
-		uint64_t GetStableComponentChunkSize()
+		uint64_t GetComponentChunkSize()
 		{
-			return GetStableComponentChunkSize(Type<T>::ID());
+			return GetComponentChunkSize(Type<T>::ID());
 		}
 
 		void SetDefaultStableComponentChunkSize(uint32_t chunkSize)
