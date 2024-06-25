@@ -499,8 +499,8 @@ namespace decs
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
 				if (findTypeIndex != Limits::MaxComponentCount)
 				{
-						StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
-						return container->GetAsPtr(entityData.m_IndexInArchetype);
+					StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
+					return container->GetAsPtr(entityData.m_IndexInArchetype);
 				}
 			}
 			return nullptr;

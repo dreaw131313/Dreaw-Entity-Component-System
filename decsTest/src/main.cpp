@@ -71,14 +71,14 @@ public:
 
 
 	// Inherited via EnableComponentObserver
-	void OnEnableEntity(TestComponent& component, const decs::Entity& entity) override
+	void OnEnableComponent(TestComponent& component, const decs::Entity& entity) override
 	{
 		PrintLine("TestComponent on enable");
 	}
 
 
 	// Inherited via DisableComponentObserver
-	void OnDisableEntity(TestComponent& component, const decs::Entity& entity) override
+	void OnDisableComponent(TestComponent& component, const decs::Entity& entity) override
 	{
 		PrintLine("TestComponent on disable");
 	}

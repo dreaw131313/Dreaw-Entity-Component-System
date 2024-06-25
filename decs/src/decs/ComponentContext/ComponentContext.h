@@ -135,7 +135,7 @@ namespace decs
 				component->m_bIsEnabledByECS = true;
 				if (m_Observers.m_EnableObserver != nullptr)
 				{
-					m_Observers.m_EnableObserver->OnEnableEntity(*static_cast<TComponent*>(component), entity);
+					m_Observers.m_EnableObserver->OnEnableComponent(*static_cast<TComponent*>(component), entity);
 				}
 			}
 		}
@@ -147,7 +147,7 @@ namespace decs
 				component->m_bIsEnabledByECS = false;
 				if (m_Observers.m_DisableObserver != nullptr)
 				{
-					m_Observers.m_DisableObserver->OnDisableEntity(*static_cast<TComponent*>(component), entity);
+					m_Observers.m_DisableObserver->OnDisableComponent(*static_cast<TComponent*>(component), entity);
 				}
 			}
 		}

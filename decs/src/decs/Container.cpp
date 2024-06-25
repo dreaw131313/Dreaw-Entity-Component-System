@@ -887,7 +887,7 @@ namespace decs
 			entityData->m_bIsEnabledByContainer = true;
 			if (m_EnableEntityObserver != nullptr)
 			{
-				m_EnableEntityObserver->OnEnableEntity(entity);
+				m_EnableEntityObserver->OnEnableComponent(entity);
 			}
 		}
 	}
@@ -900,7 +900,7 @@ namespace decs
 			entityData->m_bIsEnabledByContainer = false;
 			if (m_DisableEntityObserver != nullptr)
 			{
-				m_DisableEntityObserver->OnDisableEntity(entity);
+				m_DisableEntityObserver->OnDisableComponent(entity);
 			}
 		}
 	}
@@ -909,7 +909,7 @@ namespace decs
 	{
 		if (m_EnableEntityObserver != nullptr)
 		{
-			m_EnableEntityObserver->OnEnableEntity(entity);
+			m_EnableEntityObserver->OnEnableComponent(entity);
 		}
 
 		// TODO: add components activation listeners invoking
@@ -953,7 +953,7 @@ namespace decs
 	{
 		if (m_DisableEntityObserver != nullptr)
 		{
-			m_DisableEntityObserver->OnDisableEntity(entity);
+			m_DisableEntityObserver->OnDisableComponent(entity);
 		}
 
 		// TODO: add components deactivation listeners invoking
