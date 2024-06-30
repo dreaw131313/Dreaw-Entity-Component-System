@@ -46,7 +46,7 @@ namespace decs
 
 		inline bool IsEnabledByECS() const
 		{
-			return m_bIsCreatedByContainer;
+			return m_bIsEnabledByECS;
 		}
 
 	private:
