@@ -39,6 +39,16 @@ namespace decs
 
 		virtual ~ComponentBase() = default;
 
+		inline bool IsCreatedByECS() const
+		{
+			return m_bIsCreatedByContainer;
+		}
+
+		inline bool IsEnabledByECS() const
+		{
+			return m_bIsCreatedByContainer;
+		}
+
 	private:
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByECS = false;
