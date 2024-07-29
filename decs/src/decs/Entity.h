@@ -150,6 +150,15 @@ namespace decs
 			return nullptr;
 		}
 
+		template<typename TComponent, typename TCallable,typename... Args>
+		inline typename TComponent* AddComponent_WithCallback(TCallable&& func,Args&&... args) const
+		{
+			if (IsValid())
+				return m_Container->AddComponent_WithCallback<TComponent>(*this, *m_EntityData, func, std::forward<Args>(args)...);
+
+			return nullptr;
+		}
+
 		template<typename TComponent>
 		inline bool RemoveComponent() const
 		{
@@ -159,6 +168,12 @@ namespace decs
 		inline bool RemoveComponent(TypeID componentTypeID) const
 		{
 			return IsValid() && m_Container->RemoveComponent(*this, componentTypeID);
+		}
+
+		template<typename TComponent, typename TCallable>
+		inline bool RemoveComponent_If(TCallable&& canRemoveFunc) const
+		{
+			return IsValid() && m_Container->RemoveComponent_If<TComponent>(*m_EntityData, canRemoveFunc);
 		}
 
 		/*template<typename... Ts>

@@ -101,7 +101,25 @@ int main()
 	{
 		auto entity = container.CreateEntity();
 
-		auto pos = entity.AddComponent<Position>();
+		auto pos = entity.AddComponent_WithCallback<Position>([](Position& position)
+		{
+			PrintLine("Position callback!");
+			PrintLine(std::format("\tX: {0} Y: {1}", position.X, position.Y));
+		}, 10.f, 10.f);
+
+		bool removeResult = entity.RemoveComponent_If<Position>([](const Position& position) 
+		{
+			return position.X > 0;
+		});
+		if (entity.HasComponent<Position>())
+		{
+			PrintLine("Failed to remove Position component!");
+		}
+		else
+		{
+			PrintLine("Removed Position component!");
+		}
+
 		auto test = entity.AddComponent<TestComponent>();
 		auto rend = entity.AddComponent<Renderer>();
 
@@ -172,7 +190,7 @@ int main()
 
 		entity.Destroy();
 	}
-	
+
 
 	// NO CALLBACK:
 	//{
