@@ -56,7 +56,7 @@ namespace decs
 
 		~Container();
 
-#pragma region Extension data
+		// Extension data
 	public:
 		template<typename T>
 		void SetExtensionData(T* data)
@@ -73,9 +73,9 @@ namespace decs
 	private:
 		void* m_ExtensionData = nullptr;
 
-#pragma endregion 
+		// Extension data - end 
 
-#pragma region UTILITY
+		// UTILITY
 	public:
 		/// <summary>
 		/// Some functions change internal state of container during invocation and if error will be thrown in any of this functions they can leave invalid internal state of Container object. This function brings back container to valid state.
@@ -99,9 +99,10 @@ namespace decs
 
 	private:
 		void ReturnOwnedEntitiesToEntityManager_Internal(bool bNullEntityManagerIfIsNotHisOwner);
-#pragma endregion
 
-#pragma region ENTITIES:
+		// UTILITY - end
+
+		// ENTITIES:
 	private:
 		std::vector<EntityData*> m_EmptyEntities = {}; //TODO: change to std::vector
 		EntityManager* m_EntityManager = nullptr;
@@ -139,9 +140,9 @@ namespace decs
 
 		EntityData* CreateAliveEntityData(bool bIsActive);
 
-#pragma endregion
+		// ENTITIES - end
 
-#pragma region RESERVING ENTITIES:
+		// RESERVING ENTITIES:
 	public:
 		void ReserveEntities(uint32_t entitiesToReserve);
 
@@ -151,9 +152,9 @@ namespace decs
 		std::vector<EntityData*> m_ReservedEntityData;
 		uint32_t m_ReservedEntitiesCount = 0;
 
-#pragma endregion
+		// RESERVING ENTITIES - end
 
-#pragma region SPAWNING ENTITIES:
+// SPAWNING ENTITIES:
 	private:
 		struct SpawnComponentRefData
 		{
@@ -270,9 +271,9 @@ namespace decs
 
 		void InvokeComponentCreateAndEnableObserversOnSpawn(const Entity& entity, Archetype* archetype, uint64_t componentsCount, const SpawnDataState& spawnState);
 
-#pragma endregion
+		// SPAWNING ENTITIES - end
 
-#pragma region COMPONENTS:
+// COMPONENTS:
 	private:
 		ComponentContextsManager m_ComponentContextManager = { 1000 };
 
@@ -684,9 +685,9 @@ namespace decs
 			return HasComponentInternal(entityData, Type<TComponent>::ID());
 		}
 
-#pragma endregion
+		// COMPONENTS - end
 
-#pragma region STABLE COMPONENTS
+		// STABLE COMPONENTS:
 	public:
 		template<typename T>
 		bool SetComponentChunkSize(uint32_t chunkSize)
@@ -710,9 +711,9 @@ namespace decs
 			return m_ComponentContextManager.GetComponentChunkSize(typeID);
 		}
 
-#pragma endregion
+		// STABLE COMPONENTS - end
 
-#pragma region ARCHETYPES:
+		// ARCHETYPES:
 	public:
 		inline void ShrinkArchetypesToFit()
 		{
@@ -773,9 +774,9 @@ namespace decs
 			return entityNewArchetype;
 		}
 
-#pragma endregion
+		// ARCHETYPES - end
 
-#pragma region OBSERVERS
+		// OBSERVERS:
 	public:
 		void InvokeEntitesOnCreateListeners();
 
@@ -935,7 +936,6 @@ namespace decs
 		EnableEntityObserver* m_EnableEntityObserver = nullptr;
 		DisableEntityObserver* m_DisableEntityObserver = nullptr;
 
-
 	private:
 		inline void InvokeEntityCreateObserver(const Entity& entity);
 
@@ -949,9 +949,9 @@ namespace decs
 
 		void InvokeEntityAndComponentsDisableObservers(const Entity& entity);
 
-#pragma endregion
+		// OBSERVERS - end
 
-#pragma region DELAYED DESTROY:
+		// DELAYED DESTROY:
 	public:
 		/// <summary>
 		/// This function clean all entites which was destroyed. It do not invoke any callback observers it only cleans records in archetypes.
@@ -1000,9 +1000,9 @@ namespace decs
 			m_ArchetypesRecordsToDelayedRemove.push_back({ archetype, removedComponentTypeID, index, bRemoveAfterRemoveComponent });
 		}
 
-#pragma endregion
+		// DELAYED DESTROY - end
 
-#pragma region FLAGS:
+		// FLAGS:
 	private:
 		struct BoolSwitch final
 		{
@@ -1045,9 +1045,9 @@ namespace decs
 		bool m_CanRemoveComponents = true;
 
 
-#pragma endregion
+		// FLAGS - end
 
-#pragma region ITERATION:
+		// ITERATION:
 	public:
 		/// <summary>
 		/// Helper methods for iterating over entites which containe component of type TComponentType.
@@ -1095,9 +1095,9 @@ namespace decs
 			});
 		}
 
-#pragma endregion
+		// ITERATION - end
 
-#pragma region NO CALLBACKS methods:
+		// NO CALLBACKS methods:
 	public:
 		Entity CreateEntity_NoCallbacks(bool bIsActive = true);
 
@@ -1207,7 +1207,7 @@ namespace decs
 
 		bool RemoveComponent_NoCallback(const Entity& entity, TypeID componentTypeID);
 
-#pragma endregion
+		// NO CALLBACKS methods - end
 
 	};
 }
