@@ -555,6 +555,7 @@ namespace decs
 				if (componentVoidPtr != nullptr)
 				{
 					orderData.m_ComponentContext->InvokeOnCreateComponent(componentVoidPtr, entity);
+
 					componentVoidPtr = componentRef.Get();
 					if (entity.IsActive() && componentVoidPtr != nullptr)
 					{
@@ -575,7 +576,6 @@ namespace decs
 				if (componentVoidPtr != nullptr)
 				{
 					orderData.m_ComponentContext->InvokeOnCreateComponent(componentVoidPtr, entity);
-					//orderData.m_ComponentContext->InvokeOnEnableEntity(componentVoidPtr, entity);
 				}
 			}
 		}
@@ -591,10 +591,12 @@ namespace decs
 		auto entityData = entity.m_EntityData;
 		{
 			Archetype* currentArch = entityData->m_Archetype;
-			componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
 
-			// All this checks are here to check if this entity containe components after OnCreateMethod
-			Archetype* newArch = entityData->m_Archetype;
+			ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+			componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity); \
+
+				// All this checks are here to check if this entity containe components after OnCreateMethod
+				Archetype* newArch = entityData->m_Archetype;
 			if (newArch != nullptr && entity.IsActive())
 			{
 				if (currentArch != newArch)
@@ -687,12 +689,12 @@ namespace decs
 	}
 
 	void Container::InvokeRemovingComponentObserverFunctions(
-		EntityData& entityData, 
-		Archetype* oldArchetype, 
+		EntityData& entityData,
+		Archetype* oldArchetype,
 		uint32_t entityIndexInOldArchetype,
 		PackedContainerBase* packedContainer,
 		const ArchetypeTypeData& archetypeTypeData
-		)
+	)
 	{
 		// Invoking remove observers:
 		{
