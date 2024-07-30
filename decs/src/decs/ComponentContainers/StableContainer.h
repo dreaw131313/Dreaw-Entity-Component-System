@@ -43,6 +43,31 @@ namespace decs
 	class Chunk final : public ChunkBase
 	{
 		using AllocationResultType = TChunkAllocationResult<DataType>;
+
+		struct RecordData final
+		{
+		public:
+			union
+			{
+				DataType Component;
+			};
+			bool bIsAllocated = false;
+
+		public:
+			RecordData():
+				bIsAllocated(false)
+			{
+			}
+
+			~RecordData()
+			{
+				if (bIsAllocated)
+				{
+					Component.~DataType();
+				}
+			}
+		};
+
 	public:
 		uint32_t m_Index = 0;
 		uint32_t m_IndexInFreeSpaces = 0;
@@ -50,27 +75,16 @@ namespace decs
 
 	public:
 		Chunk(uint32_t capacity) :
-			m_Capacity(capacity)
+			m_Capacity(capacity > 0 ? capacity : 100)
 		{
-			m_AllocationFlags = new bool[capacity]();
-			m_Data = (DataType*)::operator new(capacity * sizeof(DataType));
+			//m_Data = (RecordData*)::operator new(capacity * sizeof(RecordData));
+
+			m_Data = new RecordData[m_Capacity];
 		}
 
 		~Chunk()
 		{
-			if (m_Size > 0)
-			{
-				for (uint32_t i = 0; i < m_CurrentAllocationOffset; i++)
-				{
-					if (m_AllocationFlags[i])
-					{
-						m_Data[i].~DataType();
-					}
-				}
-			}
-
-			::operator delete(m_Data, static_cast<uint64_t>(m_Capacity) * sizeof(DataType));
-			delete[] m_AllocationFlags;
+			delete[] m_Data;
 		}
 
 		virtual uint32_t GetChunkIndex() const override
@@ -83,13 +97,19 @@ namespace decs
 			return m_Size == 0;
 		}
 
-		bool IsFull() const { return m_Capacity == m_Size; }
+		bool IsFull() const
+		{
+			return m_Capacity == m_Size;
+		}
 
-		DataType& operator[](uint32_t index) const { return m_Data[index]; }
+		DataType& operator[](uint32_t index) const
+		{
+			return m_Data[index];
+		}
 
 		bool IsAllocatedAt(uint32_t index) const
 		{
-			return m_AllocationFlags[index];
+			return m_Data[index].bIsAllocated;
 		}
 
 		template<typename... Args>
@@ -103,44 +123,54 @@ namespace decs
 			{
 				uint32_t freeSpaceIndex = m_FreeSpaces.back();
 				m_FreeSpaces.pop_back();
-				DataType* data = new(&m_Data[freeSpaceIndex])DataType(std::forward<Args>(args)...);
 
-				m_AllocationFlags[freeSpaceIndex] = true;
+				RecordData& record = m_Data[freeSpaceIndex];
+				record.bIsAllocated = true;
+				DataType* data = new(&record.Component)DataType(std::forward<Args>(args)...);
+
 				return AllocationResultType(freeSpaceIndex, data);
 			}
 
-			uint32_t allocationIndex = m_CurrentAllocationOffset;
-			DataType* data = new(&m_Data[allocationIndex])DataType(std::forward<Args>(args)...);
-			m_AllocationFlags[allocationIndex] = true;
+			{
 
-			m_CurrentAllocationOffset += 1;
+				uint32_t allocationIndex = m_CurrentAllocationOffset;
+				RecordData& record = m_Data[m_CurrentAllocationOffset];
+				record.bIsAllocated = true;
+				DataType* data = new(&record.Component)DataType(std::forward<Args>(args)...);
 
-			return AllocationResultType(allocationIndex, data);
+				m_CurrentAllocationOffset += 1;
+
+				return AllocationResultType(allocationIndex, data);
+			}
 		}
 
 		bool RemoveAt(uint32_t index)
 		{
-			if (index < m_Capacity && m_AllocationFlags[index])
+			if (index < m_Capacity)
 			{
-				m_Size -= 1;
-				if (index == (m_CurrentAllocationOffset - 1))
+				RecordData& record = m_Data[index];
+				if (record.bIsAllocated)
 				{
-					m_CurrentAllocationOffset -= 1;
-				}
-				else
-				{
-					m_FreeSpaces.push_back(index);
-				}
+					m_Size -= 1;
+					if (index == (m_CurrentAllocationOffset - 1))
+					{
+						m_CurrentAllocationOffset -= 1;
+					}
+					else
+					{
+						m_FreeSpaces.push_back(index);
+					}
 
-				if (IsEmpty())
-				{
-					m_FreeSpaces.clear();
-					m_CurrentAllocationOffset = 0;
-				}
+					if (IsEmpty())
+					{
+						m_FreeSpaces.clear();
+						m_CurrentAllocationOffset = 0;
+					}
 
-				m_AllocationFlags[index] = false;
-				m_Data[index].~DataType();
-				return true;
+					record.bIsAllocated = false;
+					record.Component.~DataType();
+					return true;
+				}
 			}
 			return false;
 		}
@@ -148,9 +178,8 @@ namespace decs
 	private:
 		std::vector<uint32_t> m_FreeSpaces;
 
+		RecordData* m_Data = nullptr;
 		uint32_t m_Capacity = 0;
-		DataType* m_Data = nullptr;
-		bool* m_AllocationFlags = nullptr;
 
 		uint32_t m_CurrentAllocationOffset = 0;
 		uint32_t m_Size = 0;

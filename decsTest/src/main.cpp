@@ -18,12 +18,12 @@ public:
 public:
 	Position()
 	{
-
+		PrintLine("Position constructior");
 	}
 
 	Position(float x, float y) : X(x), Y(y)
 	{
-
+		PrintLine("Position constructior");
 	}
 
 	void TestFunc(int& i)
