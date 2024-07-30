@@ -30,7 +30,7 @@ namespace decs
 	public:
 		virtual ~EnableEntityObserver() = default;
 
-		virtual void OnEnableComponent(const Entity& entity) = 0;
+		virtual void OnEnableEntity(const Entity& entity) = 0;
 	};
 
 	class DisableEntityObserver
@@ -38,7 +38,7 @@ namespace decs
 	public:
 		virtual ~DisableEntityObserver() = default;
 
-		virtual void OnDisableComponent(const Entity& entity) = 0;;
+		virtual void OnDisableEntity(const Entity& entity) = 0;;
 	};
 
 	template<typename TComponent>

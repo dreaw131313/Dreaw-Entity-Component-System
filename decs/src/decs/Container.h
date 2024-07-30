@@ -847,6 +847,13 @@ namespace decs
 			componentContext->m_Observers.m_EnableObserver = enableObserver;
 			componentContext->m_Observers.m_DisableObserver = disableObserver;
 		}
+
+		/// <summary>
+		/// Invokes only entity Create and Enable (if entity is enabled). If callbacks was invoked earliers then callbacks will not be invoked. This function should be used with CreateEntity_NoCallbacks method.
+		/// </summary>
+		/// <param name="entity"></param>
+		void InvokeEntityObservers(const decs::Entity& entity);
+
 	private:
 		std::vector<ComponentBaseRef> m_ActivationChangeComponentRefs = {};
 
@@ -856,17 +863,17 @@ namespace decs
 		DisableEntityObserver* m_DisableEntityObserver = nullptr;
 
 	private:
-		inline void InvokeEntityCreateObserver(const Entity& entity);
+		void InvokeEntityCreateObserver_Internal(const Entity& entity);
 
-		inline void InvokeEntityDestroyObserver(const Entity& entity);
+		void InvokeEntityDestroyObserver_Internal(const Entity& entity);
 
-		inline void InvokeEntityEnableObserver(const Entity& entity);
+		void InvokeEntityEnableObserver_Internal(const Entity& entity);
 
-		inline void InvokeEntityDisableObserver(const Entity& entity);
+		void InvokeEntityDisableObserver_Internal(const Entity& entity);
 
-		void InvokeEntityAndComponentEnableObservers(const Entity& entity);
+		void InvokeEntityAndComponentEnableObservers_Internal(const Entity& entity);
 
-		void InvokeEntityAndComponentsDisableObservers(const Entity& entity);
+		void InvokeEntityAndComponentsDisableObservers_Internal(const Entity& entity);
 
 		// OBSERVERS - end
 
