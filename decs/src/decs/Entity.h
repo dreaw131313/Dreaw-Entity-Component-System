@@ -150,15 +150,6 @@ namespace decs
 			return nullptr;
 		}
 
-		template<typename TComponent, typename TCallable,typename... Args>
-		inline typename TComponent* AddComponent_WithCallback(TCallable&& func,Args&&... args) const
-		{
-			if (IsValid())
-				return m_Container->AddComponent_WithCallback<TComponent>(*this, *m_EntityData, func, std::forward<Args>(args)...);
-
-			return nullptr;
-		}
-
 		template<typename TComponent>
 		inline bool RemoveComponent() const
 		{
@@ -270,6 +261,23 @@ namespace decs
 		}
 
 #pragma endregion
+
+		void SetUserDataPtr(void* userData)
+		{
+			if (IsValid())
+			{
+				m_EntityData->m_UserData = userData;
+			}
+		}
+
+		inline void* GetUserDataPtr() const
+		{
+			if (IsValid())
+			{
+				return m_EntityData->m_UserData;
+			}
+			return nullptr;
+		}
 
 	private:
 		mutable Container* m_Container = nullptr;
@@ -420,6 +428,10 @@ namespace decs
 			return m_Entity.Destroy();
 		}
 
+		inline void* GetUserDataPtr() const
+		{
+			return m_Entity.GetUserDataPtr();
+		}
 	private:
 		Entity m_Entity = {};
 

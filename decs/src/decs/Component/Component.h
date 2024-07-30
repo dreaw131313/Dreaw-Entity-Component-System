@@ -2,8 +2,11 @@
 
 #include "traits.h"
 
+
 namespace decs
 {
+	class Entity;
+
 	class ComponentBase
 	{
 		friend class Container;
@@ -48,6 +51,13 @@ namespace decs
 		{
 			return m_bIsEnabledByECS;
 		}
+
+	protected:
+		/// <summary>
+		/// This function is called always when adding component to entity (and when entity is spawned). Removing any other component or removing this component is forbidden because it cause undefined behavior.
+		/// </summary>
+		/// <param name="entity"></param>
+		virtual void OnPreCreate(const Entity& entity);
 
 	private:
 		bool m_bIsCreatedByContainer = false;

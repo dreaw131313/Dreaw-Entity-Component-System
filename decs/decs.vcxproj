@@ -131,6 +131,7 @@
     <ClCompile Include="src\decs\Archetypes\Archetype.cpp" />
     <ClCompile Include="src\decs\Archetypes\ArchetypesMap.cpp" />
     <ClCompile Include="src\decs\ComponentRefs\ComponentBaseRef.cpp" />
+    <ClCompile Include="src\decs\Component\Component.cpp" />
     <ClCompile Include="src\decs\Container.cpp" />
     <ClCompile Include="src\decs\EntityData.cpp" />
     <ClCompile Include="src\decs\Iteration\MultiQuery.h" />

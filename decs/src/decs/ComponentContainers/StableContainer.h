@@ -47,6 +47,7 @@ namespace decs
 		uint32_t m_Index = 0;
 		uint32_t m_IndexInFreeSpaces = 0;
 		bool m_IsInFreeSpaces = 0;
+
 	public:
 		Chunk(uint32_t capacity) :
 			m_Capacity(capacity)

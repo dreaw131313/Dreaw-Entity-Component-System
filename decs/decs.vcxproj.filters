@@ -119,5 +119,8 @@
     <ClCompile Include="src\decs\Archetypes\Archetype.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\decs\Component\Component.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

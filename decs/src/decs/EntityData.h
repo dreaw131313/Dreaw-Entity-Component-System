@@ -21,6 +21,7 @@ namespace decs
 
 	public:
 		Archetype* m_Archetype = nullptr;
+		void* m_UserData = nullptr;
 
 	private:
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
@@ -122,6 +123,7 @@ namespace decs
 			m_Archetype = nullptr;
 			m_Version += 1;
 			m_State = EEntityState::Dead;
+			m_UserData = nullptr;
 		}
 
 		void SetIsInManager(bool bIsInManager)

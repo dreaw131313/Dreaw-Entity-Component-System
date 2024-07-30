@@ -348,7 +348,7 @@ namespace decs
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
-		CreateEntityFromSpawnData(*spawnedEntityData, spawnState);
+		CreateEntityFromSpawnData(spawnedEntity, *spawnedEntityData, spawnState);
 
 		InvokeEntityCreateObserver(spawnedEntity);
 		if (isActive)
@@ -404,7 +404,7 @@ namespace decs
 			EntityData* entityData = CreateAliveEntityData(areActive);
 			spawnedEntity.Set(entityData, this);
 
-			CreateEntityFromSpawnData(*entityData, spawnState);
+			CreateEntityFromSpawnData(spawnedEntity, *entityData, spawnState);
 
 			InvokeEntityCreateObserver(spawnedEntity);
 			if (areActive)
@@ -460,7 +460,7 @@ namespace decs
 			EntityData* entityData = CreateAliveEntityData(areActive);
 			Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
 
-			CreateEntityFromSpawnData(*entityData, spawnState);
+			CreateEntityFromSpawnData(spawnedEntity, *entityData, spawnState);
 
 			InvokeEntityCreateObserver(spawnedEntity);
 			if (spawnedEntity.IsActive())
@@ -514,6 +514,7 @@ namespace decs
 	}
 
 	void Container::CreateEntityFromSpawnData(
+		const Entity& entity,
 		EntityData& spawnedEntityData,
 		const SpawnDataState& spawnState
 	)
@@ -533,6 +534,8 @@ namespace decs
 			currentTypeData.m_PackedContainer->EmplaceFromStableComponentRef(&compNodeInfo);
 
 			m_SpawnData.m_SpawnedEntityComponentRefs[i].Set(currentTypeData.m_TypeID, spawnedEntityData, i);
+
+			compNodeInfo.m_ComponentPtr->OnPreCreate(entity);
 		}
 	}
 
@@ -1150,7 +1153,7 @@ namespace decs
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
-		CreateEntityFromSpawnData(*spawnedEntityData, spawnState);
+		CreateEntityFromSpawnData(spawnedEntity, *spawnedEntityData, spawnState);
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
 
@@ -1191,7 +1194,7 @@ namespace decs
 		{
 			EntityData* entityData = CreateAliveEntityData(areActive);
 			spawnedEntity.Set(entityData, this);
-			CreateEntityFromSpawnData(*entityData, spawnState);
+			CreateEntityFromSpawnData(spawnedEntity, *entityData, spawnState);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -1233,7 +1236,7 @@ namespace decs
 		{
 			EntityData* entityData = CreateAliveEntityData(areActive);
 			Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
-			CreateEntityFromSpawnData(*entityData, spawnState);
+			CreateEntityFromSpawnData(spawnedEntity, *entityData, spawnState);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
