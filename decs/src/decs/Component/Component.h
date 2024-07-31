@@ -1,7 +1,5 @@
 #pragma once
 
-#include "traits.h"
-
 namespace decs
 {
 	class Entity;

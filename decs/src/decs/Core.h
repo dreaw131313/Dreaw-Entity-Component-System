@@ -9,8 +9,6 @@
 #include <string>
 #include <typeinfo>
 
-#include "traits.h"
-
 #if defined _MSC_VER
 #   define FULL_FUNCTION_NAME __FUNCSIG__
 #elif defined __clang__ || (defined __GNUC__)
