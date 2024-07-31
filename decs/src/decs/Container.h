@@ -259,7 +259,14 @@ namespace decs
 			uint64_t spawnCount,
 			bool areActive = true
 		);
-		
+
+		Entity Spawn_WithCallback(
+			SpawnEntityCallback& callback,
+			const Entity& prefab,
+			bool bIsActive = true,
+			void* userData = nullptr
+		);
+
 		bool Spawn_WithCallback(
 			SpawnEntityCallback& callback,
 			const Entity& prefab,
@@ -1014,7 +1021,7 @@ namespace decs
 					{
 						if constexpr (std::is_invocable<Callable, Entity&, TComponent&>())
 						{
-							entityBuffor.Set(entityData.m_EntityData, this);
+							entityBuffor.Set(entityData.m_EntityData);
 							func(entityBuffor, *static_cast<TComponent*>(packedContainer->GetComponentBasePtr(idx)));
 						}
 						else

@@ -23,7 +23,7 @@ namespace decs
 
 			for (uint32_t i = 0; i < container.m_EmptyEntities.size(); i++)
 			{
-				entityBuffer.Set(container.m_EmptyEntities[i], &container);
+				entityBuffer.Set(container.m_EmptyEntities[i]);
 				callable(entityBuffer);
 			}
 
@@ -44,7 +44,7 @@ namespace decs
 							auto& archetypeEntityData = archetype.m_EntitiesData[entityIdx];
 							if (archetypeEntityData.IsValid())
 							{
-								entityBuffer.Set(archetypeEntityData.m_EntityData, &container);
+								entityBuffer.Set(archetypeEntityData.m_EntityData);
 								callable(entityBuffer);
 							}
 						}

@@ -45,9 +45,6 @@
     <ClInclude Include="src\decs\EntityManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\ComponentRefs\ComponentRef.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decs\ComponentRefs\ComponentBaseRef.h">
       <Filter>Header Files</Filter>
     </ClInclude>

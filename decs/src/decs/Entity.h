@@ -33,18 +33,7 @@ namespace decs
 
 		}
 
-		Entity(EntityID id, Container* container) :
-			m_ID(id),
-			m_Container(container),
-			m_EntityData(&container->m_EntityManager->GetEntityData(id)),
-			m_Version(m_EntityData->GetVersion())
-		{
-
-		}
-
-		Entity(EntityData* entityData, Container* container) :
-			m_ID(entityData->GetID()),
-			m_Container(container),
+		Entity(EntityData* entityData) :
 			m_EntityData(entityData),
 			m_Version(entityData->GetVersion())
 		{
@@ -57,16 +46,6 @@ namespace decs
 			return this->m_EntityData == rhs.m_EntityData && this->m_Version == rhs.m_Version;
 		}
 
-		inline EntityID GetID() const
-		{
-			return m_ID;
-		}
-
-		inline Container* GetContainer() const
-		{
-			return m_Container;
-		}
-
 		inline bool IsValid() const
 		{
 			return m_EntityData != nullptr && m_Version == m_EntityData->GetVersion() && m_EntityData->IsAlive();
@@ -75,6 +54,24 @@ namespace decs
 		inline bool IsNull() const
 		{
 			return !IsValid();
+		}
+
+		inline EntityID GetID() const
+		{
+			if (IsValid())
+			{
+				return m_EntityData->GetID();
+			}
+			return std::numeric_limits< EntityID>::max();
+		}
+
+		inline Container* GetContainer() const
+		{
+			if (IsValid())
+			{
+				return m_EntityData->m_Container;
+			}
+			return nullptr;
 		}
 
 		inline bool IsActive() const
@@ -86,7 +83,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				m_Container->SetEntityActive(*this, isActive);
+				GetContainer_Internal()->SetEntityActive(*this, isActive);
 			}
 		}
 
@@ -94,7 +91,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				m_Container->DestroyEntityInternal(*this, true);
+				GetContainer_Internal()->DestroyEntityInternal(*this, true);
 				Invalidate();
 				return true;
 			}
@@ -105,7 +102,7 @@ namespace decs
 		inline TComponent* GetComponent() const
 		{
 			if (IsValid())
-				return m_Container->GetComponent<TComponent>(*m_EntityData);
+				return GetContainer_Internal()->GetComponent<TComponent>(*m_EntityData);
 
 			return nullptr;
 		}
@@ -119,7 +116,7 @@ namespace decs
 		inline TComponent* GetComponentDynamic() const
 		{
 			if (IsValid())
-				return m_Container->GetComponentDynamic<TComponent>(*m_EntityData);
+				return GetContainer_Internal()->GetComponentDynamic<TComponent>(*m_EntityData);
 
 			return nullptr;
 		}
@@ -127,14 +124,14 @@ namespace decs
 		template<typename TComponent>
 		inline bool HasComponent() const
 		{
-			return IsValid() && m_Container->HasComponent<TComponent>(*m_EntityData);
+			return IsValid() && GetContainer_Internal()->HasComponent<TComponent>(*m_EntityData);
 		}
 
 		template<typename TComponent>
 		inline bool TryGetComponent(TComponent*& component) const
 		{
 			if (IsValid())
-				component = m_Container->GetComponent<TComponent>(*m_EntityData);
+				component = GetContainer_Internal()->GetComponent<TComponent>(*m_EntityData);
 			else
 				component = nullptr;
 
@@ -145,7 +142,7 @@ namespace decs
 		inline typename TComponent* AddComponent(Args&&... args) const
 		{
 			if (IsValid())
-				return m_Container->AddComponent<TComponent>(*this, *m_EntityData, std::forward<Args>(args)...);
+				return GetContainer_Internal()->AddComponent<TComponent>(*this, *m_EntityData, std::forward<Args>(args)...);
 
 			return nullptr;
 		}
@@ -153,18 +150,18 @@ namespace decs
 		template<typename TComponent>
 		inline bool RemoveComponent() const
 		{
-			return IsValid() && m_Container->RemoveComponent<TComponent>(*this);
+			return IsValid() && GetContainer_Internal()->RemoveComponent<TComponent>(*this);
 		}
 
 		inline bool RemoveComponent(TypeID componentTypeID) const
 		{
-			return IsValid() && m_Container->RemoveComponent(*this, componentTypeID);
+			return IsValid() && GetContainer_Internal()->RemoveComponent(*this, componentTypeID);
 		}
 
 		template<typename TComponent, typename TCallable>
 		inline bool RemoveComponent_If(TCallable&& canRemoveFunc) const
 		{
-			return IsValid() && m_Container->RemoveComponent_If<TComponent>(*m_EntityData, canRemoveFunc);
+			return IsValid() && GetContainer_Internal()->RemoveComponent_If<TComponent>(*m_EntityData, canRemoveFunc);
 		}
 
 		inline EntityVersion GetVersion() const
@@ -199,7 +196,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				m_Container->SetEntityActive_NoCallback(*this, isActive);
+				GetContainer_Internal()->SetEntityActive_NoCallback(*this, isActive);
 			}
 		}
 
@@ -211,7 +208,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				m_Container->DestroyEntityInternal(*this, false);
+				GetContainer_Internal()->DestroyEntityInternal(*this, false);
 				Invalidate();
 				return true;
 			}
@@ -226,7 +223,7 @@ namespace decs
 		inline typename TComponent* AddComponent_NoCallback(Args&&... args) const
 		{
 			if (IsValid())
-				return m_Container->AddComponent_NoCallback<TComponent>(*this, *m_EntityData, std::forward<Args>(args)...);
+				return GetContainer_Internal()->AddComponent_NoCallback<TComponent>(*this, *m_EntityData, std::forward<Args>(args)...);
 
 			return nullptr;
 		}
@@ -238,7 +235,7 @@ namespace decs
 		template<typename TComponent>
 		inline bool RemoveComponent_NoCallback() const
 		{
-			return IsValid() && m_Container->RemoveComponent_NoCallback<TComponent>(*this);
+			return IsValid() && GetContainer_Internal()->RemoveComponent_NoCallback<TComponent>(*this);
 		}
 
 		/// <summary>
@@ -247,12 +244,12 @@ namespace decs
 		/// <returns></returns>
 		inline bool RemoveComponent_NoCallback(TypeID componentTypeID) const
 		{
-			return IsValid() && m_Container->RemoveComponent_NoCallback(*this, componentTypeID);
+			return IsValid() && GetContainer_Internal()->RemoveComponent_NoCallback(*this, componentTypeID);
 		}
 
 #pragma endregion
 
-		void SetUserDataPtr(void* userData)
+		void SetUserDataPtr(void* userData) const
 		{
 			if (IsValid())
 			{
@@ -270,44 +267,32 @@ namespace decs
 		}
 
 	private:
-		mutable Container* m_Container = nullptr;
 		mutable EntityData* m_EntityData = nullptr;
-		mutable EntityID m_ID = std::numeric_limits<EntityID>::max();
 		mutable EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
 
 	private:
-		inline void Set(EntityID id, Container* container)
+		inline void Set(EntityData& data)
 		{
-			m_ID = id;
-			m_Container = container;
-			m_EntityData = &container->m_EntityManager->GetEntityData(id);
-			m_Version = m_EntityData->GetVersion();
-		}
-
-		inline void Set(EntityData& data, Container* container)
-		{
-			m_ID = data.GetID();
-			m_Container = container;
 			m_EntityData = &data;
 			m_Version = data.GetVersion();
 		}
 
-		inline void Set(EntityData* data, Container* container)
+		inline void Set(EntityData* data)
 		{
-			m_ID = data->GetID();
-			m_Container = container;
 			m_EntityData = data;
 			m_Version = data->GetVersion();
 		}
 
 		inline void Invalidate() const
 		{
-			m_ID = std::numeric_limits<EntityID>::max();
-			m_Container = nullptr;
 			m_EntityData = nullptr;
 			m_Version = std::numeric_limits<EntityVersion>::max();
 		}
 
+		Container* GetContainer_Internal() const
+		{
+			return m_EntityData->m_Container;
+		}
 	};
 
 	class ConstEntity final
@@ -427,19 +412,14 @@ namespace decs
 		Entity m_Entity = {};
 
 	private:
-		inline void Set(EntityID id, Container* container)
+		inline void Set(EntityData& data)
 		{
-			m_Entity.Set(id, container);
+			m_Entity.Set(data);
 		}
 
-		inline void Set(EntityData& data, Container* container)
+		inline void Set(EntityData* data)
 		{
-			m_Entity.Set(data, container);
-		}
-
-		inline void Set(EntityData* data, Container* container)
-		{
-			m_Entity.Set(data, container);
+			m_Entity.Set(data);
 		}
 
 		inline void Invalidate() const

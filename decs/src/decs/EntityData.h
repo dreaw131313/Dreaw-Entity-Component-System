@@ -16,20 +16,21 @@ namespace decs
 
 	class EntityData
 	{
+		friend class Archetype;
 		friend class EntityManager;
 		friend class Container;
+		friend class Entity;
+		friend class EntityManager;
+		friend class ComponentBaseRef;
 
-	public:
+	private:
 		Archetype* m_Archetype = nullptr;
+		Container* m_Container = nullptr;
 		void* m_UserData = nullptr;
 
-	private:
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
-
-	public:
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 
-	private:
 		EntityVersion m_Version = 1;
 		EEntityState m_State = EEntityState::Alive;
 
@@ -124,6 +125,7 @@ namespace decs
 			m_Version += 1;
 			m_State = EEntityState::Dead;
 			m_UserData = nullptr;
+			m_Container = nullptr;
 		}
 
 		void SetIsInManager(bool bIsInManager)
