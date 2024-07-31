@@ -2,21 +2,22 @@
 #include "Core.h"
 #include "Type.h"
 
-#include "Archetypes\ArchetypesMap.h"
+#include "Archetypes/ArchetypesMap.h"
 #include "EntityManager.h"
-#include "ComponentContext\ComponentContextsManager.h"
+#include "ComponentContext/ComponentContextsManager.h"
 
-#include "Observers\Observers.h"
+#include "Observers/Observers.h"
 
 #include "Component/Component.h"
 
-#include "decs\ComponentContainers\PackedContainer.h"
-#include "decs\ComponentContainers\StableContainer.h"
-#include "ComponentRefs\ComponentBaseRef.h"
+#include "decs/ComponentContainers/PackedContainer.h"
+#include "decs/ComponentContainers/StableContainer.h"
+#include "ComponentRefs/ComponentBaseRef.h"
 
 namespace decs
 {
 	class Entity;
+	class SpawnEntityCallback;
 
 	class Container
 	{
@@ -104,13 +105,13 @@ namespace decs
 
 		// ENTITIES:
 	private:
-		std::vector<EntityData*> m_EmptyEntities = {}; //TODO: change to std::vector
+		std::vector<EntityData*> m_EmptyEntities = {};
 		EntityManager* m_EntityManager = nullptr;
 		uint32_t m_EntityCount = 0;
 		bool m_HaveOwnEntityManager = false;
 
 	public:
-		Entity CreateEntity(bool isActive = true);
+		Entity CreateEntity(bool bIsActive = true, void* userData = nullptr);
 
 		inline uint32_t GetEntityCount() const
 		{
@@ -242,7 +243,8 @@ namespace decs
 	public:
 		Entity Spawn(
 			const Entity& prefab,
-			bool isActive = true
+			bool bIsActive = true,
+			void* userData = nullptr
 		);
 
 		bool Spawn(
@@ -256,6 +258,21 @@ namespace decs
 			std::vector<Entity>& spawnedEntities,
 			uint64_t spawnCount,
 			bool areActive = true
+		);
+		
+		bool Spawn_WithCallback(
+			SpawnEntityCallback& callback,
+			const Entity& prefab,
+			uint64_t spawnCount,
+			bool bAreActive = true
+		);
+
+		bool Spawn_WithCallback(
+			SpawnEntityCallback& callback,
+			const Entity& prefab,
+			std::vector<Entity>& spawnedEntities,
+			uint64_t spawnCount,
+			bool bAreActive = true
 		);
 
 	private:
@@ -508,18 +525,6 @@ namespace decs
 					return currentArchetype->ComponentCount();
 				}
 			}*/
-
-		template<typename TComponent>
-		TComponent* GetComponent(EntityID e) const
-		{
-			if (e < m_EntityManager->GetEntitiesDataCount())
-			{
-				EntityData& entityData = m_EntityManager->GetEntityData(e);
-				return GetComponent<TComponent>(entityData);
-			}
-
-			return nullptr;
-		}
 
 		template<typename TComponent>
 		TComponent* GetComponent(EntityData& entityData) const

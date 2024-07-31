@@ -96,6 +96,9 @@
     <ClInclude Include="src\decs\Bitmask\Bitmask.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\decs\Utils\UtilityClasses.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\decs\Container.cpp">

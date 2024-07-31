@@ -167,16 +167,6 @@ namespace decs
 			return IsValid() && m_Container->RemoveComponent_If<TComponent>(*m_EntityData, canRemoveFunc);
 		}
 
-		/*template<typename... Ts>
-		inline uint32_t RemoveComponents() const
-		{
-			if (IsValid())
-			{
-				return m_Container->RemoveMultipleComponnets<Ts...>(*this, *m_EntityData);
-			}
-			return 0;
-		}*/
-
 		inline EntityVersion GetVersion() const
 		{
 			return m_Version;
@@ -432,6 +422,7 @@ namespace decs
 		{
 			return m_Entity.GetUserDataPtr();
 		}
+
 	private:
 		Entity m_Entity = {};
 

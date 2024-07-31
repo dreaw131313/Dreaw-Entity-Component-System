@@ -193,3 +193,18 @@ int main()
 
 	return 0;
 }
+
+struct EntityData
+{
+
+};
+
+struct Entity
+{
+	EntityData m_EntityData;
+};
+
+struct EntityPtr
+{
+	Entity* m_Entity;
+};

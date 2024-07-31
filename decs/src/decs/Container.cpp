@@ -3,6 +3,7 @@
 #include "Entity.h"
 
 #include "decs/Utils/ContainerIterator.h"
+#include "decs/Utils/UtilityClasses.h"
 
 namespace decs
 {
@@ -117,11 +118,12 @@ namespace decs
 		}
 	}
 
-	Entity Container::CreateEntity(bool isActive)
+	Entity Container::CreateEntity(bool bIsActive, void* userData)
 	{
 		if (m_CanCreateEntities)
 		{
-			EntityData* entityData = CreateAliveEntityData(isActive);
+			EntityData* entityData = CreateAliveEntityData(bIsActive);
+			entityData->m_UserData = userData;
 			Entity e(entityData, this);
 			AddToEmptyEntitiesRightAfterNewEntityCreation(*e.m_EntityData);
 			InvokeEntityCreateObserver_Internal(e);
@@ -317,7 +319,11 @@ namespace decs
 		m_ReservedEntityData.clear();
 	}
 
-	Entity Container::Spawn(const Entity& prefab, bool isActive)
+	Entity Container::Spawn(
+		const Entity& prefab,
+		bool bIsActive,
+		void* userData 
+	)
 	{
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
@@ -327,7 +333,8 @@ namespace decs
 
 		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
 
-		EntityData* spawnedEntityData = CreateAliveEntityData(isActive);
+		EntityData* spawnedEntityData = CreateAliveEntityData(bIsActive);
+		spawnedEntityData->m_UserData = userData;
 		Entity spawnedEntity(spawnedEntityData, this);
 
 		if (prefabArchetype == nullptr)
@@ -351,7 +358,7 @@ namespace decs
 		CreateEntityFromSpawnData(spawnedEntity, *spawnedEntityData, spawnState);
 
 		InvokeEntityCreateObserver_Internal(spawnedEntity);
-		if (isActive)
+		if (spawnedEntity.IsActive())
 		{
 			InvokeEntityEnableObserver_Internal(spawnedEntity);
 		}
@@ -383,7 +390,7 @@ namespace decs
 				AddToEmptyEntitiesRightAfterNewEntityCreation(*entityData);
 
 				InvokeEntityCreateObserver_Internal(spawnedEntity);
-				if (areActive)
+				if (spawnedEntity.IsActive())
 				{
 					InvokeEntityEnableObserver_Internal(spawnedEntity);
 				}
@@ -407,7 +414,7 @@ namespace decs
 			CreateEntityFromSpawnData(spawnedEntity, *entityData, spawnState);
 
 			InvokeEntityCreateObserver_Internal(spawnedEntity);
-			if (areActive)
+			if (spawnedEntity.IsActive())
 			{
 				InvokeEntityEnableObserver_Internal(spawnedEntity);
 			}
@@ -461,6 +468,127 @@ namespace decs
 			Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
 
 			CreateEntityFromSpawnData(spawnedEntity, *entityData, spawnState);
+
+			InvokeEntityCreateObserver_Internal(spawnedEntity);
+			if (spawnedEntity.IsActive())
+			{
+				InvokeEntityEnableObserver_Internal(spawnedEntity);
+			}
+
+			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
+		}
+
+		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
+
+		return true;
+	}
+
+	bool Container::Spawn_WithCallback(SpawnEntityCallback& callback, const Entity& prefab, uint64_t spawnCount, bool bAreActive)
+	{
+		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
+
+		Container* prefabContainer = prefab.GetContainer();
+		EntityData& prefabEntityData = *prefab.m_EntityData;
+		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
+		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
+
+		Entity spawnedEntity;
+
+		if (prefabArchetype == nullptr)
+		{
+			for (uint64_t i = 0; i < spawnCount; i++)
+			{
+				EntityData* entityData = CreateAliveEntityData(bAreActive);
+				spawnedEntity.Set(entityData, this);
+				AddToEmptyEntitiesRightAfterNewEntityCreation(*entityData);
+
+				callback.OnSpawnEntityCallback(spawnedEntity);
+
+				InvokeEntityCreateObserver_Internal(spawnedEntity);
+				if (spawnedEntity.IsActive())
+				{
+					InvokeEntityEnableObserver_Internal(spawnedEntity);
+				}
+			}
+			return true;
+		}
+
+		uint64_t componentsCount = prefabArchetype->ComponentCount();
+		SpawnDataState spawnState(m_SpawnData);
+
+		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
+
+		Archetype* spawnArchetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
+		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntityCount() + spawnCount);
+
+		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
+		{
+			EntityData* entityData = CreateAliveEntityData(bAreActive);
+			spawnedEntity.Set(entityData, this);
+
+			CreateEntityFromSpawnData(spawnedEntity, *entityData, spawnState);
+
+			callback.OnSpawnEntityCallback(spawnedEntity);
+
+			InvokeEntityCreateObserver_Internal(spawnedEntity);
+			if (spawnedEntity.IsActive())
+			{
+				InvokeEntityEnableObserver_Internal(spawnedEntity);
+			}
+			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
+		}
+
+		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
+
+		return true;
+	}
+
+	bool Container::Spawn_WithCallback(SpawnEntityCallback& callback, const Entity& prefab, std::vector<Entity>& spawnedEntities, uint64_t spawnCount, bool bAreActive)
+	{
+		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
+
+		Container* prefabContainer = prefab.GetContainer();
+		EntityData& prefabEntityData = *prefab.m_EntityData;
+		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
+		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
+
+		spawnedEntities.reserve(spawnedEntities.size() + spawnCount);
+
+		if (prefabArchetype == nullptr)
+		{
+			for (uint64_t i = 0; i < spawnCount; i++)
+			{
+				EntityData* entityData = CreateAliveEntityData(bAreActive);
+				Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
+				AddToEmptyEntitiesRightAfterNewEntityCreation(*entityData);
+
+				callback.OnSpawnEntityCallback(spawnedEntity);
+
+				InvokeEntityCreateObserver_Internal(spawnedEntity);
+				if (spawnedEntity.IsActive())
+				{
+					InvokeEntityEnableObserver_Internal(spawnedEntity);
+				}
+			}
+			return true;
+		}
+
+		uint64_t componentsCount = prefabArchetype->ComponentCount();
+		SpawnDataState spawnState(m_SpawnData);
+
+		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
+
+		Archetype* spawnArchetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
+		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntityCount() + spawnCount);
+
+		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
+		{
+			EntityData* entityData = CreateAliveEntityData(bAreActive);
+			Entity& spawnedEntity = spawnedEntities.emplace_back(entityData, this);
+
+			CreateEntityFromSpawnData(spawnedEntity, *entityData, spawnState);
+
+			callback.OnSpawnEntityCallback(spawnedEntity);
 
 			InvokeEntityCreateObserver_Internal(spawnedEntity);
 			if (spawnedEntity.IsActive())
