@@ -408,6 +408,11 @@ namespace decs
 			auto packedContainer = archetypeTypeData.m_PackedContainer;
 			auto compPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
 
+			if (compPtr->GetDependecyCount() > 0)
+			{
+				return false;
+			}
+
 			const TComponent& compConstRef = *static_cast<TComponent*>(compPtr);
 			if (!canRemoveFunc(compConstRef))
 			{

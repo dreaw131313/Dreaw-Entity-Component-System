@@ -1,4 +1,5 @@
 #pragma once
+#include "decs/Core.h"
 
 namespace decs
 {
@@ -49,6 +50,28 @@ namespace decs
 			return m_bIsEnabledByECS;
 		}
 		
+		inline uint32_t GetDependecyCount() const
+		{
+			return m_DependencyCount;
+		}
+
+		inline void AddDependency(uint32_t dependecyCount = 1)
+		{
+			m_DependencyCount += 1;
+		}
+
+		inline void RemoveDependecy(uint32_t dependecyCount = 1)
+		{
+			if (dependecyCount > m_DependencyCount)
+			{
+				m_DependencyCount = 0;
+			}
+			else
+			{
+				m_DependencyCount -= dependecyCount;
+			}
+		}
+
 	protected:
 		/// <summary>
 		/// This function is called always when adding component to entity (and when entity is spawned). Removing any other component or removing this component is forbidden because it cause undefined behavior.
@@ -57,6 +80,7 @@ namespace decs
 		virtual void OnPreCreate(const Entity& entity);
 
 	private:
+		uint32_t m_DependencyCount = 0;
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByECS = false;
 

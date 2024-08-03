@@ -820,7 +820,11 @@ namespace decs
 
 		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
 		auto packedContainer = archetypeTypeData.m_PackedContainer;
-		//auto compPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
+		auto compPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
+		if (compPtr->GetDependecyCount() > 0)
+		{
+			return false;
+		}
 
 		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
 			*entityData.m_Archetype,
@@ -1468,6 +1472,12 @@ namespace decs
 
 		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
 		auto& packedContainer = archetypeTypeData.m_PackedContainer;
+
+		auto componentPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
+		if(componentPtr->GetDependecyCount() >0)
+		{
+			return false;
+		}
 
 		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
 			*entityData.m_Archetype,
