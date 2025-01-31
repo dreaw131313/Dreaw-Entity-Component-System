@@ -7,7 +7,7 @@
 
 namespace decs
 {
-	Container::Container() :
+	Container::Container():
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(m_DefaultEntitiesChunkSize))
 	{
@@ -17,7 +17,7 @@ namespace decs
 	Container::Container(
 		uint64_t enititesChunkSize,
 		uint32_t stableComponentDefaultChunkSize
-	) :
+	):
 		m_HaveOwnEntityManager(true),
 		m_EntityManager(new EntityManager(enititesChunkSize)),
 		m_ComponentContextManager(stableComponentDefaultChunkSize)
@@ -27,14 +27,14 @@ namespace decs
 	Container::Container(
 		EntityManager* entityManager,
 		uint32_t stableComponentDefaultChunkSize
-	) :
+	):
 		m_HaveOwnEntityManager(entityManager == nullptr),
 		m_EntityManager(entityManager == nullptr ? new EntityManager(m_DefaultEntitiesChunkSize) : entityManager),
 		m_ComponentContextManager(stableComponentDefaultChunkSize)
 	{
 	}
 
-	Container::Container(bool bCreateInvalid) :
+	Container::Container(bool bCreateInvalid):
 		m_HaveOwnEntityManager(!bCreateInvalid),
 		m_EntityManager(bCreateInvalid ? nullptr : new EntityManager(m_DefaultEntitiesChunkSize))
 	{
@@ -325,7 +325,7 @@ namespace decs
 	Entity Container::Spawn(
 		const Entity& prefab,
 		bool bIsActive,
-		void* userData 
+		void* userData
 	)
 	{
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
@@ -486,8 +486,8 @@ namespace decs
 		return true;
 	}
 
-    Entity Container::Spawn_WithCallback(SpawnEntityCallback& callback, const Entity& prefab, bool bIsActive, void* userData)
-    {
+	Entity Container::Spawn_WithCallback(SpawnEntityCallback& callback, const Entity& prefab, bool bIsActive, void* userData)
+	{
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
 		Container* prefabContainer = prefab.GetContainer();
@@ -535,7 +535,7 @@ namespace decs
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
 
 		return spawnedEntity;
-    }
+	}
 
 	bool Container::Spawn_WithCallback(SpawnEntityCallback& callback, const Entity& prefab, uint64_t spawnCount, bool bAreActive)
 	{
@@ -775,10 +775,10 @@ namespace decs
 			Archetype* currentArch = entityData->m_Archetype;
 
 			ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
-			componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity); \
+			componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
 
-				// All this checks are here to check if this entity containe components after OnCreateMethod
-				Archetype* newArch = entityData->m_Archetype;
+			// All this checks are here to check if this entity containe components after OnCreateMethod
+			Archetype* newArch = entityData->m_Archetype;
 			if (newArch != nullptr && entity.IsActive())
 			{
 				if (currentArch != newArch)
@@ -1306,7 +1306,7 @@ namespace decs
 	void Container::AddEntityToDelayedDestroy(const Entity& entity, bool bInvokeCallbacks)
 	{
 		entity.m_EntityData->SetState(EEntityState::DelayedToDestruction);
-		m_DelayedEntitiesToDestroy.push_back({ entity.m_EntityData,bInvokeCallbacks });
+		m_DelayedEntitiesToDestroy.push_back({ entity.m_EntityData, bInvokeCallbacks });
 	}
 
 	Entity Container::CreateEntity_NoCallbacks(bool bIsActive)
@@ -1474,7 +1474,7 @@ namespace decs
 		auto& packedContainer = archetypeTypeData.m_PackedContainer;
 
 		auto componentPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
-		if(componentPtr->GetDependecyCount() >0)
+		if (componentPtr->GetDependecyCount() > 0)
 		{
 			return false;
 		}
