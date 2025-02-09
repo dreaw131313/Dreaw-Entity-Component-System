@@ -80,6 +80,12 @@ namespace decs
 			return m_State == EEntityState::InDestruction;
 		}
 
+		inline bool IsInDestructionOrDelayedToDestruction() const
+		{
+			return m_State == EEntityState::InDestruction
+				|| m_State == EEntityState::DelayedToDestruction;
+		}
+
 		inline bool IsValidToPerformComponentOperation() const
 		{
 			return m_State == EEntityState::Alive && !m_bIsUsedAsPrefab;

@@ -56,6 +56,15 @@ namespace decs
 			return !IsValid();
 		}
 
+		inline bool IsInDestruction() const
+		{
+			if (IsValid())
+			{
+				return m_EntityData->IsInDestructionOrDelayedToDestruction();
+			}
+			return false;
+		}
+
 		inline EntityID GetID() const
 		{
 			if (IsValid())
