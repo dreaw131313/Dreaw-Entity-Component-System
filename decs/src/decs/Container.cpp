@@ -292,9 +292,8 @@ namespace decs
 	{
 		m_EntityCount += 1;
 
-		if (m_ReservedEntitiesCount > 0)
+		if (!m_ReservedEntityData.empty())
 		{
-			m_ReservedEntitiesCount -= 1;
 			EntityData* data = m_ReservedEntityData.back();
 			data->m_Container = this;
 			m_ReservedEntityData.pop_back();
@@ -311,9 +310,15 @@ namespace decs
 
 	void Container::ReserveEntities(uint32_t entitiesToReserve)
 	{
-		m_ReservedEntitiesCount += entitiesToReserve;
-		m_ReservedEntityData.reserve(m_ReservedEntitiesCount);
-		m_EntityManager->CreateReservedEntityData(entitiesToReserve, m_ReservedEntityData);
+		uint64_t currentSize = m_ReservedEntityData.size();
+		if (entitiesToReserve <= currentSize)
+		{
+			return;
+		}
+
+		uint64_t finalNumberToReserve = entitiesToReserve - currentSize;
+		m_ReservedEntityData.reserve(entitiesToReserve);
+		m_EntityManager->CreateReservedEntityData(static_cast<uint32_t>(finalNumberToReserve), m_ReservedEntityData);
 	}
 
 	void Container::FreeReservedEntities()

@@ -151,7 +151,6 @@ namespace decs
 
 	private:
 		std::vector<EntityData*> m_ReservedEntityData;
-		uint32_t m_ReservedEntitiesCount = 0;
 
 		// RESERVING ENTITIES - end
 
@@ -343,7 +342,6 @@ namespace decs
 			TComponent* componentPtr = static_cast<TComponent*>(componentNodeInfo.m_ComponentPtr);
 
 			// Adding entity to archetype
-			uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
 			if (entityData.m_Archetype != nullptr)
 			{
 				if (m_PerformDelayedDestruction)
