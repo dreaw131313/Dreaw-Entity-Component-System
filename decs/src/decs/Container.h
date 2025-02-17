@@ -57,7 +57,7 @@ namespace decs
 
 		~Container();
 
-		// Extension data
+	#pragma region Extension data
 	public:
 		template<typename T>
 		void SetExtensionData(T* data)
@@ -74,9 +74,9 @@ namespace decs
 	private:
 		void* m_ExtensionData = nullptr;
 
-		// Extension data - end 
+	#pragma endregion 
 
-		// UTILITY
+	#pragma region UTILITY
 	public:
 		/// <summary>
 		/// Some functions change internal state of container during invocation and if error will be thrown in any of this functions they can leave invalid internal state of Container object. This function brings back container to valid state.
@@ -101,9 +101,9 @@ namespace decs
 	private:
 		void ReturnOwnedEntitiesToEntityManager_Internal(bool bNullEntityManagerIfIsNotHisOwner);
 
-		// UTILITY - end
+	#pragma endregion
 
-		// ENTITIES:
+	#pragma region ENTITIES:
 	private:
 		std::vector<EntityData*> m_EmptyEntities = {};
 		EntityManager* m_EntityManager = nullptr;
@@ -141,9 +141,9 @@ namespace decs
 
 		EntityData* CreateAliveEntityData(bool bIsActive);
 
-		// ENTITIES - end
+	#pragma endregion
 
-		// RESERVING ENTITIES:
+	#pragma region RESERVING ENTITIES:
 	public:
 		void ReserveEntities(uint32_t entitiesToReserve);
 
@@ -152,9 +152,9 @@ namespace decs
 	private:
 		std::vector<EntityData*> m_ReservedEntityData;
 
-		// RESERVING ENTITIES - end
+	#pragma endregion
 
-// SPAWNING ENTITIES:
+	#pragma region SPAWNING ENTITIES:
 	private:
 		struct SpawnComponentRefData
 		{
@@ -172,7 +172,7 @@ namespace decs
 			SpawnComponentRefData(
 				StableContainerBase* stableContainer,
 				Args&&... args
-			) :
+			):
 				m_StableContainer(stableContainer), m_ComponentRef(std::forward<Args>(args)...)
 			{
 
@@ -228,7 +228,7 @@ namespace decs
 			uint32_t m_ArchetypeIndex;
 
 		public:
-			SpawnDataState(SpawnData& spawnData) :
+			SpawnDataState(SpawnData& spawnData):
 				m_CompRefsStart((uint32_t)spawnData.m_SpawnedEntityComponentRefs.size()),
 				m_ArchetypeIndex((uint32_t)spawnData.m_SpawnArchetypes.size())
 			{
@@ -295,9 +295,9 @@ namespace decs
 
 		void InvokeComponentCreateAndEnableObserversOnSpawn(const Entity& entity, Archetype* archetype, uint64_t componentsCount, const SpawnDataState& spawnState);
 
-		// SPAWNING ENTITIES - end
+	#pragma endregion
 
-// COMPONENTS:
+	#pragma region COMPONENTS:
 	private:
 		ComponentContextsManager m_ComponentContextManager = { 1000 };
 
@@ -619,9 +619,9 @@ namespace decs
 			return HasComponentInternal(entityData, Type<TComponent>::ID());
 		}
 
-		// COMPONENTS - end
+	#pragma endregion
 
-		// STABLE COMPONENTS:
+	#pragma region STABLE COMPONENTS:
 	public:
 		template<typename T>
 		bool SetComponentChunkSize(uint32_t chunkSize)
@@ -645,9 +645,9 @@ namespace decs
 			return m_ComponentContextManager.GetComponentChunkSize(typeID);
 		}
 
-		// STABLE COMPONENTS - end
+	#pragma endregion
 
-		// ARCHETYPES:
+	#pragma region ARCHETYPES:
 	public:
 		inline void ShrinkArchetypesToFit()
 		{
@@ -708,9 +708,9 @@ namespace decs
 			return entityNewArchetype;
 		}
 
-		// ARCHETYPES - end
+	#pragma endregion
 
-		// OBSERVERS:
+	#pragma region OBSERVERS:
 	public:
 		void InvokeEntitesOnCreateListeners();
 
@@ -890,9 +890,9 @@ namespace decs
 
 		void InvokeEntityAndComponentsDisableObservers_Internal(const Entity& entity);
 
-		// OBSERVERS - end
+	#pragma endregion
 
-		// DELAYED DESTROY:
+	#pragma region DELAYED DESTROY:
 	public:
 		/// <summary>
 		/// This function clean all entites which was destroyed. It do not invoke any callback observers it only cleans records in archetypes.
@@ -941,20 +941,20 @@ namespace decs
 			m_ArchetypesRecordsToDelayedRemove.push_back({ archetype, removedComponentTypeID, index, bRemoveAfterRemoveComponent });
 		}
 
-		// DELAYED DESTROY - end
+	#pragma endregion
 
-		// FLAGS:
+	#pragma region FLAGS:
 	private:
 		struct BoolSwitch final
 		{
 		public:
-			BoolSwitch(bool& boolToSwitch) :
+			BoolSwitch(bool& boolToSwitch):
 				m_Bool(boolToSwitch),
 				m_FinalValue(!boolToSwitch)
 			{
 			}
 
-			BoolSwitch(bool& boolToSwitch, const bool& startValue) :
+			BoolSwitch(bool& boolToSwitch, const bool& startValue):
 				m_Bool(boolToSwitch),
 				m_FinalValue(!startValue)
 			{
@@ -985,10 +985,9 @@ namespace decs
 		bool m_CanAddComponents = true;
 		bool m_CanRemoveComponents = true;
 
+	#pragma endregion
 
-		// FLAGS - end
-
-		// ITERATION:
+	#pragma region ITERATION:
 	public:
 		/// <summary>
 		/// Helper methods for iterating over entites which containe component of type TComponentType.
@@ -1036,9 +1035,9 @@ namespace decs
 			});
 		}
 
-		// ITERATION - end
+	#pragma endregion
 
-		// NO CALLBACKS methods:
+	#pragma region NO CALLBACKS methods:
 	public:
 		Entity CreateEntity_NoCallbacks(bool bIsActive = true);
 
@@ -1144,7 +1143,7 @@ namespace decs
 
 		bool RemoveComponent_NoCallback(const Entity& entity, TypeID componentTypeID);
 
-		// NO CALLBACKS methods - end
+	#pragma endregion
 
 	};
 }
