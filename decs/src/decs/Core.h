@@ -31,8 +31,6 @@ className& operator=(const className&) = delete;	\
 className(className&&) = delete;			\
 className& operator=(className&&) = delete;	\
 
-#define UBIT(index) (1<<index)
-
 namespace decs
 {
 	template<typename Key, typename Value>
