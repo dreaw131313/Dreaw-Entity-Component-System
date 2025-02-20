@@ -18,22 +18,22 @@ namespace decs
 	public:
 		ComponentBase() = default;
 
-		ComponentBase(const ComponentBase& other)
+		ComponentBase(const ComponentBase&)
 		{
 
 		}
 
-		ComponentBase(ComponentBase&& other) noexcept
+		ComponentBase(ComponentBase&&) noexcept
 		{
 
 		}
 
-		ComponentBase& operator =(const ComponentBase& other)
+		ComponentBase& operator =(const ComponentBase&)
 		{
 			return *this;
 		}
 
-		ComponentBase& operator =(ComponentBase&& other) noexcept
+		ComponentBase& operator =(ComponentBase&&) noexcept
 		{
 			return *this;
 		}
@@ -57,7 +57,7 @@ namespace decs
 
 		inline void AddDependency(uint32_t dependecyCount = 1)
 		{
-			m_DependencyCount += 1;
+			m_DependencyCount += dependecyCount;
 		}
 
 		inline void RemoveDependecy(uint32_t dependecyCount = 1)
