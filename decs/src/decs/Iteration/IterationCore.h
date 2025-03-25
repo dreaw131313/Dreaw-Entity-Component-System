@@ -48,7 +48,7 @@ namespace decs
 
 		}
 
-		IterationContainerContext(Container* container, bool bIsEnabled = true) :
+		IterationContainerContext(Container* container, bool bIsEnabled = true):
 			m_Container(container),
 			m_bIsEnabled(bIsEnabled)
 		{
@@ -224,10 +224,13 @@ namespace decs
 
 			for (uint64_t i = minComponentsCount; i <= maxComponentCountsInGroup; i++)
 			{
-				std::vector<Archetype*>& archetypesToCheck = group->GetArchetypesWithComponentsCount(i);
-				for (auto& archetype : archetypesToCheck)
+				auto archetypesToCheckPtr = group->GetArchetypesWithComponentsCount(i);
+				if (archetypesToCheckPtr != nullptr)
 				{
-					TryAddArchetypeFromGroup(*archetype, includes, without, withAnyOf, withAll);
+					for (auto archetype : *archetypesToCheckPtr)
+					{
+						TryAddArchetypeFromGroup(*archetype, includes, without, withAnyOf, withAll);
+					}
 				}
 			}
 		}

@@ -23,7 +23,7 @@ namespace decs
 
 		}
 
-		Query(Container* container) :
+		Query(Container* container):
 			m_Container(container)
 		{
 
@@ -464,10 +464,13 @@ namespace decs
 
 			for (uint64_t i = minComponentsCount; i <= maxComponentCountsInGroup; i++)
 			{
-				std::vector<Archetype*>& archetypesToCheck = group->GetArchetypesWithComponentsCount(i);
-				for (auto& archetype : archetypesToCheck)
+				auto archetypesToCheckPtr = group->GetArchetypesWithComponentsCount(i);
+				if (archetypesToCheckPtr!= nullptr)
 				{
-					TryAddArchetypeFromGroup(*archetype);
+					for (auto& archetype : *archetypesToCheckPtr)
+					{
+						TryAddArchetypeFromGroup(*archetype);
+					}
 				}
 			}
 		}
@@ -516,7 +519,7 @@ namespace decs
 
 		}
 
-#pragma region BATCH ITERATOR
+	#pragma region BATCH ITERATOR
 	public:
 		class BatchIterator
 		{
@@ -532,7 +535,7 @@ namespace decs
 				const uint64_t& firstArchetypeIndex,
 				const uint64_t& firstIterationIndex,
 				const uint64_t& entitiesCount
-			) :
+			):
 				m_IsValid(true),
 				m_Query(query),
 				m_FirstArchetypeIndex(firstArchetypeIndex),
@@ -658,7 +661,7 @@ namespace decs
 			uint64_t m_EntitiesCount = 0;
 		};
 
-#pragma endregion
+	#pragma endregion
 
 	public:
 		void CreateBatchIterators(

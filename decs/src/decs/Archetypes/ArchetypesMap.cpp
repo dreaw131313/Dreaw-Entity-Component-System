@@ -3,7 +3,7 @@
 
 namespace decs
 {
-	ArchetypesMap::ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize) :
+	ArchetypesMap::ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize):
 		m_Archetypes(archetypesVectorChunkSize),
 		m_ArchetrypesGroupsByOneTypeVector(archetypeGroupsVectorChunkSize)
 	{
@@ -208,7 +208,7 @@ namespace decs
 	std::pair<Archetype*, bool> ArchetypesMap::FindMatchingArchetype(Archetype* archetypeToMatch)
 	{
 		const uint64_t typesCount = archetypeToMatch->ComponentCount();
-		if (typesCount == 0) return { nullptr,false };
+		if (typesCount == 0) return { nullptr, false };
 
 		Archetype* finalArchetype = GetSingleComponentArchetype(archetypeToMatch->GetTypeID(0));
 		uint64_t typeIndex = 1;
@@ -243,33 +243,37 @@ namespace decs
 
 				if (group->MaxComponentsCount() >= typesCount)
 				{
-					std::vector<Archetype*>& archetypes = group->GetArchetypesWithComponentsCount(typesCount);
-					uint64_t archetypesSize = archetypes.size();
-					auto& matchedArchData = archetypeToMatch->m_TypeData;
-					for (uint64_t archIdx = 0; archIdx < archetypesSize; archIdx++)
+					auto archetypesPtr = group->GetArchetypesWithComponentsCount(typesCount);
+					if (archetypesPtr != nullptr)
 					{
-						finalArchetype = archetypes[archIdx];
-						auto& typeData = finalArchetype->m_TypeData;
-
-						for (uint64_t typeIdx = 0; typeIdx < typesCount; typeIdx++)
+						auto& archetypes = *archetypesPtr;
+						uint64_t archetypesSize = archetypes.size();
+						auto& matchedArchData = archetypeToMatch->m_TypeData;
+						for (uint64_t archIdx = 0; archIdx < archetypesSize; archIdx++)
 						{
-							if (typeData[typeIdx].m_TypeID != matchedArchData[typeIdx].m_TypeID)
+							finalArchetype = archetypes[archIdx];
+							auto& typeData = finalArchetype->m_TypeData;
+
+							for (uint64_t typeIdx = 0; typeIdx < typesCount; typeIdx++)
 							{
-								finalArchetype = nullptr;
+								if (typeData[typeIdx].m_TypeID != matchedArchData[typeIdx].m_TypeID)
+								{
+									finalArchetype = nullptr;
+									break;
+								}
+							}
+
+							if (finalArchetype != nullptr)
+							{
 								break;
 							}
-						}
-
-						if (finalArchetype != nullptr)
-						{
-							break;
 						}
 					}
 				}
 			}
 		}
 
-		return { finalArchetype,findedWithEdges };
+		return { finalArchetype, findedWithEdges };
 	}
 
 	Archetype* ArchetypesMap::GetOrCreateMatchedArchetype(

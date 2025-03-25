@@ -8,6 +8,7 @@
 #include <type_traits>
 #include <string>
 #include <typeinfo>
+#include <span>
 
 #if defined _MSC_VER
 #   define FULL_FUNCTION_NAME __FUNCSIG__

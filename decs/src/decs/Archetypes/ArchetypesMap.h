@@ -1,4 +1,7 @@
 #pragma once
+
+#include <memory>
+
 #include "decs\Core.h"
 #include "decs\Type.h"
 #include "decs\ComponentContext\ComponentContextsManager.h"
@@ -24,7 +27,7 @@ namespace decs
 
 		}
 
-		ArchetypesShrinkToFitState(uint64_t archetypesToShrinkInOneCall, float maxArchetypeLoadFactor) :
+		ArchetypesShrinkToFitState(uint64_t archetypesToShrinkInOneCall, float maxArchetypeLoadFactor):
 			m_ArchetypesToShrinkInOneCall(archetypesToShrinkInOneCall),
 			m_MaxArchetypeLoadFactor(maxArchetypeLoadFactor)
 		{
@@ -62,60 +65,100 @@ namespace decs
 	class ArchetypesGroupByOneType
 	{
 	public:
-		ArchetypesGroupByOneType(TypeID mainTypeID) :
+		ArchetypesGroupByOneType(TypeID mainTypeID):
 			m_MainTypeID(mainTypeID)
 		{
 
 		}
 
+		~ArchetypesGroupByOneType()
+		{
+			for (auto group : m_Groups)
+			{
+				delete group;
+			}
+		}
+
 		inline uint64_t ArchetypesCount() const { return m_ArchetypesCount; }
-		inline uint32_t MaxComponentsCount() const { return (uint32_t)m_Archetypes.size(); }
+		inline uint32_t MaxComponentsCount() const { return (uint32_t)m_Groups.size(); }
 
 		void AddArchetype(Archetype* archetype)
 		{
 			m_ArchetypesCount += 1;
 			uint64_t archetypesCount = archetype->ComponentCount();
-			if (archetypesCount > m_Archetypes.size())
+			if (archetypesCount > m_Groups.size())
 			{
-				m_Archetypes.resize(archetypesCount);
+				m_Groups.resize(archetypesCount);
 			}
 
-			m_Archetypes[archetypesCount - 1].push_back(archetype);
+			auto& archetypeGroup = m_Groups[archetypesCount - 1];
+			if (archetypeGroup == nullptr)
+			{
+				archetypeGroup = new ArchetypeGroup();
+			}
+			archetypeGroup->Archetypes.push_back(archetype);
 		}
 
-		std::vector<Archetype*>& GetArchetypesWithComponentsCount(const uint64_t& componentsCount)
+		const std::vector<Archetype*>* GetArchetypesWithComponentsCount(uint64_t componentsCount) const
 		{
-			return m_Archetypes[componentsCount - 1];
+			uint64_t groupIndex = componentsCount - 1;
+			if (groupIndex < m_Groups.size())
+			{
+				return nullptr;
+			}
+			auto group = m_Groups[groupIndex];
+			if (group == nullptr)
+			{
+				return nullptr;
+			}
+			return &group->Archetypes;
 		}
 
 		inline Archetype* GetSingleComponentArchetype() const
 		{
-			if (m_Archetypes.size() > 0 && m_Archetypes[0].size() > 0)
+			if (m_Groups.empty())
 			{
-				return m_Archetypes[0][0];
+				return nullptr;
 			}
-			return nullptr;
+
+			auto group = m_Groups.front();
+			if (group == nullptr || group->Archetypes.empty())
+			{
+				return nullptr;
+			}
+			return group->Archetypes.front();
 		}
 
 		template<typename Callable>
 		void IterateOverAllArchetypes(Callable&& func)
 		{
-			uint64_t archetypesGroupCount = m_Archetypes.size();
+			uint64_t archetypesGroupCount = m_Groups.size();
 			for (uint64_t groupIdx = 0; groupIdx < archetypesGroupCount; groupIdx++)
 			{
-				auto& group = m_Archetypes[groupIdx];
-				uint64_t archetypeCount = group.size();
-				for (uint64_t archIdx = 0; archIdx < archetypeCount; archIdx++)
+				auto group = m_Groups[groupIdx];
+				if (group != nullptr)
 				{
-					auto archetype = group[archIdx];
-					func(archetype);
+					auto& groupArchetypes = group->Archetypes;
+					uint64_t archetypeCount = groupArchetypes.size();
+					for (uint64_t archIdx = 0; archIdx < archetypeCount; archIdx++)
+					{
+						auto archetype = groupArchetypes[archIdx];
+						func(archetype);
+					}
 				}
 			}
 		}
 
 	private:
 		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
-		std::vector<std::vector<Archetype*>> m_Archetypes;
+
+		struct ArchetypeGroup
+		{
+		public:
+			std::vector<Archetype*> Archetypes;
+		};
+
+		std::vector<ArchetypeGroup*> m_Groups;
 		uint64_t m_ArchetypesCount = 0;
 	};
 
