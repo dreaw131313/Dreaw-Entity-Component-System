@@ -62,21 +62,27 @@ namespace decs
 		}
 	};
 
+	struct ArchetypeGroup
+	{
+	public:
+		std::vector<Archetype*> Archetypes;
+
+	public:
+		ArchetypeGroup()= default;
+
+	};
+
 	class ArchetypesGroupByOneType
 	{
 	public:
-		ArchetypesGroupByOneType(TypeID mainTypeID):
+		ArchetypesGroupByOneType(
+			TChunkedVector<ArchetypeGroup>& archetypeGroupAllocator,
+			TypeID mainTypeID
+		):
+			m_ArchetypeGroupAllocator(archetypeGroupAllocator),
 			m_MainTypeID(mainTypeID)
 		{
 
-		}
-
-		~ArchetypesGroupByOneType()
-		{
-			for (auto group : m_Groups)
-			{
-				delete group;
-			}
 		}
 
 		inline uint64_t ArchetypesCount() const { return m_ArchetypesCount; }
@@ -94,7 +100,7 @@ namespace decs
 			auto& archetypeGroup = m_Groups[archetypesCount - 1];
 			if (archetypeGroup == nullptr)
 			{
-				archetypeGroup = new ArchetypeGroup();
+				archetypeGroup = &m_ArchetypeGroupAllocator.EmplaceBack();
 			}
 			archetypeGroup->Archetypes.push_back(archetype);
 		}
@@ -150,13 +156,9 @@ namespace decs
 		}
 
 	private:
-		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
+		TChunkedVector<ArchetypeGroup>& m_ArchetypeGroupAllocator;
 
-		struct ArchetypeGroup
-		{
-		public:
-			std::vector<Archetype*> Archetypes;
-		};
+		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
 
 		std::vector<ArchetypeGroup*> m_Groups;
 		uint64_t m_ArchetypesCount = 0;
@@ -274,10 +276,12 @@ namespace decs
 
 	private:
 		TChunkedVector<Archetype> m_Archetypes = { 100 };
+		TChunkedVector<ArchetypeGroup> m_ArchetrypesGroupsAllocator = { 100 };
+		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeVector = { 100 };
+
 		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes = {};
 		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount = {};
 
-		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeVector = { 100 };
 		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType;
 
 		// UTILITY
@@ -301,7 +305,7 @@ namespace decs
 			ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
 			if (group == nullptr)
 			{
-				group = &m_ArchetrypesGroupsByOneTypeVector.EmplaceBack(id);
+				group = &m_ArchetrypesGroupsByOneTypeVector.EmplaceBack(m_ArchetrypesGroupsAllocator,id);
 			}
 			return group;
 		}
