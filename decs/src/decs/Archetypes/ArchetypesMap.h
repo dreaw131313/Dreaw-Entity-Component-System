@@ -102,7 +102,7 @@ namespace decs
 		const std::vector<Archetype*>* GetArchetypesWithComponentsCount(uint64_t componentsCount) const
 		{
 			uint64_t groupIndex = componentsCount - 1;
-			if (groupIndex < m_Groups.size())
+			if (groupIndex >= m_Groups.size())
 			{
 				return nullptr;
 			}
