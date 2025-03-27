@@ -299,6 +299,61 @@ namespace decs
 			}
 		}
 
+		/// <summary>
+		/// Same rules apply like in Foreach methods. But here iteration is for every entity even if entity is not active
+		/// </summary>
+		/// <typeparam name="Callable"></typeparam>
+		/// <param name="func"></param>
+		template<typename Callable>
+		void ForEach_IngoreEntityActiveState(Callable&& func)
+		{
+			Fetch();
+
+			decs::Entity entityBuffor = {};
+			std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
+
+			uint64_t contextSize = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
+			{
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				if (!containerContext.m_bIsEnabled)
+				{
+					continue; // Skip if container context is disabled
+				}
+
+				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+
+				for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+				{
+					ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+					uint64_t ctxEntityCount = ctx.GetEntityCount();
+					if (ctxEntityCount == 0) continue;
+
+					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+					{
+						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+						{
+							const auto& entityData = entitiesData[idx];
+							entityBuffor.Set(entityData.m_EntityData);
+							func(
+								entityBuffor,
+								std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
+							);
+						}
+						else
+						{
+							func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
+						}
+					}
+				}
+			}
+
+		}
+
 		virtual bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{
 			auto& contextIndex = m_ContainerContextsIndexes[container];
@@ -480,7 +535,7 @@ namespace decs
 				uint64_t startArchetypeIndex,
 				uint64_t startEntityIndex,
 				uint64_t entitiesCount
-			) :
+			):
 				m_Query(query),
 				m_StartContainerElementIndex(startContainerElementIndex),
 				m_StartArchetypeIndex(startArchetypeIndex),
@@ -564,6 +619,88 @@ namespace decs
 								{
 									func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
 								}
+							}
+						}
+
+						if (leftEntitiesToIterate == 0)
+						{
+							return;
+						}
+					}
+				}
+			}
+
+			template<typename Callable>
+			void ForEach_IngoreEntityActiveState(Callable&& func)
+			{
+				auto& containerContexts = m_Query->m_ContainerContexts;
+				decs::Entity entityBuffor = {};
+				std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
+
+				uint64_t leftEntitiesToIterate = m_EntitiesCount;
+
+				uint64_t contextSize = containerContexts.size();
+				for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
+				{
+					ContainerContextType& containerContext = containerContexts[containerContextIndex];
+					if (!containerContext.m_bIsEnabled)
+					{
+						continue; // Skip if container context is disabled
+					}
+
+					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+
+					uint64_t archetypeContextIdx;
+					uint64_t startEntitiyIndex;
+					if (containerContextIndex == m_StartContainerElementIndex)
+					{
+						archetypeContextIdx = m_StartArchetypeIndex;
+						startEntitiyIndex = m_StartEntityIndex;
+					}
+					else
+					{
+						archetypeContextIdx = 0;
+						startEntitiyIndex = 0;
+					}
+
+					for (; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+					{
+						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+						uint64_t ctxEntityCount = ctx.GetEntityCount();
+						if (ctxEntityCount == 0) continue;
+
+						uint64_t leftEntitiesInArchetypeToIterate = ctxEntityCount - startEntitiyIndex;
+						uint64_t entitiesCount;
+
+						if (leftEntitiesToIterate <= leftEntitiesInArchetypeToIterate)
+						{
+							entitiesCount = leftEntitiesToIterate + startEntitiyIndex;
+							leftEntitiesToIterate = 0;
+						}
+						else
+						{
+							entitiesCount = leftEntitiesInArchetypeToIterate + startEntitiyIndex;
+							leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
+						}
+
+						std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+						for (uint64_t idx = startEntitiyIndex; idx < entitiesCount; idx++)
+						{
+							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+							{
+								const auto& entityData = entitiesData[idx];
+								entityBuffor.Set(entityData.m_EntityData);
+								func(
+									entityBuffor,
+									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
+								);
+							}
+							else
+							{
+								func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
 							}
 						}
 

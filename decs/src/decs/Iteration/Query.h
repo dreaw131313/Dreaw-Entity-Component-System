@@ -268,6 +268,48 @@ namespace decs
 			}
 		}
 
+		/// <summary>
+		/// Same rules apply like in Foreach methods. But here iteration is for every entity even if entity is not active
+		/// </summary>
+		/// <typeparam name="Callable"></typeparam>
+		/// <param name="func"></param>
+		template<typename Callable>
+		void ForEach_IngoreEntityActiveState(Callable&& func)
+		{
+			if (!IsValid()) return;
+			FetchInternal();
+
+			Entity entityBuffor = {};
+			std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
+			const uint64_t contextCount = m_ArchetypesContexts.size();
+			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
+			{
+				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
+				uint64_t ctxEntityCount = ctx.GetEntityCount();
+				if (ctxEntityCount == 0) continue;
+
+				std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+				CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+				for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+				{
+					if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+					{
+						const auto& entityData = entitiesData[idx];
+						entityBuffor.Set(entityData.m_EntityData);
+						func(
+							entityBuffor,
+							std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
+						);
+					}
+					else
+					{
+						func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
+					}
+				}
+			}
+		}
+
 		inline void Fetch()
 		{
 			if (!IsValid()) return;
@@ -465,7 +507,7 @@ namespace decs
 			for (uint64_t i = minComponentsCount; i <= maxComponentCountsInGroup; i++)
 			{
 				auto archetypesToCheckPtr = group->GetArchetypesWithComponentsCount(i);
-				if (archetypesToCheckPtr!= nullptr)
+				if (archetypesToCheckPtr != nullptr)
 				{
 					for (auto& archetype : *archetypesToCheckPtr)
 					{
@@ -615,6 +657,84 @@ namespace decs
 							{
 								func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
 							}
+						}
+					}
+
+					if (leftEntitiesToIterate == 0)
+					{
+						return;
+					}
+				}
+			}
+
+			/// <summary>
+			/// Same rules apply like in Foreach methods. But here iteration is for every entity even if entity is not active
+			/// </summary>
+			/// <typeparam name="Callable"></typeparam>
+			/// <param name="func"></param>
+			template<typename Callable>
+			inline void ForEach_IngoreEntityActiveState(Callable&& func) const
+			{
+				if (!m_IsValid) return;
+
+				Entity entityBuffor = {};
+				std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
+
+				uint64_t contextIndex = m_FirstArchetypeIndex;
+				uint64_t contextCount = m_Query->m_ArchetypesContexts.size();
+				ArchetypeContextType* archetypeContexts = m_Query->m_ArchetypesContexts.data();
+				Container* container = m_Query->m_Container;
+
+				uint64_t leftEntitiesToIterate = m_EntitiesCount;
+
+				for (; contextIndex < contextCount; contextIndex++)
+				{
+					const ArchetypeContextType& ctx = archetypeContexts[contextIndex];
+					uint64_t ctxEntityCount = ctx.GetEntityCount();
+					if (ctxEntityCount == 0) continue;
+
+					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+					uint64_t iterationIndex;
+					uint64_t iterationsCount;
+
+					if (contextIndex == m_FirstArchetypeIndex)
+					{
+						iterationIndex = m_FirstIterationIndex;
+					}
+					else
+					{
+						iterationIndex = 0;
+					}
+
+					uint64_t leftEntitiesInContext = ctxEntityCount - iterationIndex;
+					if (leftEntitiesToIterate <= leftEntitiesInContext)
+					{
+						iterationsCount = iterationIndex + leftEntitiesToIterate;
+						leftEntitiesToIterate = 0;
+					}
+					else
+					{
+						iterationsCount = iterationIndex + leftEntitiesInContext;
+						leftEntitiesToIterate -= leftEntitiesInContext;
+					}
+
+					uint64_t idx = iterationIndex;
+					for (; idx < iterationsCount; idx++)
+					{
+						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+						{
+							const auto& entityData = entitiesData[idx];
+							entityBuffor.Set(entityData.m_EntityData);
+							func(
+								entityBuffor,
+								std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
+							);
+						}
+						else
+						{
+							func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
 						}
 					}
 
