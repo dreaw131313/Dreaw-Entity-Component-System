@@ -1,9 +1,9 @@
 #pragma once
-#include "Core.h"
-#include "Containers/TChunkedVector.h"
+#include "decs/Core.h"
+#include "decs/Containers/TChunkedVector.h"
 #include "StableContainer.h"
 
-#include "Component/Component.h"
+#include "decs/Component/Component.h"
 
 namespace decs
 {

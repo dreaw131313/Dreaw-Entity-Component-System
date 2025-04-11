@@ -3,7 +3,7 @@
 #include "decs/Containers/TChunkedVector.h"
 #include "decs/Type.h"
 
-#include "Component/Component.h"
+#include "decs/Component/Component.h"
 
 namespace decs
 {

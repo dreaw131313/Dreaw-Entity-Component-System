@@ -2,9 +2,9 @@
 #include "decs/Core.h"
 #include "decs/Type.h"
 #include "decs/EntityData.h"
-#include "Archetypes/Archetype.h"
+#include "decs/Archetypes/Archetype.h"
 
-#include "Component/Component.h"
+#include "decs/Component/Component.h"
 
 namespace decs
 {

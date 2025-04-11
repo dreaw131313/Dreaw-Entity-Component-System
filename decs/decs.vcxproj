@@ -60,7 +60,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>decspch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
-      <AdditionalIncludeDirectories>src/decs;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DisableSpecificWarnings>5260;%(DisableSpecificWarnings)</DisableSpecificWarnings>
@@ -86,7 +86,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>decspch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
-      <AdditionalIncludeDirectories>src/decs;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <DisableSpecificWarnings>5260;%(DisableSpecificWarnings)</DisableSpecificWarnings>
@@ -134,6 +134,7 @@
     <ClCompile Include="src\decs\ComponentRefs\ComponentBaseRef.cpp" />
     <ClCompile Include="src\decs\Component\Component.cpp" />
     <ClCompile Include="src\decs\Container.cpp" />
+    <ClCompile Include="src\decs\decs.cpp" />
     <ClCompile Include="src\decs\EntityData.cpp" />
     <ClCompile Include="src\decs\Iteration\MultiQuery.h" />
     <ClCompile Include="src\decs\EntityManager.cpp" />

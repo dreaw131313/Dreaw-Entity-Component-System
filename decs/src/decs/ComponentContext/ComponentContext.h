@@ -1,8 +1,8 @@
 #pragma once
-#include "decs\Type.h"
-#include "decs\Observers\Observers.h"
+#include "decs/Type.h"
+#include "decs/Observers/Observers.h"
 
-#include "Component/Component.h"
+#include "decs/Component/Component.h"
 #include "decs/ComponentContainers/StableContainer.h"
 
 namespace decs
