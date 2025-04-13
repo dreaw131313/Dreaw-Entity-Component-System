@@ -14,7 +14,7 @@ else()
 endif()
 
 set(DECS_DIR ./decs/src)
-file(GLOB DECS_SRC 
+file(GLOB_RECURSE DECS_SRC 
 	"${DECS_DIR}/decs/*.cpp"
 	"${DECS_DIR}/decs/*.h"
 	)
