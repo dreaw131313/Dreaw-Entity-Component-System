@@ -120,6 +120,11 @@ int main()
 		auto entity = container.CreateEntity(false);
 		auto test = entity.AddComponent<TestComponent>();
 
+		entity.RemoveComponent_If<TestComponent>([](const TestComponent& c)
+		{
+			return true;
+		});
+
 		entity.SetActive(true);
 		entity.SetActive(false);
 

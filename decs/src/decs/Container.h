@@ -400,15 +400,14 @@ namespace decs
 
 			ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
 			auto packedContainer = archetypeTypeData.m_PackedContainer;
-			auto compPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
-
-			if (compPtr->GetDependecyCount() > 0)
+			ComponentBase* componentBasePtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
+			if (componentBasePtr->GetDependecyCount() > 0)
 			{
 				return false;
 			}
 
-			const TComponent& compConstRef = *static_cast<TComponent*>(compPtr);
-			if (!canRemoveFunc(compConstRef))
+			const TComponent& compConstPtr = *static_cast<TComponent*>(componentBasePtr);
+			if (!canRemoveFunc(compConstPtr))
 			{
 				return false;
 			}
@@ -432,8 +431,13 @@ namespace decs
 				AddToEmptyEntities(entityData);
 			}
 
-			// Invoking remove observers:
-			InvokeRemovingComponentObserverFunctions(entityData, oldArchetype, static_cast<uint32_t>(entityIndexInOldArchetype), packedContainer, archetypeTypeData);
+			InvokeRemoveComponentObserverCallbacks(
+				entityData,
+				componentBasePtr,
+				*oldArchetype,
+				static_cast<uint32_t>(entityIndexInOldArchetype),
+				*archetypeTypeData.m_ComponentContext
+			);
 
 			if (m_PerformDelayedDestruction)
 			{
@@ -447,90 +451,90 @@ namespace decs
 			return true;
 		}
 
-		void InvokeRemovingComponentObserverFunctions(
+		void InvokeRemoveComponentObserverCallbacks(
 			EntityData& entityData,
-			Archetype* oldArchetype,
+			ComponentBase* componentPtr,
+			Archetype& oldArchetype,
 			uint32_t entityIndexInOldArchetype,
-			PackedContainerBase* packedContainer,
-			const ArchetypeTypeData& archetypeTypeData
+			ComponentContextBase& componentContext
 		);
 
-		/*template<typename... ComponentsTypes>
-			uint32_t RemoveMultipleComponnets(Entity entity, EntityData& entityData)
+	/*template<typename... ComponentsTypes>
+		uint32_t RemoveMultipleComponnets(Entity entity, EntityData& entityData)
+		{
+			if constexpr (sizeof...(ComponentsTypes) == 0)
 			{
-				if constexpr (sizeof...(ComponentsTypes) == 0)
-				{
-					return 0;
-				}
+				return 0;
+			}
 
-				if (!m_CanRemoveComponents || entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation())
-				{
-					return 0;
-				}
+			if (!m_CanRemoveComponents || entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation())
+			{
+				return 0;
+			}
 
-				Archetype* currentArchetype = entityData.m_Archetype;
-				if (currentArchetype == nullptr)
-				{
-					return 0;
-				}
+			Archetype* currentArchetype = entityData.m_Archetype;
+			if (currentArchetype == nullptr)
+			{
+				return 0;
+			}
 
-				// invoke on destroy listeners:
-				{
-					TypeGroup<ComponentsTypes...> componentsTypes = {};
+			// invoke on destroy listeners:
+			{
+				TypeGroup<ComponentsTypes...> componentsTypes = {};
 
-					for (uint32_t i = 0; i < componentsTypes.Size(); i++)
+				for (uint32_t i = 0; i < componentsTypes.Size(); i++)
+				{
+					auto type = componentsTypes[i];
+
+					if (currentArchetype != nullptr)
 					{
-						auto type = componentsTypes[i];
-
-						if (currentArchetype != nullptr)
+						uint32_t typeIdx = currentArchetype->FindTypeIndex(type);
+						if (typeIdx != Limits::MaxComponentCount)
 						{
-							uint32_t typeIdx = currentArchetype->FindTypeIndex(type);
-							if (typeIdx != Limits::MaxComponentCount)
-							{
-								auto& typeData = currentArchetype->m_TypeData[typeIdx];
-								typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentPtrAsVoi(entityData.m_IndexInArchetype), entity);
-							}
+							auto& typeData = currentArchetype->m_TypeData[typeIdx];
+							typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentPtrAsVoi(entityData.m_IndexInArchetype), entity);
+						}
 
-							currentArchetype = entityData.m_Archetype;
-						}
-						else
-						{
-							break;
-						}
+						currentArchetype = entityData.m_Archetype;
+					}
+					else
+					{
+						break;
 					}
 				}
+			}
 
-				// archetype has changed during invoking of observers
-				if (currentArchetype == nullptr)
-				{
-					return 0;
-				}
+			// archetype has changed during invoking of observers
+			if (currentArchetype == nullptr)
+			{
+				return 0;
+			}
 
-				Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponents<ComponentsTypes...>(currentArchetype);
+			Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponents<ComponentsTypes...>(currentArchetype);
 
-				if (newArchetype == currentArchetype)
-				{
-					// archetype not changed
-					return  0;
-				}
+			if (newArchetype == currentArchetype)
+			{
+				// archetype not changed
+				return  0;
+			}
 
-				// archetype changed:
-				if (newArchetype != nullptr)
-				{
-					uint32_t removedComponents = currentArchetype->ComponentCount() - newArchetype->ComponentCount();
-					newArchetype->MoveEntityComponentsAfterRemoveComponent(currentArchetype, entityData.m_IndexInArchetype, &entityData);
+			// archetype changed:
+			if (newArchetype != nullptr)
+			{
+				uint32_t removedComponents = currentArchetype->ComponentCount() - newArchetype->ComponentCount();
+				newArchetype->MoveEntityComponentsAfterRemoveComponent(currentArchetype, entityData.m_IndexInArchetype, &entityData);
 
-					return removedComponents;
-				}
-				else
-				{
-					// here new archetype is nullptr
-					entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
-					AddToEmptyEntities(entityData);
+				return removedComponents;
+			}
+			else
+			{
+				// here new archetype is nullptr
+				entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
+				AddToEmptyEntities(entityData);
 
-					return currentArchetype->ComponentCount();
-				}
-			}*/
+				return currentArchetype->ComponentCount();
+			}
+		}*/
 
 		template<typename TComponent>
 		TComponent* GetComponent(EntityData& entityData) const

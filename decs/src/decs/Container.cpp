@@ -850,6 +850,8 @@ namespace decs
 
 		// Invoking remove observers:
 		{
+			oldArchetype->SetPlaceHolderEntityData(nullptr, static_cast<uint32_t>(entityIndexInOldArchetype));
+
 			auto componentContext = archetypeTypeData.m_ComponentContext;
 			componentContext->InvokeOnDisableComponent(componentPtr, entity);
 			componentContext->InvokeOnDestroyComponent(componentPtr, entity);
@@ -867,36 +869,21 @@ namespace decs
 		return true;
 	}
 
-	void Container::InvokeRemovingComponentObserverFunctions(
+	void Container::InvokeRemoveComponentObserverCallbacks(
 		EntityData& entityData,
-		Archetype* oldArchetype,
+		ComponentBase* componentPtr,
+		Archetype& oldArchetype,
 		uint32_t entityIndexInOldArchetype,
-		PackedContainerBase* packedContainer,
-		const ArchetypeTypeData& archetypeTypeData
+		ComponentContextBase& componentContext
+
 	)
 	{
-		// Invoking remove observers:
-		{
-			Entity entity(&entityData);
-
-			EntityData placeHolderEntityData = entityData;
-			placeHolderEntityData.m_Archetype = oldArchetype;
-			placeHolderEntityData.m_IndexInArchetype = static_cast<uint32_t>(entityIndexInOldArchetype);
-			oldArchetype->SetPlaceHolderEntityData(&placeHolderEntityData, static_cast<uint32_t>(entityIndexInOldArchetype));
-			{
-				auto componentContext = archetypeTypeData.m_ComponentContext;
-				if (entityData.IsActive())
-				{
-					componentContext->InvokeOnDisableComponent(packedContainer->GetComponentBasePtr(entityIndexInOldArchetype), entity);
-				}
-				if (entity.IsActive())
-				{
-					componentContext->InvokeOnDestroyComponent(packedContainer->GetComponentBasePtr(placeHolderEntityData.m_IndexInArchetype), entity);
-				}
-			}
-			oldArchetype->SetPlaceHolderEntityData(nullptr, static_cast<uint32_t>(entityIndexInOldArchetype));
-		}
+		Entity entity(&entityData);
+		oldArchetype.SetPlaceHolderEntityData(nullptr, static_cast<uint32_t>(entityIndexInOldArchetype));
+		componentContext.InvokeOnDisableComponent(componentPtr, entity);
+		componentContext.InvokeOnDestroyComponent(componentPtr, entity);
 	}
+
 
 	void Container::InvokeEntitesOnCreateListeners()
 	{

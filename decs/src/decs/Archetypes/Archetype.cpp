@@ -373,7 +373,6 @@ namespace decs
 
 				typeData.m_PackedContainer->PopBack();
 			}
-
 		}
 		else
 		{

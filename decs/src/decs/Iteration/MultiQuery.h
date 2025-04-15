@@ -335,18 +335,24 @@ namespace decs
 
 					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 					{
-						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+						const auto& entityData = entitiesData[idx];
+						// Add safety check since the entity can sometimes be null, meaning the record is invalid.
+						// When iterating with entity state checks, an explicit validity check is unnecessary—
+						// if the entity data is nullptr, the archetype's "is active" flag will already be false.
+						if (entityData != nullptr)
 						{
-							const auto& entityData = entitiesData[idx];
-							entityBuffor.Set(entityData.m_EntityData);
-							func(
-								entityBuffor,
-								std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
-							);
-						}
-						else
-						{
-							func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
+							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+							{
+								entityBuffor.Set(entityData.m_EntityData);
+								func(
+									entityBuffor,
+									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
+								);
+							}
+							else
+							{
+								func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
+							}
 						}
 					}
 				}
@@ -689,18 +695,25 @@ namespace decs
 
 						for (uint64_t idx = startEntitiyIndex; idx < entitiesCount; idx++)
 						{
-							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+
+							const auto& entityData = entitiesData[idx];
+							// Add safety check since the entity can sometimes be null, meaning the record is invalid.
+							// When iterating with entity state checks, an explicit validity check is unnecessary—
+							// if the entity data is nullptr, the archetype's "is active" flag will already be false.
+							if (entityData != nullptr)
 							{
-								const auto& entityData = entitiesData[idx];
-								entityBuffor.Set(entityData.m_EntityData);
-								func(
-									entityBuffor,
-									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
-								);
-							}
-							else
-							{
-								func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
+								if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+								{
+									entityBuffor.Set(entityData.m_EntityData);
+									func(
+										entityBuffor,
+										std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
+									);
+								}
+								else
+								{
+									func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
+								}
 							}
 						}
 
