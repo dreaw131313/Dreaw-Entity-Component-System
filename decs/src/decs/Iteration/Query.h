@@ -297,7 +297,7 @@ namespace decs
 					// Add safety check since the entity can sometimes be null, meaning the record is invalid.
 					// When iterating with entity state checks, an explicit validity check is unnecessary—
 					// if the entity data is nullptr, the archetype's "is active" flag will already be false.
-					if (entityData != nullptr)
+					if (entityData.m_EntityData != nullptr)
 					{
 						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 						{
@@ -733,7 +733,7 @@ namespace decs
 						// Add safety check since the entity can sometimes be null, meaning the record is invalid.
 						// When iterating with entity state checks, an explicit validity check is unnecessary—
 						// if the entity data is nullptr, the archetype's "is active" flag will already be false.
-						if (entityData != nullptr)
+						if (entityData.m_EntityData != nullptr)
 						{
 							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
