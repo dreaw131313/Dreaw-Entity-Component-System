@@ -536,7 +536,6 @@ namespace decs
 		}
 		InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
 
-
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
 
 		return spawnedEntity;
@@ -959,27 +958,12 @@ namespace decs
 							entity.Set(entityData);
 
 							Archetype* currentArch = entityData->m_Archetype;
-							componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
+							ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+							componentContext->InvokeOnCreateComponent(componentPtr, entity);
 
-							// All this checks are here to check if this entity containe components after OnCreateMethod
-							Archetype* newArch = entityData->m_Archetype;
-							if (newArch != nullptr && entity.IsActive())
+							if (entity.IsActive())
 							{
-								if (currentArch != newArch)
-								{
-									uint32_t compIndex = newArch->FindTypeIndex(componentTypeID);
-									if (compIndex < newArch->ComponentCount())
-									{
-										componentContext->InvokeOnEnableComponent(
-											newArch->m_TypeData[compIndex].m_PackedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype),
-											entity
-										);
-									}
-								}
-								else
-								{
-									componentContext->InvokeOnEnableComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
-								}
+								componentContext->InvokeOnEnableComponent(componentPtr, entity);
 							}
 						}
 					}
@@ -1136,8 +1120,6 @@ namespace decs
 		{
 			m_EnableEntityObserver->OnEnableEntity(entity);
 		}
-
-		// TODO: add components activation listeners invoking
 
 		EntityData& entityData = *entity.m_EntityData;
 		uint32_t entityIndexInArchetype = entityData.m_IndexInArchetype;

@@ -52,3 +52,16 @@ namespace decs
 	}
 }
 
+
+/// About entity and component callbacks:
+/// Entity callbacks:
+///		Create:
+///		Destroy:
+///		Enable:
+///		Disable
+/// Component callbacks
+///	In component create, enable and disable callback the same component cant be removed!
+///		Create:
+///		Destroy:
+///		Enable:
+///		Disable
