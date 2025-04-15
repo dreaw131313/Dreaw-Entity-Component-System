@@ -823,8 +823,8 @@ namespace decs
 
 		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
 		auto packedContainer = archetypeTypeData.m_PackedContainer;
-		auto compPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
-		if (compPtr->GetDependecyCount() > 0)
+		ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
+		if (componentPtr->GetDependecyCount() > 0)
 		{
 			return false;
 		}
@@ -850,22 +850,9 @@ namespace decs
 
 		// Invoking remove observers:
 		{
-			EntityData placeHolderEntityData = entityData;
-			placeHolderEntityData.m_Archetype = oldArchetype;
-			placeHolderEntityData.m_IndexInArchetype = static_cast<uint32_t>(entityIndexInOldArchetype);
-			oldArchetype->SetPlaceHolderEntityData(&placeHolderEntityData, static_cast<uint32_t>(entityIndexInOldArchetype));
-			{
-				auto componentContext = archetypeTypeData.m_ComponentContext;
-				if (entity.IsActive())
-				{
-					componentContext->InvokeOnDisableComponent(packedContainer->GetComponentBasePtr(entityIndexInOldArchetype), entity);
-				}
-				if (entity.IsValid())
-				{
-					componentContext->InvokeOnDestroyComponent(packedContainer->GetComponentBasePtr(placeHolderEntityData.m_IndexInArchetype), entity);
-				}
-			}
-			oldArchetype->SetPlaceHolderEntityData(nullptr, static_cast<uint32_t>(entityIndexInOldArchetype));
+			auto componentContext = archetypeTypeData.m_ComponentContext;
+			componentContext->InvokeOnDisableComponent(componentPtr, entity);
+			componentContext->InvokeOnDestroyComponent(componentPtr, entity);
 		}
 
 		if (m_PerformDelayedDestruction)
@@ -1182,7 +1169,7 @@ namespace decs
 				auto& typeData = componentsTypeData[idx];
 				m_ActivationChangeComponentPtrs.push_back(
 					typeData.m_PackedContainer->GetComponentBasePtr(entityIndexInArchetype)
-					);
+				);
 			}
 
 			// invoke components activation listeners:
@@ -1336,16 +1323,6 @@ namespace decs
 		return false;
 	}
 
-	void Container::SetEntityActive_NoCallback(const Entity& entity, bool bIsActive)
-	{
-		if (entity.GetContainer() == this
-			&& entity.m_EntityData->IsAlive()
-			&& entity.m_EntityData->IsActive() != bIsActive)
-		{
-			entity.m_EntityData->SetActiveState(bIsActive);
-		}
-	}
-
 	Entity Container::Spawn_NoCallback(const Entity& prefab, bool isActive)
 	{
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
@@ -1459,6 +1436,16 @@ namespace decs
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
 
 		return true;
+	}
+
+	void Container::SetEntityActive_NoCallback(const Entity& entity, bool bIsActive)
+	{
+		if (entity.GetContainer() == this
+			&& entity.m_EntityData->IsAlive()
+			&& entity.m_EntityData->IsActive() != bIsActive)
+		{
+			entity.m_EntityData->SetActiveState(bIsActive);
+		}
 	}
 
 	bool Container::RemoveComponent_NoCallback(const Entity& entity, TypeID componentTypeID)

@@ -123,7 +123,12 @@ int main()
 		entity.SetActive(true);
 		entity.SetActive(false);
 
+
+		auto secondEntity = container.Spawn_NoCallback(entity);
+
 		entity.Destroy();
+
+
 	}
 
 

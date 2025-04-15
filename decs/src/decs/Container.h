@@ -1052,9 +1052,6 @@ namespace decs
 
 		bool DestroyEntity_NoCallback(const Entity& entity);
 
-	private:
-		void SetEntityActive_NoCallback(const Entity& entity, bool bIsActive);
-
 		Entity Spawn_NoCallback(
 			const Entity& prefab,
 			bool isActive = true
@@ -1072,6 +1069,9 @@ namespace decs
 			uint64_t spawnCount,
 			bool areActive = true
 		);
+
+	private:
+		void SetEntityActive_NoCallback(const Entity& entity, bool bIsActive);
 
 		template<typename TComponent, typename ...Args>
 		TComponent* AddComponent_NoCallback(Entity entity, EntityData& entityData, Args&&... args)
