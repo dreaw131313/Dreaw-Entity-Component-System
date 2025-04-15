@@ -401,8 +401,8 @@ namespace decs
 
 				ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
 
-				thisTypeData.m_PackedContainer->MoveEmplaceBackFromStableComponentRef(
-					fromArchetypeData.m_PackedContainer->GetStableComponentRef(fromIndex)
+				thisTypeData.m_PackedContainer->PushBack(
+					fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
 				);
 
 				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);

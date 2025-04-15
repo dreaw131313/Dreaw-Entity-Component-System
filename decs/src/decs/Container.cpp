@@ -717,12 +717,12 @@ namespace decs
 			ArchetypeTypeData& currentTypeData = typeDataVector[i];
 			SpawnComponentRefData& spawnRefData = m_SpawnData.m_PrefabComponentRefs[i];
 
-			StableComponentRef compNodeInfo = spawnRefData.m_StableContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentRef.Get());
-			currentTypeData.m_PackedContainer->EmplaceFromStableComponentRef(&compNodeInfo);
+			ComponentBase* componentPtr = spawnRefData.m_StableContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentRef.Get());
+			currentTypeData.m_PackedContainer->PushBack(componentPtr);
 
 			m_SpawnData.m_SpawnedEntityComponentRefs[i].Set(currentTypeData.m_TypeID, spawnedEntityData, i);
 
-			compNodeInfo.m_ComponentPtr->OnPreCreate(entity);
+			componentPtr->OnPreCreate(entity);
 		}
 	}
 

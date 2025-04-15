@@ -333,13 +333,11 @@ namespace decs
 
 			// Adding component to stable component container
 			StableContainer<TComponent>* stableContainer = static_cast<StableContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
-			StableComponentRef componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
+			TComponent* componentPtr = stableContainer->Emplace(std::forward<Args>(args)...);
 
 			//StableComponentRef componentNodeInfo = {};
 			// Adding component pointer to packed container in archetype
-			archetypeTypeData.m_PackedContainer->EmplaceFromStableComponentRef(&componentNodeInfo);
-
-			TComponent* componentPtr = static_cast<TComponent*>(componentNodeInfo.m_ComponentPtr);
+			archetypeTypeData.m_PackedContainer->PushBack(componentPtr);
 
 			// Adding entity to archetype
 			if (entityData.m_Archetype != nullptr)
@@ -598,7 +596,7 @@ namespace decs
 				if (findTypeIndex != Limits::MaxComponentCount)
 				{
 					StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
-					return static_cast<TComponent*>(container->m_Data[entityData.m_IndexInArchetype].m_ComponentPtr);
+					return static_cast<TComponent*>(container->m_Data[entityData.m_IndexInArchetype]);
 				}
 			}
 			return nullptr;
@@ -1088,13 +1086,11 @@ namespace decs
 
 			// Adding component to stable component container
 			StableContainer<TComponent>* stableContainer = static_cast<StableContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
-			StableComponentRef componentNodeInfo = stableContainer->Emplace(std::forward<Args>(args)...);
+			TComponent* componentPtr = stableContainer->Emplace(std::forward<Args>(args)...);
 
 			//StableComponentRef componentNodeInfo = {};
 			// Adding component pointer to packed container in archetype
-			archetypeTypeData.m_PackedContainer->EmplaceFromStableComponentRef(&componentNodeInfo);
-
-			TComponent* componentPtr = static_cast<TComponent*>(componentNodeInfo.m_ComponentPtr);
+			archetypeTypeData.m_PackedContainer->PushBack(componentPtr);
 
 			// Adding entity to archetype
 			uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
