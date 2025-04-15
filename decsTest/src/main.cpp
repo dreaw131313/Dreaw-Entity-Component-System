@@ -124,7 +124,6 @@ int main()
 		entity.SetActive(false);
 
 		entity.Destroy();
-
 	}
 
 
