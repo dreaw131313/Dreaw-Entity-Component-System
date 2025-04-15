@@ -133,9 +133,6 @@ namespace decs
 		template<typename...>
 		friend class BatchIterator;
 
-		template<typename>
-		friend class ComponentRef;
-		friend class ComponentBaseRef;
 
 	private:
 		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;

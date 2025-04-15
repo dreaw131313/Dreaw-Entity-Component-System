@@ -12,7 +12,6 @@
 
 #include "decs/ComponentContainers/PackedContainer.h"
 #include "decs/ComponentContainers/StableContainer.h"
-#include "ComponentRefs/ComponentBaseRef.h"
 
 namespace decs
 {
@@ -160,7 +159,7 @@ namespace decs
 		{
 		public:
 			StableContainerBase* m_StableContainer = nullptr;
-			ComponentBaseRef m_ComponentRef;
+			ComponentBase* m_ComponentPtr = nullptr;
 
 		public:
 			SpawnComponentRefData()
@@ -168,12 +167,11 @@ namespace decs
 
 			}
 
-			template<typename... Args>
 			SpawnComponentRefData(
 				StableContainerBase* stableContainer,
-				Args&&... args
+				ComponentBase* componentPtr
 			):
-				m_StableContainer(stableContainer), m_ComponentRef(std::forward<Args>(args)...)
+				m_StableContainer(stableContainer), m_ComponentPtr(componentPtr)
 			{
 
 			}
@@ -184,19 +182,19 @@ namespace decs
 		public:
 			std::vector<SpawnComponentRefData> m_PrefabComponentRefs;
 			std::vector <Archetype*> m_SpawnArchetypes;
-			std::vector<ComponentBaseRef> m_SpawnedEntityComponentRefs;
+			std::vector<ComponentBase*> m_SpawnedEntityComponentPtrs;
 
 		public:
 			void Reserve(uint64_t size)
 			{
 				m_PrefabComponentRefs.reserve(size);
-				m_SpawnedEntityComponentRefs.reserve(size);
+				m_SpawnedEntityComponentPtrs.reserve(size);
 			}
 
 			void Clear()
 			{
 				m_PrefabComponentRefs.clear();
-				m_SpawnedEntityComponentRefs.clear();
+				m_SpawnedEntityComponentPtrs.clear();
 				m_SpawnArchetypes.clear();
 			}
 
@@ -214,9 +212,9 @@ namespace decs
 					std::advance(pIt, refsStartIdx);
 					m_PrefabComponentRefs.erase(pIt, m_PrefabComponentRefs.end());
 
-					auto eIt = m_SpawnedEntityComponentRefs.begin();
+					auto eIt = m_SpawnedEntityComponentPtrs.begin();
 					std::advance(eIt, refsStartIdx);
-					m_SpawnedEntityComponentRefs.erase(eIt, m_SpawnedEntityComponentRefs.end());
+					m_SpawnedEntityComponentPtrs.erase(eIt, m_SpawnedEntityComponentPtrs.end());
 				}
 			}
 		};
@@ -229,7 +227,7 @@ namespace decs
 
 		public:
 			SpawnDataState(SpawnData& spawnData):
-				m_CompRefsStart((uint32_t)spawnData.m_SpawnedEntityComponentRefs.size()),
+				m_CompRefsStart((uint32_t)spawnData.m_SpawnedEntityComponentPtrs.size()),
 				m_ArchetypeIndex((uint32_t)spawnData.m_SpawnArchetypes.size())
 			{
 
@@ -544,6 +542,19 @@ namespace decs
 				{
 					StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
 					return container->GetAsPtr(entityData.m_IndexInArchetype);
+				}
+			}
+			return nullptr;
+		}
+
+		ComponentBase* GetComponent(EntityData& entityData, TypeID componentType) const
+		{
+			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
+			{
+				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex(componentType);
+				if (findTypeIndex != Limits::MaxComponentCount)
+				{
+					return entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
 				}
 			}
 			return nullptr;
@@ -868,7 +879,7 @@ namespace decs
 		void InvokeEntityObservers(const decs::Entity& entity);
 
 	private:
-		std::vector<ComponentBaseRef> m_ActivationChangeComponentRefs = {};
+		std::vector<ComponentBase*> m_ActivationChangeComponentPtrs = {};
 
 		CreateEntityObserver* m_CreateEntityObserver = nullptr;
 		DestroyEntityObserver* m_DestroyEntityObserver = nullptr;
