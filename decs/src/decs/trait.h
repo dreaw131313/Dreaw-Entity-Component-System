@@ -26,4 +26,7 @@ namespace decs
 	template<typename T>
 	inline constexpr bool is_tag_v = is_tag<T>::value;
 
+	template<typename... Ts>
+	inline constexpr bool contain_tags_v = (is_tag_v<Ts> || ...);
+
 }

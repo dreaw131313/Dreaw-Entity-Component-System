@@ -21,7 +21,7 @@ public:
 		PrintLine("Position constructior");
 	}
 
-	Position(float x, float y) : X(x), Y(y)
+	Position(float x, float y): X(x), Y(y)
 	{
 		PrintLine("Position constructior");
 	}
@@ -107,7 +107,7 @@ int main()
 	{
 		auto entity = container.CreateEntity();
 
-		entity.AddComponent<Position>(10.f,10.f);
+		entity.AddComponent<Position>(10.f, 10.f);
 
 		auto test = entity.AddComponent<TestComponent>();
 		auto rend = entity.AddComponent<Renderer>();
@@ -193,12 +193,18 @@ int main()
 
 	// TAGS:
 	{
-		struct TestType
+		struct TestType : public decs::ComponentBase
 		{
 
 		};
 
 		using TestTypeTag = decs::tag<TestType>;
+
+		static_assert(!decs::contain_tags_v<float, int, TestType>, "Tags must not be used");
+
+		decs::Query<TestType> tagQuery{ &container };
+		decs::MultiQuery<TestType> tagMultiQuery{};
+		tagMultiQuery.AddContainer(&container);
 
 		auto tagEntity = container.CreateEntity();
 

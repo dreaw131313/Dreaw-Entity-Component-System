@@ -6,11 +6,15 @@
 
 #include "IterationCore.h"
 
+#include <type_traits>
+
 namespace decs
 {
 	template<typename... ComponentsTypes>
 	class Query
 	{
+		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "Query must not use tags in as ComponentTypes!");
+
 	private:
 		using ArchetypeContextType = IterationArchetypeContext<sizeof...(ComponentsTypes)>;
 
