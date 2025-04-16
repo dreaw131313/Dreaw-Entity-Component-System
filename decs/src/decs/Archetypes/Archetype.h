@@ -26,7 +26,7 @@ namespace decs
 
 		ArchetypeEntityData(
 			EntityData* entityData
-		) :
+		):
 			m_EntityData(entityData),
 			m_bIsActive(entityData->IsActive())
 		{
@@ -74,12 +74,19 @@ namespace decs
 			PackedContainerBase* packedContainer,
 			ComponentContextBase* componentContext,
 			StableContainerBase* stableContainer
-		) :
+		):
 			m_TypeID(typeID), m_PackedContainer(packedContainer), m_ComponentContext(componentContext), m_StableContainer(stableContainer)
 		{
 
 		}
 
+		inline bool IsTag() const
+		{
+			return m_PackedContainer == nullptr
+				|| m_ComponentContext == nullptr
+				|| m_StableContainer == nullptr
+				;
+		}
 	};
 
 	enum class EComponentEdgeType
@@ -100,7 +107,7 @@ namespace decs
 
 		}
 
-		ArchetypeEdge(Archetype* archetype, EComponentEdgeType edgeType) :
+		ArchetypeEdge(Archetype* archetype, EComponentEdgeType edgeType):
 			m_Archetype(archetype), m_EdgeType(edgeType)
 		{
 
