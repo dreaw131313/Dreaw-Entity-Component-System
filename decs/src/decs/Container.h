@@ -319,7 +319,7 @@ namespace decs
 
 			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<TComponent>::ID();
 
-			auto currentComponent = GetStableComponentWithoutCheckingIsAlive<TComponent>(entityData);
+			auto currentComponent = GetComponentWithoutCheckingIsAlive<TComponent>(entityData);
 			if (currentComponent != nullptr)
 			{
 				return currentComponent;
@@ -602,21 +602,6 @@ namespace decs
 			return nullptr;
 		}
 
-		template<typename TComponent>
-		TComponent* GetStableComponentWithoutCheckingIsAlive(EntityData& entityData) const
-		{
-			if (entityData.m_Archetype != nullptr)
-			{
-				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
-				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
-				{
-					StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
-					return static_cast<TComponent*>(container->m_Data[entityData.m_IndexInArchetype]);
-				}
-			}
-			return nullptr;
-		}
-
 		bool HasComponentInternal(EntityData& entityData, TypeID typeID) const
 		{
 			if (entityData.m_Archetype != nullptr)
@@ -625,7 +610,7 @@ namespace decs
 			}
 			return false;
 		}
-
+		
 		template<typename TComponent>
 		bool HasComponent(EntityData& entityData) const
 		{
@@ -1155,18 +1140,18 @@ namespace decs
 		{
 			if (!m_CanAddComponents) return nullptr;
 
-			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<TComponent>::ID();
-
 			if (!entityData.IsValidToPerformComponentOperation())
 			{
 				return nullptr;
 			}
 
-			auto currentComponent = GetStableComponentWithoutCheckingIsAlive<TComponent>(entityData);
+			auto currentComponent = GetComponentWithoutCheckingIsAlive<TComponent>(entityData);
 			if (currentComponent != nullptr)
 			{
 				return currentComponent;
 			}
+
+			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<TComponent>::ID();
 
 			uint32_t componentContainerIndex = 0;
 			Archetype* entityNewArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype, componentContainerIndex);
