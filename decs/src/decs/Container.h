@@ -782,14 +782,17 @@ namespace decs
 			uint32_t& componentContainerIndex
 		)
 		{
+			TYPE_ID_CONSTEXPR const TypeID addedComponentTypeID =Type<TComponent>::ID();
+
 			Archetype* entityNewArchetype = nullptr;
 			if (toArchetype == nullptr)
 			{
-				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype<TComponent>();
+				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype(addedComponentTypeID);
 				if (entityNewArchetype == nullptr)
 				{
 					auto compCtx = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
-					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<TComponent>(
+					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype(
+						addedComponentTypeID,
 						compCtx
 					);
 				}
@@ -802,7 +805,7 @@ namespace decs
 					auto compCtx = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent(
 						*toArchetype,
-						Type<TComponent>::ID(),
+						addedComponentTypeID,
 						compCtx
 					);
 				}

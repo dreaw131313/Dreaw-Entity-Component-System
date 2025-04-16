@@ -303,6 +303,17 @@ namespace decs
 		return archetype;
 	}
 
+	Archetype* ArchetypesMap::CreateSingleComponentArchetype(TypeID componentTypeID, ComponentContextBase* componentContext)
+	{
+		auto& archetype = m_SingleComponentArchetypes[componentTypeID];
+		if (archetype != nullptr) return archetype;
+		archetype = &m_Archetypes.EmplaceBack();
+		archetype->AddTypeData_WithoutCheck(componentTypeID, componentContext->CreatePackedContainer(), componentContext);
+		AddArchetypeToCorrectContainers(*archetype, false);
+		MakeArchetypeEdges(*archetype);
+		return archetype;
+	}
+
 	Archetype* ArchetypesMap::CreateArchetypeAfterAddComponent(Archetype& toArchetype, TypeID componentTypeID, ComponentContextBase* componentContext)
 	{
 		//auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
@@ -325,29 +336,7 @@ namespace decs
 		}
 
 		Archetype& newArchetype = m_Archetypes.EmplaceBack();
-		bool isNewComponentTypeAdded = false;
-
-		for (uint32_t i = 0; i < toArchetype.ComponentCount(); i++)
-		{
-			ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[i];
-			TypeID currentTypeID = toTypeData.m_TypeID;
-			if (!isNewComponentTypeAdded && currentTypeID > componentTypeID)
-			{
-				isNewComponentTypeAdded = true;
-				newArchetype.AddTypeData_WithCheck(componentTypeID, componentContext->CreatePackedContainer(), componentContext);
-			}
-
-			newArchetype.AddTypeData_WithCheck(
-				currentTypeID,
-				toTypeData.m_PackedContainer->Clone(),
-				toTypeData.m_ComponentContext
-			);
-		}
-
-		if (!isNewComponentTypeAdded)
-		{
-			newArchetype.AddTypeData_WithCheck(componentTypeID, componentContext->CreatePackedContainer(), componentContext);
-		}
+		AddTypeDataAfterAddComponent(toArchetype, newArchetype, componentTypeID, componentContext);
 
 		AddArchetypeToCorrectContainers(newArchetype);
 		MakeArchetypeEdges(newArchetype);
@@ -394,44 +383,26 @@ namespace decs
 
 	Archetype* ArchetypesMap::GetArchetypeAfterAddTag(Archetype& toArchetype, TypeID tagType)
 	{
-		return nullptr;
+		return CreateArchetypeAfterAddComponent(toArchetype, tagType, nullptr);
 	}
 
 	Archetype* ArchetypesMap::GetArchetypeAfterRemoveTag(Archetype& fromArchetype, TypeID tagType)
 	{
-		if (fromArchetype.ComponentCount() == 1 && fromArchetype.GetTypeID(0) == tagType)
+		return GetArchetypeAfterRemoveComponent(fromArchetype, tagType);
+	}
+
+	Archetype* ArchetypesMap::CreateSingleTagArchetype(TypeID componentTypeID)
+	{
+		auto& archetype = m_SingleComponentArchetypes[componentTypeID];
+		if (archetype != nullptr)
 		{
-			return nullptr;
+			return archetype;
 		}
-
-		// first we check if we have edge it will fail only once
-		auto edge = fromArchetype.GetEdge(tagType);
-		if (edge.IsValid())
-		{
-			if (edge.m_EdgeType == EComponentEdgeType::Remove)
-			{
-				return edge.m_Archetype;
-			}
-			else
-			{
-				return nullptr;
-			}
-		}
-
-		// next check if we have this component in archetype if no we must not create new archetype
-		if (!fromArchetype.ContainType(tagType))
-		{
-			// TODO: check if this is ok:
-			// this archetype do not have component with id removedComponentTypeID so we return same archetype.
-			return &fromArchetype;
-		}
-
-		Archetype& newArchetype = m_Archetypes.EmplaceBack();
-		AddTypeDataAfterRemoveComponent(fromArchetype, newArchetype, tagType);
-		AddArchetypeToCorrectContainers(newArchetype);
-		MakeArchetypeEdges(newArchetype);
-
-		return &newArchetype;
+		archetype = &m_Archetypes.EmplaceBack();
+		archetype->AddTypeData_WithoutCheck(componentTypeID, nullptr, nullptr);
+		AddArchetypeToCorrectContainers(*archetype, false);
+		MakeArchetypeEdges(*archetype);
+		return archetype;
 	}
 
 	void ArchetypesMap::AddTypeDataAfterRemoveComponent(Archetype& fromArchetype, Archetype& toArchetype, TypeID compType)
@@ -457,9 +428,50 @@ namespace decs
 		}
 	}
 
-	void ArchetypesMap::AddTypeDataAfterAddComponent(Archetype& fromArchetype, Archetype& toArchetype, ComponentContextBase* addedComponentContext)
+	void ArchetypesMap::AddTypeDataAfterAddComponent(Archetype& fromArchetype, Archetype& toArchetype, TypeID componentTypeID, ComponentContextBase* addedComponentContext)
 	{
+		bool isNewComponentTypeAdded = false;
 
+		for (uint32_t i = 0; i < fromArchetype.ComponentCount(); i++)
+		{
+			ArchetypeTypeData& toTypeData = fromArchetype.m_TypeData[i];
+			TypeID currentTypeID = toTypeData.m_TypeID;
+			if (!isNewComponentTypeAdded && currentTypeID > componentTypeID)
+			{
+				isNewComponentTypeAdded = true;
+				fromArchetype.AddTypeData_WithoutCheck(
+					componentTypeID,
+					addedComponentContext != nullptr ? addedComponentContext->CreatePackedContainer() : nullptr, // if addedComponentContext means it is tag
+					addedComponentContext
+				);
+			}
+
+			if (toTypeData.IsTag())
+			{
+				fromArchetype.AddTypeData_WithoutCheck(
+					currentTypeID,
+					nullptr,
+					nullptr
+				);
+			}
+			else
+			{
+				fromArchetype.AddTypeData_WithoutCheck(
+					currentTypeID,
+					toTypeData.m_PackedContainer->Clone(),
+					toTypeData.m_ComponentContext
+				);
+			}
+		}
+
+		if (!isNewComponentTypeAdded)
+		{
+			fromArchetype.AddTypeData_WithoutCheck(
+				componentTypeID,
+				addedComponentContext != nullptr ? addedComponentContext->CreatePackedContainer() : nullptr, // if addedComponentContext means it is tag
+				addedComponentContext
+			);
+		}
 	}
 
 

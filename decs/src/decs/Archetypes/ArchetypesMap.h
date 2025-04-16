@@ -290,6 +290,11 @@ namespace decs
 
 		void AddArchetypeToCorrectContainers(Archetype& archetype, bool bTryAddToSingleComponentsMap = true);
 
+		/// <summary>
+		/// Can be used to get single tags components
+		/// </summary>
+		/// <param name="typeID"></param>
+		/// <returns></returns>
 		inline Archetype* GetSingleComponentArchetype(TypeID typeID)
 		{
 			auto it = m_SingleComponentArchetypes.find(typeID);
@@ -344,18 +349,7 @@ namespace decs
 			return it != m_SingleComponentArchetypes.end() ? it->second : nullptr;
 		}
 
-		template<typename TComponent>
-		Archetype* CreateSingleComponentArchetype(ComponentContextBase* componentContext)
-		{
-			TYPE_ID_CONSTEXPR uint64_t typeID = Type<TComponent>::ID();
-			auto& archetype = m_SingleComponentArchetypes[typeID];
-			if (archetype != nullptr) return archetype;
-			archetype = &m_Archetypes.EmplaceBack();
-			archetype->AddTypeData_WithCheck(typeID, new StablePackedContainer<TComponent>(), componentContext);
-			AddArchetypeToCorrectContainers(*archetype, false);
-			MakeArchetypeEdges(*archetype);
-			return archetype;
-		}
+		Archetype* CreateSingleComponentArchetype(TypeID componentTypeID, ComponentContextBase* componentContext);
 
 		template<typename T>
 		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype)
@@ -374,18 +368,14 @@ namespace decs
 
 		Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, TypeID removedComponentTypeID);
 
-		template<typename T>
-		inline Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype)
-		{
-			return GetArchetypeAfterRemoveComponent(fromArchetype, Type<T>::ID());
-		}
-
 		Archetype* GetArchetypeAfterAddTag(Archetype& toArchetype, TypeID tagType);
 
 		Archetype* GetArchetypeAfterRemoveTag(Archetype& fromArchetype, TypeID tagType);
 
+		Archetype* CreateSingleTagArchetype(TypeID componentTypeID);
+
 		void AddTypeDataAfterRemoveComponent(Archetype& fromArchetype,Archetype& toArchetype, TypeID compType);
 
-		void AddTypeDataAfterAddComponent(Archetype& fromArchetype, Archetype& toArchetype, ComponentContextBase* addedComponentContext);
+		void AddTypeDataAfterAddComponent(Archetype& fromArchetype, Archetype& toArchetype,TypeID componentTypeID, ComponentContextBase* addedComponentContext);
 	};
 }
