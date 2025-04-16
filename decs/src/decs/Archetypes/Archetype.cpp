@@ -89,10 +89,20 @@ namespace decs
 		}
 	}
 
-	ArchetypeTypeData& Archetype::AddTypeData_WithoutCheck(TypeID typeID, PackedContainerBase* packedContainer, ComponentContextBase* componentContext)
+	void Archetype::AddTypeData_WithoutCheck(TypeID typeID, PackedContainerBase* packedContainer, ComponentContextBase* componentContext)
 	{
-		InsertComponentContextInCorrectPlace(componentContext, static_cast<uint32_t>(m_TypeData.size()));
-		return m_TypeData.emplace_back(typeID, packedContainer, componentContext, componentContext->GetStableContainer());
+		m_ComponentsCount += 1;
+		m_TypeIDsIndexes[typeID] = (uint32_t)m_TypeData.size();
+		if (packedContainer == nullptr || componentContext == nullptr)
+		{
+			// tag data
+			m_TypeData.emplace_back(typeID, nullptr, nullptr, nullptr);
+		}
+		else
+		{
+			m_TypeData.emplace_back(typeID, packedContainer, componentContext, componentContext->GetStableContainer());
+			InsertComponentContextInCorrectPlace(componentContext, static_cast<uint32_t>(m_TypeData.size()));
+		}
 	}
 
 	void Archetype::AddTypeData_WithCheck(
@@ -104,8 +114,6 @@ namespace decs
 		auto it = m_TypeIDsIndexes.find(id);
 		if (it == m_TypeIDsIndexes.end())
 		{
-			m_ComponentsCount += 1;
-			m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
 			AddTypeData_WithoutCheck(
 				id,
 				packedContainer,
@@ -372,7 +380,7 @@ namespace decs
 
 		fromArchetype->RemoveSwapBackEntityData(fromIndex);
 	}
-	
+
 	*/
 
 	void Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(

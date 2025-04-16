@@ -249,7 +249,7 @@ namespace decs
 		// it must be called only from "AddTypeData_WithoutCheck" function
 		void InsertComponentContextInCorrectPlace(ComponentContextBase* componentContext, uint32_t typeDataIndex);
 
-		ArchetypeTypeData& AddTypeData_WithoutCheck(
+		void AddTypeData_WithoutCheck(
 			TypeID typeID,
 			PackedContainerBase* packedContainer,
 			ComponentContextBase* componentContext
