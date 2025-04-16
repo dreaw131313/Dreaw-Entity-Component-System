@@ -628,14 +628,12 @@ namespace decs
 	private:
 		Archetype* GetArchetypeAfterAddTag(Archetype* toArchetype, TypeID tagID)
 		{
-
-			return nullptr;
+			return m_ArchetypesMap.GetArchetypeAfterAddTag(*toArchetype, tagID);
 		}
 
 		Archetype* GetArchetypeAfterRemoveTag(Archetype* fromArchetype, TypeID tagID)
 		{
-
-			return nullptr;
+			return m_ArchetypesMap.GetArchetypeAfterRemoveTag(*fromArchetype, tagID);
 		}
 
 		inline bool HasTag(EntityData& entityData, TypeID tagType)
@@ -784,8 +782,6 @@ namespace decs
 			uint32_t& componentContainerIndex
 		)
 		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<TComponent>::ID();
-
 			Archetype* entityNewArchetype = nullptr;
 			if (toArchetype == nullptr)
 			{
@@ -804,8 +800,9 @@ namespace decs
 				if (entityNewArchetype == nullptr)
 				{
 					auto compCtx = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
-					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<TComponent>(
+					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent(
 						*toArchetype,
+						Type<TComponent>::ID(),
 						compCtx
 					);
 				}

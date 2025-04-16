@@ -4,6 +4,7 @@
 
 #include "decs/Component/Component.h"
 #include "decs/ComponentContainers/StableContainer.h"
+#include "decs/ComponentContainers/PackedContainer.h"
 
 namespace decs
 {
@@ -46,6 +47,12 @@ namespace decs
 		virtual ComponentContextBase* Clone(int observerOrder, uint32_t stableComponentChunkSize) = 0;
 
 		virtual StableContainerBase* GetStableContainer() const = 0;
+
+		/// <summary>
+		/// Life time of container must be managed manualy.
+		/// </summary>
+		/// <returns></returns>
+		virtual PackedContainerBase* CreatePackedContainer() const = 0;
 
 		virtual void ClearStableContainer() = 0;
 
@@ -144,6 +151,11 @@ namespace decs
 		StableContainerBase* GetStableContainer() const override
 		{
 			return m_StableContainer;
+		}
+
+		PackedContainerBase* CreatePackedContainer() const override
+		{
+			return new StablePackedContainer<TComponent>();
 		}
 
 		virtual void ClearStableContainer() override

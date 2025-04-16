@@ -370,59 +370,7 @@ namespace decs
 			return nullptr;
 		}
 
-		template<typename TComponent>
-		inline Archetype* CreateArchetypeAfterAddComponent(Archetype& toArchetype, ComponentContextBase* componentContext)
-		{
-			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<TComponent>::ID();
-			//auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
-			auto edge = toArchetype.GetEdge(addedComponentTypeID);
-			if (edge.IsValid())
-			{
-				if (edge.m_EdgeType == EComponentEdgeType::Add)
-				{
-					return edge.m_Archetype;
-				}
-				else
-				{
-					return nullptr;
-				}
-			}
-
-			if (toArchetype.ContainType(addedComponentTypeID))
-			{
-				return &toArchetype;
-			}
-
-			Archetype& newArchetype = m_Archetypes.EmplaceBack();
-			bool isNewComponentTypeAdded = false;
-
-			for (uint32_t i = 0; i < toArchetype.ComponentCount(); i++)
-			{
-				ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[i];
-				TypeID currentTypeID = toTypeData.m_TypeID;
-				if (!isNewComponentTypeAdded && currentTypeID > addedComponentTypeID)
-				{
-					isNewComponentTypeAdded = true;
-					newArchetype.AddTypeData_WithCheck(addedComponentTypeID, new StablePackedContainer<TComponent>(), componentContext);
-				}
-
-				newArchetype.AddTypeData_WithCheck(
-					currentTypeID,
-					toTypeData.m_PackedContainer->Clone(),
-					toTypeData.m_ComponentContext
-				);
-			}
-
-			if (!isNewComponentTypeAdded)
-			{
-				newArchetype.AddTypeData_WithCheck(addedComponentTypeID, new StablePackedContainer<TComponent>(), componentContext);
-			}
-
-			AddArchetypeToCorrectContainers(newArchetype);
-			MakeArchetypeEdges(newArchetype);
-
-			return &newArchetype;
-		}
+		Archetype* CreateArchetypeAfterAddComponent(Archetype& toArchetype, TypeID componentTypeID, ComponentContextBase* componentContext);
 
 		Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, TypeID removedComponentTypeID);
 
@@ -432,28 +380,12 @@ namespace decs
 			return GetArchetypeAfterRemoveComponent(fromArchetype, Type<T>::ID());
 		}
 
-		template<typename T = void, typename... ComponentsTypes>
-		Archetype* GetArchetypeAfterRemoveComponents(Archetype* baseArchetype)
-		{
-			if (baseArchetype == nullptr)
-			{
-				return nullptr;
-			}
+		Archetype* GetArchetypeAfterAddTag(Archetype& toArchetype, TypeID tagType);
 
-			Archetype* arch = GetArchetypeAfterRemoveComponent<T>(*baseArchetype);
+		Archetype* GetArchetypeAfterRemoveTag(Archetype& fromArchetype, TypeID tagType);
 
-			if constexpr (sizeof...(ComponentsTypes) == 0)
-			{
-				return arch;
-			}
+		void AddTypeDataAfterRemoveComponent(Archetype& fromArchetype,Archetype& toArchetype, TypeID compType);
 
-			return GetArchetypeAfterRemoveComponents<ComponentsTypes...>(arch);
-		}
-
-		template<>
-		Archetype* GetArchetypeAfterRemoveComponents<void>(Archetype* baseArchetype)
-		{
-			return baseArchetype;
-		}
+		void AddTypeDataAfterAddComponent(Archetype& fromArchetype, Archetype& toArchetype, ComponentContextBase* addedComponentContext);
 	};
 }
