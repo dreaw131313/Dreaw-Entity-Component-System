@@ -628,12 +628,17 @@ namespace decs
 	private:
 		Archetype* GetArchetypeAfterAddTag(Archetype* toArchetype, TypeID tagID)
 		{
+			if (toArchetype == nullptr)
+			{
+				return m_ArchetypesMap.CreateSingleTagArchetype(tagID);
+			}
+
 			return m_ArchetypesMap.GetArchetypeAfterAddTag(*toArchetype, tagID);
 		}
 
-		Archetype* GetArchetypeAfterRemoveTag(Archetype* fromArchetype, TypeID tagID)
+		Archetype* GetArchetypeAfterRemoveTag(Archetype& fromArchetype, TypeID tagID)
 		{
-			return m_ArchetypesMap.GetArchetypeAfterRemoveTag(*fromArchetype, tagID);
+			return m_ArchetypesMap.GetArchetypeAfterRemoveTag(fromArchetype, tagID);
 		}
 
 		inline bool HasTag(EntityData& entityData, TypeID tagType)

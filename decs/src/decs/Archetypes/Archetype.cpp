@@ -179,11 +179,12 @@ namespace decs
 			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
-
-				ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
-				typeData.m_StableContainer->Remove(componentPtr);
-
-				typeData.m_PackedContainer->PopBack();
+				if (!typeData.IsTag())
+				{
+					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
+					typeData.m_PackedContainer->PopBack();
+					typeData.m_StableContainer->Remove(componentPtr);
+				}
 			}
 
 		}
@@ -192,12 +193,12 @@ namespace decs
 			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
-
-				ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
-				typeData.m_StableContainer->Remove(componentPtr);
-
-
-				typeData.m_PackedContainer->RemoveSwapBack(index);
+				if (!typeData.IsTag())
+				{
+					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
+					typeData.m_PackedContainer->RemoveSwapBack(index);
+					typeData.m_StableContainer->Remove(componentPtr);
+				}
 			}
 		}
 
@@ -217,7 +218,11 @@ namespace decs
 			m_EntitiesData.pop_back();
 			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
-				m_TypeData[i].m_PackedContainer->PopBack();
+				auto& typeData = m_TypeData[i];
+				if (!typeData.IsTag())
+				{
+					typeData.m_PackedContainer->PopBack();
+				}
 			}
 		}
 		else
@@ -233,7 +238,11 @@ namespace decs
 
 			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
-				m_TypeData[i].m_PackedContainer->RemoveSwapBack(index);
+				auto& typeData = m_TypeData[i];
+				if (!typeData.IsTag())
+				{
+					typeData.m_PackedContainer->RemoveSwapBack(index);
+				}
 			}
 		}
 
@@ -257,7 +266,11 @@ namespace decs
 
 			for (uint64_t idx = 0; idx < ComponentCount(); idx++)
 			{
-				m_TypeData[idx].m_PackedContainer->Reserve(desiredCapacity);
+				auto& typeData = m_TypeData[idx];
+				if (!typeData.IsTag())
+				{
+					typeData.m_PackedContainer->Reserve(desiredCapacity);
+				}
 			}
 		}
 	}
@@ -268,7 +281,11 @@ namespace decs
 		m_EntitiesData.clear();
 		for (uint64_t idx = 0; idx < ComponentCount(); idx++)
 		{
-			m_TypeData[idx].m_PackedContainer->Clear();
+			auto& typeData = m_TypeData[idx];
+			if (!typeData.IsTag())
+			{
+				typeData.m_PackedContainer->Clear();
+			}
 		}
 	}
 
@@ -283,11 +300,22 @@ namespace decs
 			otherTypeData.m_TypeID;
 			m_TypeIDsIndexes[otherTypeData.m_TypeID] = i;
 
-			AddTypeData_WithoutCheck(
-				otherTypeData.m_TypeID,
-				otherTypeData.m_PackedContainer->Clone(),
-				componentContexts->GetComponentContext(otherTypeData.m_TypeID)
-			);
+			if (otherTypeData.IsTag())
+			{
+				AddTypeData_WithoutCheck(
+					otherTypeData.m_TypeID,
+					nullptr,
+					nullptr
+				);
+			}
+			else
+			{
+				AddTypeData_WithoutCheck(
+					otherTypeData.m_TypeID,
+					otherTypeData.m_PackedContainer->Clone(),
+					componentContexts->GetComponentContext(otherTypeData.m_TypeID)
+				);
+			}
 		}
 	}
 
@@ -398,6 +426,11 @@ namespace decs
 		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++, fromArchetypeIndex++)
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
+			if (thisTypeData.IsTag())
+			{
+				continue;
+			}
+
 			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
 			if (fromArchetypeData.m_TypeID == removedComponentTypeID)
 			{
@@ -422,32 +455,39 @@ namespace decs
 			return;
 		}
 
+		const uint32_t componentCount = ComponentCount();
 		if (entityIndex == m_EntitiesCount - 1)
 		{
-			for (uint64_t i = 0; i < ComponentCount(); i++)
+			for (uint64_t i = 0; i < componentCount; i++)
 			{
 				auto& typeData = m_TypeData[i];
-				if (removedComponentTypeID == typeData.m_TypeID)
+				if (!typeData.IsTag())
 				{
-					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
-					typeData.m_StableContainer->Remove(componentPtr);
-				}
+					if (removedComponentTypeID == typeData.m_TypeID)
+					{
+						ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
+						typeData.m_StableContainer->Remove(componentPtr);
+					}
 
-				typeData.m_PackedContainer->PopBack();
+					typeData.m_PackedContainer->PopBack();
+				}
 			}
 		}
 		else
 		{
-			for (uint64_t i = 0; i < ComponentCount(); i++)
+			for (uint64_t i = 0; i < componentCount; i++)
 			{
 				auto& typeData = m_TypeData[i];
-				if (removedComponentTypeID == typeData.m_TypeID)
+				if (!typeData.IsTag())
 				{
-					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
-					typeData.m_StableContainer->Remove(componentPtr);
-				}
+					if (removedComponentTypeID == typeData.m_TypeID)
+					{
+						ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
+						typeData.m_StableContainer->Remove(componentPtr);
+					}
 
-				typeData.m_PackedContainer->RemoveSwapBack(entityIndex);
+					typeData.m_PackedContainer->RemoveSwapBack(entityIndex);
+				}
 			}
 		}
 
@@ -465,7 +505,7 @@ namespace decs
 		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++)
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-			if (thisTypeData.m_TypeID == newComponentTypeID)
+			if (thisTypeData.IsTag() || thisTypeData.m_TypeID == newComponentTypeID)
 			{
 				continue;
 			}

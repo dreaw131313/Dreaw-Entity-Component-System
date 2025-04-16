@@ -922,7 +922,7 @@ namespace decs
 
 		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
 
-		Archetype* newEntityArchetype = GetArchetypeAfterRemoveTag(oldArchetype, tagType);
+		Archetype* newEntityArchetype = GetArchetypeAfterRemoveTag(*oldArchetype, tagType);
 
 		if (newEntityArchetype != nullptr)
 		{

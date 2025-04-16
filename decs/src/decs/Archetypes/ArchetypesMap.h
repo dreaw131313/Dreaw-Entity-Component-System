@@ -364,18 +364,18 @@ namespace decs
 			return nullptr;
 		}
 
-		Archetype* CreateArchetypeAfterAddComponent(Archetype& toArchetype, TypeID componentTypeID, ComponentContextBase* componentContext);
+		Archetype* CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, ComponentContextBase* componentContext);
 
-		Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, TypeID removedComponentTypeID);
+		Archetype* GetArchetypeAfterRemoveComponent(const Archetype& fromArchetype, TypeID removedComponentTypeID);
 
-		Archetype* GetArchetypeAfterAddTag(Archetype& toArchetype, TypeID tagType);
+		Archetype* GetArchetypeAfterAddTag(const Archetype& toArchetype, TypeID tagType);
 
-		Archetype* GetArchetypeAfterRemoveTag(Archetype& fromArchetype, TypeID tagType);
+		Archetype* GetArchetypeAfterRemoveTag(const Archetype& fromArchetype, TypeID tagType);
 
 		Archetype* CreateSingleTagArchetype(TypeID componentTypeID);
 
-		void AddTypeDataAfterRemoveComponent(Archetype& fromArchetype,Archetype& toArchetype, TypeID compType);
+		void AddTypeDataAfterRemoveComponent(const Archetype& fromArchetype,Archetype& toArchetype, TypeID compType);
 
-		void AddTypeDataAfterAddComponent(Archetype& fromArchetype, Archetype& toArchetype,TypeID componentTypeID, ComponentContextBase* addedComponentContext);
+		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype,TypeID componentTypeID, ComponentContextBase* addedComponentContext);
 	};
 }
