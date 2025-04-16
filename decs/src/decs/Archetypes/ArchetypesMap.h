@@ -424,12 +424,6 @@ namespace decs
 			return &newArchetype;
 		}
 
-		inline Archetype* CreateArchetypeAfterAddComponent(
-			Archetype& toArchetype,
-			Archetype& archetypeToGetContainer,
-			uint64_t addedComponentIndex
-		);
-
 		Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, TypeID removedComponentTypeID);
 
 		template<typename T>
