@@ -45,6 +45,50 @@ namespace decs
 		m_EntitiesCount = 0;
 	}
 
+	void Archetype::InsertComponentContextInCorrectPlace(ComponentContextBase* componentContext, uint32_t typeDataIndex)
+	{
+		// TODO: find better way to insert new elements,
+		/*uint64_t size = m_ComponentContextsInOrder.size();
+		for (uint32_t i = 0; i < size; i++)
+		{
+		if (m_ComponentContextsInOrder[i].m_ComponentContext->GetObserverOrder() >= componentContext->GetObserverOrder())
+		{
+		auto insertPos = m_ComponentContextsInOrder.begin();
+		std::advance(insertPos, i);
+		m_ComponentContextsInOrder.insert(insertPos, { componentContext, typeDataIndex });
+		return;
+		}
+		}
+		m_ComponentContextsInOrder.push_back({ componentContext, typeDataIndex });*/
+
+		//
+		{
+			int32_t contextCount = static_cast<int32_t>(m_ComponentContextsInOrder.size());
+			int32_t contextCountMinusOne = contextCount - 1;
+			for (int32_t i = contextCountMinusOne; i >= 0; i--)
+			{
+				auto& orderData = m_ComponentContextsInOrder[i];
+				if (orderData.m_ComponentContext->GetObserverOrder() <= componentContext->GetObserverOrder())
+				{
+					if (i < contextCountMinusOne)
+					{
+						// insert on i+1 place
+						auto insertPos = m_ComponentContextsInOrder.begin();
+						std::advance(insertPos, i + 1);
+						m_ComponentContextsInOrder.insert(insertPos, { componentContext, typeDataIndex });
+					}
+					else
+					{
+						// pushback
+						m_ComponentContextsInOrder.push_back({ componentContext, typeDataIndex });
+					}
+					return;
+				}
+			}
+			m_ComponentContextsInOrder.insert(m_ComponentContextsInOrder.begin(), { componentContext, typeDataIndex });
+		}
+	}
+
 	ArchetypeTypeData& Archetype::AddTypeData_WithoutCheck(TypeID typeID, PackedContainerBase* packedContainer, ComponentContextBase* componentContext)
 	{
 		InsertComponentContextInCorrectPlace(componentContext, static_cast<uint32_t>(m_TypeData.size()));
