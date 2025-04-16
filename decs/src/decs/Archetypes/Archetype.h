@@ -229,40 +229,20 @@ namespace decs
 	private:
 		void ClearEntityDataAndComponents();
 
-		// instead of using "m_TypeData.emplace_back"
-		inline ArchetypeTypeData& AddTypeData(
-			TypeID typeID,
-			PackedContainerBase* packedContainer,
-			ComponentContextBase* componentContext
-		)
-		{
-			InsertComponentContextInCorrectPlace(componentContext, static_cast<uint32_t>(m_TypeData.size()));
-			return m_TypeData.emplace_back(typeID, packedContainer, componentContext, componentContext->GetStableContainer());
-		}
-
-		void UpdateOrderOfComponentContexts();
-
-		inline void SetEntityActiveState(uint32_t index, bool isActive)
-		{
-			if (index < m_EntitiesCount)
-			{
-				m_EntitiesData[index].m_bIsActive = isActive;
-			}
-		}
-
+		// it must be called only from "AddTypeData_WithoutCheck" function
 		void InsertComponentContextInCorrectPlace(ComponentContextBase* componentContext, uint32_t typeDataIndex)
 		{
 			// TODO: find better way to insert new elements,
 			/*uint64_t size = m_ComponentContextsInOrder.size();
 			for (uint32_t i = 0; i < size; i++)
 			{
-				if (m_ComponentContextsInOrder[i].m_ComponentContext->GetObserverOrder() >= componentContext->GetObserverOrder())
-				{
-					auto insertPos = m_ComponentContextsInOrder.begin();
-					std::advance(insertPos, i);
-					m_ComponentContextsInOrder.insert(insertPos, { componentContext, typeDataIndex });
-					return;
-				}
+			if (m_ComponentContextsInOrder[i].m_ComponentContext->GetObserverOrder() >= componentContext->GetObserverOrder())
+			{
+			auto insertPos = m_ComponentContextsInOrder.begin();
+			std::advance(insertPos, i);
+			m_ComponentContextsInOrder.insert(insertPos, { componentContext, typeDataIndex });
+			return;
+			}
 			}
 			m_ComponentContextsInOrder.push_back({ componentContext, typeDataIndex });*/
 
@@ -294,30 +274,27 @@ namespace decs
 			}
 		}
 
-		template<typename TComponent>
-		void AddTypeID(ComponentContextBase* componentContext, StableContainerBase* stableContainer)
-		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<TComponent>::ID();
-			auto it = m_TypeIDsIndexes.find(id);
-			if (it == m_TypeIDsIndexes.end())
-			{
-				m_ComponentsCount += 1;
-				m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
-
-				PackedContainerBase* packedContainer = new StablePackedContainer<TComponent>();
-				AddTypeData(
-					id,
-					packedContainer,
-					componentContext
-				);
-			}
-		}
-
-		void AddTypeID(
-			const TypeID& id,
-			PackedContainerBase* frompackedContainer,
+		ArchetypeTypeData& AddTypeData_WithoutCheck(
+			TypeID typeID,
+			PackedContainerBase* packedContainer,
 			ComponentContextBase* componentContext
 		);
+
+		void AddTypeData_WithCheck(
+			const TypeID& id,
+			PackedContainerBase* packedContainer,
+			ComponentContextBase* componentContext
+		);
+
+		void UpdateOrderOfComponentContexts();
+
+		inline void SetEntityActiveState(uint32_t index, bool isActive)
+		{
+			if (index < m_EntitiesCount)
+			{
+				m_EntitiesData[index].m_bIsActive = isActive;
+			}
+		}
 
 		void AddEntityData(EntityData* entityData);
 

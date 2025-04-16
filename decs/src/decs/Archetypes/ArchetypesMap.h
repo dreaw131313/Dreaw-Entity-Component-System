@@ -68,7 +68,7 @@ namespace decs
 		std::vector<Archetype*> Archetypes;
 
 	public:
-		ArchetypeGroup()= default;
+		ArchetypeGroup() = default;
 
 	};
 
@@ -305,7 +305,7 @@ namespace decs
 			ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
 			if (group == nullptr)
 			{
-				group = &m_ArchetrypesGroupsByOneTypeVector.EmplaceBack(m_ArchetrypesGroupsAllocator,id);
+				group = &m_ArchetrypesGroupsByOneTypeVector.EmplaceBack(m_ArchetrypesGroupsAllocator, id);
 			}
 			return group;
 		}
@@ -345,32 +345,17 @@ namespace decs
 		}
 
 		template<typename TComponent>
-		Archetype* CreateSingleComponentArchetype(ComponentContextBase* componentContext, StableContainerBase* stableContainer)
+		Archetype* CreateSingleComponentArchetype(ComponentContextBase* componentContext)
 		{
 			TYPE_ID_CONSTEXPR uint64_t typeID = Type<TComponent>::ID();
 			auto& archetype = m_SingleComponentArchetypes[typeID];
 			if (archetype != nullptr) return archetype;
 			archetype = &m_Archetypes.EmplaceBack();
-			archetype->AddTypeID<TComponent>(componentContext, stableContainer);
+			archetype->AddTypeData_WithCheck(typeID, new StablePackedContainer<TComponent>(), componentContext);
 			AddArchetypeToCorrectContainers(*archetype, false);
 			MakeArchetypeEdges(*archetype);
 			return archetype;
 		}
-
-		//Archetype* CreateSingleComponentArchetype(Archetype& from)
-		//{
-		//	uint64_t typeID = from.m_TypeData[0].m_TypeID;
-		//	uint64_t typeIndex = from.FindTypeIndex(typeID);
-		//	auto& archetype = m_SingleComponentArchetypes[typeID];
-		//	if (archetype != nullptr) return archetype;
-		//	archetype = &m_Archetypes.EmplaceBack();
-		//
-		//	ArchetypeTypeData& fromTypeData = from.m_TypeData[typeIndex];
-		//	archetype->AddTypeID(typeID, fromTypeData.m_PackedContainer, fromTypeData.m_ComponentContext, fromTypeData.m_StableContainer);
-		//	AddArchetypeToCorrectContainers(*archetype, false);
-		//	MakeArchetypeEdges(*archetype);
-		//	return archetype;
-		//}
 
 		template<typename T>
 		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype)
@@ -385,10 +370,10 @@ namespace decs
 			return nullptr;
 		}
 
-		template<typename T>
-		inline Archetype* CreateArchetypeAfterAddComponent(Archetype& toArchetype, ComponentContextBase* componentContext, StableContainerBase* stableContainer)
+		template<typename TComponent>
+		inline Archetype* CreateArchetypeAfterAddComponent(Archetype& toArchetype, ComponentContextBase* componentContext)
 		{
-			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::ID();
+			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<TComponent>::ID();
 			//auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
 			auto edge = toArchetype.GetEdge(addedComponentTypeID);
 			if (edge.IsValid())
@@ -418,15 +403,19 @@ namespace decs
 				if (!isNewComponentTypeAdded && currentTypeID > addedComponentTypeID)
 				{
 					isNewComponentTypeAdded = true;
-					newArchetype.AddTypeID<T>(componentContext, stableContainer);
+					newArchetype.AddTypeData_WithCheck(addedComponentTypeID, new StablePackedContainer<TComponent>(), componentContext);
 				}
 
-				newArchetype.AddTypeID(currentTypeID, toTypeData.m_PackedContainer, toTypeData.m_ComponentContext);
+				newArchetype.AddTypeData_WithCheck(
+					currentTypeID,
+					toTypeData.m_PackedContainer->Clone(),
+					toTypeData.m_ComponentContext
+				);
 			}
 
 			if (!isNewComponentTypeAdded)
 			{
-				newArchetype.AddTypeID<T>(componentContext, stableContainer);
+				newArchetype.AddTypeData_WithCheck(addedComponentTypeID, new StablePackedContainer<TComponent>(), componentContext);
 			}
 
 			AddArchetypeToCorrectContainers(newArchetype);
@@ -434,12 +423,6 @@ namespace decs
 
 			return &newArchetype;
 		}
-
-		inline Archetype* CreateArchetypeAfterAddComponent(
-			Archetype& toArchetype,
-			Archetype& archetypeToGetContainer,
-			uint64_t addedComponentIndex
-		);
 
 		Archetype* GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, TypeID removedComponentTypeID);
 

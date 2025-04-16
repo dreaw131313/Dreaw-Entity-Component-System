@@ -44,15 +44,7 @@ struct TestComponent : public decs::ComponentBase
 public:
 	int table[10];
 
-	TestComponent()
-	{
-		std::cout << "TestComponent constructor " << this << "\n";
-	}
-
-	~TestComponent()
-	{
-		std::cout << "TestComponent destructor " << this << "\n";
-	}
+	TestComponent() = default;
 
 };
 
@@ -87,18 +79,14 @@ public:
 	// Inherited via EnableComponentObserver
 	void OnEnableComponent(TestComponent& component, const decs::Entity& entity) override
 	{
-		//PrintLine("TestComponent on enable");
-
-		std::cout << "TestComponent on enable " << &component << "\n";
+		PrintLine("TestComponent on enable");
 	}
 
 
 	// Inherited via DisableComponentObserver
 	void OnDisableComponent(TestComponent& component, const decs::Entity& entity) override
 	{
-		//PrintLine("TestComponent on disable");
-
-		std::cout << "TestComponent on disable " << &component << "\n";
+		PrintLine("TestComponent on disable");
 	}
 };
 
@@ -117,25 +105,91 @@ int main()
 	observerManager.FillContainerObservers(container);
 
 	{
-		auto entity = container.CreateEntity(false);
-		auto test = entity.AddComponent<TestComponent>();
+		auto entity = container.CreateEntity();
 
-		entity.RemoveComponent_If<TestComponent>([](const TestComponent& c)
+		entity.AddComponent<Position>(10.f,10.f);
+
+		auto test = entity.AddComponent<TestComponent>();
+		auto rend = entity.AddComponent<Renderer>();
+
+		Position* position = entity.GetComponent<Position>();
+		TestComponent* testComp = entity.GetComponent<TestComponent>();
+		Renderer* renderer = entity.GetComponentDynamic<Renderer>();
+
+		auto spawnedEntity = container.Spawn(entity, true);
+		secondContainer.Spawn(entity);
+
+		//entity.RemoveComponent<TestComponent>();
+
+		PrintLine();
+
+		container.ForEach<Position>([](const decs::Entity& e, Position& p)
 		{
-			return true;
+			p.X += e.GetID();
+			p.Y += 2 * e.GetID();
 		});
 
-		entity.SetActive(true);
-		entity.SetActive(false);
+		container.ForEach<Position>([](const decs::Entity& e, Position& p)
+		{
+			PrintLine(std::format("X: {0}, Y: {1}", p.X, p.Y));
+		});
 
+		PrintLine();
+		PrintLine("Second Container");
+		secondContainer.ForEach<Position>([](const decs::Entity& e, Position& p)
+		{
+			PrintLine(std::format("X: {0}, Y: {1}", p.X, p.Y));
+		});
 
-		auto secondEntity = container.Spawn_NoCallback(entity);
+		PrintLine();
+		decs::Query<Position> testQuery = { &container };
+
+		testQuery.ForEach([&](Position& pos)
+		{
+			PrintLine("decs::Query::ForEach");
+		});
+		testQuery.ForEachBackward([&](decs::Entity& e, Position& pos)
+		{
+			PrintLine("decs::Query::ForEachBackward");
+		});
+		testQuery.ForEachSafe([&](Position& pos)
+		{
+			PrintLine("decs::Query::ForEachSafe");
+		});
+
+		decs::MultiQuery<TestComponent> testMultiQuery = {};
+		testMultiQuery.AddContainer(&container);
+
+		PrintLine();
+
+		testMultiQuery.ForEach([&](TestComponent& pos)
+		{
+			PrintLine("decs::MultiQuery::ForEach");
+		});
+		testMultiQuery.ForEachBackward([&](decs::Entity& e, TestComponent& pos)
+		{
+			PrintLine("decs::MultiQuery::ForEachBackward");
+		});
+		testMultiQuery.ForEachSafe([&](TestComponent& pos)
+		{
+			PrintLine("decs::MultiQuery::ForEachSafe");
+		});
+
+		PrintLine();
 
 		entity.Destroy();
-
-
 	}
 
+
+	// NO CALLBACK:
+	{
+		auto entity_nc = container.CreateEntity();
+
+		entity_nc.AddComponent_NoCallback<TestComponent>();
+
+		// container.InvokeEntitesOnCreateListeners();
+		// container.InvokeEntitesOnDestroyListeners();
+	}
 
 	return 0;
 }

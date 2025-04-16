@@ -303,70 +303,6 @@ namespace decs
 		return archetype;
 	}
 
-	inline Archetype* ArchetypesMap::CreateArchetypeAfterAddComponent(Archetype& toArchetype, Archetype& archetypeToGetContainer, uint64_t addedComponentIndex)
-	{
-		TypeID addedComponentTypeID = archetypeToGetContainer.m_TypeData[addedComponentIndex].m_TypeID;
-		uint64_t componentIndexToAdd = archetypeToGetContainer.FindTypeIndex(addedComponentTypeID);
-
-		auto edge = toArchetype.GetEdge(addedComponentTypeID);
-		if (edge.IsValid())
-		{
-			if (edge.m_EdgeType == EComponentEdgeType::Add)
-			{
-				return edge.m_Archetype;
-			}
-			else
-			{
-				return nullptr;
-			}
-		}
-
-		if (toArchetype.ContainType(addedComponentTypeID))
-		{
-			return &toArchetype;
-		}
-
-		Archetype& newArchetype = m_Archetypes.EmplaceBack();
-		bool isNewComponentTypeAdded = false;
-
-		for (uint32_t i = 0; i < toArchetype.ComponentCount(); i++)
-		{
-			const ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[i];
-			TypeID currentTypeID = toTypeData.m_TypeID;
-			if (!isNewComponentTypeAdded && currentTypeID > addedComponentTypeID)
-			{
-				ArchetypeTypeData& otherTypeData = archetypeToGetContainer.m_TypeData[componentIndexToAdd];
-				isNewComponentTypeAdded = true;
-				newArchetype.AddTypeID(
-					addedComponentTypeID,
-					otherTypeData.m_PackedContainer,
-					otherTypeData.m_ComponentContext
-				);
-			}
-
-			newArchetype.AddTypeID(
-				currentTypeID,
-				toTypeData.m_PackedContainer,
-				toTypeData.m_ComponentContext
-			);
-		}
-
-		if (!isNewComponentTypeAdded)
-		{
-			ArchetypeTypeData& otherTypeData = archetypeToGetContainer.m_TypeData[componentIndexToAdd];
-			newArchetype.AddTypeID(
-				addedComponentTypeID,
-				otherTypeData.m_PackedContainer,
-				otherTypeData.m_ComponentContext
-			);
-		}
-
-		AddArchetypeToCorrectContainers(newArchetype);
-		MakeArchetypeEdges(newArchetype);
-
-		return &newArchetype;
-	}
-
 	Archetype* ArchetypesMap::GetArchetypeAfterRemoveComponent(Archetype& fromArchetype, TypeID removedComponentTypeID)
 	{
 		if (fromArchetype.ComponentCount() == 1 && fromArchetype.GetTypeID(0) == removedComponentTypeID)
@@ -403,9 +339,9 @@ namespace decs
 			TypeID typeID = fromArchetypeData.m_TypeID;
 			if (typeID != removedComponentTypeID)
 			{
-				newArchetype.AddTypeID(
+				newArchetype.AddTypeData_WithCheck(
 					typeID,
-					fromArchetypeData.m_PackedContainer,
+					fromArchetypeData.m_PackedContainer->Clone(),
 					fromArchetypeData.m_ComponentContext
 				);
 			}
