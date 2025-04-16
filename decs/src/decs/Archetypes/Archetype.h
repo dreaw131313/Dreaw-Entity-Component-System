@@ -174,20 +174,6 @@ namespace decs
 			return m_TypeData[index].m_TypeID;
 		}
 
-		inline std::string GetComponentTypeName(uint64_t componentIndex) const
-		{
-			if (componentIndex < m_TypeData.size())
-			{
-				auto& typeData = m_TypeData[componentIndex];
-				if (typeData.m_ComponentContext != nullptr)
-				{
-					return typeData.m_ComponentContext->GetComponentName();
-				}
-			}
-
-			return std::string();
-		}
-
 		inline uint32_t EntityCount() const
 		{
 			return m_EntitiesCount;

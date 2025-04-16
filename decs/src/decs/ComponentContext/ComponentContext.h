@@ -24,8 +24,6 @@ namespace decs
 
 		inline virtual TypeID GetComponentTypeID() const = 0;
 
-		inline virtual std::string GetComponentName() const = 0;
-
 		inline int GetObserverOrder() const { return m_ObserverOrder; }
 
 		inline void SetComponentOrder(int order)
@@ -78,15 +76,6 @@ namespace decs
 		inline TypeID GetComponentTypeID() const override
 		{
 			return Type<TComponent>::ID();
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <returns>Name of component if coponent is stable (T = decs::stable<ComponentType>) it will return name of ComponentType without decs::stable</returns>
-		inline std::string GetComponentName() const override
-		{
-			return decs::Type<TComponent>::Name();
 		}
 
 		inline bool HasCreateObserver() const override
