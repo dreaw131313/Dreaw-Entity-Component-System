@@ -105,6 +105,7 @@
     <ClInclude Include="src\decs\Component\Component.h" />
     <ClInclude Include="src\decs\Containers\TOrderedList.h" />
     <ClInclude Include="src\decs\Observers\ObserversManager.h" />
+    <ClInclude Include="src\decs\trait.h" />
     <ClInclude Include="src\decs\Utils\ContainerIterator.h" />
     <ClInclude Include="src\decs\Utils\ContainerSerializer.h" />
     <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h" />
