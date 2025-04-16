@@ -283,6 +283,8 @@ namespace decs
 		}
 	}
 
+	/*
+
 	void Archetype::MoveEntityComponentsAfterRemoveComponent(
 		TypeID removedComponentTypeID,
 		Archetype* fromArchetype,
@@ -370,6 +372,8 @@ namespace decs
 
 		fromArchetype->RemoveSwapBackEntityData(fromIndex);
 	}
+	
+	*/
 
 	void Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
 		TypeID removedComponentTypeID,

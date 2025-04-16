@@ -296,6 +296,7 @@ namespace decs
 
 		void InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts);
 
+		/*
 		/// <summary>
 		/// Moves entity components from "fromArchetype" to this archetype.
 		/// </summary>
@@ -314,6 +315,8 @@ namespace decs
 			uint64_t fromIndex,
 			EntityData* entityData
 		);
+
+		*/
 
 		void MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
 			TypeID removedComponentTypeID,
