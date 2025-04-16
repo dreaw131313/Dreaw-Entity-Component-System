@@ -103,6 +103,7 @@ int main()
 	decs::Container secondContainer = {};
 
 	observerManager.FillContainerObservers(container);
+	observerManager.FillContainerObservers(secondContainer);
 
 	{
 		auto entity = container.CreateEntity();

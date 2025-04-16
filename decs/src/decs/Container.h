@@ -177,6 +177,11 @@ namespace decs
 			{
 
 			}
+
+			inline bool IsTag() const
+			{
+				return m_StableContainer == nullptr;
+			}
 		};
 
 		struct SpawnData
@@ -293,7 +298,7 @@ namespace decs
 			const SpawnDataState& spawnState
 		);
 
-		void InvokeComponentCreateAndEnableObserversOnSpawn(const Entity& entity, Archetype* archetype, uint64_t componentsCount, const SpawnDataState& spawnState);
+		void InvokeComponentCreateAndEnableObserversOnSpawn(const Entity& entity, const Archetype& archetype, const SpawnDataState& spawnState);
 
 	#pragma endregion
 
@@ -621,6 +626,17 @@ namespace decs
 
 	#pragma region TAGS:
 	private:
+		Archetype* GetArchetypeAfterAddTag(Archetype* toArchetype, TypeID tagID)
+		{
+
+			return nullptr;
+		}
+
+		Archetype* GetArchetypeAfterRemoveTag(Archetype* fromArchetype, TypeID tagID)
+		{
+
+			return nullptr;
+		}
 
 		inline bool HasTag(EntityData& entityData, TypeID tagType)
 		{
@@ -655,31 +671,52 @@ namespace decs
 				return HasTag<TTag>(entityData);
 			}
 
-			Archetype* currentArchetype = entityData.m_Archetype;
-			if (currentArchetype != nullptr && currentArchetype->HasTag<TTag>())
+			Archetype* oldArchetype = entityData.m_Archetype;
+			if (oldArchetype  != nullptr && oldArchetype ->HasTag<TTag>())
 			{
 				return true;
 			}
 
+			TYPE_ID_CONSTEXPR const TypeID tagTypeID = Type<TTag>::ID();
 
-			return false;
-		}
+			Archetype* newArchetype = GetArchetypeAfterAddTag(oldArchetype, tagTypeID);
 
-		bool RemoveTag(EntityData& entityData, TypeID tagType)
-		{
-			if (!m_CanRemoveComponents 
-				|| entityData.m_Container != this
-				|| entityData.m_Archetype == nullptr 
-				|| !entityData.IsValidToPerformComponentOperation()
-				)
+			if (oldArchetype != nullptr)
 			{
-				return false;
+				if (m_PerformDelayedDestruction)
+				{
+					// Change to respect tag
+					// AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
+
+					// move entity to new archetype
+					//entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
+					//	entityData.m_Archetype,
+					//	entityData.m_IndexInArchetype,
+					//	copmonentTypeID,
+					//	&entityData
+					//);
+				}
+				else
+				{
+					// move entity to new archetype
+					//entityNewArchetype->MoveEntityComponentsAfterAddComponent<TComponent>(
+					//	entityData.m_Archetype,
+					//	entityData.m_IndexInArchetype,
+					//	&entityData
+					//);
+				}
+			}
+			else
+			{
+				// means that archetype has one component/tag so we just need add entity to it
+				//RemoveFromEmptyEntities(entityData);
+				//newArchetype->AddEntityData(&entityData);
 			}
 
-
-
-			return false;
+			return true;
 		}
+
+		bool RemoveTag(EntityData& entityData, TypeID tagType);
 
 		template<typename TTag>
 		bool RemoveTag(EntityData& entityData)
