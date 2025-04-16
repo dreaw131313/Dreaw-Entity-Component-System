@@ -229,41 +229,20 @@ namespace decs
 	private:
 		void ClearEntityDataAndComponents();
 
-		ArchetypeTypeData& AddTypeData_WithoutCheck(
-			TypeID typeID,
-			PackedContainerBase* packedContainer,
-			ComponentContextBase* componentContext
-		);
-
-		void AddTypeData_WithCheck(
-			const TypeID& id,
-			PackedContainerBase* packedContainer,
-			ComponentContextBase* componentContext
-		);
-
-		void UpdateOrderOfComponentContexts();
-
-		inline void SetEntityActiveState(uint32_t index, bool isActive)
-		{
-			if (index < m_EntitiesCount)
-			{
-				m_EntitiesData[index].m_bIsActive = isActive;
-			}
-		}
-
+		// it must be called only from "AddTypeData_WithoutCheck" function
 		void InsertComponentContextInCorrectPlace(ComponentContextBase* componentContext, uint32_t typeDataIndex)
 		{
 			// TODO: find better way to insert new elements,
 			/*uint64_t size = m_ComponentContextsInOrder.size();
 			for (uint32_t i = 0; i < size; i++)
 			{
-				if (m_ComponentContextsInOrder[i].m_ComponentContext->GetObserverOrder() >= componentContext->GetObserverOrder())
-				{
-					auto insertPos = m_ComponentContextsInOrder.begin();
-					std::advance(insertPos, i);
-					m_ComponentContextsInOrder.insert(insertPos, { componentContext, typeDataIndex });
-					return;
-				}
+			if (m_ComponentContextsInOrder[i].m_ComponentContext->GetObserverOrder() >= componentContext->GetObserverOrder())
+			{
+			auto insertPos = m_ComponentContextsInOrder.begin();
+			std::advance(insertPos, i);
+			m_ComponentContextsInOrder.insert(insertPos, { componentContext, typeDataIndex });
+			return;
+			}
 			}
 			m_ComponentContextsInOrder.push_back({ componentContext, typeDataIndex });*/
 
@@ -292,6 +271,28 @@ namespace decs
 					}
 				}
 				m_ComponentContextsInOrder.insert(m_ComponentContextsInOrder.begin(), { componentContext, typeDataIndex });
+			}
+		}
+
+		ArchetypeTypeData& AddTypeData_WithoutCheck(
+			TypeID typeID,
+			PackedContainerBase* packedContainer,
+			ComponentContextBase* componentContext
+		);
+
+		void AddTypeData_WithCheck(
+			const TypeID& id,
+			PackedContainerBase* packedContainer,
+			ComponentContextBase* componentContext
+		);
+
+		void UpdateOrderOfComponentContexts();
+
+		inline void SetEntityActiveState(uint32_t index, bool isActive)
+		{
+			if (index < m_EntitiesCount)
+			{
+				m_EntitiesData[index].m_bIsActive = isActive;
 			}
 		}
 
