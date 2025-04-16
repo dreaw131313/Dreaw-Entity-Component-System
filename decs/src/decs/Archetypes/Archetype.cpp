@@ -45,13 +45,13 @@ namespace decs
 		m_EntitiesCount = 0;
 	}
 
-	ArchetypeTypeData& Archetype::AddTypeData(TypeID typeID, PackedContainerBase* packedContainer, ComponentContextBase* componentContext)
+	ArchetypeTypeData& Archetype::AddTypeData_WithoutCheck(TypeID typeID, PackedContainerBase* packedContainer, ComponentContextBase* componentContext)
 	{
 		InsertComponentContextInCorrectPlace(componentContext, static_cast<uint32_t>(m_TypeData.size()));
 		return m_TypeData.emplace_back(typeID, packedContainer, componentContext, componentContext->GetStableContainer());
 	}
 
-	void Archetype::AddTypeID(
+	void Archetype::AddTypeData_WithCheck(
 		const TypeID& id,
 		PackedContainerBase* packedContainer,
 		ComponentContextBase* componentContext
@@ -62,7 +62,7 @@ namespace decs
 		{
 			m_ComponentsCount += 1;
 			m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
-			AddTypeData(
+			AddTypeData_WithoutCheck(
 				id,
 				packedContainer,
 				componentContext
@@ -231,7 +231,7 @@ namespace decs
 			otherTypeData.m_TypeID;
 			m_TypeIDsIndexes[otherTypeData.m_TypeID] = i;
 
-			AddTypeData(
+			AddTypeData_WithoutCheck(
 				otherTypeData.m_TypeID,
 				otherTypeData.m_PackedContainer->Clone(),
 				componentContexts->GetComponentContext(otherTypeData.m_TypeID)

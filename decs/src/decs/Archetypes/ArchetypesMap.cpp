@@ -337,14 +337,14 @@ namespace decs
 			{
 				ArchetypeTypeData& otherTypeData = archetypeToGetContainer.m_TypeData[componentIndexToAdd];
 				isNewComponentTypeAdded = true;
-				newArchetype.AddTypeID(
+				newArchetype.AddTypeData_WithCheck(
 					addedComponentTypeID,
 					otherTypeData.m_PackedContainer->Clone(),
 					otherTypeData.m_ComponentContext
 				);
 			}
 
-			newArchetype.AddTypeID(
+			newArchetype.AddTypeData_WithCheck(
 				currentTypeID,
 				toTypeData.m_PackedContainer->Clone(),
 				toTypeData.m_ComponentContext
@@ -354,7 +354,7 @@ namespace decs
 		if (!isNewComponentTypeAdded)
 		{
 			ArchetypeTypeData& otherTypeData = archetypeToGetContainer.m_TypeData[componentIndexToAdd];
-			newArchetype.AddTypeID(
+			newArchetype.AddTypeData_WithCheck(
 				addedComponentTypeID,
 				otherTypeData.m_PackedContainer->Clone(),
 				otherTypeData.m_ComponentContext
@@ -403,7 +403,7 @@ namespace decs
 			TypeID typeID = fromArchetypeData.m_TypeID;
 			if (typeID != removedComponentTypeID)
 			{
-				newArchetype.AddTypeID(
+				newArchetype.AddTypeData_WithCheck(
 					typeID,
 					fromArchetypeData.m_PackedContainer->Clone(),
 					fromArchetypeData.m_ComponentContext

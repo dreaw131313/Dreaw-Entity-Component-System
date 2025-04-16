@@ -229,14 +229,13 @@ namespace decs
 	private:
 		void ClearEntityDataAndComponents();
 
-		// instead of using "m_TypeData.emplace_back"
-		ArchetypeTypeData& AddTypeData(
+		ArchetypeTypeData& AddTypeData_WithoutCheck(
 			TypeID typeID,
 			PackedContainerBase* packedContainer,
 			ComponentContextBase* componentContext
 		);
 
-		void AddTypeID(
+		void AddTypeData_WithCheck(
 			const TypeID& id,
 			PackedContainerBase* packedContainer,
 			ComponentContextBase* componentContext

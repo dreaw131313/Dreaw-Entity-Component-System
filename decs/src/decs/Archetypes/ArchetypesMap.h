@@ -351,7 +351,7 @@ namespace decs
 			auto& archetype = m_SingleComponentArchetypes[typeID];
 			if (archetype != nullptr) return archetype;
 			archetype = &m_Archetypes.EmplaceBack();
-			archetype->AddTypeID(typeID, new StablePackedContainer<TComponent>(), componentContext);
+			archetype->AddTypeData_WithCheck(typeID, new StablePackedContainer<TComponent>(), componentContext);
 			AddArchetypeToCorrectContainers(*archetype, false);
 			MakeArchetypeEdges(*archetype);
 			return archetype;
@@ -403,10 +403,10 @@ namespace decs
 				if (!isNewComponentTypeAdded && currentTypeID > addedComponentTypeID)
 				{
 					isNewComponentTypeAdded = true;
-					newArchetype.AddTypeID(addedComponentTypeID, new StablePackedContainer<TComponent>(), componentContext);
+					newArchetype.AddTypeData_WithCheck(addedComponentTypeID, new StablePackedContainer<TComponent>(), componentContext);
 				}
 
-				newArchetype.AddTypeID(
+				newArchetype.AddTypeData_WithCheck(
 					currentTypeID,
 					toTypeData.m_PackedContainer->Clone(),
 					toTypeData.m_ComponentContext
@@ -415,7 +415,7 @@ namespace decs
 
 			if (!isNewComponentTypeAdded)
 			{
-				newArchetype.AddTypeID(addedComponentTypeID, new StablePackedContainer<TComponent>(), componentContext);
+				newArchetype.AddTypeData_WithCheck(addedComponentTypeID, new StablePackedContainer<TComponent>(), componentContext);
 			}
 
 			AddArchetypeToCorrectContainers(newArchetype);
