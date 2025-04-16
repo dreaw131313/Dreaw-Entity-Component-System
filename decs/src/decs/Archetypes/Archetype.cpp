@@ -45,6 +45,31 @@ namespace decs
 		m_EntitiesCount = 0;
 	}
 
+	ArchetypeTypeData& Archetype::AddTypeData(TypeID typeID, PackedContainerBase* packedContainer, ComponentContextBase* componentContext)
+	{
+		InsertComponentContextInCorrectPlace(componentContext, static_cast<uint32_t>(m_TypeData.size()));
+		return m_TypeData.emplace_back(typeID, packedContainer, componentContext, componentContext->GetStableContainer());
+	}
+
+	void Archetype::AddTypeID(
+		const TypeID& id,
+		PackedContainerBase* packedContainer,
+		ComponentContextBase* componentContext
+	)
+	{
+		auto it = m_TypeIDsIndexes.find(id);
+		if (it == m_TypeIDsIndexes.end())
+		{
+			m_ComponentsCount += 1;
+			m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
+			AddTypeData(
+				id,
+				packedContainer,
+				componentContext
+			);
+		}
+	}
+
 	void Archetype::UpdateOrderOfComponentContexts()
 	{
 		static auto sortLambda = [](OrderData& lhs, OrderData& rhs)
@@ -57,25 +82,6 @@ namespace decs
 		};
 
 		std::sort(m_ComponentContextsInOrder.begin(), m_ComponentContextsInOrder.end(), sortLambda);
-	}
-
-	void Archetype::AddTypeID(
-		const TypeID& id,
-		PackedContainerBase* frompackedContainer,
-		ComponentContextBase* componentContext
-	)
-	{
-		auto it = m_TypeIDsIndexes.find(id);
-		if (it == m_TypeIDsIndexes.end())
-		{
-			m_ComponentsCount += 1;
-			m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
-			AddTypeData(
-				id,
-				frompackedContainer->Clone(),
-				componentContext
-			);
-		}
 	}
 
 	void Archetype::AddEntityData(EntityData* entityData)

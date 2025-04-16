@@ -230,15 +230,17 @@ namespace decs
 		void ClearEntityDataAndComponents();
 
 		// instead of using "m_TypeData.emplace_back"
-		inline ArchetypeTypeData& AddTypeData(
+		ArchetypeTypeData& AddTypeData(
 			TypeID typeID,
 			PackedContainerBase* packedContainer,
 			ComponentContextBase* componentContext
-		)
-		{
-			InsertComponentContextInCorrectPlace(componentContext, static_cast<uint32_t>(m_TypeData.size()));
-			return m_TypeData.emplace_back(typeID, packedContainer, componentContext, componentContext->GetStableContainer());
-		}
+		);
+
+		void AddTypeID(
+			const TypeID& id,
+			PackedContainerBase* packedContainer,
+			ComponentContextBase* componentContext
+		);
 
 		void UpdateOrderOfComponentContexts();
 
@@ -293,31 +295,6 @@ namespace decs
 				m_ComponentContextsInOrder.insert(m_ComponentContextsInOrder.begin(), { componentContext, typeDataIndex });
 			}
 		}
-
-		template<typename TComponent>
-		void AddTypeID(ComponentContextBase* componentContext, StableContainerBase* stableContainer)
-		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<TComponent>::ID();
-			auto it = m_TypeIDsIndexes.find(id);
-			if (it == m_TypeIDsIndexes.end())
-			{
-				m_ComponentsCount += 1;
-				m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
-
-				PackedContainerBase* packedContainer = new StablePackedContainer<TComponent>();
-				AddTypeData(
-					id,
-					packedContainer,
-					componentContext
-				);
-			}
-		}
-
-		void AddTypeID(
-			const TypeID& id,
-			PackedContainerBase* frompackedContainer,
-			ComponentContextBase* componentContext
-		);
 
 		void AddEntityData(EntityData* entityData);
 

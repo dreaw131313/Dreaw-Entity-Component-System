@@ -697,8 +697,7 @@ namespace decs
 				{
 					auto compCtx = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<TComponent>(
-						compCtx,
-						compCtx->GetStableContainer()
+						compCtx
 					);
 				}
 			}
@@ -710,8 +709,7 @@ namespace decs
 					auto compCtx = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent<TComponent>(
 						*toArchetype,
-						compCtx,
-						compCtx->GetStableContainer()
+						compCtx
 					);
 				}
 

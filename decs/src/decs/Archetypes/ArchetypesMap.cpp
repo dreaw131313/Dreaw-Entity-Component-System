@@ -339,14 +339,14 @@ namespace decs
 				isNewComponentTypeAdded = true;
 				newArchetype.AddTypeID(
 					addedComponentTypeID,
-					otherTypeData.m_PackedContainer,
+					otherTypeData.m_PackedContainer->Clone(),
 					otherTypeData.m_ComponentContext
 				);
 			}
 
 			newArchetype.AddTypeID(
 				currentTypeID,
-				toTypeData.m_PackedContainer,
+				toTypeData.m_PackedContainer->Clone(),
 				toTypeData.m_ComponentContext
 			);
 		}
@@ -356,7 +356,7 @@ namespace decs
 			ArchetypeTypeData& otherTypeData = archetypeToGetContainer.m_TypeData[componentIndexToAdd];
 			newArchetype.AddTypeID(
 				addedComponentTypeID,
-				otherTypeData.m_PackedContainer,
+				otherTypeData.m_PackedContainer->Clone(),
 				otherTypeData.m_ComponentContext
 			);
 		}
@@ -405,7 +405,7 @@ namespace decs
 			{
 				newArchetype.AddTypeID(
 					typeID,
-					fromArchetypeData.m_PackedContainer,
+					fromArchetypeData.m_PackedContainer->Clone(),
 					fromArchetypeData.m_ComponentContext
 				);
 			}
