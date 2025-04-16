@@ -42,14 +42,9 @@ namespace decs
 
 		inline virtual ComponentBase* GetComponentBasePtr(uint64_t index) = 0;
 
-		inline virtual StableComponentRef* GetStableComponentRef(uint64_t index) = 0;
-
 		inline virtual void RemoveSwapBack(uint64_t index) = 0;
 
-		inline virtual ComponentBase* EmplaceFromStableComponentRef(StableComponentRef* componentRef) = 0;
-
-		inline virtual ComponentBase* MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) = 0;
-
+		inline virtual void PushBack(ComponentBase* componentBase) = 0;
 	};
 
 	template<typename TComponent>
@@ -58,7 +53,7 @@ namespace decs
 		friend class Container;
 		friend class Archetype;
 	private:
-		std::vector<StableComponentRef> m_Data;
+		std::vector<TComponent*> m_Data;
 
 	public:
 		StablePackedContainer()
@@ -116,12 +111,7 @@ namespace decs
 
 		inline virtual ComponentBase* GetComponentBasePtr(uint64_t index)  override
 		{
-			return m_Data[index].m_ComponentPtr;
-		}
-
-		inline virtual StableComponentRef* GetStableComponentRef(uint64_t index)  override
-		{
-			return &m_Data[index];
+			return m_Data[index];
 		}
 
 		inline virtual void RemoveSwapBack(uint64_t index) override
@@ -137,31 +127,19 @@ namespace decs
 			}
 		}
 
-		inline virtual ComponentBase* EmplaceFromStableComponentRef(StableComponentRef* componentRef) override
+		inline void PushBack(ComponentBase* componentBase) override
 		{
-			m_Data.emplace_back(*componentRef);
-			return componentRef->m_ComponentPtr;
-		}
-
-		inline virtual ComponentBase* MoveEmplaceBackFromStableComponentRef(StableComponentRef* componentRef) override
-		{
-			m_Data.emplace_back(*componentRef);
-			return componentRef->m_ComponentPtr;
+			m_Data.push_back(static_cast<TComponent*>(componentBase));
 		}
 
 		inline TComponent& GetAsRef(uint64_t index)
 		{
-			return *static_cast<TComponent*>(m_Data[index].m_ComponentPtr);
+			return *m_Data[index];
 		}
 
 		inline TComponent* GetAsPtr(uint64_t index)
 		{
-			return static_cast<TComponent*>(m_Data[index].m_ComponentPtr);
-		}
-
-		inline StableComponentRef& EmplaceBack(TComponent* componentPtr, uint64_t chunkIndex, uint64_t elementIndex)
-		{
-			return m_Data.emplace_back(componentPtr, chunkIndex, elementIndex);
+			return m_Data[index];
 		}
 	};
 }

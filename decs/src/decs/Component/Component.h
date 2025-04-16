@@ -4,6 +4,12 @@
 namespace decs
 {
 	class Entity;
+	class ChunkBase;
+	class StableContainerBase;
+	template<typename TComponentType>
+	class StableContainer;
+	template<typename TComponentType>
+	class TChunk;
 
 	class ComponentBase
 	{
@@ -14,6 +20,13 @@ namespace decs
 		friend class PackedContainer;
 		template<typename>
 		friend class StablePackedContainer;
+
+		friend class ChunkBase;
+		friend class StableContainerBase;
+		template<typename>
+		friend class TChunk;
+		template<typename TComponentType>
+		friend class StableContainer;
 
 	public:
 		ComponentBase() = default;
@@ -50,17 +63,17 @@ namespace decs
 			return m_bIsEnabledByECS;
 		}
 		
-		inline uint32_t GetDependecyCount() const
+		inline uint16_t GetDependecyCount() const
 		{
 			return m_DependencyCount;
 		}
 
-		inline void AddDependency(uint32_t dependecyCount = 1)
+		inline void AddDependency(uint16_t dependecyCount = 1)
 		{
 			m_DependencyCount += dependecyCount;
 		}
 
-		inline void RemoveDependecy(uint32_t dependecyCount = 1)
+		inline void RemoveDependecy(uint16_t dependecyCount = 1)
 		{
 			if (dependecyCount > m_DependencyCount)
 			{
@@ -80,9 +93,31 @@ namespace decs
 		virtual void OnPreCreate(const Entity& entity);
 
 	private:
-		uint32_t m_DependencyCount = 0;
+		ChunkBase* m_ParentChunk = nullptr;
+		uint32_t m_IndexInChunk = std::numeric_limits<uint32_t>::max();
+
+		uint16_t m_DependencyCount = 0;
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByECS = false;
+
+	private:
+
+		inline void SetChunkAndIndex(ChunkBase* parentChunk, uint32_t index)
+		{
+			m_ParentChunk = parentChunk;
+			m_IndexInChunk = index;
+		}
+
+		inline uint32_t GetIndexInChunk() const
+		{
+			return m_IndexInChunk;
+		}
+
+		inline const ChunkBase* GetParentChunk() const
+		{
+			return m_ParentChunk;
+		}
+
 
 	private:
 		inline void SetFlags(bool bIsCreated, bool bIsEnabled)
@@ -91,5 +126,4 @@ namespace decs
 			m_bIsEnabledByECS = bIsEnabled;
 		}
 	};
-
 }

@@ -116,6 +116,14 @@ namespace decs
 			return nullptr;
 		}
 
+		inline ComponentBase* GetComponent(TypeID componentType) const
+		{
+			if (IsValid())
+				return GetContainer_Internal()->GetComponent(*m_EntityData, componentType);
+
+			return nullptr;
+		}
+
 		/// <summary>
 		/// Iterates over all components on entity and use dynamic cast. If casted component is not nullptr returns it. If none of componets can be casted to TComponent returns nullptr.
 		/// </summary>

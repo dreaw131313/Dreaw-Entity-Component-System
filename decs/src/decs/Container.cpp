@@ -86,7 +86,7 @@ namespace decs
 
 		m_DelayedEntitiesToDestroy.clear();
 		m_ArchetypesRecordsToDelayedRemove.clear();
-		m_ActivationChangeComponentRefs.clear();
+		m_ActivationChangeComponentPtrs.clear();
 		m_SpawnData.Clear();
 		m_EmptyEntities.clear();
 		m_ArchetypesMap.ClearEntityDataAndComponents();
@@ -536,7 +536,6 @@ namespace decs
 		}
 		InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
 
-
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
 
 		return spawnedEntity;
@@ -685,19 +684,20 @@ namespace decs
 		}
 		m_SpawnData.m_SpawnArchetypes.push_back(spawnedEntityArchetype);
 
+		Entity e(&prefabEntityData);
+
 		for (uint32_t i = 0; i < componentsCount; i++)
 		{
 			ArchetypeTypeData& spawnedEntityArchetypeTypeData = spawnedEntityArchetype->m_TypeData[i];
 
 			m_SpawnData.m_PrefabComponentRefs.emplace_back(
 				spawnedEntityArchetypeTypeData.m_StableContainer,
-				spawnedEntityArchetypeTypeData.m_TypeID,
-				prefabEntityData,
-				i
+				e.GetComponent(spawnedEntityArchetypeTypeData.m_TypeID)
 			);
+
 		}
 
-		m_SpawnData.m_SpawnedEntityComponentRefs.resize(m_SpawnData.m_SpawnedEntityComponentRefs.size() + componentsCount);
+		m_SpawnData.m_SpawnedEntityComponentPtrs.resize(m_SpawnData.m_SpawnedEntityComponentPtrs.size() + componentsCount);
 	}
 
 	void Container::CreateEntityFromSpawnData(
@@ -717,12 +717,12 @@ namespace decs
 			ArchetypeTypeData& currentTypeData = typeDataVector[i];
 			SpawnComponentRefData& spawnRefData = m_SpawnData.m_PrefabComponentRefs[i];
 
-			StableComponentRef compNodeInfo = spawnRefData.m_StableContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentRef.Get());
-			currentTypeData.m_PackedContainer->EmplaceFromStableComponentRef(&compNodeInfo);
+			ComponentBase* componentPtr = spawnRefData.m_StableContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentPtr);
+			currentTypeData.m_PackedContainer->PushBack(componentPtr);
 
-			m_SpawnData.m_SpawnedEntityComponentRefs[i].Set(currentTypeData.m_TypeID, spawnedEntityData, i);
+			m_SpawnData.m_SpawnedEntityComponentPtrs[i] = componentPtr;
 
-			compNodeInfo.m_ComponentPtr->OnPreCreate(entity);
+			componentPtr->OnPreCreate(entity);
 		}
 	}
 
@@ -737,16 +737,14 @@ namespace decs
 				auto& orderData = orderContextVector[idx];
 				uint32_t componentIdx = orderData.m_ComponentIndex;
 
-				auto& componentRef = m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx + componentIdx];
-				ComponentBase* componentVoidPtr = componentRef.Get();
-				if (componentVoidPtr != nullptr)
+				ComponentBase* componentPtr = m_SpawnData.m_SpawnedEntityComponentPtrs[compRefIdx + componentIdx];
+				if (componentPtr != nullptr)
 				{
-					orderData.m_ComponentContext->InvokeOnCreateComponent(componentVoidPtr, entity);
+					orderData.m_ComponentContext->InvokeOnCreateComponent(componentPtr, entity);
 
-					componentVoidPtr = componentRef.Get();
-					if (entity.IsActive() && componentVoidPtr != nullptr)
+					if (entity.IsActive())
 					{
-						orderData.m_ComponentContext->InvokeOnEnableComponent(componentVoidPtr, entity);
+						orderData.m_ComponentContext->InvokeOnEnableComponent(componentPtr, entity);
 					}
 				}
 			}
@@ -758,11 +756,10 @@ namespace decs
 				auto& orderData = orderContextVector[idx];
 				uint32_t componentIdx = orderData.m_ComponentIndex;
 
-				auto& componentRef = m_SpawnData.m_SpawnedEntityComponentRefs[compRefIdx + componentIdx];
-				ComponentBase* componentVoidPtr = componentRef.Get();
-				if (componentVoidPtr != nullptr)
+				ComponentBase* componentPtr = m_SpawnData.m_SpawnedEntityComponentPtrs[compRefIdx + componentIdx];
+				if (componentPtr != nullptr)
 				{
-					orderData.m_ComponentContext->InvokeOnCreateComponent(componentVoidPtr, entity);
+					orderData.m_ComponentContext->InvokeOnCreateComponent(componentPtr, entity);
 				}
 			}
 		}
@@ -825,8 +822,8 @@ namespace decs
 
 		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
 		auto packedContainer = archetypeTypeData.m_PackedContainer;
-		auto compPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
-		if (compPtr->GetDependecyCount() > 0)
+		ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
+		if (componentPtr->GetDependecyCount() > 0)
 		{
 			return false;
 		}
@@ -852,22 +849,11 @@ namespace decs
 
 		// Invoking remove observers:
 		{
-			EntityData placeHolderEntityData = entityData;
-			placeHolderEntityData.m_Archetype = oldArchetype;
-			placeHolderEntityData.m_IndexInArchetype = static_cast<uint32_t>(entityIndexInOldArchetype);
-			oldArchetype->SetPlaceHolderEntityData(&placeHolderEntityData, static_cast<uint32_t>(entityIndexInOldArchetype));
-			{
-				auto componentContext = archetypeTypeData.m_ComponentContext;
-				if (entity.IsActive())
-				{
-					componentContext->InvokeOnDisableComponent(packedContainer->GetComponentBasePtr(entityIndexInOldArchetype), entity);
-				}
-				if (entity.IsValid())
-				{
-					componentContext->InvokeOnDestroyComponent(packedContainer->GetComponentBasePtr(placeHolderEntityData.m_IndexInArchetype), entity);
-				}
-			}
 			oldArchetype->SetPlaceHolderEntityData(nullptr, static_cast<uint32_t>(entityIndexInOldArchetype));
+
+			auto componentContext = archetypeTypeData.m_ComponentContext;
+			componentContext->InvokeOnDisableComponent(componentPtr, entity);
+			componentContext->InvokeOnDestroyComponent(componentPtr, entity);
 		}
 
 		if (m_PerformDelayedDestruction)
@@ -882,36 +868,21 @@ namespace decs
 		return true;
 	}
 
-	void Container::InvokeRemovingComponentObserverFunctions(
+	void Container::InvokeRemoveComponentObserverCallbacks(
 		EntityData& entityData,
-		Archetype* oldArchetype,
+		ComponentBase* componentPtr,
+		Archetype& oldArchetype,
 		uint32_t entityIndexInOldArchetype,
-		PackedContainerBase* packedContainer,
-		const ArchetypeTypeData& archetypeTypeData
+		ComponentContextBase& componentContext
+
 	)
 	{
-		// Invoking remove observers:
-		{
-			Entity entity(&entityData);
-
-			EntityData placeHolderEntityData = entityData;
-			placeHolderEntityData.m_Archetype = oldArchetype;
-			placeHolderEntityData.m_IndexInArchetype = static_cast<uint32_t>(entityIndexInOldArchetype);
-			oldArchetype->SetPlaceHolderEntityData(&placeHolderEntityData, static_cast<uint32_t>(entityIndexInOldArchetype));
-			{
-				auto componentContext = archetypeTypeData.m_ComponentContext;
-				if (entityData.IsActive())
-				{
-					componentContext->InvokeOnDisableComponent(packedContainer->GetComponentBasePtr(entityIndexInOldArchetype), entity);
-				}
-				if (entity.IsActive())
-				{
-					componentContext->InvokeOnDestroyComponent(packedContainer->GetComponentBasePtr(placeHolderEntityData.m_IndexInArchetype), entity);
-				}
-			}
-			oldArchetype->SetPlaceHolderEntityData(nullptr, static_cast<uint32_t>(entityIndexInOldArchetype));
-		}
+		Entity entity(&entityData);
+		oldArchetype.SetPlaceHolderEntityData(nullptr, static_cast<uint32_t>(entityIndexInOldArchetype));
+		componentContext.InvokeOnDisableComponent(componentPtr, entity);
+		componentContext.InvokeOnDestroyComponent(componentPtr, entity);
 	}
+
 
 	void Container::InvokeEntitesOnCreateListeners()
 	{
@@ -960,8 +931,6 @@ namespace decs
 
 		// invoking components creation observers
 		{
-			ComponentBaseRef compRef = {};
-
 			m_ComponentContextManager.IterateOverComponentContexts([&](ComponentContextBase* componentContext)
 			{
 				TypeID componentTypeID = componentContext->GetComponentTypeID();
@@ -989,27 +958,12 @@ namespace decs
 							entity.Set(entityData);
 
 							Archetype* currentArch = entityData->m_Archetype;
-							componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
+							ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+							componentContext->InvokeOnCreateComponent(componentPtr, entity);
 
-							// All this checks are here to check if this entity containe components after OnCreateMethod
-							Archetype* newArch = entityData->m_Archetype;
-							if (newArch != nullptr && entity.IsActive())
+							if (entity.IsActive())
 							{
-								if (currentArch != newArch)
-								{
-									uint32_t compIndex = newArch->FindTypeIndex(componentTypeID);
-									if (compIndex < newArch->ComponentCount())
-									{
-										componentContext->InvokeOnEnableComponent(
-											newArch->m_TypeData[compIndex].m_PackedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype),
-											entity
-										);
-									}
-								}
-								else
-								{
-									componentContext->InvokeOnEnableComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
-								}
+								componentContext->InvokeOnEnableComponent(componentPtr, entity);
 							}
 						}
 					}
@@ -1167,22 +1121,24 @@ namespace decs
 			m_EnableEntityObserver->OnEnableEntity(entity);
 		}
 
-		// TODO: add components activation listeners invoking
-
 		EntityData& entityData = *entity.m_EntityData;
+		uint32_t entityIndexInArchetype = entityData.m_IndexInArchetype;
+
 		if (entityData.m_Archetype != nullptr)
 		{
-			uint64_t startRefsIdx = m_ActivationChangeComponentRefs.size();
+			uint64_t startRefsIdx = m_ActivationChangeComponentPtrs.size();
 			uint64_t refCount = entityData.m_Archetype->ComponentCount();
 
-			m_ActivationChangeComponentRefs.reserve(startRefsIdx + refCount);
+			m_ActivationChangeComponentPtrs.reserve(startRefsIdx + refCount);
 
 			// fetch components refs
 			auto& componentsTypeData = entityData.m_Archetype->m_TypeData;
 			for (uint64_t idx = 0; idx < refCount; idx++)
 			{
 				auto& typeData = componentsTypeData[idx];
-				m_ActivationChangeComponentRefs.emplace_back(typeData.m_TypeID, entityData, static_cast<uint32_t>(idx));
+				m_ActivationChangeComponentPtrs.push_back(
+					typeData.m_PackedContainer->GetComponentBasePtr(entityIndexInArchetype)
+				);
 			}
 
 			// invoke components activation listeners:
@@ -1190,17 +1146,12 @@ namespace decs
 			for (uint64_t idx = 0; idx < refCount; idx++)
 			{
 				auto& orderData = componentOrderData[idx];
-				auto& compRef = m_ActivationChangeComponentRefs[startRefsIdx + orderData.m_ComponentIndex];
-				ComponentBase* compPtr = compRef.Get();
-				if (compPtr != nullptr)
-				{
-					// invoke activation listener:
-					orderData.m_ComponentContext->InvokeOnEnableComponent(compPtr, entity);
-				}
+				ComponentBase* compPtr = m_ActivationChangeComponentPtrs[startRefsIdx + orderData.m_ComponentIndex];
+				orderData.m_ComponentContext->InvokeOnEnableComponent(compPtr, entity);
 			}
 
 			// erase used component refs:
-			m_ActivationChangeComponentRefs.erase(m_ActivationChangeComponentRefs.begin() + startRefsIdx, m_ActivationChangeComponentRefs.end());
+			m_ActivationChangeComponentPtrs.erase(m_ActivationChangeComponentPtrs.begin() + startRefsIdx, m_ActivationChangeComponentPtrs.end());
 		}
 	}
 
@@ -1213,19 +1164,21 @@ namespace decs
 
 		// TODO: add components deactivation listeners invoking
 		EntityData& entityData = *entity.m_EntityData;
+		uint32_t entityIndexInArchetype = entityData.m_IndexInArchetype;
+
 		if (entityData.m_Archetype != nullptr)
 		{
-			uint64_t startRefsIdx = m_ActivationChangeComponentRefs.size();
+			uint64_t startRefsIdx = m_ActivationChangeComponentPtrs.size();
 			uint64_t refCount = entityData.m_Archetype->ComponentCount();
 
-			m_ActivationChangeComponentRefs.reserve(startRefsIdx + refCount);
+			m_ActivationChangeComponentPtrs.reserve(startRefsIdx + refCount);
 
 			// fetch components refs
 			auto& componentsTypeData = entityData.m_Archetype->m_TypeData;
 			for (uint64_t idx = 0; idx < refCount; idx++)
 			{
 				auto& typeData = componentsTypeData[idx];
-				m_ActivationChangeComponentRefs.emplace_back(typeData.m_TypeID, entityData, static_cast<uint32_t>(idx));
+				m_ActivationChangeComponentPtrs.push_back(typeData.m_PackedContainer->GetComponentBasePtr(entityIndexInArchetype));
 			}
 
 			// invoke components activation listeners:
@@ -1233,16 +1186,12 @@ namespace decs
 			for (uint64_t idx = 0; idx < refCount; idx++)
 			{
 				auto& orderData = componentOrderData[idx];
-				auto& compRef = m_ActivationChangeComponentRefs[startRefsIdx + orderData.m_ComponentIndex];
-				ComponentBase* compPtr = compRef.Get();
-				if (compPtr != nullptr)
-				{
-					orderData.m_ComponentContext->InvokeOnDisableComponent(compPtr, entity);
-				}
+				ComponentBase* compPtr = m_ActivationChangeComponentPtrs[startRefsIdx + orderData.m_ComponentIndex];
+				orderData.m_ComponentContext->InvokeOnDisableComponent(compPtr, entity);
 			}
 
 			// erase used component refs:
-			m_ActivationChangeComponentRefs.erase(m_ActivationChangeComponentRefs.begin() + startRefsIdx, m_ActivationChangeComponentRefs.end());
+			m_ActivationChangeComponentPtrs.erase(m_ActivationChangeComponentPtrs.begin() + startRefsIdx, m_ActivationChangeComponentPtrs.end());
 		}
 	}
 
@@ -1341,16 +1290,6 @@ namespace decs
 		}
 
 		return false;
-	}
-
-	void Container::SetEntityActive_NoCallback(const Entity& entity, bool bIsActive)
-	{
-		if (entity.GetContainer() == this
-			&& entity.m_EntityData->IsAlive()
-			&& entity.m_EntityData->IsActive() != bIsActive)
-		{
-			entity.m_EntityData->SetActiveState(bIsActive);
-		}
 	}
 
 	Entity Container::Spawn_NoCallback(const Entity& prefab, bool isActive)
@@ -1466,6 +1405,16 @@ namespace decs
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
 
 		return true;
+	}
+
+	void Container::SetEntityActive_NoCallback(const Entity& entity, bool bIsActive)
+	{
+		if (entity.GetContainer() == this
+			&& entity.m_EntityData->IsAlive()
+			&& entity.m_EntityData->IsActive() != bIsActive)
+		{
+			entity.m_EntityData->SetActiveState(bIsActive);
+		}
 	}
 
 	bool Container::RemoveComponent_NoCallback(const Entity& entity, TypeID componentTypeID)

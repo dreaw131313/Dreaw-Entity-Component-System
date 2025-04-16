@@ -7,21 +7,21 @@ namespace decs
 	class TChunkedVector
 	{
 	private:
-#pragma region Chunk class
-		class Chunk final
+#pragma region TChunk class
+		class TChunk final
 		{
 		public:
-			Chunk()
+			TChunk()
 			{
 
 			}
 
-			~Chunk()
+			~TChunk()
 			{
 
 			}
 
-			static void Create(Chunk& chunk, uint64_t capacity = 100)
+			static void Create(TChunk& chunk, uint64_t capacity = 100)
 			{
 				if (capacity == 0) chunk.m_Capacity = 1;
 				else chunk.m_Capacity = capacity;
@@ -31,7 +31,7 @@ namespace decs
 				chunk.m_Data = (T*) ::operator new(chunk.m_Capacity * sizeof(T));
 			}
 
-			static void Destroy(Chunk& chunk)
+			static void Destroy(TChunk& chunk)
 			{
 				for (uint64_t idx = 0; idx < chunk.m_Size; idx++)
 				{
@@ -41,7 +41,7 @@ namespace decs
 				::operator delete(chunk.m_Data, chunk.m_Capacity * sizeof(T));
 			}
 
-			static void Copy(const Chunk& from, Chunk& to)
+			static void Copy(const TChunk& from, TChunk& to)
 			{
 				uint64_t sourceChunkSize = from.Size();
 				for (uint64_t eIdx = 0; eIdx < sourceChunkSize; eIdx++)
@@ -160,7 +160,7 @@ namespace decs
 		{
 			for (auto& chunk : m_Chunks)
 			{
-				Chunk::Destroy(chunk);
+				TChunk::Destroy(chunk);
 			}
 		}
 
@@ -179,10 +179,10 @@ namespace decs
 
 			for (uint64_t i = 0; i < m_ChunksCount; i++)
 			{
-				const Chunk& sourceChunk = other.m_Chunks[i];
-				Chunk newChunk = m_Chunks.emplace_back();
-				Chunk::Create(newChunk, m_ChunkCapacity);
-				Chunk::Copy(sourceChunk, newChunk);
+				const TChunk& sourceChunk = other.m_Chunks[i];
+				TChunk newChunk = m_Chunks.emplace_back();
+				TChunk::Create(newChunk, m_ChunkCapacity);
+				TChunk::Copy(sourceChunk, newChunk);
 			}
 		}
 
@@ -214,7 +214,7 @@ namespace decs
 			m_Chunks.reserve(m_ChunksCount);
 
 			for (auto& chunk : m_Chunks)
-				Chunk::Destroy(chunk);
+				TChunk::Destroy(chunk);
 
 			m_Chunks.clear();
 			m_Chunks = std::move(other.m_Chunks);
@@ -255,13 +255,13 @@ namespace decs
 		T& EmplaceBack(Args&&... args)
 		{
 			if (m_ChunksCount == 0)AddChunk();
-			Chunk& b = m_Chunks.back();
+			TChunk& b = m_Chunks.back();
 
 			m_CreatedElements += 1;
 
 			if (b.IsFull())
 			{
-				Chunk& newChunk = AddChunk();
+				TChunk& newChunk = AddChunk();
 				return newChunk.EmplaceBack(std::forward<Args>(args)...);
 			}
 
@@ -272,13 +272,13 @@ namespace decs
 		EmplaceBackData EmplaceBack_CR(Args&&... args)
 		{
 			if (m_ChunksCount == 0)AddChunk();
-			Chunk& b = m_Chunks.back();
+			TChunk& b = m_Chunks.back();
 
 			m_CreatedElements += 1;
 
 			if (b.IsFull())
 			{
-				Chunk& newChunk = AddChunk();
+				TChunk& newChunk = AddChunk();
 				return EmplaceBackData(m_ChunksCount - 1, 0, &newChunk.EmplaceBack(std::forward<Args>(args)...));
 			}
 
@@ -308,7 +308,7 @@ namespace decs
 				return true;
 			}
 			m_CreatedElements -= 1;
-			Chunk& lastChunk = m_Chunks.back();
+			TChunk& lastChunk = m_Chunks.back();
 
 			auto& oldElement = fromChunk[elementIndex];
 			auto& newElement = lastChunk.Back();
@@ -329,7 +329,7 @@ namespace decs
 			{
 				auto& lastChunk = m_Chunks.back();
 				m_ChunksCount -= 1;
-				Chunk::Destroy(lastChunk);
+				TChunk::Destroy(lastChunk);
 				m_Chunks.pop_back();
 			}
 
@@ -368,7 +368,7 @@ namespace decs
 		inline uint64_t GetChunkSize(uint64_t index)const { return m_Chunks[index].m_Size; }
 
 	private:
-		std::vector<Chunk> m_Chunks;
+		std::vector<TChunk> m_Chunks;
 		uint64_t m_ChunkCapacity = 100;
 		uint64_t m_ChunksCount = 0;
 
@@ -376,11 +376,11 @@ namespace decs
 
 	private:
 
-		Chunk& AddChunk()
+		TChunk& AddChunk()
 		{
 			m_ChunksCount += 1;
 			auto& newChunk = m_Chunks.emplace_back();
-			Chunk::Create(newChunk, m_ChunkCapacity);
+			TChunk::Create(newChunk, m_ChunkCapacity);
 			return newChunk;
 		}
 
@@ -389,7 +389,7 @@ namespace decs
 			if (m_ChunksCount <= 1) return;
 
 			auto& lastChunk = m_Chunks.back();
-			Chunk::Destroy(lastChunk);
+			TChunk::Destroy(lastChunk);
 			m_Chunks.pop_back();
 			m_ChunksCount -= 1;
 

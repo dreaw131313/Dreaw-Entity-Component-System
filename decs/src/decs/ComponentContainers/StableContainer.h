@@ -5,51 +5,24 @@
 
 #include "decs/Component/Component.h"
 
+
 namespace decs
 {
-	template<typename DataType>
-	struct TChunkAllocationResult final
-	{
-	public:
-		DataType* Data = nullptr;
-		uint32_t Index = std::numeric_limits<uint32_t>::max();
-
-	public:
-		TChunkAllocationResult() {}
-
-		TChunkAllocationResult(
-			uint32_t index,
-			DataType* data
-		) :
-			Data(data),
-			Index(index)
-		{
-
-		}
-
-		inline bool IsValid() const
-		{
-			return Data != nullptr;
-		}
-	};
-
 	class ChunkBase
 	{
 	public:
 		virtual uint32_t GetChunkIndex() const = 0;
 	};
 
-	template<typename DataType>
-	class Chunk final : public ChunkBase
+	template<typename TComponentType>
+	class TChunk final : public ChunkBase
 	{
-		using AllocationResultType = TChunkAllocationResult<DataType>;
-
 		struct RecordData final
 		{
 		public:
 			union
 			{
-				DataType Component;
+				TComponentType Component;
 			};
 			bool bIsAllocated = false;
 
@@ -63,7 +36,7 @@ namespace decs
 			{
 				if (bIsAllocated)
 				{
-					Component.~DataType();
+					Component.~TComponentType();
 				}
 			}
 		};
@@ -74,7 +47,7 @@ namespace decs
 		bool m_IsInFreeSpaces = 0;
 
 	public:
-		Chunk(uint32_t capacity) :
+		TChunk(uint32_t capacity):
 			m_Capacity(capacity > 0 ? capacity : 100)
 		{
 			//m_Data = (RecordData*)::operator new(capacity * sizeof(RecordData));
@@ -82,7 +55,7 @@ namespace decs
 			m_Data = new RecordData[m_Capacity];
 		}
 
-		~Chunk()
+		~TChunk()
 		{
 			delete[] m_Data;
 		}
@@ -102,7 +75,7 @@ namespace decs
 			return m_Capacity == m_Size;
 		}
 
-		DataType& operator[](uint32_t index) const
+		TComponentType& operator[](uint32_t index) const
 		{
 			return m_Data[index];
 		}
@@ -113,9 +86,9 @@ namespace decs
 		}
 
 		template<typename... Args>
-		AllocationResultType Emplace(Args&&... args)
+		TComponentType* Emplace(Args&&... args)
 		{
-			if (IsFull()) return AllocationResultType();
+			if (IsFull()) return nullptr;
 
 			m_Size += 1;
 
@@ -126,9 +99,12 @@ namespace decs
 
 				RecordData& record = m_Data[freeSpaceIndex];
 				record.bIsAllocated = true;
-				DataType* data = new(&record.Component)DataType(std::forward<Args>(args)...);
+				TComponentType* data = new(&record.Component)TComponentType(std::forward<Args>(args)...);
 
-				return AllocationResultType(freeSpaceIndex, data);
+				ComponentBase* componentBase = data;
+				componentBase->SetChunkAndIndex(this, freeSpaceIndex);
+
+				return data;
 			}
 
 			{
@@ -136,20 +112,30 @@ namespace decs
 				uint32_t allocationIndex = m_CurrentAllocationOffset;
 				RecordData& record = m_Data[m_CurrentAllocationOffset];
 				record.bIsAllocated = true;
-				DataType* data = new(&record.Component)DataType(std::forward<Args>(args)...);
+				TComponentType* data = new(&record.Component)TComponentType(std::forward<Args>(args)...);
+
+				ComponentBase* componentBase = data;
+				componentBase->SetChunkAndIndex(this, m_CurrentAllocationOffset);
 
 				m_CurrentAllocationOffset += 1;
 
-				return AllocationResultType(allocationIndex, data);
+				return data;
 			}
 		}
 
-		bool RemoveAt(uint32_t index)
+		bool Remove(TComponentType* component)
 		{
+			if (component == nullptr || component->GetParentChunk() != this)
+			{
+				return true;
+			}
+
+			uint32_t index = component->GetIndexInChunk();
+
 			if (index < m_Capacity)
 			{
 				RecordData& record = m_Data[index];
-				if (record.bIsAllocated)
+				if (record.bIsAllocated && component == &record.Component)
 				{
 					m_Size -= 1;
 					if (index == (m_CurrentAllocationOffset - 1))
@@ -168,11 +154,12 @@ namespace decs
 					}
 
 					record.bIsAllocated = false;
-					record.Component.~DataType();
+					record.Component.~TComponentType();
 					return true;
 				}
 			}
 			return false;
+
 		}
 
 	private:
@@ -183,31 +170,6 @@ namespace decs
 
 		uint32_t m_CurrentAllocationOffset = 0;
 		uint32_t m_Size = 0;
-	};
-
-	class StableComponentRef
-	{
-	public:
-		ComponentBase* m_ComponentPtr = nullptr;
-		ChunkBase* m_Chunk = nullptr;
-		uint32_t m_Index = std::numeric_limits<uint32_t>::max();
-
-	public:
-		StableComponentRef()
-		{
-
-		}
-
-		StableComponentRef(
-			ComponentBase* componentPtr,
-			ChunkBase* chunk,
-			uint32_t index
-		) :
-			m_ComponentPtr(componentPtr), m_Chunk(chunk), m_Index(index)
-		{
-
-		}
-
 	};
 
 	class StableContainerBase
@@ -221,16 +183,16 @@ namespace decs
 		inline virtual TypeID GetTypeID()const noexcept = 0;
 		virtual StableContainerBase* Clone(uint32_t withChunkSize) = 0;
 
-		virtual bool Remove(const StableComponentRef& compRef) = 0;
-		virtual StableComponentRef EmplaceFromBaseComponent(ComponentBase* ptr) = 0;
+		virtual bool Remove(ComponentBase* component) = 0;
+		virtual ComponentBase* EmplaceFromBaseComponent(ComponentBase* ptr) = 0;
 		virtual uint32_t GetChunkSize() const noexcept = 0;
 		virtual void Clear() = 0;
 	};
 
-	template<typename DataType>
+	template<typename TComponentType>
 	class StableContainer : public StableContainerBase
 	{
-		using ChunkType = Chunk<DataType>;
+		using ChunkType = TChunk<TComponentType>;
 	private:
 		NON_COPYABLE(StableContainer);
 		NON_MOVEABLE(StableContainer);
@@ -241,7 +203,7 @@ namespace decs
 
 		}
 
-		StableContainer(uint32_t chunkCapacity) :
+		StableContainer(uint32_t chunkCapacity):
 			m_ChunkCapacity(chunkCapacity)
 		{
 		}
@@ -257,11 +219,11 @@ namespace decs
 			}
 		}
 
-		virtual TypeID GetTypeID()const noexcept override { return Type<DataType>::ID(); }
+		virtual TypeID GetTypeID()const noexcept override { return Type<TComponentType>::ID(); }
 
 		virtual StableContainerBase* Clone(uint32_t withChunkSize) override
 		{
-			return new StableContainer<DataType>(withChunkSize);
+			return new StableContainer<TComponentType>(withChunkSize);
 		}
 
 		virtual uint32_t GetChunkSize() const noexcept override
@@ -270,7 +232,7 @@ namespace decs
 		}
 
 		template<typename... Args>
-		StableComponentRef Emplace(Args&&... args)
+		TComponentType* Emplace(Args&&... args)
 		{
 			ChunkType* chunk = GetCurrentChunk();
 			auto result = chunk->Emplace(std::forward<Args>(args)...);
@@ -280,17 +242,18 @@ namespace decs
 				RemoveChunkFromFreeSpaces(chunk);
 			}
 
-			return StableComponentRef(result.Data, chunk, result.Index);
+			return result;
 		}
 
-		bool Remove(const StableComponentRef& compRef) override
+		bool Remove(ComponentBase* componentBase) override
 		{
-			uint32_t chunkIndex = compRef.m_Chunk->GetChunkIndex();
-			if (chunkIndex < m_Chunks.size() && m_Chunks[chunkIndex] == compRef.m_Chunk)
+			TComponentType* component = static_cast<TComponentType*>(componentBase);
+			uint32_t chunkIndex = componentBase->GetParentChunk()->GetChunkIndex();
+			if (chunkIndex < m_Chunks.size())
 			{
 				ChunkType* chunk = m_Chunks[chunkIndex];
 				bool wasChunkFull = chunk->IsFull();
-				if (chunk->RemoveAt(compRef.m_Index))
+				if (chunk->Remove(component))
 				{
 					if (chunk->IsEmpty())
 					{
@@ -306,9 +269,34 @@ namespace decs
 			return false;
 		}
 
-		virtual StableComponentRef EmplaceFromBaseComponent(ComponentBase* ptr)override
+		bool Remove(TComponentType* component)
 		{
-			return Emplace(*static_cast<DataType*>(ptr));
+			ComponentBase* componentBase = component;
+
+			uint32_t chunkIndex = componentBase->GetParentChunk()->GetChunkIndex();
+			if (chunkIndex < m_Chunks.size())
+			{
+				ChunkType* chunk = m_Chunks[chunkIndex];
+				bool wasChunkFull = chunk->IsFull();
+				if (chunk->Remove(component))
+				{
+					if (chunk->IsEmpty())
+					{
+						RemoveChunk(chunk);
+					}
+					else
+					{
+						AddChunkToFreeSpaces(chunk);
+					}
+					return true;
+				}
+			}
+			return false;
+		}
+
+		virtual ComponentBase* EmplaceFromBaseComponent(ComponentBase* ptr)override
+		{
+			return Emplace(*static_cast<TComponentType*>(ptr));
 		}
 
 		virtual void Clear() override

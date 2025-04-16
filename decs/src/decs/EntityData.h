@@ -21,7 +21,6 @@ namespace decs
 		friend class Container;
 		friend class Entity;
 		friend class EntityManager;
-		friend class ComponentBaseRef;
 
 	private:
 		Archetype* m_Archetype = nullptr;
