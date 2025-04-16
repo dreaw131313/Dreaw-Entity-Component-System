@@ -19,9 +19,9 @@ namespace decs
 
 	uint32_t Archetype::FindTypeIndex(TypeID typeID) const
 	{
-		if (m_ComponentsCount < Limits::MinComponentsInArchetypeToPerformMapLookup)
+		if (ComponentCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
 		{
-			for (uint32_t i = 0; i < m_ComponentsCount; i++)
+			for (uint32_t i = 0; i < ComponentCount(); i++)
 				if (m_TypeData[i].m_TypeID == typeID) return i;
 
 			return std::numeric_limits<uint32_t>::max();
@@ -91,8 +91,8 @@ namespace decs
 
 	void Archetype::AddTypeData_WithoutCheck(TypeID typeID, PackedContainerBase* packedContainer, ComponentContextBase* componentContext)
 	{
-		m_ComponentsCount += 1;
-		m_TypeIDsIndexes[typeID] = (uint32_t)m_TypeData.size();
+		const uint32_t typeIndex = static_cast<uint32_t>(m_TypeData.size());
+		m_TypeIDsIndexes[typeID] = typeIndex;
 		if (packedContainer == nullptr || componentContext == nullptr)
 		{
 			// tag data
@@ -101,7 +101,7 @@ namespace decs
 		else
 		{
 			m_TypeData.emplace_back(typeID, packedContainer, componentContext, componentContext->GetStableContainer());
-			InsertComponentContextInCorrectPlace(componentContext, static_cast<uint32_t>(m_TypeData.size()));
+			InsertComponentContextInCorrectPlace(componentContext, typeIndex);
 		}
 	}
 
@@ -176,7 +176,7 @@ namespace decs
 
 		if (index == m_EntitiesCount - 1)
 		{
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
 
@@ -189,7 +189,7 @@ namespace decs
 		}
 		else
 		{
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
 
@@ -215,7 +215,7 @@ namespace decs
 		if (index == m_EntitiesCount - 1)
 		{
 			m_EntitiesData.pop_back();
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
 				m_TypeData[i].m_PackedContainer->PopBack();
 			}
@@ -231,7 +231,7 @@ namespace decs
 			m_EntitiesData[index] = m_EntitiesData.back();
 			m_EntitiesData.pop_back();
 
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
 				m_TypeData[i].m_PackedContainer->RemoveSwapBack(index);
 			}
@@ -255,7 +255,7 @@ namespace decs
 		{
 			m_EntitiesData.reserve(desiredCapacity);
 
-			for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
+			for (uint64_t idx = 0; idx < ComponentCount(); idx++)
 			{
 				m_TypeData[idx].m_PackedContainer->Reserve(desiredCapacity);
 			}
@@ -266,7 +266,7 @@ namespace decs
 	{
 		m_EntitiesCount = 0;
 		m_EntitiesData.clear();
-		for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
+		for (uint64_t idx = 0; idx < ComponentCount(); idx++)
 		{
 			m_TypeData[idx].m_PackedContainer->Clear();
 		}
@@ -274,10 +274,10 @@ namespace decs
 
 	void Archetype::InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts)
 	{
-		m_ComponentsCount = other.m_ComponentsCount;
-		m_TypeData.reserve(m_ComponentsCount);
+		uint32_t componentsCount = other.ComponentCount();
+		m_TypeData.reserve(componentsCount);
 
-		for (uint32_t i = 0; i < m_ComponentsCount; i++)
+		for (uint32_t i = 0; i < componentsCount; i++)
 		{
 			ArchetypeTypeData& otherTypeData = other.m_TypeData[i];
 			otherTypeData.m_TypeID;
@@ -305,7 +305,7 @@ namespace decs
 
 		this->AddEntityData(entityData);
 
-		for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++, fromArchetypeIndex++)
+		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++, fromArchetypeIndex++)
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
 			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
@@ -338,7 +338,7 @@ namespace decs
 
 		this->AddEntityData(entityData);
 
-		for (; thisArchetypeIndex < m_ComponentsCount; )
+		for (; thisArchetypeIndex < ComponentCount(); )
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
 			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
@@ -395,7 +395,7 @@ namespace decs
 
 		this->AddEntityData(entityData);
 
-		for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++, fromArchetypeIndex++)
+		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++, fromArchetypeIndex++)
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
 			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
@@ -424,7 +424,7 @@ namespace decs
 
 		if (entityIndex == m_EntitiesCount - 1)
 		{
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
 				if (removedComponentTypeID == typeData.m_TypeID)
@@ -438,7 +438,7 @@ namespace decs
 		}
 		else
 		{
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
 				if (removedComponentTypeID == typeData.m_TypeID)
@@ -462,7 +462,7 @@ namespace decs
 		uint64_t thisArchetypeIndex = 0;
 		uint64_t fromArchetypeIndex = 0;
 
-		for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++)
+		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++)
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
 			if (thisTypeData.m_TypeID == newComponentTypeID)
@@ -483,7 +483,7 @@ namespace decs
 	void Archetype::ShrinkToFit()
 	{
 		m_EntitiesData.shrink_to_fit();
-		for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
+		for (uint64_t idx = 0; idx < ComponentCount(); idx++)
 		{
 			m_TypeData[idx].m_PackedContainer->ShrinkToFit();
 		}

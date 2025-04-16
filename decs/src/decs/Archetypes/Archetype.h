@@ -157,7 +157,6 @@ namespace decs
 
 		std::vector<OrderData> m_ComponentContextsInOrder = {};
 
-		uint32_t m_ComponentsCount = 0; // number of components for each entity
 		uint32_t m_EntitiesCount = 0;
 
 	public:
@@ -167,7 +166,7 @@ namespace decs
 
 		inline uint32_t ComponentCount() const
 		{
-			return m_ComponentsCount;
+			return static_cast<uint32_t>(m_TypeData.size());
 		}
 
 		inline TypeID GetTypeID(uint64_t index) const
@@ -211,9 +210,9 @@ namespace decs
 		inline uint32_t FindTypeIndex() const
 		{
 			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
-			if (m_ComponentsCount < Limits::MinComponentsInArchetypeToPerformMapLookup)
+			if (ComponentCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
 			{
-				for (uint32_t i = 0; i < m_ComponentsCount; i++)
+				for (uint32_t i = 0; i < ComponentCount(); i++)
 					if (m_TypeData[i].m_TypeID == typeID) return i;
 
 				return std::numeric_limits<uint32_t>::max();
@@ -350,7 +349,7 @@ namespace decs
 			uint64_t thisArchetypeIndex = 0;
 			uint64_t fromArchetypeIndex = 0;
 
-			for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++)
+			for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++)
 			{
 				ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
 				if (thisTypeData.m_TypeID == newComponentTypeID)
