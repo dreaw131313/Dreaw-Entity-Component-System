@@ -815,7 +815,7 @@ namespace decs
 		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
 
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
-		if (compIdxInArch == Limits::MaxComponentCount) return false;
+		if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
 
 		Archetype* oldArchetype = entityData.m_Archetype;
 		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
@@ -1425,7 +1425,7 @@ namespace decs
 		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
 
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
-		if (compIdxInArch == Limits::MaxComponentCount) return false;
+		if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
 
 		Archetype* oldArchetype = entityData.m_Archetype;
 		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;

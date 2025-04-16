@@ -46,7 +46,6 @@ namespace decs
 
 	namespace Limits
 	{
-		inline constexpr uint32_t MaxComponentCount = std::numeric_limits<uint32_t>::max();
 		inline constexpr uint64_t MinComponentsInArchetypeToPerformMapLookup = 20;
 		inline constexpr EntityVersion MaxVersion = std::numeric_limits<uint32_t>::max();
 	}

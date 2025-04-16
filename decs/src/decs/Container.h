@@ -13,6 +13,8 @@
 #include "decs/ComponentContainers/PackedContainer.h"
 #include "decs/ComponentContainers/StableContainer.h"
 
+#include "trait.h"
+
 namespace decs
 {
 	class Entity;
@@ -310,14 +312,12 @@ namespace decs
 		template<typename TComponent, typename ...Args>
 		TComponent* AddComponent(Entity entity, EntityData& entityData, Args&&... args)
 		{
-			if (!m_CanAddComponents) return nullptr;
-
-			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<TComponent>::ID();
-
-			if (!entityData.IsValidToPerformComponentOperation())
+			if (!m_CanAddComponents || !entityData.IsValidToPerformComponentOperation())
 			{
 				return nullptr;
 			}
+
+			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<TComponent>::ID();
 
 			auto currentComponent = GetStableComponentWithoutCheckingIsAlive<TComponent>(entityData);
 			if (currentComponent != nullptr)
@@ -393,7 +393,7 @@ namespace decs
 			if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
 
 			uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
-			if (compIdxInArch == Limits::MaxComponentCount) return false;
+			if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
 
 			Archetype* oldArchetype = entityData.m_Archetype;
 			uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
@@ -489,7 +489,7 @@ namespace decs
 					if (currentArchetype != nullptr)
 					{
 						uint32_t typeIdx = currentArchetype->FindTypeIndex(type);
-						if (typeIdx != Limits::MaxComponentCount)
+						if (typeIdx != std::numeric_limits<uint32_t>::max())
 						{
 							auto& typeData = currentArchetype->m_TypeData[typeIdx];
 							typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentPtrAsVoi(entityData.m_IndexInArchetype), entity);
@@ -542,7 +542,7 @@ namespace decs
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
 			{
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
-				if (findTypeIndex != Limits::MaxComponentCount)
+				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
 				{
 					StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
 					return container->GetAsPtr(entityData.m_IndexInArchetype);
@@ -556,7 +556,7 @@ namespace decs
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
 			{
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex(componentType);
-				if (findTypeIndex != Limits::MaxComponentCount)
+				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
 				{
 					return entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
 				}
@@ -593,7 +593,7 @@ namespace decs
 			if (entityData.m_Archetype != nullptr)
 			{
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
-				if (findTypeIndex != Limits::MaxComponentCount)
+				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
 				{
 					StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
 					return container->GetAsPtr(entityData.m_IndexInArchetype);
@@ -608,7 +608,7 @@ namespace decs
 			if (entityData.m_Archetype != nullptr)
 			{
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
-				if (findTypeIndex != Limits::MaxComponentCount)
+				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
 				{
 					StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
 					return static_cast<TComponent*>(container->m_Data[entityData.m_IndexInArchetype]);
@@ -630,6 +630,81 @@ namespace decs
 		bool HasComponent(EntityData& entityData) const
 		{
 			return HasComponentInternal(entityData, Type<TComponent>::ID());
+		}
+
+	#pragma endregion
+
+	#pragma region TAGS:
+	private:
+
+		inline bool HasTag(EntityData& entityData, TypeID tagType)
+		{
+			if (!entityData.IsAlive() || entityData.m_Archetype == nullptr)
+			{
+				return false;
+			}
+
+			return entityData.m_Archetype->HasTag(tagType);
+		}
+
+		template<typename TTag>
+		inline bool HasTag(EntityData& entityData)
+		{
+			if constexpr (!is_tag_v<TTag>)
+			{
+				return false;
+			}
+			return HasTag(entityData, Type<TTag>::ID());
+		}
+
+		template<typename TTag>
+		bool AddTag(EntityData& entityData)
+		{
+			if constexpr (!is_tag_v<TTag>)
+			{
+				return false;
+			}
+
+			if (!m_CanAddComponents || !entityData.IsValidToPerformComponentOperation())
+			{
+				return HasTag<TTag>(entityData);
+			}
+
+			Archetype* currentArchetype = entityData.m_Archetype;
+			if (currentArchetype != nullptr && currentArchetype->HasTag<TTag>())
+			{
+				return true;
+			}
+
+
+			return false;
+		}
+
+		bool RemoveTag(EntityData& entityData, TypeID tagType)
+		{
+			if (!m_CanRemoveComponents 
+				|| entityData.m_Container != this
+				|| entityData.m_Archetype == nullptr 
+				|| !entityData.IsValidToPerformComponentOperation()
+				)
+			{
+				return false;
+			}
+
+
+
+			return false;
+		}
+
+		template<typename TTag>
+		bool RemoveTag(EntityData& entityData)
+		{
+			if constexpr (!is_tag_v<TTag>)
+			{
+				return false;
+			}
+
+			return RemoveTag(entityData, Type<TTag>::ID());
 		}
 
 	#pragma endregion

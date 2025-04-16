@@ -191,5 +191,23 @@ int main()
 		// container.InvokeEntitesOnDestroyListeners();
 	}
 
+	// TAGS:
+	{
+		struct TestType
+		{
+
+		};
+
+		using TestTypeTag = decs::tag<TestType>;
+
+		auto tagEntity = container.CreateEntity();
+
+		tagEntity.AddTag<TestTypeTag>();
+		tagEntity.HasTag<TestTypeTag>();
+		tagEntity.RemoveTag<TestTypeTag>();
+
+
+	}
+
 	return 0;
 }

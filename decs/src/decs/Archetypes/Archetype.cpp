@@ -24,12 +24,12 @@ namespace decs
 			for (uint32_t i = 0; i < m_ComponentsCount; i++)
 				if (m_TypeData[i].m_TypeID == typeID) return i;
 
-			return Limits::MaxComponentCount;
+			return std::numeric_limits<uint32_t>::max();
 		}
 
 		auto it = m_TypeIDsIndexes.find(typeID);
 		if (it == m_TypeIDsIndexes.end())
-			return Limits::MaxComponentCount;
+			return std::numeric_limits<uint32_t>::max();
 
 		return it->second;
 	}
