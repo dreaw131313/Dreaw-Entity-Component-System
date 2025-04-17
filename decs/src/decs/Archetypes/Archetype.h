@@ -239,6 +239,10 @@ namespace decs
 			return HasTag(Type<TTag>::ID());
 		}
 
+		inline bool IsTypeTag(uint32_t typeIndex) const 
+		{
+			return m_TypeData[typeIndex].IsTag();
+		}
 	private:
 		void ClearEntityDataAndComponents();
 

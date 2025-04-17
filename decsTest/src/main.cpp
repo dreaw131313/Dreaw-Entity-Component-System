@@ -122,6 +122,7 @@ int main()
 
 		auto spawnedEntity = container.Spawn(prefabEntity);
 
+		PrintLine();
 		if (spawnedEntity.HasTag<FloatTag>())
 		{
 			PrintLine("Spawned has FloatTag");
@@ -152,8 +153,10 @@ int main()
 			PrintLine("Spawned removed DoubleTag");
 		}
 
-		decs::Query<TestComponent> query{&container};
+		decs::MultiQuery<TestComponent> query{};
 		query.With<DoubleTag>();
+
+		query.AddContainer(&container);
 
 		PrintLine();
 		query.ForEach([](const decs::ConstEntity& entity, const TestComponent& )

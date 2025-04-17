@@ -10,6 +10,10 @@
 #include <typeinfo>
 #include <span>
 
+#ifdef DECS_DEBUG
+#include <cassert>
+#endif
+
 #if defined _MSC_VER
 #   define FULL_FUNCTION_NAME __FUNCSIG__
 #elif defined __clang__ || (defined __GNUC__)
@@ -31,6 +35,13 @@ className& operator=(const className&) = delete;	\
 #define NON_MOVEABLE(className)				\
 className(className&&) = delete;			\
 className& operator=(className&&) = delete;	\
+
+#ifdef DECS_DEBUG
+#define DECS_ASSERT(condition, message) assert(condition && message)
+#else
+#define DECS_ASSERT(condition, message)
+#endif // DECS_DEBUG
+
 
 namespace decs
 {
