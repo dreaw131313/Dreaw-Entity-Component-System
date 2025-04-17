@@ -336,37 +336,12 @@ namespace decs
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <param name="fromArchetype"></param>
 		/// <param name="fromIndex"></param>
-		template<typename TComponent>
-		void MoveEntityComponentsAfterAddComponent(Archetype* fromArchetype, uint64_t fromIndex, EntityData* entityData)
-		{
-			TYPE_ID_CONSTEXPR TypeID newComponentTypeID = Type<TComponent>::ID();
-
-			this->AddEntityData(entityData);
-
-			uint64_t thisArchetypeIndex = 0;
-			uint64_t fromArchetypeIndex = 0;
-
-			for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++)
-			{
-				ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-				if (thisTypeData.m_TypeID == newComponentTypeID)
-				{
-					continue;
-				}
-
-				ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-
-				thisTypeData.m_PackedContainer->PushBack(
-					fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
-				);
-
-				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
-
-				fromArchetypeIndex++;
-			}
-
-			fromArchetype->RemoveSwapBackEntityData(fromIndex);
-		}
+		void MoveEntityComponentsAfterAddComponent(
+			TypeID addedComponentTypeID, 
+			Archetype* fromArchetype,
+			uint64_t entityIndex, 
+			EntityData* entityData
+		);
 
 		void ShrinkToFit();
 

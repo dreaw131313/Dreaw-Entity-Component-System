@@ -932,25 +932,25 @@ namespace decs
 		if (newEntityArchetype != nullptr)
 		{
 			// move entity to new archetype without destroying from source
-			//newEntityArchetype->MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
-			//	componentTypeID,
-			//	entityData.m_Archetype,
-			//	entityData.m_IndexInArchetype,
-			//	&entityData
-			//);
+			newEntityArchetype->MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
+				tagType,
+				entityData.m_Archetype,
+				entityData.m_IndexInArchetype,
+				&entityData
+			);
 		}
 		else
 		{
-			//AddToEmptyEntities(entityData);
+			AddToEmptyEntities(entityData);
 		}
 
 		if (m_PerformDelayedDestruction)
 		{
-			//AddArchetypeRecordToDelayedRemove(oldArchetype, static_cast<uint32_t>(entityIndexInOldArchetype), true, tagType);
+			AddArchetypeRecordToDelayedRemove(oldArchetype, static_cast<uint32_t>(entityIndexInOldArchetype), true, tagType);
 		}
 		else
 		{
-			//oldArchetype->RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(entityIndexInOldArchetype, tagType);
+			oldArchetype->RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(entityIndexInOldArchetype, tagType);
 		}
 
 		return true;

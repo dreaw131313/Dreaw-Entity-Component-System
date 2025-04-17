@@ -362,7 +362,8 @@ namespace decs
 				}
 				else
 				{
-					entityNewArchetype->MoveEntityComponentsAfterAddComponent<TComponent>(
+					entityNewArchetype->MoveEntityComponentsAfterAddComponent(
+						copmonentTypeID,
 						entityData.m_Archetype,
 						entityData.m_IndexInArchetype,
 						&entityData
@@ -678,7 +679,7 @@ namespace decs
 			return m_ArchetypesMap.GetArchetypeAfterRemoveTag(fromArchetype, tagID);
 		}
 
-		inline bool HasTag(EntityData& entityData, TypeID tagType)
+		inline bool HasTag(const EntityData& entityData, TypeID tagType)
 		{
 			if (!entityData.IsAlive() || entityData.m_Archetype == nullptr)
 			{
@@ -689,7 +690,7 @@ namespace decs
 		}
 
 		template<typename TTag>
-		inline bool HasTag(EntityData& entityData)
+		inline bool HasTag(const EntityData& entityData)
 		{
 			if constexpr (!is_tag_v<TTag>)
 			{
@@ -726,31 +727,32 @@ namespace decs
 				if (m_PerformDelayedDestruction)
 				{
 					// Change to respect tag
-					// AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
+					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, tagTypeID);
 
-					// move entity to new archetype
-					//entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
-					//	entityData.m_Archetype,
-					//	entityData.m_IndexInArchetype,
-					//	copmonentTypeID,
-					//	&entityData
-					//);
+					//move entity to new archetype
+					newArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
+						entityData.m_Archetype,
+						entityData.m_IndexInArchetype,
+						tagTypeID,
+						&entityData
+					);
 				}
 				else
 				{
 					// move entity to new archetype
-					//entityNewArchetype->MoveEntityComponentsAfterAddComponent<TComponent>(
-					//	entityData.m_Archetype,
-					//	entityData.m_IndexInArchetype,
-					//	&entityData
-					//);
+					newArchetype->MoveEntityComponentsAfterAddComponent(
+						tagTypeID,
+						entityData.m_Archetype,
+						entityData.m_IndexInArchetype,
+						&entityData
+					);
 				}
 			}
 			else
 			{
 				// means that archetype has one component/tag so we just need add entity to it
-				//RemoveFromEmptyEntities(entityData);
-				//newArchetype->AddEntityData(&entityData);
+				RemoveFromEmptyEntities(entityData);
+				newArchetype->AddEntityData(&entityData);
 			}
 
 			return true;
@@ -1215,7 +1217,8 @@ namespace decs
 				}
 				else
 				{
-					entityNewArchetype->MoveEntityComponentsAfterAddComponent<TComponent>(
+					entityNewArchetype->MoveEntityComponentsAfterAddComponent(
+						copmonentTypeID,
 						entityData.m_Archetype,
 						entityData.m_IndexInArchetype,
 						&entityData

@@ -100,100 +100,67 @@ int main()
 	}
 
 	decs::Container container = {};
-	decs::Container secondContainer = {};
-
 	observerManager.FillContainerObservers(container);
-	observerManager.FillContainerObservers(secondContainer);
 
+	// TAG TEST:
 	{
-		auto entity = container.CreateEntity();
+		using FloatTag = decs::tag<float>;
+		using IntTag = decs::tag<int>;
+		using DoubleTag = decs::tag<double>;
+		using BoolTag = decs::tag<bool>;
+	
+		auto prefabEntity = container.CreateEntity();
 
-		entity.AddComponent<Position>(10.f, 10.f);
+		prefabEntity.AddComponent<Position>();
 
-		auto test = entity.AddComponent<TestComponent>();
-		auto rend = entity.AddComponent<Renderer>();
+		prefabEntity.AddTag<FloatTag>();
+		prefabEntity.AddTag<IntTag>();
+		prefabEntity.AddTag<DoubleTag>();
+		prefabEntity.AddTag<BoolTag>();
 
-		Position* position = entity.GetComponent<Position>();
-		TestComponent* testComp = entity.GetComponent<TestComponent>();
-		Renderer* renderer = entity.GetComponentDynamic<Renderer>();
+		prefabEntity.AddComponent<TestComponent>();
 
-		auto spawnedEntity = container.Spawn(entity, true);
-		secondContainer.Spawn(entity);
+		auto spawnedEntity = container.Spawn(prefabEntity);
 
-		//entity.RemoveComponent<TestComponent>();
+		if (spawnedEntity.HasTag<FloatTag>())
+		{
+			PrintLine("Spawned has FloatTag");
+		}
+		if (spawnedEntity.HasTag<IntTag>())
+		{
+			PrintLine("Spawned has IntTag");
+		}
+		if (spawnedEntity.HasTag<DoubleTag>())
+		{
+			PrintLine("Spawned has DoubleTag");
+		}
+		if (spawnedEntity.HasTag<BoolTag>())
+		{
+			PrintLine("Spawned has BoolTag");
+		}
+		if (spawnedEntity.HasComponent<Position>())
+		{
+			PrintLine("Spawned has Position");
+		}
+		if (spawnedEntity.HasTag<TestComponent>())
+		{
+			PrintLine("Spawned has TestComponent");
+		}
+
+		if (spawnedEntity.RemoveTag<DoubleTag>())
+		{
+			PrintLine("Spawned removed DoubleTag");
+		}
+
+		decs::Query<TestComponent> query{&container};
+		query.With<DoubleTag>();
 
 		PrintLine();
-		decs::Query<Position> testQuery = { &container };
-
-		testQuery.ForEach([&](Position& pos)
+		query.ForEach([](const decs::ConstEntity& entity, const TestComponent& )
 		{
-			PrintLine("decs::Query::ForEach");
+			PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
 		});
-		testQuery.ForEachBackward([&](decs::Entity& e, Position& pos)
-		{
-			PrintLine("decs::Query::ForEachBackward");
-		});
-		testQuery.ForEachSafe([&](Position& pos)
-		{
-			PrintLine("decs::Query::ForEachSafe");
-		});
-
-		decs::MultiQuery<TestComponent> testMultiQuery = {};
-		testMultiQuery.AddContainer(&container);
-
 		PrintLine();
-
-		testMultiQuery.ForEach([&](TestComponent& pos)
-		{
-			PrintLine("decs::MultiQuery::ForEach");
-		});
-		testMultiQuery.ForEachBackward([&](decs::Entity& e, TestComponent& pos)
-		{
-			PrintLine("decs::MultiQuery::ForEachBackward");
-		});
-		testMultiQuery.ForEachSafe([&](TestComponent& pos)
-		{
-			PrintLine("decs::MultiQuery::ForEachSafe");
-		});
-
-		PrintLine();
-
-		entity.Destroy();
-	}
-
-
-	// NO CALLBACK:
-	{
-		auto entity_nc = container.CreateEntity();
-
-		entity_nc.AddComponent_NoCallback<TestComponent>();
-
-		// container.InvokeEntitesOnCreateListeners();
-		// container.InvokeEntitesOnDestroyListeners();
-	}
-
-	// TAGS:
-	{
-		struct TestType : public decs::ComponentBase
-		{
-
-		};
-
-		using TestTypeTag = decs::tag<TestType>;
-
-		static_assert(!decs::contain_tags_v<float, int, TestType>, "Tags must not be used");
-
-		decs::Query<TestType> tagQuery{ &container };
-		decs::MultiQuery<TestType> tagMultiQuery{};
-		tagMultiQuery.AddContainer(&container);
-
-		auto tagEntity = container.CreateEntity();
-
-		tagEntity.AddTag<TestTypeTag>();
-		tagEntity.HasTag<TestTypeTag>();
-		tagEntity.RemoveTag<TestTypeTag>();
-
-
 	}
 
 	return 0;

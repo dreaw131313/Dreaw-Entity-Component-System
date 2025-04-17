@@ -319,98 +319,6 @@ namespace decs
 		}
 	}
 
-	/*
-
-	void Archetype::MoveEntityComponentsAfterRemoveComponent(
-		TypeID removedComponentTypeID,
-		Archetype* fromArchetype,
-		uint64_t fromIndex,
-		EntityData* entityData
-	)
-	{
-		uint64_t thisArchetypeIndex = 0;
-		uint64_t fromArchetypeIndex = 0;
-
-		this->AddEntityData(entityData);
-
-		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++, fromArchetypeIndex++)
-		{
-			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-			if (fromArchetypeData.m_TypeID == removedComponentTypeID)
-			{
-				ComponentBase* componentPtr = fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex);
-				fromArchetypeData.m_StableContainer->Remove(componentPtr);
-
-				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
-
-				fromArchetypeIndex += 1;
-			}
-
-			ArchetypeTypeData& updatetFromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-
-			thisTypeData.m_PackedContainer->PushBack(
-				updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
-			);
-
-			updatetFromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
-		}
-
-		fromArchetype->RemoveSwapBackEntityData(fromIndex);
-	}
-
-	void Archetype::MoveEntityComponentsAfterRemoveComponent(Archetype* fromArchetype, uint64_t fromIndex, EntityData* entityData)
-	{
-		uint64_t thisArchetypeIndex = 0;
-		uint64_t fromArchetypeIndex = 0;
-
-		this->AddEntityData(entityData);
-
-		for (; thisArchetypeIndex < ComponentCount(); )
-		{
-			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-
-			if (thisTypeData.m_TypeID != fromArchetypeData.m_TypeID)
-			{
-				ComponentBase* componentPtr = fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex);
-				fromArchetypeData.m_StableContainer->Remove(componentPtr);
-
-				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
-
-				fromArchetypeIndex += 1;
-			}
-			else
-			{
-				thisTypeData.m_PackedContainer->PushBack(
-					fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
-				);
-
-				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
-
-				thisArchetypeIndex += 1;
-				fromArchetypeIndex += 1;
-			}
-		}
-
-		// remove remaining components:
-		for (; fromArchetypeIndex < fromArchetype->ComponentCount(); fromArchetypeIndex++)
-		{
-			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-			if (fromArchetypeData.m_StableContainer != nullptr)
-			{
-				ComponentBase* componentPtr = fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex);
-				fromArchetypeData.m_StableContainer->Remove(componentPtr);
-			}
-
-			fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
-		}
-
-		fromArchetype->RemoveSwapBackEntityData(fromIndex);
-	}
-
-	*/
-
 	void Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
 		TypeID removedComponentTypeID,
 		Archetype* fromArchetype,
@@ -426,23 +334,17 @@ namespace decs
 		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++, fromArchetypeIndex++)
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-			if (thisTypeData.IsTag())
-			{
-				continue;
-			}
-
 			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
 			if (fromArchetypeData.m_TypeID == removedComponentTypeID)
 			{
 				fromArchetypeIndex += 1;
 			}
 
-			ArchetypeTypeData& updatetFromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-
-			thisTypeData.m_PackedContainer->PushBack(
-				updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
-			);
-
+			if (!thisTypeData.IsTag())
+			{
+				ArchetypeTypeData& updatetFromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
+				thisTypeData.m_PackedContainer->PushBack(updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex));
+			}
 		}
 
 		fromArchetype->m_EntitiesData[fromIndex].m_bIsActive = false;
@@ -505,19 +407,52 @@ namespace decs
 		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++)
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-			if (thisTypeData.IsTag() || thisTypeData.m_TypeID == newComponentTypeID)
+			if (thisTypeData.m_TypeID == newComponentTypeID)
 			{
 				continue;
 			}
 
 			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-
-			thisTypeData.m_PackedContainer->PushBack(
-				fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
-			);
+			if (!fromArchetypeData.IsTag())
+			{
+				thisTypeData.m_PackedContainer->PushBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex));
+			}
 
 			fromArchetypeIndex++;
 		}
+	}
+
+	void Archetype::MoveEntityComponentsAfterAddComponent(
+		TypeID addedComponentTypeID,
+		Archetype* fromArchetype,
+		uint64_t entityIndex,
+		EntityData* entityData
+	)
+	{
+		this->AddEntityData(entityData);
+
+		uint64_t thisArchetypeIndex = 0;
+		uint64_t fromArchetypeIndex = 0;
+
+		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++)
+		{
+			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
+			if (thisTypeData.m_TypeID == addedComponentTypeID)
+			{
+				continue;
+			}
+
+			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
+			if (!fromArchetypeData.IsTag())
+			{
+				thisTypeData.m_PackedContainer->PushBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+				fromArchetypeData.m_PackedContainer->RemoveSwapBack(entityIndex);
+			}
+
+			fromArchetypeIndex++;
+		}
+
+		fromArchetype->RemoveSwapBackEntityData(entityIndex);
 	}
 
 	void Archetype::ShrinkToFit()
@@ -525,7 +460,12 @@ namespace decs
 		m_EntitiesData.shrink_to_fit();
 		for (uint64_t idx = 0; idx < ComponentCount(); idx++)
 		{
-			m_TypeData[idx].m_PackedContainer->ShrinkToFit();
+			auto& typeData = m_TypeData[idx];
+			if (typeData.IsTag())
+			{
+				continue;
+			}
+			typeData.m_PackedContainer->ShrinkToFit();
 		}
 	}
 
