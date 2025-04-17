@@ -1137,56 +1137,6 @@ namespace decs
 
 	#pragma endregion
 
-	#pragma region ITERATION:
-	public:
-		/// <summary>
-		/// Helper methods for iterating over entites which containe component of type TComponentType.
-		/// Iterates over entities in archetypes from first to last. During iteration with this method creating, destroying and adding or removing component is forbidden on all entities, because it can cause undefined behavior. 
-		/// Destroying entites and adding or removing component to any entity, can cause that iteration index will go out of bound. 
-		/// Creating new entities will not cause index out of bound but if created entity has component of type "TComponentType", it is undefined if that entity will be iterated or not in this function. If created entity will be placed in archetype that does not contain component of type "TComponentType" it is safe to create this entity.
-		/// </summary>
-		/// <typeparam name="Callable"></typeparam>
-		/// <param name="func"></param>
-		template<typename TComponent, typename Callable>
-		void ForEach(Callable&& func)
-		{
-			decs::Entity entityBuffor = {};
-			constexpr TypeID componentID = Type<TComponent>::ID();
-
-			m_ArchetypesMap.IterateOverArchetypesWithType(componentID, [&](Archetype* archetype)
-			{
-				uint64_t entityCount = archetype->EntityCount();
-				if (entityCount == 0)
-				{
-					return;
-				}
-
-				uint64_t compIdx = archetype->FindTypeIndex(componentID);
-
-				auto& entitiesData = archetype->m_EntitiesData;
-				auto packedContainer = archetype->m_TypeData[compIdx].m_PackedContainer;
-
-				for (uint64_t idx = 0; idx < entityCount; idx++)
-				{
-					const auto& entityData = entitiesData[idx];
-					if (entityData.IsActive())
-					{
-						if constexpr (std::is_invocable<Callable, Entity&, TComponent&>())
-						{
-							entityBuffor.Set(entityData.m_EntityData);
-							func(entityBuffor, *static_cast<TComponent*>(packedContainer->GetComponentBasePtr(idx)));
-						}
-						else
-						{
-							func(*static_cast<TComponent*>(packedContainer->GetComponentBasePtr(idx)));
-						}
-					}
-				}
-			});
-		}
-
-	#pragma endregion
-
 	#pragma region NO CALLBACKS methods:
 	public:
 		Entity CreateEntity_NoCallbacks(bool bIsActive = true);

@@ -123,26 +123,6 @@ int main()
 		//entity.RemoveComponent<TestComponent>();
 
 		PrintLine();
-
-		container.ForEach<Position>([](const decs::Entity& e, Position& p)
-		{
-			p.X += e.GetID();
-			p.Y += 2 * e.GetID();
-		});
-
-		container.ForEach<Position>([](const decs::Entity& e, Position& p)
-		{
-			PrintLine(std::format("X: {0}, Y: {1}", p.X, p.Y));
-		});
-
-		PrintLine();
-		PrintLine("Second Container");
-		secondContainer.ForEach<Position>([](const decs::Entity& e, Position& p)
-		{
-			PrintLine(std::format("X: {0}, Y: {1}", p.X, p.Y));
-		});
-
-		PrintLine();
 		decs::Query<Position> testQuery = { &container };
 
 		testQuery.ForEach([&](Position& pos)
