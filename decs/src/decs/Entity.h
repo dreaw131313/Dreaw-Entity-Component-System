@@ -33,7 +33,7 @@ namespace decs
 
 		}
 
-		Entity(EntityData* entityData) :
+		Entity(EntityData* entityData):
 			m_EntityData(entityData),
 			m_Version(entityData->GetVersion())
 		{
@@ -203,7 +203,7 @@ namespace decs
 			return nullptr;
 		}
 
-#pragma region NO CALLBACK METHODS:
+	#pragma region NO CALLBACK METHODS:
 	public:
 		/// <summary>
 		/// Enable and disable observers of entity and components are not invoked.
@@ -264,7 +264,7 @@ namespace decs
 			return IsValid() && GetContainer_Internal()->RemoveComponent_NoCallback(*this, componentTypeID);
 		}
 
-#pragma endregion
+	#pragma endregion
 
 		void SetUserDataPtr(void* userData) const
 		{
@@ -282,6 +282,58 @@ namespace decs
 			}
 			return nullptr;
 		}
+
+	#pragma region TAGS:
+	public:
+		inline bool HasTag(TypeID tagType)const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->HasTag(*m_EntityData, tagType);
+			}
+			return false;
+		}
+
+		template<typename TTag>
+		inline bool HasTag()const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->HasTag<TTag>(*m_EntityData);
+			}
+			return false;
+		}
+
+		template<typename TTag>
+		bool AddTag()
+		{
+			if (IsValid())
+			{
+				return GetContainer()->AddTag<TTag>(*m_EntityData);
+			}
+			return false;
+		}
+
+		bool RemoveTag(TypeID tagType)
+		{
+			if (IsValid())
+			{
+				return GetContainer()->RemoveTag(*m_EntityData, tagType);
+			}
+			return false;
+		}
+
+		template<typename TTag>
+		bool RemoveTag()
+		{
+			if (IsValid())
+			{
+				return GetContainer()->RemoveTag<TTag>(*m_EntityData);
+			}
+			return false;
+		}
+
+	#pragma endregion
 
 	private:
 		mutable EntityData* m_EntityData = nullptr;
@@ -335,7 +387,7 @@ namespace decs
 
 		}
 
-		ConstEntity(const Entity& entity) :
+		ConstEntity(const Entity& entity):
 			m_Entity(entity)
 		{
 

@@ -21,7 +21,7 @@ public:
 		PrintLine("Position constructior");
 	}
 
-	Position(float x, float y) : X(x), Y(y)
+	Position(float x, float y): X(x), Y(y)
 	{
 		PrintLine("Position constructior");
 	}
@@ -100,95 +100,73 @@ int main()
 	}
 
 	decs::Container container = {};
-	decs::Container secondContainer = {};
-
 	observerManager.FillContainerObservers(container);
 
+	// TAG TEST:
 	{
-		auto entity = container.CreateEntity();
+		using FloatTag = decs::tag<float>;
+		using IntTag = decs::tag<int>;
+		using DoubleTag = decs::tag<double>;
+		using BoolTag = decs::tag<bool>;
 
-		entity.AddComponent<Position>(10.f,10.f);
+		PrintLine(decs::Type<FloatTag>::Name());
+		PrintLine(decs::Type<std::vector<decs::Entity>>::Name());
+	
+		auto prefabEntity = container.CreateEntity();
 
-		auto test = entity.AddComponent<TestComponent>();
-		auto rend = entity.AddComponent<Renderer>();
+		prefabEntity.AddComponent<Position>();
 
-		Position* position = entity.GetComponent<Position>();
-		TestComponent* testComp = entity.GetComponent<TestComponent>();
-		Renderer* renderer = entity.GetComponentDynamic<Renderer>();
+		prefabEntity.AddTag<FloatTag>();
+		prefabEntity.AddTag<IntTag>();
+		prefabEntity.AddTag<DoubleTag>();
+		prefabEntity.AddTag<BoolTag>();
 
-		auto spawnedEntity = container.Spawn(entity, true);
-		secondContainer.Spawn(entity);
+		prefabEntity.AddComponent<TestComponent>();
 
-		//entity.RemoveComponent<TestComponent>();
-
-		PrintLine();
-
-		container.ForEach<Position>([](const decs::Entity& e, Position& p)
-		{
-			p.X += e.GetID();
-			p.Y += 2 * e.GetID();
-		});
-
-		container.ForEach<Position>([](const decs::Entity& e, Position& p)
-		{
-			PrintLine(std::format("X: {0}, Y: {1}", p.X, p.Y));
-		});
+		auto spawnedEntity = container.Spawn(prefabEntity);
 
 		PrintLine();
-		PrintLine("Second Container");
-		secondContainer.ForEach<Position>([](const decs::Entity& e, Position& p)
+		if (spawnedEntity.HasTag<FloatTag>())
 		{
-			PrintLine(std::format("X: {0}, Y: {1}", p.X, p.Y));
-		});
+			PrintLine("Spawned has FloatTag");
+		}
+		if (spawnedEntity.HasTag<IntTag>())
+		{
+			PrintLine("Spawned has IntTag");
+		}
+		if (spawnedEntity.HasTag<DoubleTag>())
+		{
+			PrintLine("Spawned has DoubleTag");
+		}
+		if (spawnedEntity.HasTag<BoolTag>())
+		{
+			PrintLine("Spawned has BoolTag");
+		}
+		if (spawnedEntity.HasComponent<Position>())
+		{
+			PrintLine("Spawned has Position");
+		}
+		if (spawnedEntity.HasTag<TestComponent>())
+		{
+			PrintLine("Spawned has TestComponent");
+		}
+
+		if (spawnedEntity.RemoveTag<DoubleTag>())
+		{
+			PrintLine("Spawned removed DoubleTag");
+		}
+
+		decs::MultiQuery<TestComponent> query{};
+		query.With<DoubleTag>();
+
+		query.AddContainer(&container);
 
 		PrintLine();
-		decs::Query<Position> testQuery = { &container };
-
-		testQuery.ForEach([&](Position& pos)
+		query.ForEach([](const decs::ConstEntity& entity, const TestComponent& )
 		{
-			PrintLine("decs::Query::ForEach");
+			PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
 		});
-		testQuery.ForEachBackward([&](decs::Entity& e, Position& pos)
-		{
-			PrintLine("decs::Query::ForEachBackward");
-		});
-		testQuery.ForEachSafe([&](Position& pos)
-		{
-			PrintLine("decs::Query::ForEachSafe");
-		});
-
-		decs::MultiQuery<TestComponent> testMultiQuery = {};
-		testMultiQuery.AddContainer(&container);
-
 		PrintLine();
-
-		testMultiQuery.ForEach([&](TestComponent& pos)
-		{
-			PrintLine("decs::MultiQuery::ForEach");
-		});
-		testMultiQuery.ForEachBackward([&](decs::Entity& e, TestComponent& pos)
-		{
-			PrintLine("decs::MultiQuery::ForEachBackward");
-		});
-		testMultiQuery.ForEachSafe([&](TestComponent& pos)
-		{
-			PrintLine("decs::MultiQuery::ForEachSafe");
-		});
-
-		PrintLine();
-
-		entity.Destroy();
-	}
-
-
-	// NO CALLBACK:
-	{
-		auto entity_nc = container.CreateEntity();
-
-		entity_nc.AddComponent_NoCallback<TestComponent>();
-
-		// container.InvokeEntitesOnCreateListeners();
-		// container.InvokeEntitesOnDestroyListeners();
 	}
 
 	return 0;

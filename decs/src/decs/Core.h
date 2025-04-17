@@ -10,6 +10,10 @@
 #include <typeinfo>
 #include <span>
 
+#ifdef DECS_DEBUG
+#include <cassert>
+#endif
+
 #if defined _MSC_VER
 #   define FULL_FUNCTION_NAME __FUNCSIG__
 #elif defined __clang__ || (defined __GNUC__)
@@ -32,6 +36,13 @@ className& operator=(const className&) = delete;	\
 className(className&&) = delete;			\
 className& operator=(className&&) = delete;	\
 
+#ifdef DECS_DEBUG
+#define DECS_ASSERT(condition, message) assert(condition && message)
+#else
+#define DECS_ASSERT(condition, message)
+#endif // DECS_DEBUG
+
+
 namespace decs
 {
 	template<typename Key, typename Value>
@@ -46,7 +57,6 @@ namespace decs
 
 	namespace Limits
 	{
-		inline constexpr uint32_t MaxComponentCount = std::numeric_limits<uint32_t>::max();
 		inline constexpr uint64_t MinComponentsInArchetypeToPerformMapLookup = 20;
 		inline constexpr EntityVersion MaxVersion = std::numeric_limits<uint32_t>::max();
 	}

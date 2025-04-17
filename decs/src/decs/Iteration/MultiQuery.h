@@ -24,6 +24,8 @@ namespace decs
 	template<typename... ComponentsTypes>
 	class MultiQuery : public MultiQueryBase
 	{
+		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "MultiQuery must not use tags in as ComponentTypes!");
+
 	private:
 		using ArchetypeContextType = IterationArchetypeContext<sizeof...(ComponentsTypes)>;
 		using ContainerContextType = IterationContainerContext<ArchetypeContextType, ComponentsTypes...>;

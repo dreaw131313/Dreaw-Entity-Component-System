@@ -370,7 +370,7 @@ namespace decs
 		{
 			InvokeEntityEnableObserver_Internal(spawnedEntity);
 		}
-		InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
+		InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, *m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], spawnState);
 
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -426,7 +426,7 @@ namespace decs
 			{
 				InvokeEntityEnableObserver_Internal(spawnedEntity);
 			}
-			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
+			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, *m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], spawnState);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -483,7 +483,7 @@ namespace decs
 				InvokeEntityEnableObserver_Internal(spawnedEntity);
 			}
 
-			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
+			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, *m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], spawnState);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -534,7 +534,7 @@ namespace decs
 		{
 			InvokeEntityEnableObserver_Internal(spawnedEntity);
 		}
-		InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
+		InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, *m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], spawnState);
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
 
@@ -593,7 +593,7 @@ namespace decs
 			{
 				InvokeEntityEnableObserver_Internal(spawnedEntity);
 			}
-			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
+			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, *m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], spawnState);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -654,7 +654,7 @@ namespace decs
 				InvokeEntityEnableObserver_Internal(spawnedEntity);
 			}
 
-			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], componentsCount, spawnState);
+			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, *m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex], spawnState);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ArchetypeIndex, spawnState.m_CompRefsStart);
@@ -667,7 +667,8 @@ namespace decs
 		Container* prefabContainer
 	)
 	{
-		Archetype& prefabArchetype = *prefabEntityData.m_Archetype;
+		const Archetype& prefabArchetype = *prefabEntityData.m_Archetype;
+		const uint32_t prefabIndexInArchetype = prefabEntityData.m_IndexInArchetype;
 		Archetype* spawnedEntityArchetype = nullptr;
 		uint64_t componentsCount = prefabArchetype.ComponentCount();
 
@@ -688,13 +689,21 @@ namespace decs
 
 		for (uint32_t i = 0; i < componentsCount; i++)
 		{
+			const ArchetypeTypeData& prefabArchetypeTypeData = prefabArchetype.m_TypeData[i];
+
 			ArchetypeTypeData& spawnedEntityArchetypeTypeData = spawnedEntityArchetype->m_TypeData[i];
 
-			m_SpawnData.m_PrefabComponentRefs.emplace_back(
-				spawnedEntityArchetypeTypeData.m_StableContainer,
-				e.GetComponent(spawnedEntityArchetypeTypeData.m_TypeID)
-			);
-
+			if (prefabArchetypeTypeData.IsTag())
+			{
+				m_SpawnData.m_PrefabComponentRefs.emplace_back();
+			}
+			else
+			{
+				m_SpawnData.m_PrefabComponentRefs.emplace_back(
+					spawnedEntityArchetypeTypeData.m_StableContainer,
+					prefabArchetypeTypeData.m_PackedContainer->GetComponentBasePtr(prefabIndexInArchetype)
+				);
+			}
 		}
 
 		m_SpawnData.m_SpawnedEntityComponentPtrs.resize(m_SpawnData.m_SpawnedEntityComponentPtrs.size() + componentsCount);
@@ -716,6 +725,10 @@ namespace decs
 		{
 			ArchetypeTypeData& currentTypeData = typeDataVector[i];
 			SpawnComponentRefData& spawnRefData = m_SpawnData.m_PrefabComponentRefs[i];
+			if (spawnRefData.IsTag())
+			{
+				continue;
+			}
 
 			ComponentBase* componentPtr = spawnRefData.m_StableContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentPtr);
 			currentTypeData.m_PackedContainer->PushBack(componentPtr);
@@ -726,16 +739,18 @@ namespace decs
 		}
 	}
 
-	void Container::InvokeComponentCreateAndEnableObserversOnSpawn(const Entity& entity, Archetype* archetype, uint64_t componentsCount, const SpawnDataState& spawnState)
+	void Container::InvokeComponentCreateAndEnableObserversOnSpawn(const Entity& entity, const Archetype& archetype, const SpawnDataState& spawnState)
 	{
-		auto& orderContextVector = archetype->m_ComponentContextsInOrder;
+		auto& orderContextVector = archetype.m_ComponentContextsInOrder;
+		const uint32_t observerInvokeCount = static_cast<uint32_t>(orderContextVector.size()); // must use this becouse orderContextVector does not contain observers for tags
 
+		uint64_t compRefIdx = spawnState.m_CompRefsStart;
 		if (entity.IsActive())
 		{
-			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++)
+			for (uint64_t idx = 0; idx < observerInvokeCount; idx++)
 			{
 				auto& orderData = orderContextVector[idx];
-				uint32_t componentIdx = orderData.m_ComponentIndex;
+				const uint32_t componentIdx = orderData.m_ComponentIndex;
 
 				ComponentBase* componentPtr = m_SpawnData.m_SpawnedEntityComponentPtrs[compRefIdx + componentIdx];
 				if (componentPtr != nullptr)
@@ -751,7 +766,7 @@ namespace decs
 		}
 		else
 		{
-			for (uint64_t idx = 0, compRefIdx = spawnState.m_CompRefsStart; idx < componentsCount; idx++)
+			for (uint64_t idx = 0; idx < observerInvokeCount; idx++)
 			{
 				auto& orderData = orderContextVector[idx];
 				uint32_t componentIdx = orderData.m_ComponentIndex;
@@ -815,12 +830,17 @@ namespace decs
 		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
 
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
-		if (compIdxInArch == Limits::MaxComponentCount) return false;
+		if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
 
 		Archetype* oldArchetype = entityData.m_Archetype;
 		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
 
 		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
+		if (archetypeTypeData.IsTag())
+		{
+			return false;
+		}
+
 		auto packedContainer = archetypeTypeData.m_PackedContainer;
 		ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
 		if (componentPtr->GetDependecyCount() > 0)
@@ -883,6 +903,58 @@ namespace decs
 		componentContext.InvokeOnDestroyComponent(componentPtr, entity);
 	}
 
+
+	bool Container::RemoveTag(EntityData& entityData, TypeID tagType)
+	{
+		if (!m_CanRemoveComponents
+			|| entityData.m_Container != this
+			|| entityData.m_Archetype == nullptr
+			|| !entityData.IsValidToPerformComponentOperation()
+			)
+		{
+			return false;
+		}
+
+		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(tagType);
+		if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
+
+		Archetype* oldArchetype = entityData.m_Archetype;
+		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
+		if (!archetypeTypeData.IsTag())
+		{
+			return false;
+		}
+
+		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
+
+		Archetype* newEntityArchetype = GetArchetypeAfterRemoveTag(*oldArchetype, tagType);
+
+		if (newEntityArchetype != nullptr)
+		{
+			// move entity to new archetype without destroying from source
+			newEntityArchetype->MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
+				tagType,
+				entityData.m_Archetype,
+				entityData.m_IndexInArchetype,
+				&entityData
+			);
+		}
+		else
+		{
+			AddToEmptyEntities(entityData);
+		}
+
+		if (m_PerformDelayedDestruction)
+		{
+			AddArchetypeRecordToDelayedRemove(oldArchetype, static_cast<uint32_t>(entityIndexInOldArchetype), true, tagType);
+		}
+		else
+		{
+			oldArchetype->RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(entityIndexInOldArchetype, tagType);
+		}
+
+		return true;
+	}
 
 	void Container::InvokeEntitesOnCreateListeners()
 	{
@@ -1425,12 +1497,17 @@ namespace decs
 		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
 
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
-		if (compIdxInArch == Limits::MaxComponentCount) return false;
+		if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
 
 		Archetype* oldArchetype = entityData.m_Archetype;
 		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
 
 		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
+		if (archetypeTypeData.IsTag())
+		{
+			return false;
+		}
+
 		auto& packedContainer = archetypeTypeData.m_PackedContainer;
 
 		auto componentPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);

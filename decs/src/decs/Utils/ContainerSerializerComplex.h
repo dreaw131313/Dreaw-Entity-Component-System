@@ -8,6 +8,9 @@
 
 namespace decs
 {
+	/// <summary>
+	/// Tag serialization callback is ommited because tags can be serialized per archetype instead of per entity. If tags need to be serialized per entity it can be done in BeginArchetypeSerialize
+	/// </summary>
 	class ContainerSerializerComplex
 	{
 	public:
@@ -19,6 +22,7 @@ namespace decs
 			uint64_t archetypesChunks = archetypesVector.ChunkCount();
 
 			decs::Entity entityBuffer = {};
+			//std::vector<TypeID> entityTagsIDs{};
 
 			for (uint32_t i = 0; i < container.m_EmptyEntities.size(); i++)
 			{
@@ -39,6 +43,8 @@ namespace decs
 				{
 					Archetype& archetype = chunk[archetypeIdx];
 
+					//FetchTagsTypeIDsFromArchetype(archetype, entityTagsIDs);
+
 					if (BeginArchetypeSerialize(archetype))
 					{
 						uint64_t entitesCount = archetype.EntityCount();
@@ -53,14 +59,16 @@ namespace decs
 									for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
 									{
 										const auto& archetypeComponentData = archetype.m_TypeData[componentIdx];
-
-										SerializeComponent(
-											entityBuffer,
-											archetypeComponentData.m_PackedContainer->GetComponentBasePtr(entityIdx),
-											archetypeComponentData.m_PackedContainer->GetComponentSize(),
-											archetypeComponentData.m_TypeID,
-											componentIdx
-										);
+										if (!archetypeComponentData.IsTag())
+										{
+											SerializeComponent(
+												entityBuffer,
+												archetypeComponentData.m_PackedContainer->GetComponentBasePtr(entityIdx),
+												archetypeComponentData.m_PackedContainer->GetComponentSize(),
+												archetypeComponentData.m_TypeID,
+												componentIdx
+											);
+										}
 									}
 									EndEntitySerialize(entityBuffer);
 								}
@@ -73,6 +81,19 @@ namespace decs
 		}
 
 	protected:
+		void FetchTagsTypeIDsFromArchetype(const Archetype& archetype, std::vector<TypeID>& entityTagsID)
+		{
+			entityTagsID.clear();
+			const uint32_t componentCount = archetype.ComponentCount();
+			for (uint32_t i = 0; i < componentCount; i++)
+			{
+				if (archetype.IsTypeTag(i))
+				{
+					entityTagsID.push_back(archetype.GetTypeID(i));
+				}
+			}
+		}
+
 		virtual bool BeginArchetypeSerialize(const Archetype& archetype) = 0;
 
 		virtual void EndArchetypeSerialize(const Archetype& archetype) = 0;
@@ -87,6 +108,7 @@ namespace decs
 		virtual void EndEntitySerialize(const Entity& entity) = 0;
 
 		virtual void SerializeComponent(const Entity& entity, ComponentBase* component, uint64_t componentSize, TypeID componentTypeID, uint64_t componentIndexInArchetype) = 0;
+
 
 	};
 }

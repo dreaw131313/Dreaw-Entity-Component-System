@@ -157,7 +157,6 @@ namespace decs
 
 		std::vector<OrderData> m_ComponentContextsInOrder = {};
 
-		uint32_t m_ComponentsCount = 0; // number of components for each entity
 		uint32_t m_EntitiesCount = 0;
 
 	public:
@@ -167,26 +166,12 @@ namespace decs
 
 		inline uint32_t ComponentCount() const
 		{
-			return m_ComponentsCount;
+			return static_cast<uint32_t>(m_TypeData.size());
 		}
 
 		inline TypeID GetTypeID(uint64_t index) const
 		{
 			return m_TypeData[index].m_TypeID;
-		}
-
-		inline std::string GetComponentTypeName(uint64_t componentIndex) const
-		{
-			if (componentIndex < m_TypeData.size())
-			{
-				auto& typeData = m_TypeData[componentIndex];
-				if (typeData.m_ComponentContext != nullptr)
-				{
-					return typeData.m_ComponentContext->GetComponentName();
-				}
-			}
-
-			return std::string();
 		}
 
 		inline uint32_t EntityCount() const
@@ -205,34 +190,66 @@ namespace decs
 			return m_TypeIDsIndexes.find(typeID) != m_TypeIDsIndexes.end();
 		}
 
+		inline bool HasComponentType(TypeID typeID) const
+		{
+			auto it = m_TypeIDsIndexes.find(typeID);
+			if (it != m_TypeIDsIndexes.end())
+			{
+				auto& typeData = m_TypeData[it->second];
+				return !typeData.IsTag();
+			}
+			return false;
+		}
+
 		uint32_t FindTypeIndex(TypeID typeID) const;
 
 		template<typename T>
 		inline uint32_t FindTypeIndex() const
 		{
 			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
-			if (m_ComponentsCount < Limits::MinComponentsInArchetypeToPerformMapLookup)
+			if (ComponentCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
 			{
-				for (uint32_t i = 0; i < m_ComponentsCount; i++)
+				for (uint32_t i = 0; i < ComponentCount(); i++)
 					if (m_TypeData[i].m_TypeID == typeID) return i;
 
-				return Limits::MaxComponentCount;
+				return std::numeric_limits<uint32_t>::max();
 			}
 
 			auto it = m_TypeIDsIndexes.find(typeID);
 			if (it == m_TypeIDsIndexes.end())
-				return Limits::MaxComponentCount;
+				return std::numeric_limits<uint32_t>::max();
 
 			return it->second;
 		}
 
+		inline bool HasTag(TypeID tagType) const
+		{
+			uint32_t index = FindTypeIndex(tagType);
+			if (index == std::numeric_limits<uint32_t>::max())
+			{
+				return false;
+			}
+
+			return m_TypeData[index].IsTag();
+		}
+
+		template<typename TTag>
+		inline bool HasTag() const
+		{
+			return HasTag(Type<TTag>::ID());
+		}
+
+		inline bool IsTypeTag(uint32_t typeIndex) const 
+		{
+			return m_TypeData[typeIndex].IsTag();
+		}
 	private:
 		void ClearEntityDataAndComponents();
 
 		// it must be called only from "AddTypeData_WithoutCheck" function
 		void InsertComponentContextInCorrectPlace(ComponentContextBase* componentContext, uint32_t typeDataIndex);
 
-		ArchetypeTypeData& AddTypeData_WithoutCheck(
+		void AddTypeData_WithoutCheck(
 			TypeID typeID,
 			PackedContainerBase* packedContainer,
 			ComponentContextBase* componentContext
@@ -279,6 +296,7 @@ namespace decs
 
 		void InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts);
 
+		/*
 		/// <summary>
 		/// Moves entity components from "fromArchetype" to this archetype.
 		/// </summary>
@@ -297,6 +315,8 @@ namespace decs
 			uint64_t fromIndex,
 			EntityData* entityData
 		);
+
+		*/
 
 		void MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
 			TypeID removedComponentTypeID,
@@ -320,37 +340,12 @@ namespace decs
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <param name="fromArchetype"></param>
 		/// <param name="fromIndex"></param>
-		template<typename TComponent>
-		void MoveEntityComponentsAfterAddComponent(Archetype* fromArchetype, uint64_t fromIndex, EntityData* entityData)
-		{
-			TYPE_ID_CONSTEXPR TypeID newComponentTypeID = Type<TComponent>::ID();
-
-			this->AddEntityData(entityData);
-
-			uint64_t thisArchetypeIndex = 0;
-			uint64_t fromArchetypeIndex = 0;
-
-			for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++)
-			{
-				ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-				if (thisTypeData.m_TypeID == newComponentTypeID)
-				{
-					continue;
-				}
-
-				ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-
-				thisTypeData.m_PackedContainer->PushBack(
-					fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
-				);
-
-				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
-
-				fromArchetypeIndex++;
-			}
-
-			fromArchetype->RemoveSwapBackEntityData(fromIndex);
-		}
+		void MoveEntityComponentsAfterAddComponent(
+			TypeID addedComponentTypeID, 
+			Archetype* fromArchetype,
+			uint64_t entityIndex, 
+			EntityData* entityData
+		);
 
 		void ShrinkToFit();
 

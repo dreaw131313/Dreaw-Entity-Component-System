@@ -22,8 +22,6 @@ namespace decs
 
 		inline virtual std::string GetComponentTypeName() const = 0;
 
-		inline virtual std::string GetComponentTypeNameWithoutNamespace() const = 0;
-
 	protected:
 		virtual void SerializeComponentFromVoid(ComponentBase* component, SerializerData& serializerData) const = 0;
 
@@ -47,15 +45,37 @@ namespace decs
 			return Type<TComponent>::Name();
 		}
 
-		inline virtual std::string GetComponentTypeNameWithoutNamespace() const override final
-		{
-			return Type<TComponent>::NameWithoutNamespace();
-		}
 
 	private:
 		virtual void SerializeComponentFromVoid(ComponentBase* component, SerializerData& serializerData) const override final
 		{
 			SerializeComponent(*static_cast<TComponent*>(component), serializerData);
+		}
+	};
+
+	template<typename SerializerData>
+	class TagSerializerBase
+	{
+	public:
+		inline virtual TypeID GetTagTypeID() const = 0;
+
+		inline virtual std::string GetComponentTypeName() const = 0;
+
+		virtual void SerializeTag(SerializerData& serializerData) const = 0;
+	};
+
+	template<typename TTag, typename SerializerData>
+	class TagSerializer : ComponentSerializerBase<SerializerData>
+	{
+	public:
+		inline virtual TypeID GetComponentTypeID() const override final
+		{
+			return Type<TTag>::ID();
+		}
+
+		inline virtual std::string GetComponentTypeName() const override final
+		{
+			return Type<TTag>::Name();
 		}
 	};
 
@@ -68,6 +88,11 @@ namespace decs
 		public:
 			const ComponentSerializerBase<SerializerData>* m_Serializer = nullptr;
 			PackedContainerBase* m_PackedContainer = nullptr;
+		};
+		struct TagSerializationData
+		{
+		public:
+			const TagSerializerBase<SerializerData>* m_Serializer = nullptr;
 		};
 
 	public:
@@ -96,6 +121,7 @@ namespace decs
 		void Serialize(Container& container, SerializerData& serializerData)
 		{
 			std::vector<ComponentSerializationData> componentSerializersData;
+			std::vector<TagSerializationData> tagSerializersData;
 
 			auto& archetypesMap = container.m_ArchetypesMap;
 			auto& archetypesVector = container.m_ArchetypesMap.m_Archetypes;
@@ -126,19 +152,32 @@ namespace decs
 					if (entitesCount > 0)
 					{
 						GetComponentSerializers(archetype, componentSerializersData);
+						GetTagSerializers(archetype, tagSerializersData);
+
 						uint64_t componentCount = componentSerializersData.size();
+						uint64_t tagCount = tagSerializersData.size();
 
 						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 						{
 							auto& archetypeEntityData = archetype.m_EntitiesData[entityIdx];
 							if (archetypeEntityData.IsValid())
 							{
-								entityBuffer.Set(archetype.m_EntitiesData[entityIdx].m_EntityData);
+								entityBuffer.Set(archetypeEntityData.m_EntityData);
 								if (BeginEntitySerialize(entityBuffer, serializerData))
 								{
+									for (uint64_t tagIdx = 0; tagIdx < tagCount; tagIdx++)
+									{
+										TagSerializationData& tagSerializationData = tagSerializersData[tagIdx];
+										BeginTagSerialize(entityBuffer, tagSerializationData.m_Serializer, serializerData);
+										{
+											tagSerializationData.m_Serializer->SerializeTag(serializerData);
+										}
+										EndTagSerialize(entityBuffer, tagSerializationData.m_Serializer, serializerData);
+									}
+
 									for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
 									{
-										auto& componentSerializerData = componentSerializersData[componentIdx];
+										ComponentSerializationData& componentSerializerData = componentSerializersData[componentIdx];
 										BeginComponentSerialize(entityBuffer, componentSerializerData.m_Serializer, serializerData);
 										{
 											componentSerializerData.m_Serializer->SerializeComponentFromVoid(
@@ -171,8 +210,13 @@ namespace decs
 
 		virtual void EndComponentSerialize(const Entity& entity, const ComponentSerializerBase<SerializerData>* componentSerializer, SerializerData& serializerData) = 0;
 
+		virtual void BeginTagSerialize(const Entity& entity, const TagSerializerBase<SerializerData>* componentSerializer, SerializerData& serializerData) = 0;
+
+		virtual void EndTagSerialize(const Entity& entity, const TagSerializerBase<SerializerData>* componentSerializer, SerializerData& serializerData) = 0;
+
 	private:
 		ecsMap<TypeID, const ComponentSerializerBase<SerializerData>*> m_ComponentSerializers = {};
+		ecsMap<TypeID, const TagSerializerBase<SerializerData>*> m_TagSerializers = {};
 
 	private:
 		void GetComponentSerializers(Archetype& archetype, std::vector<ComponentSerializationData>& serializers)
@@ -182,10 +226,30 @@ namespace decs
 			for (uint32_t i = 0; i < archetype.ComponentCount(); i++)
 			{
 				TypeID componentType = archetype.GetTypeID(i);
-				auto it = m_ComponentSerializers.find(componentType);
-				if (it != m_ComponentSerializers.end())
+				if (!archetype.IsTypeTag(i))
 				{
-					serializers.push_back({ it->second, archetype.GetPackedContainerAt(i) });
+					auto it = m_ComponentSerializers.find(componentType);
+					if (it != m_ComponentSerializers.end())
+					{
+						serializers.push_back({ it->second, archetype.GetPackedContainerAt(i) });
+					}
+				}
+			}
+		}
+		void GetTagSerializers(Archetype& archetype, std::vector<TagSerializationData>& serializers)
+		{
+			serializers.clear();
+
+			for (uint32_t i = 0; i < archetype.ComponentCount(); i++)
+			{
+				TypeID componentType = archetype.GetTypeID(i);
+				if (archetype.IsTypeTag(i))
+				{
+					auto it = m_TagSerializers.find(componentType);
+					if (it != m_TagSerializers.end())
+					{
+						serializers.push_back({ it->second });
+					}
 				}
 			}
 		}
