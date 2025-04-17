@@ -305,7 +305,7 @@ namespace decs
 		}
 
 		template<typename TTag>
-		bool AddTag()
+		bool AddTag()const
 		{
 			if (IsValid())
 			{
@@ -314,7 +314,7 @@ namespace decs
 			return false;
 		}
 
-		bool RemoveTag(TypeID tagType)
+		bool RemoveTag(TypeID tagType)const
 		{
 			if (IsValid())
 			{
@@ -324,7 +324,7 @@ namespace decs
 		}
 
 		template<typename TTag>
-		bool RemoveTag()
+		bool RemoveTag() const
 		{
 			if (IsValid())
 			{
@@ -475,6 +475,18 @@ namespace decs
 		inline void* GetUserDataPtr() const
 		{
 			return m_Entity.GetUserDataPtr();
+		}
+
+
+		inline bool HasTag(TypeID tagType)const
+		{
+			return m_Entity.HasTag(tagType);
+		}
+
+		template<typename TTag>
+		inline bool HasTag()const
+		{
+			return m_Entity.HasTag<TTag>();
 		}
 
 	private:

@@ -156,6 +156,9 @@ int main()
 			PrintLine("Spawned removed DoubleTag");
 		}
 
+		decs::ConstEntity constEntityr = spawnedEntity;
+		constEntityr.HasComponent<float>();
+
 		decs::MultiQuery<TestComponent> query{};
 		query.With<DoubleTag>();
 
