@@ -108,6 +108,9 @@ int main()
 		using IntTag = decs::tag<int>;
 		using DoubleTag = decs::tag<double>;
 		using BoolTag = decs::tag<bool>;
+
+		PrintLine(decs::Type<FloatTag>::Name());
+		PrintLine(decs::Type<std::vector<decs::Entity>>::Name());
 	
 		auto prefabEntity = container.CreateEntity();
 

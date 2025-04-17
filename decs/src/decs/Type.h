@@ -86,12 +86,6 @@ namespace decs
 			return className;
 		}
 
-		inline static constexpr std::string NameWithoutNamespace()
-		{
-			static std::string name = FindNameWithoutNamespace();
-			return name;
-		}
-
 	private:
 		constexpr static std::string FindName()
 		{
