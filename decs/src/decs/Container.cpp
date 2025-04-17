@@ -836,6 +836,11 @@ namespace decs
 		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
 
 		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
+		if (archetypeTypeData.IsTag())
+		{
+			return false;
+		}
+
 		auto packedContainer = archetypeTypeData.m_PackedContainer;
 		ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
 		if (componentPtr->GetDependecyCount() > 0)
@@ -1498,6 +1503,11 @@ namespace decs
 		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
 
 		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
+		if (archetypeTypeData.IsTag())
+		{
+			return false;
+		}
+
 		auto& packedContainer = archetypeTypeData.m_PackedContainer;
 
 		auto componentPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);

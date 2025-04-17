@@ -317,6 +317,11 @@ namespace decs
 		template<typename TComponent, typename ...Args>
 		TComponent* AddComponent(Entity entity, EntityData& entityData, Args&&... args)
 		{
+			if constexpr (is_tag_v<TComponent>)
+			{
+				return nullptr;
+			}
+
 			if (!m_CanAddComponents || !entityData.IsValidToPerformComponentOperation())
 			{
 				return nullptr;
@@ -380,6 +385,10 @@ namespace decs
 		template<typename TComponent>
 		bool RemoveComponent(Entity entity)
 		{
+			if constexpr (is_tag_v<TComponent>)
+			{
+				return false;
+			}
 			return RemoveComponent(entity, Type<TComponent>::ID());
 		}
 
@@ -388,6 +397,11 @@ namespace decs
 		template<typename TComponent, typename TCallable>
 		bool RemoveComponent_If(EntityData& entityData, TCallable&& canRemoveFunc)
 		{
+			if constexpr (is_tag_v<TComponent>)
+			{
+				return false;
+			}
+
 			if (!m_CanRemoveComponents)
 			{
 				return false;
@@ -404,6 +418,11 @@ namespace decs
 			uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
 
 			ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
+			if (archetypeTypeData.IsTag())
+			{
+				return false;
+			}
+
 			auto packedContainer = archetypeTypeData.m_PackedContainer;
 			ComponentBase* componentBasePtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
 			if (componentBasePtr->GetDependecyCount() > 0)
@@ -544,6 +563,11 @@ namespace decs
 		template<typename TComponent>
 		TComponent* GetComponent(EntityData& entityData) const
 		{
+			if constexpr (is_tag_v<TComponent>)
+			{
+				return nullptr;
+			}
+
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
 			{
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
@@ -563,7 +587,12 @@ namespace decs
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex(componentType);
 				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
 				{
-					return entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
+					const auto& typeData = entityData.m_Archetype->m_TypeData[findTypeIndex];
+					if (typeData.IsTag())
+					{
+						return nullptr;
+					}
+					return typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
 				}
 			}
 			return nullptr;
@@ -578,13 +607,16 @@ namespace decs
 				const auto& typeDataVector = entityData.m_Archetype->m_TypeData;
 				for (uint32_t i = 0; i < archetypeComponentCount; i++)
 				{
-					auto& componentData = typeDataVector[i];
-					auto componentPtr = componentData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
-
-					TComponent* casted = dynamic_cast<TComponent*>(componentPtr);
-					if (casted != nullptr)
+					auto& typeData = typeDataVector[i];
+					if (!typeData.IsTag())
 					{
-						return casted;
+						auto componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
+
+						TComponent* casted = dynamic_cast<TComponent*>(componentPtr);
+						if (casted != nullptr)
+						{
+							return casted;
+						}
 					}
 				}
 			}
@@ -611,14 +643,19 @@ namespace decs
 		{
 			if (entityData.m_Archetype != nullptr)
 			{
-				return entityData.m_Archetype->ContainType(typeID);
+				return entityData.m_Archetype->HasComponentType(typeID);
 			}
 			return false;
 		}
-		
+
 		template<typename TComponent>
 		bool HasComponent(EntityData& entityData) const
 		{
+			if constexpr (is_tag_v<TComponent>)
+			{
+				return false;
+			}
+
 			return HasComponentInternal(entityData, Type<TComponent>::ID());
 		}
 
@@ -675,7 +712,7 @@ namespace decs
 			}
 
 			Archetype* oldArchetype = entityData.m_Archetype;
-			if (oldArchetype  != nullptr && oldArchetype ->HasTag<TTag>())
+			if (oldArchetype != nullptr && oldArchetype->HasTag<TTag>())
 			{
 				return true;
 			}
@@ -787,7 +824,7 @@ namespace decs
 			uint32_t& componentContainerIndex
 		)
 		{
-			TYPE_ID_CONSTEXPR const TypeID addedComponentTypeID =Type<TComponent>::ID();
+			TYPE_ID_CONSTEXPR const TypeID addedComponentTypeID = Type<TComponent>::ID();
 
 			Archetype* entityNewArchetype = nullptr;
 			if (toArchetype == nullptr)
@@ -1180,6 +1217,11 @@ namespace decs
 		template<typename TComponent, typename ...Args>
 		TComponent* AddComponent_NoCallback(Entity entity, EntityData& entityData, Args&&... args)
 		{
+			if constexpr (is_tag_v<TComponent>)
+			{
+				return nullptr;
+			}
+
 			if (!m_CanAddComponents) return nullptr;
 
 			if (!entityData.IsValidToPerformComponentOperation())
@@ -1244,6 +1286,10 @@ namespace decs
 		template<typename TComponent>
 		bool RemoveComponent_NoCallback(Entity entity)
 		{
+			if constexpr (is_tag_v<TComponent>)
+			{
+				return false;
+			}
 			if (!m_CanRemoveComponents)
 			{
 				return false;

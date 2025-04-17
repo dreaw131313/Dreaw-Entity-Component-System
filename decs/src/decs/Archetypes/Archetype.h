@@ -190,6 +190,17 @@ namespace decs
 			return m_TypeIDsIndexes.find(typeID) != m_TypeIDsIndexes.end();
 		}
 
+		inline bool HasComponentType(TypeID typeID) const
+		{
+			auto it = m_TypeIDsIndexes.find(typeID);
+			if (it != m_TypeIDsIndexes.end())
+			{
+				auto& typeData = m_TypeData[it->second];
+				return !typeData.IsTag();
+			}
+			return false;
+		}
+
 		uint32_t FindTypeIndex(TypeID typeID) const;
 
 		template<typename T>
