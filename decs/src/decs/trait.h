@@ -7,6 +7,8 @@ namespace decs
 	template<typename T>
 	struct tag final
 	{
+	public:
+		using UnderlyingType = T;
 	};
 
 	template<typename T>
