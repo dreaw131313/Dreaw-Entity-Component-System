@@ -19,17 +19,17 @@ namespace decs
 
 	uint32_t Archetype::FindTypeIndex(TypeID typeID) const
 	{
-		if (m_ComponentsCount < Limits::MinComponentsInArchetypeToPerformMapLookup)
+		if (ComponentCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
 		{
-			for (uint32_t i = 0; i < m_ComponentsCount; i++)
+			for (uint32_t i = 0; i < ComponentCount(); i++)
 				if (m_TypeData[i].m_TypeID == typeID) return i;
 
-			return Limits::MaxComponentCount;
+			return std::numeric_limits<uint32_t>::max();
 		}
 
 		auto it = m_TypeIDsIndexes.find(typeID);
 		if (it == m_TypeIDsIndexes.end())
-			return Limits::MaxComponentCount;
+			return std::numeric_limits<uint32_t>::max();
 
 		return it->second;
 	}
@@ -89,10 +89,20 @@ namespace decs
 		}
 	}
 
-	ArchetypeTypeData& Archetype::AddTypeData_WithoutCheck(TypeID typeID, PackedContainerBase* packedContainer, ComponentContextBase* componentContext)
+	void Archetype::AddTypeData_WithoutCheck(TypeID typeID, PackedContainerBase* packedContainer, ComponentContextBase* componentContext)
 	{
-		InsertComponentContextInCorrectPlace(componentContext, static_cast<uint32_t>(m_TypeData.size()));
-		return m_TypeData.emplace_back(typeID, packedContainer, componentContext, componentContext->GetStableContainer());
+		const uint32_t typeIndex = static_cast<uint32_t>(m_TypeData.size());
+		m_TypeIDsIndexes[typeID] = typeIndex;
+		if (packedContainer == nullptr || componentContext == nullptr)
+		{
+			// tag data
+			m_TypeData.emplace_back(typeID, nullptr, nullptr, nullptr);
+		}
+		else
+		{
+			m_TypeData.emplace_back(typeID, packedContainer, componentContext, componentContext->GetStableContainer());
+			InsertComponentContextInCorrectPlace(componentContext, typeIndex);
+		}
 	}
 
 	void Archetype::AddTypeData_WithCheck(
@@ -104,8 +114,6 @@ namespace decs
 		auto it = m_TypeIDsIndexes.find(id);
 		if (it == m_TypeIDsIndexes.end())
 		{
-			m_ComponentsCount += 1;
-			m_TypeIDsIndexes[id] = (uint32_t)m_TypeData.size();
 			AddTypeData_WithoutCheck(
 				id,
 				packedContainer,
@@ -168,28 +176,29 @@ namespace decs
 
 		if (index == m_EntitiesCount - 1)
 		{
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
-
-				ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
-				typeData.m_StableContainer->Remove(componentPtr);
-
-				typeData.m_PackedContainer->PopBack();
+				if (!typeData.IsTag())
+				{
+					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
+					typeData.m_PackedContainer->PopBack();
+					typeData.m_StableContainer->Remove(componentPtr);
+				}
 			}
 
 		}
 		else
 		{
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
-
-				ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
-				typeData.m_StableContainer->Remove(componentPtr);
-
-
-				typeData.m_PackedContainer->RemoveSwapBack(index);
+				if (!typeData.IsTag())
+				{
+					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
+					typeData.m_PackedContainer->RemoveSwapBack(index);
+					typeData.m_StableContainer->Remove(componentPtr);
+				}
 			}
 		}
 
@@ -207,9 +216,13 @@ namespace decs
 		if (index == m_EntitiesCount - 1)
 		{
 			m_EntitiesData.pop_back();
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
-				m_TypeData[i].m_PackedContainer->PopBack();
+				auto& typeData = m_TypeData[i];
+				if (!typeData.IsTag())
+				{
+					typeData.m_PackedContainer->PopBack();
+				}
 			}
 		}
 		else
@@ -223,9 +236,13 @@ namespace decs
 			m_EntitiesData[index] = m_EntitiesData.back();
 			m_EntitiesData.pop_back();
 
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint64_t i = 0; i < ComponentCount(); i++)
 			{
-				m_TypeData[i].m_PackedContainer->RemoveSwapBack(index);
+				auto& typeData = m_TypeData[i];
+				if (!typeData.IsTag())
+				{
+					typeData.m_PackedContainer->RemoveSwapBack(index);
+				}
 			}
 		}
 
@@ -247,9 +264,13 @@ namespace decs
 		{
 			m_EntitiesData.reserve(desiredCapacity);
 
-			for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
+			for (uint64_t idx = 0; idx < ComponentCount(); idx++)
 			{
-				m_TypeData[idx].m_PackedContainer->Reserve(desiredCapacity);
+				auto& typeData = m_TypeData[idx];
+				if (!typeData.IsTag())
+				{
+					typeData.m_PackedContainer->Reserve(desiredCapacity);
+				}
 			}
 		}
 	}
@@ -258,117 +279,44 @@ namespace decs
 	{
 		m_EntitiesCount = 0;
 		m_EntitiesData.clear();
-		for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
+		for (uint64_t idx = 0; idx < ComponentCount(); idx++)
 		{
-			m_TypeData[idx].m_PackedContainer->Clear();
+			auto& typeData = m_TypeData[idx];
+			if (!typeData.IsTag())
+			{
+				typeData.m_PackedContainer->Clear();
+			}
 		}
 	}
 
 	void Archetype::InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts)
 	{
-		m_ComponentsCount = other.m_ComponentsCount;
-		m_TypeData.reserve(m_ComponentsCount);
+		uint32_t componentsCount = other.ComponentCount();
+		m_TypeData.reserve(componentsCount);
 
-		for (uint32_t i = 0; i < m_ComponentsCount; i++)
+		for (uint32_t i = 0; i < componentsCount; i++)
 		{
 			ArchetypeTypeData& otherTypeData = other.m_TypeData[i];
 			otherTypeData.m_TypeID;
 			m_TypeIDsIndexes[otherTypeData.m_TypeID] = i;
 
-			AddTypeData_WithoutCheck(
-				otherTypeData.m_TypeID,
-				otherTypeData.m_PackedContainer->Clone(),
-				componentContexts->GetComponentContext(otherTypeData.m_TypeID)
-			);
-		}
-	}
-
-	void Archetype::MoveEntityComponentsAfterRemoveComponent(
-		TypeID removedComponentTypeID,
-		Archetype* fromArchetype,
-		uint64_t fromIndex,
-		EntityData* entityData
-	)
-	{
-		uint64_t thisArchetypeIndex = 0;
-		uint64_t fromArchetypeIndex = 0;
-
-		this->AddEntityData(entityData);
-
-		for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++, fromArchetypeIndex++)
-		{
-			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-			if (fromArchetypeData.m_TypeID == removedComponentTypeID)
+			if (otherTypeData.IsTag())
 			{
-				ComponentBase* componentPtr = fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex);
-				fromArchetypeData.m_StableContainer->Remove(componentPtr);
-
-				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
-
-				fromArchetypeIndex += 1;
-			}
-
-			ArchetypeTypeData& updatetFromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-
-			thisTypeData.m_PackedContainer->PushBack(
-				updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
-			);
-
-			updatetFromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
-		}
-
-		fromArchetype->RemoveSwapBackEntityData(fromIndex);
-	}
-
-	void Archetype::MoveEntityComponentsAfterRemoveComponent(Archetype* fromArchetype, uint64_t fromIndex, EntityData* entityData)
-	{
-		uint64_t thisArchetypeIndex = 0;
-		uint64_t fromArchetypeIndex = 0;
-
-		this->AddEntityData(entityData);
-
-		for (; thisArchetypeIndex < m_ComponentsCount; )
-		{
-			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-
-			if (thisTypeData.m_TypeID != fromArchetypeData.m_TypeID)
-			{
-				ComponentBase* componentPtr = fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex);
-				fromArchetypeData.m_StableContainer->Remove(componentPtr);
-
-				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
-
-				fromArchetypeIndex += 1;
+				AddTypeData_WithoutCheck(
+					otherTypeData.m_TypeID,
+					nullptr,
+					nullptr
+				);
 			}
 			else
 			{
-				thisTypeData.m_PackedContainer->PushBack(
-					fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
+				AddTypeData_WithoutCheck(
+					otherTypeData.m_TypeID,
+					otherTypeData.m_PackedContainer->Clone(),
+					componentContexts->GetComponentContext(otherTypeData.m_TypeID)
 				);
-
-				fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
-
-				thisArchetypeIndex += 1;
-				fromArchetypeIndex += 1;
 			}
 		}
-
-		// remove remaining components:
-		for (; fromArchetypeIndex < fromArchetype->ComponentCount(); fromArchetypeIndex++)
-		{
-			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-			if (fromArchetypeData.m_StableContainer != nullptr)
-			{
-				ComponentBase* componentPtr = fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex);
-				fromArchetypeData.m_StableContainer->Remove(componentPtr);
-			}
-
-			fromArchetypeData.m_PackedContainer->RemoveSwapBack(fromIndex);
-		}
-
-		fromArchetype->RemoveSwapBackEntityData(fromIndex);
 	}
 
 	void Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
@@ -383,7 +331,7 @@ namespace decs
 
 		this->AddEntityData(entityData);
 
-		for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++, fromArchetypeIndex++)
+		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++, fromArchetypeIndex++)
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
 			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
@@ -392,12 +340,11 @@ namespace decs
 				fromArchetypeIndex += 1;
 			}
 
-			ArchetypeTypeData& updatetFromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-
-			thisTypeData.m_PackedContainer->PushBack(
-				updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
-			);
-
+			if (!thisTypeData.IsTag())
+			{
+				ArchetypeTypeData& updatetFromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
+				thisTypeData.m_PackedContainer->PushBack(updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex));
+			}
 		}
 
 		fromArchetype->m_EntitiesData[fromIndex].m_bIsActive = false;
@@ -410,32 +357,39 @@ namespace decs
 			return;
 		}
 
+		const uint32_t componentCount = ComponentCount();
 		if (entityIndex == m_EntitiesCount - 1)
 		{
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint64_t i = 0; i < componentCount; i++)
 			{
 				auto& typeData = m_TypeData[i];
-				if (removedComponentTypeID == typeData.m_TypeID)
+				if (!typeData.IsTag())
 				{
-					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
-					typeData.m_StableContainer->Remove(componentPtr);
-				}
+					if (removedComponentTypeID == typeData.m_TypeID)
+					{
+						ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
+						typeData.m_StableContainer->Remove(componentPtr);
+					}
 
-				typeData.m_PackedContainer->PopBack();
+					typeData.m_PackedContainer->PopBack();
+				}
 			}
 		}
 		else
 		{
-			for (uint64_t i = 0; i < m_ComponentsCount; i++)
+			for (uint64_t i = 0; i < componentCount; i++)
 			{
 				auto& typeData = m_TypeData[i];
-				if (removedComponentTypeID == typeData.m_TypeID)
+				if (!typeData.IsTag())
 				{
-					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
-					typeData.m_StableContainer->Remove(componentPtr);
-				}
+					if (removedComponentTypeID == typeData.m_TypeID)
+					{
+						ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
+						typeData.m_StableContainer->Remove(componentPtr);
+					}
 
-				typeData.m_PackedContainer->RemoveSwapBack(entityIndex);
+					typeData.m_PackedContainer->RemoveSwapBack(entityIndex);
+				}
 			}
 		}
 
@@ -450,7 +404,7 @@ namespace decs
 		uint64_t thisArchetypeIndex = 0;
 		uint64_t fromArchetypeIndex = 0;
 
-		for (; thisArchetypeIndex < m_ComponentsCount; thisArchetypeIndex++)
+		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++)
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
 			if (thisTypeData.m_TypeID == newComponentTypeID)
@@ -459,21 +413,59 @@ namespace decs
 			}
 
 			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-
-			thisTypeData.m_PackedContainer->PushBack(
-				fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex)
-			);
+			if (!fromArchetypeData.IsTag())
+			{
+				thisTypeData.m_PackedContainer->PushBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex));
+			}
 
 			fromArchetypeIndex++;
 		}
 	}
 
+	void Archetype::MoveEntityComponentsAfterAddComponent(
+		TypeID addedComponentTypeID,
+		Archetype* fromArchetype,
+		uint64_t entityIndex,
+		EntityData* entityData
+	)
+	{
+		this->AddEntityData(entityData);
+
+		uint64_t thisArchetypeIndex = 0;
+		uint64_t fromArchetypeIndex = 0;
+
+		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++)
+		{
+			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
+			if (thisTypeData.m_TypeID == addedComponentTypeID)
+			{
+				continue;
+			}
+
+			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
+			if (!fromArchetypeData.IsTag())
+			{
+				thisTypeData.m_PackedContainer->PushBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+				fromArchetypeData.m_PackedContainer->RemoveSwapBack(entityIndex);
+			}
+
+			fromArchetypeIndex++;
+		}
+
+		fromArchetype->RemoveSwapBackEntityData(entityIndex);
+	}
+
 	void Archetype::ShrinkToFit()
 	{
 		m_EntitiesData.shrink_to_fit();
-		for (uint64_t idx = 0; idx < m_ComponentsCount; idx++)
+		for (uint64_t idx = 0; idx < ComponentCount(); idx++)
 		{
-			m_TypeData[idx].m_PackedContainer->ShrinkToFit();
+			auto& typeData = m_TypeData[idx];
+			if (typeData.IsTag())
+			{
+				continue;
+			}
+			typeData.m_PackedContainer->ShrinkToFit();
 		}
 	}
 

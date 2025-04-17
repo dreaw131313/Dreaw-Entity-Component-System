@@ -6,11 +6,15 @@
 
 #include "IterationCore.h"
 
+#include <type_traits>
+
 namespace decs
 {
 	template<typename... ComponentsTypes>
 	class Query
 	{
+		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "Query must not use tags in as ComponentTypes!");
+
 	private:
 		using ArchetypeContextType = IterationArchetypeContext<sizeof...(ComponentsTypes)>;
 
@@ -489,7 +493,7 @@ namespace decs
 					for (uint32_t typeIdx = 0; typeIdx < m_Includes.Size(); typeIdx++)
 					{
 						auto typeIDIndex = archetype.FindTypeIndex(m_Includes.IDs()[typeIdx]);
-						if (typeIDIndex == Limits::MaxComponentCount)
+						if (typeIDIndex == std::numeric_limits<uint32_t>::max())
 						{
 							m_ArchetypesContexts.pop_back();
 							return;

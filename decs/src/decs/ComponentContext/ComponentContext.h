@@ -4,6 +4,7 @@
 
 #include "decs/Component/Component.h"
 #include "decs/ComponentContainers/StableContainer.h"
+#include "decs/ComponentContainers/PackedContainer.h"
 
 namespace decs
 {
@@ -23,8 +24,6 @@ namespace decs
 		virtual ~ComponentContextBase() = default;
 
 		inline virtual TypeID GetComponentTypeID() const = 0;
-
-		inline virtual std::string GetComponentName() const = 0;
 
 		inline int GetObserverOrder() const { return m_ObserverOrder; }
 
@@ -48,6 +47,12 @@ namespace decs
 		virtual ComponentContextBase* Clone(int observerOrder, uint32_t stableComponentChunkSize) = 0;
 
 		virtual StableContainerBase* GetStableContainer() const = 0;
+
+		/// <summary>
+		/// Life time of container must be managed manualy.
+		/// </summary>
+		/// <returns></returns>
+		virtual PackedContainerBase* CreatePackedContainer() const = 0;
 
 		virtual void ClearStableContainer() = 0;
 
@@ -78,15 +83,6 @@ namespace decs
 		inline TypeID GetComponentTypeID() const override
 		{
 			return Type<TComponent>::ID();
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <returns>Name of component if coponent is stable (T = decs::stable<ComponentType>) it will return name of ComponentType without decs::stable</returns>
-		inline std::string GetComponentName() const override
-		{
-			return decs::Type<TComponent>::Name();
 		}
 
 		inline bool HasCreateObserver() const override
@@ -155,6 +151,11 @@ namespace decs
 		StableContainerBase* GetStableContainer() const override
 		{
 			return m_StableContainer;
+		}
+
+		PackedContainerBase* CreatePackedContainer() const override
+		{
+			return new StablePackedContainer<TComponent>();
 		}
 
 		virtual void ClearStableContainer() override
