@@ -181,7 +181,6 @@ namespace decs
 		}
 
 		inline virtual TypeID GetTypeID()const noexcept = 0;
-		virtual StableContainerBase* Clone(uint32_t withChunkSize) = 0;
 
 		virtual bool Remove(ComponentBase* component) = 0;
 		virtual ComponentBase* EmplaceFromBaseComponent(ComponentBase* ptr) = 0;
@@ -220,11 +219,6 @@ namespace decs
 		}
 
 		virtual TypeID GetTypeID()const noexcept override { return Type<TComponentType>::ID(); }
-
-		virtual StableContainerBase* Clone(uint32_t withChunkSize) override
-		{
-			return new StableContainer<TComponentType>(withChunkSize);
-		}
 
 		virtual uint32_t GetChunkSize() const noexcept override
 		{

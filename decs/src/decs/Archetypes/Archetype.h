@@ -251,13 +251,6 @@ namespace decs
 
 		void AddTypeData_WithoutCheck(
 			TypeID typeID,
-			PackedContainerBase* packedContainer,
-			ComponentContextBase* componentContext
-		);
-
-		void AddTypeData_WithCheck(
-			const TypeID& id,
-			PackedContainerBase* packedContainer,
 			ComponentContextBase* componentContext
 		);
 

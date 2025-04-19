@@ -310,7 +310,7 @@ namespace decs
 		auto& archetype = m_SingleComponentArchetypes[componentTypeID];
 		if (archetype != nullptr) return archetype;
 		archetype = &m_Archetypes.EmplaceBack();
-		archetype->AddTypeData_WithoutCheck(componentTypeID, componentContext->CreatePackedContainer(), componentContext);
+		archetype->AddTypeData_WithoutCheck(componentTypeID, componentContext);
 		AddArchetypeToCorrectContainers(*archetype, false);
 		MakeArchetypeEdges(*archetype);
 		return archetype;
@@ -402,7 +402,7 @@ namespace decs
 			return archetype;
 		}
 		archetype = &m_Archetypes.EmplaceBack();
-		archetype->AddTypeData_WithoutCheck(componentTypeID, nullptr, nullptr);
+		archetype->AddTypeData_WithoutCheck(componentTypeID, nullptr);
 		AddArchetypeToCorrectContainers(*archetype, false);
 		MakeArchetypeEdges(*archetype);
 		return archetype;
@@ -417,13 +417,12 @@ namespace decs
 			{
 				if (fromArchetypeData.IsTag())
 				{
-					toArchetype.AddTypeData_WithoutCheck(fromArchetypeData.m_TypeID, nullptr, nullptr);
+					toArchetype.AddTypeData_WithoutCheck(fromArchetypeData.m_TypeID, nullptr);
 				}
 				else
 				{
 					toArchetype.AddTypeData_WithoutCheck(
 						fromArchetypeData.m_TypeID,
-						fromArchetypeData.m_PackedContainer->Clone(),
 						fromArchetypeData.m_ComponentContext
 					);
 				}
@@ -444,7 +443,6 @@ namespace decs
 				isNewComponentTypeAdded = true;
 				toArchetype.AddTypeData_WithoutCheck(
 					componentTypeID,
-					addedComponentContext != nullptr ? addedComponentContext->CreatePackedContainer() : nullptr, // if addedComponentContext means it is tag
 					addedComponentContext
 				);
 			}
@@ -453,7 +451,6 @@ namespace decs
 			{
 				toArchetype.AddTypeData_WithoutCheck(
 					baseTypeData.m_TypeID,
-					nullptr,
 					nullptr
 				);
 			}
@@ -461,7 +458,6 @@ namespace decs
 			{
 				toArchetype.AddTypeData_WithoutCheck(
 					baseTypeData.m_TypeID,
-					baseTypeData.m_PackedContainer->Clone(),
 					baseTypeData.m_ComponentContext
 				);
 			}
@@ -471,7 +467,6 @@ namespace decs
 		{
 			toArchetype.AddTypeData_WithoutCheck(
 				componentTypeID,
-				addedComponentContext != nullptr ? addedComponentContext->CreatePackedContainer() : nullptr, // if addedComponentContext means it is tag
 				addedComponentContext
 			);
 		}

@@ -46,7 +46,7 @@ namespace decs
 
 		virtual ComponentContextBase* Clone(int observerOrder, uint32_t stableComponentChunkSize) = 0;
 
-		virtual StableContainerBase* GetStableContainer() const = 0;
+		virtual StableContainerBase* GetStableContainer() = 0;
 
 		/// <summary>
 		/// Life time of container must be managed manualy.
@@ -67,17 +67,14 @@ namespace decs
 
 	public:
 		ComponentContext(int order, uint32_t stableComponentChunkSize) :
-			ComponentContextBase(order)
+			ComponentContextBase(order),
+			m_StableContainer(stableComponentChunkSize > 0 ? stableComponentChunkSize : 1000)
 		{
-			m_StableContainer = new StableContainer<TComponent>(stableComponentChunkSize > 0 ? stableComponentChunkSize : 1000);
+
 		}
 
 		~ComponentContext()
 		{
-			if (m_StableContainer != nullptr)
-			{
-				delete m_StableContainer;
-			}
 		}
 
 		inline TypeID GetComponentTypeID() const override
@@ -148,9 +145,9 @@ namespace decs
 			}
 		}
 
-		StableContainerBase* GetStableContainer() const override
+		StableContainerBase* GetStableContainer() override
 		{
-			return m_StableContainer;
+			return &m_StableContainer;
 		}
 
 		PackedContainerBase* CreatePackedContainer() const override
@@ -160,13 +157,10 @@ namespace decs
 
 		virtual void ClearStableContainer() override
 		{
-			if (m_StableContainer != nullptr)
-			{
-				m_StableContainer->Clear();
-			}
+			m_StableContainer.Clear();
 		}
 	private:
 		ComponentObserversGroup<TComponent> m_Observers = {};
-		StableContainer<TComponent>* m_StableContainer = nullptr;
+		StableContainer<TComponent> m_StableContainer;
 	};
 }
