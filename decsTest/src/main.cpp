@@ -96,7 +96,7 @@ int main()
 
 	decs::ObserversManager observerManager = {};
 	{
-		observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
+		//observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
 	}
 
 	decs::Container container = {};
@@ -112,64 +112,64 @@ int main()
 		PrintLine(decs::Type<FloatTag>::Name());
 		PrintLine(decs::Type<std::vector<decs::Entity>>::Name());
 	
-		auto prefabEntity = container.CreateEntity();
+		{
+			auto prefabEntity1 = container.CreateEntity();
 
-		prefabEntity.AddComponent<Position>();
+			prefabEntity1.AddComponent<Position>();
 
-		prefabEntity.AddTag<FloatTag>();
-		prefabEntity.AddTag<IntTag>();
-		prefabEntity.AddTag<DoubleTag>();
-		prefabEntity.AddTag<BoolTag>();
+			prefabEntity1.AddTag<FloatTag>();
+			prefabEntity1.AddComponent<TestComponent>();
+			container.Spawn(prefabEntity1, 123, true);
+		}
+	
+		{
+			auto prefabEntity1 = container.CreateEntity();
 
-		prefabEntity.AddComponent<TestComponent>();
+			prefabEntity1.AddComponent<Position>();
 
-		auto spawnedEntity = container.Spawn(prefabEntity);
+			prefabEntity1.AddTag<IntTag>();
+			prefabEntity1.AddComponent<TestComponent>();
+			container.Spawn(prefabEntity1, 123, true);
+		}
+	
+		{
+			auto prefabEntity1 = container.CreateEntity();
 
-		PrintLine();
-		if (spawnedEntity.HasTag<FloatTag>())
-		{
-			PrintLine("Spawned has FloatTag");
-		}
-		if (spawnedEntity.HasTag<IntTag>())
-		{
-			PrintLine("Spawned has IntTag");
-		}
-		if (spawnedEntity.HasTag<DoubleTag>())
-		{
-			PrintLine("Spawned has DoubleTag");
-		}
-		if (spawnedEntity.HasTag<BoolTag>())
-		{
-			PrintLine("Spawned has BoolTag");
-		}
-		if (spawnedEntity.HasComponent<Position>())
-		{
-			PrintLine("Spawned has Position");
-		}
-		if (spawnedEntity.HasTag<TestComponent>())
-		{
-			PrintLine("Spawned has TestComponent");
-		}
+			prefabEntity1.AddComponent<Position>();
 
-		if (spawnedEntity.RemoveTag<DoubleTag>())
+			prefabEntity1.AddTag<DoubleTag>();
+			prefabEntity1.AddComponent<TestComponent>();
+			container.Spawn(prefabEntity1, 123, true);
+		}
+	
 		{
-			PrintLine("Spawned removed DoubleTag");
+			auto prefabEntity1 = container.CreateEntity();
+
+			prefabEntity1.AddComponent<Position>();
+
+			prefabEntity1.AddTag<BoolTag>();
+			prefabEntity1.AddComponent<TestComponent>();
+			container.Spawn(prefabEntity1, 123, true);
 		}
 
-		decs::ConstEntity constEntityr = spawnedEntity;
-		constEntityr.HasComponent<float>();
-
-		decs::MultiQuery<TestComponent> query{};
-		query.With<DoubleTag>();
-
-		query.AddContainer(&container);
-
-		PrintLine();
-		query.ForEach([](const decs::ConstEntity& entity, const TestComponent& )
+		uint32_t counter = 0;
+		auto testFunc = [&](const decs::ConstEntity& entity, const TestComponent&)
 		{
 			PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
-		});
-		PrintLine();
+		};
+		
+		decs::MultiQuery<TestComponent> query{};
+		query.AddContainer(&container);
+
+
+		std::vector<decs::MultiQuery<TestComponent> ::BatchIterator> iterators{};
+		query.CreateBatchIteratorsWithMaxNumberPerBatch(iterators, 7);
+
+		for (auto& it : iterators)
+		{
+			it.ForEach(testFunc);
+		}
+
 	}
 
 	return 0;

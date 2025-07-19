@@ -834,5 +834,54 @@ namespace decs
 				}
 			}
 		}
+
+		void CreateBatchIteratorsWithMaxNumberPerBatch(
+			std::vector<BatchIterator>& iterators,
+			uint32_t maxBatchSize
+		)
+		{
+			Fetch();
+			BatchIterator* currentIterator = nullptr;
+
+			uint64_t contextSize = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
+			{
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+
+				for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+				{
+					ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+					const uint32_t ctxEntityCount = static_cast<uint32_t>(ctx.GetEntityCount());
+					uint32_t currentEntityIndex = 0;
+
+					while (currentEntityIndex < ctxEntityCount)
+					{
+						if (currentIterator == nullptr)
+						{
+							currentIterator = &iterators.emplace_back(this, containerContextIndex, archetypeContextIdx, currentEntityIndex, 0);
+						}
+
+						uint32_t iteratorEntityCount = static_cast<uint32_t>(currentIterator->m_EntitiesCount);
+						uint32_t availableArchetypeEntities = ctxEntityCount - currentEntityIndex;
+
+						uint32_t iteratorNeededEntities = maxBatchSize - iteratorEntityCount;
+
+						if (availableArchetypeEntities >= iteratorNeededEntities)
+						{
+							currentEntityIndex += iteratorNeededEntities;
+							currentIterator->m_EntitiesCount += iteratorNeededEntities;
+							currentIterator = nullptr;
+						}
+						else
+						{
+							currentIterator->m_EntitiesCount += availableArchetypeEntities;
+							currentEntityIndex += availableArchetypeEntities;
+						}
+					}
+				}
+			}
+		}
 	};
 }
