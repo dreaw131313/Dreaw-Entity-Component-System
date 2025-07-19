@@ -166,7 +166,7 @@ namespace decs
 				{
 					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
 					typeData.m_PackedContainer->PopBack();
-					typeData.m_StableContainer->Remove(componentPtr);
+					typeData.m_StableContainer->Destroy(componentPtr);
 				}
 			}
 
@@ -180,7 +180,7 @@ namespace decs
 				{
 					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
 					typeData.m_PackedContainer->RemoveSwapBack(index);
-					typeData.m_StableContainer->Remove(componentPtr);
+					typeData.m_StableContainer->Destroy(componentPtr);
 				}
 			}
 		}
@@ -349,7 +349,7 @@ namespace decs
 					if (removedComponentTypeID == typeData.m_TypeID)
 					{
 						ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
-						typeData.m_StableContainer->Remove(componentPtr);
+						typeData.m_StableContainer->Destroy(componentPtr);
 					}
 
 					typeData.m_PackedContainer->PopBack();
@@ -366,7 +366,7 @@ namespace decs
 					if (removedComponentTypeID == typeData.m_TypeID)
 					{
 						ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
-						typeData.m_StableContainer->Remove(componentPtr);
+						typeData.m_StableContainer->Destroy(componentPtr);
 					}
 
 					typeData.m_PackedContainer->RemoveSwapBack(entityIndex);

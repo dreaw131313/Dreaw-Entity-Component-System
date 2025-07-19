@@ -92,7 +92,7 @@ namespace decs
 	enum class EComponentEdgeType
 	{
 		Add,
-		Remove
+		Destroy
 	};
 
 	struct ArchetypeEdge

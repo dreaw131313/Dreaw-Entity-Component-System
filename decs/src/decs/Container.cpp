@@ -730,7 +730,7 @@ namespace decs
 				continue;
 			}
 
-			ComponentBase* componentPtr = spawnRefData.m_StableContainer->EmplaceFromBaseComponent(spawnRefData.m_ComponentPtr);
+			ComponentBase* componentPtr = spawnRefData.m_StableContainer->CreateFromComponentBase(spawnRefData.m_ComponentPtr);
 			currentTypeData.m_PackedContainer->PushBack(componentPtr);
 
 			m_SpawnData.m_SpawnedEntityComponentPtrs[i] = componentPtr;

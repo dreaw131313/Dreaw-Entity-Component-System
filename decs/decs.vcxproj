@@ -130,6 +130,7 @@
   <ItemGroup>
     <ClCompile Include="src\decs\Archetypes\Archetype.cpp" />
     <ClCompile Include="src\decs\Archetypes\ArchetypesMap.cpp" />
+    <ClCompile Include="src\decs\ComponentContainers\ChunkAllocator.h" />
     <ClCompile Include="src\decs\Component\Component.cpp" />
     <ClCompile Include="src\decs\Container.cpp" />
     <ClCompile Include="src\decs\decs.cpp" />

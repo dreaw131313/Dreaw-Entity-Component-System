@@ -341,7 +341,7 @@ namespace decs
 
 			// Adding component to stable component container
 			StableContainer<TComponent>* stableContainer = static_cast<StableContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
-			TComponent* componentPtr = stableContainer->Emplace(std::forward<Args>(args)...);
+			TComponent* componentPtr = stableContainer->Create(std::forward<Args>(args)...);
 
 			//StableComponentRef componentNodeInfo = {};
 			// Adding component pointer to packed container in archetype
@@ -1195,7 +1195,7 @@ namespace decs
 
 			// Adding component to stable component container
 			StableContainer<TComponent>* stableContainer = static_cast<StableContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
-			TComponent* componentPtr = stableContainer->Emplace(std::forward<Args>(args)...);
+			TComponent* componentPtr = stableContainer->Create(std::forward<Args>(args)...);
 
 			//StableComponentRef componentNodeInfo = {};
 			// Adding component pointer to packed container in archetype

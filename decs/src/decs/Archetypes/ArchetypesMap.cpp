@@ -136,7 +136,7 @@ namespace decs
 					if (isArchetypeValid)
 					{
 						testArchetype.AddEdge(notFindedType, &archetype, EComponentEdgeType::Add);
-						archetype.AddEdge(notFindedType, &testArchetype, EComponentEdgeType::Remove);
+						archetype.AddEdge(notFindedType, &testArchetype, EComponentEdgeType::Destroy);
 					}
 				}
 			}
@@ -182,7 +182,7 @@ namespace decs
 
 					if (isArchetypeValid)
 					{
-						testArchetype.AddEdge(lastIncorrectType, &archetype, EComponentEdgeType::Remove);
+						testArchetype.AddEdge(lastIncorrectType, &archetype, EComponentEdgeType::Destroy);
 						archetype.AddEdge(lastIncorrectType, &testArchetype, EComponentEdgeType::Add);
 					}
 				}
@@ -358,7 +358,7 @@ namespace decs
 		auto edge = fromArchetype.GetEdge(removedComponentTypeID);
 		if (edge.IsValid())
 		{
-			if (edge.m_EdgeType == EComponentEdgeType::Remove)
+			if (edge.m_EdgeType == EComponentEdgeType::Destroy)
 			{
 				return edge.m_Archetype;
 			}

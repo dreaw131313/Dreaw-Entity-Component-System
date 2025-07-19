@@ -246,7 +246,7 @@ namespace decs
 		}
 
 		/// <summary>
-		/// Remove component observers are not invoked.
+		/// Destroy component observers are not invoked.
 		/// </summary>
 		/// <returns></returns>
 		template<typename TComponent>
@@ -256,7 +256,7 @@ namespace decs
 		}
 
 		/// <summary>
-		/// Remove component observers are not invoked.
+		/// Destroy component observers are not invoked.
 		/// </summary>
 		/// <returns></returns>
 		inline bool RemoveComponent_NoCallback(TypeID componentTypeID) const

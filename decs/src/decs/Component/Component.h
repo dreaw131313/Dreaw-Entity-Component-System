@@ -1,17 +1,16 @@
 #pragma once
 #include "decs/Core.h"
 
+#include "decs/ComponentContainers/ChunkAllocator.h"
+
 namespace decs
 {
 	class Entity;
-	class ChunkBase;
 	class StableContainerBase;
 	template<typename TComponentType>
 	class StableContainer;
-	template<typename TComponentType>
-	class TChunk;
 
-	class ComponentBase
+	class ComponentBase : public ChunkAllocatorResource
 	{
 		friend class Container;
 		template<typename>
@@ -21,33 +20,38 @@ namespace decs
 		template<typename>
 		friend class StablePackedContainer;
 
-		friend class ChunkBase;
 		friend class StableContainerBase;
-		template<typename>
-		friend class TChunk;
 		template<typename TComponentType>
 		friend class StableContainer;
 
 	public:
 		ComponentBase() = default;
 
-		ComponentBase(const ComponentBase&)
+		ComponentBase(const ComponentBase& other):
+			ChunkAllocatorResource(other)
 		{
 
 		}
 
-		ComponentBase(ComponentBase&&) noexcept
+		ComponentBase(ComponentBase&& other) noexcept:
+			ChunkAllocatorResource(std::move(other))
 		{
 
 		}
 
-		ComponentBase& operator =(const ComponentBase&)
+		ComponentBase& operator =(const ComponentBase& other)
 		{
+			ChunkAllocatorResource::operator=(other);
 			return *this;
 		}
 
-		ComponentBase& operator =(ComponentBase&&) noexcept
+		ComponentBase& operator=(ComponentBase&& other) noexcept
 		{
+			if (this != &other)
+			{
+				ChunkAllocatorResource::operator=(std::move(other));
+			}
+
 			return *this;
 		}
 
@@ -62,7 +66,7 @@ namespace decs
 		{
 			return m_bIsEnabledByECS;
 		}
-		
+
 		inline uint16_t GetDependecyCount() const
 		{
 			return m_DependencyCount;
@@ -93,31 +97,9 @@ namespace decs
 		virtual void OnPreCreate(const Entity& entity);
 
 	private:
-		ChunkBase* m_ParentChunk = nullptr;
-		uint32_t m_IndexInChunk = std::numeric_limits<uint32_t>::max();
-
 		uint16_t m_DependencyCount = 0;
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByECS = false;
-
-	private:
-
-		inline void SetChunkAndIndex(ChunkBase* parentChunk, uint32_t index)
-		{
-			m_ParentChunk = parentChunk;
-			m_IndexInChunk = index;
-		}
-
-		inline uint32_t GetIndexInChunk() const
-		{
-			return m_IndexInChunk;
-		}
-
-		inline const ChunkBase* GetParentChunk() const
-		{
-			return m_ParentChunk;
-		}
-
 
 	private:
 		inline void SetFlags(bool bIsCreated, bool bIsEnabled)
