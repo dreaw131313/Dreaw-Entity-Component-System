@@ -545,7 +545,7 @@ namespace decs
 				uint64_t entitiesCount
 			):
 				m_Query(query),
-				m_StartContainerElementIndex(startContainerElementIndex),
+				m_StartContainerContextIndex(startContainerElementIndex),
 				m_StartArchetypeIndex(startArchetypeIndex),
 				m_StartEntityIndex(startEntityIndex),
 				m_EntitiesCount(entitiesCount)
@@ -563,7 +563,7 @@ namespace decs
 				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
 				uint64_t contextSize = containerContexts.size();
-				for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
+				for (uint64_t containerContextIndex = m_StartContainerContextIndex; containerContextIndex < contextSize; containerContextIndex++)
 				{
 					ContainerContextType& containerContext = containerContexts[containerContextIndex];
 					if (!containerContext.m_bIsEnabled)
@@ -576,7 +576,7 @@ namespace decs
 
 					uint64_t archetypeContextIdx;
 					uint64_t startEntitiyIndex;
-					if (containerContextIndex == m_StartContainerElementIndex)
+					if (containerContextIndex == m_StartContainerContextIndex)
 					{
 						archetypeContextIdx = m_StartArchetypeIndex;
 						startEntitiyIndex = m_StartEntityIndex;
@@ -648,7 +648,7 @@ namespace decs
 				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
 				uint64_t contextSize = containerContexts.size();
-				for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
+				for (uint64_t containerContextIndex = m_StartContainerContextIndex; containerContextIndex < contextSize; containerContextIndex++)
 				{
 					ContainerContextType& containerContext = containerContexts[containerContextIndex];
 					if (!containerContext.m_bIsEnabled)
@@ -661,7 +661,7 @@ namespace decs
 
 					uint64_t archetypeContextIdx;
 					uint64_t startEntitiyIndex;
-					if (containerContextIndex == m_StartContainerElementIndex)
+					if (containerContextIndex == m_StartContainerContextIndex)
 					{
 						archetypeContextIdx = m_StartArchetypeIndex;
 						startEntitiyIndex = m_StartEntityIndex;
@@ -728,7 +728,7 @@ namespace decs
 
 		private:
 			QueryType* m_Query = nullptr;
-			uint64_t m_StartContainerElementIndex = 0;
+			uint64_t m_StartContainerContextIndex = 0;
 			uint64_t m_StartArchetypeIndex = 0;
 			uint64_t m_StartEntityIndex = 0;
 			uint64_t m_EntitiesCount = 0;
