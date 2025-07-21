@@ -138,6 +138,20 @@ namespace decs
 			return nullptr;
 		}
 
+		/// <summary>
+		/// Entity can not have multiple components of same type, bu can have components which inherits from same type. This method retrive all components which are or inherits from TComponent. In is not efficient method, it uses dynamic cast to check if component is valid
+		/// </summary>
+		/// <typeparam name="TComponent"></typeparam>
+		/// <param name="components"></param>
+		template<typename TComponent>
+		inline void GetComponentsDynamic(std::vector<TComponent*>& components) const
+		{
+			if (IsValid())
+			{
+				GetContainer_Internal()->GetComponentsDynamic<TComponent>(*m_EntityData, components);
+			}
+		}
+
 		template<typename TComponent>
 		inline bool HasComponent() const
 		{
@@ -443,9 +457,19 @@ namespace decs
 		template<typename TComponent>
 		inline TComponent* GetComponentDynamic() const
 		{
-			return m_Entity->GetComponentDynamic<TComponent>();
+			return m_Entity.GetComponentDynamic<TComponent>();
 		}
 
+		/// <summary>
+		/// Entity can not have multiple components of same type, bu can have components which inherits from same type. This method retrive all components which are or inherits from TComponent. In is not efficient method, it uses dynamic cast to check if component is valid
+		/// </summary>
+		/// <typeparam name="TComponent"></typeparam>
+		/// <param name="components"></param>
+		template<typename TComponent>
+		inline void GetComponentsDynamic(std::vector<TComponent*>& components) const
+		{
+			m_Entity.GetComponentDynamic<TComponent>(components);
+		}
 		template<typename TComponent>
 		inline bool TryGetComponent(typename TComponent*& component) const
 		{

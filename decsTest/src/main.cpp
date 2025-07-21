@@ -120,6 +120,9 @@ int main()
 			prefabEntity1.AddTag<FloatTag>();
 			prefabEntity1.AddComponent<TestComponent>();
 			container.Spawn(prefabEntity1, 123, true);
+
+			std::vector<Position*> positions{};
+			prefabEntity1.GetComponentsDynamic<Position>(positions);
 		}
 	
 		{

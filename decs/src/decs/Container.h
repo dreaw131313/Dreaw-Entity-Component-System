@@ -612,7 +612,6 @@ namespace decs
 					if (!typeData.IsTag())
 					{
 						auto componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
-
 						TComponent* casted = dynamic_cast<TComponent*>(componentPtr);
 						if (casted != nullptr)
 						{
@@ -623,6 +622,29 @@ namespace decs
 			}
 
 			return nullptr;
+		}
+
+		template<typename TComponent>
+		void GetComponentsDynamic(EntityData& entityData, std::vector<TComponent*>& outComponents)
+		{
+			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
+			{
+				uint32_t archetypeComponentCount = entityData.m_Archetype->ComponentCount();
+				const auto& typeDataVector = entityData.m_Archetype->m_TypeData;
+				for (uint32_t i = 0; i < archetypeComponentCount; i++)
+				{
+					auto& typeData = typeDataVector[i];
+					if (!typeData.IsTag())
+					{
+						auto componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
+						TComponent* casted = dynamic_cast<TComponent*>(componentPtr);
+						if (casted != nullptr)
+						{
+							outComponents.push_back(casted);
+						}
+					}
+				}
+			}
 		}
 
 		template<typename TComponent>
