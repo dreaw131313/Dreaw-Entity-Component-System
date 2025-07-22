@@ -111,7 +111,7 @@ int main()
 
 		PrintLine(decs::Type<FloatTag>::Name());
 		PrintLine(decs::Type<std::vector<decs::Entity>>::Name());
-	
+
 		{
 			auto prefabEntity1 = container.CreateEntity();
 
@@ -119,48 +119,24 @@ int main()
 
 			prefabEntity1.AddTag<FloatTag>();
 			prefabEntity1.AddComponent<TestComponent>();
-			container.Spawn(prefabEntity1, 123, true);
+			auto spawnedEntity = container.Spawn(prefabEntity1, true);
 
-			std::vector<Position*> positions{};
-			prefabEntity1.GetComponentsDynamic<Position>(positions);
+			if (spawnedEntity.HasTag<FloatTag>())
+			{
+				PrintLine("Spawned entity with tag!");
+			}
+			spawnedEntity.SetActive(false);
+			spawnedEntity.SetActive(true);
+
 		}
-	
-		{
-			auto prefabEntity1 = container.CreateEntity();
 
-			prefabEntity1.AddComponent<Position>();
-
-			prefabEntity1.AddTag<IntTag>();
-			prefabEntity1.AddComponent<TestComponent>();
-			container.Spawn(prefabEntity1, 123, true);
-		}
-	
-		{
-			auto prefabEntity1 = container.CreateEntity();
-
-			prefabEntity1.AddComponent<Position>();
-
-			prefabEntity1.AddTag<DoubleTag>();
-			prefabEntity1.AddComponent<TestComponent>();
-			container.Spawn(prefabEntity1, 123, true);
-		}
-	
-		{
-			auto prefabEntity1 = container.CreateEntity();
-
-			prefabEntity1.AddComponent<Position>();
-
-			prefabEntity1.AddTag<BoolTag>();
-			prefabEntity1.AddComponent<TestComponent>();
-			container.Spawn(prefabEntity1, 123, true);
-		}
 
 		uint32_t counter = 0;
 		auto testFunc = [&](const decs::ConstEntity& entity, const TestComponent&)
 		{
 			PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
 		};
-		
+
 		decs::MultiQuery<TestComponent> query{};
 		query.AddContainer(&container);
 
@@ -172,6 +148,7 @@ int main()
 		{
 			it.ForEach(testFunc);
 		}
+
 
 	}
 

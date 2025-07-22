@@ -164,9 +164,18 @@ namespace decs
 
 		~Archetype();
 
+		/// <summary>
+		/// Returns number of components and tags
+		/// </summary>
+		/// <returns></returns>
 		inline uint32_t ComponentCount() const
 		{
 			return static_cast<uint32_t>(m_TypeData.size());
+		}
+
+		inline uint32_t GetComponentOnlyCount() const
+		{
+			return static_cast<uint32_t>(m_ComponentContextsInOrder.size());
 		}
 
 		inline TypeID GetTypeID(uint64_t index) const

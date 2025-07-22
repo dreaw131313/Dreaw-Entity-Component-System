@@ -272,8 +272,11 @@ namespace decs
 			{
 				const auto& orderData = orderDatas[i];
 				ArchetypeTypeData& typeData = typeDatas[orderData.m_ComponentIndex];
-				typeData.m_ComponentContext->InvokeOnDisableComponent(typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype), entity);
-				typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype), entity);
+				if (!typeData.IsTag())
+				{
+					typeData.m_ComponentContext->InvokeOnDisableComponent(typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype), entity);
+					typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype), entity);
+				}
 			}
 		}
 		else
@@ -283,7 +286,10 @@ namespace decs
 				const auto& orderData = orderDatas[i];
 				ArchetypeTypeData& typeData = typeDatas[orderData.m_ComponentIndex];
 				// typeData.m_ComponentContext->InvokeOnDisableEntity(typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype), entity); // no becouse entity is disabled
-				typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype), entity);
+				if (!typeData.IsTag())
+				{
+					typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype), entity);
+				}
 			}
 		}
 	}
@@ -1018,6 +1024,11 @@ namespace decs
 					const uint64_t compIdx = archetype->FindTypeIndex(componentTypeID);
 
 					const auto& typeData = archetype->m_TypeData[compIdx];
+					if (typeData.IsTag())
+					{
+						return;
+					}
+
 					auto* packedContainer = typeData.m_PackedContainer;
 					const auto& entityDataArray = archetype->m_EntitiesData;
 
@@ -1074,6 +1085,10 @@ namespace decs
 					const uint64_t compIdx = archetype->FindTypeIndex(componentTypeID);
 
 					const auto& typeData = archetype->m_TypeData[compIdx];
+					if (typeData.IsTag())
+					{
+						return;
+					}
 					auto* packedContainer = typeData.m_PackedContainer;
 					const auto& entityData = archetype->m_EntitiesData;
 
@@ -1208,17 +1223,26 @@ namespace decs
 			for (uint64_t idx = 0; idx < refCount; idx++)
 			{
 				auto& typeData = componentsTypeData[idx];
-				m_ActivationChangeComponentPtrs.push_back(
-					typeData.m_PackedContainer->GetComponentBasePtr(entityIndexInArchetype)
-				);
+				if (!typeData.IsTag())
+				{
+					m_ActivationChangeComponentPtrs.push_back(
+						typeData.m_PackedContainer->GetComponentBasePtr(entityIndexInArchetype)
+					);
+				}
+				else
+				{
+					m_ActivationChangeComponentPtrs.push_back(nullptr);
+				}
 			}
 
 			// invoke components activation listeners:
 			auto& componentOrderData = entityData.m_Archetype->m_ComponentContextsInOrder;
-			for (uint64_t idx = 0; idx < refCount; idx++)
+			uint32_t componentInOrderCount = entityData.m_Archetype->GetComponentOnlyCount();
+			for (uint64_t idx = 0; idx < componentInOrderCount; idx++)
 			{
 				auto& orderData = componentOrderData[idx];
 				ComponentBase* compPtr = m_ActivationChangeComponentPtrs[startRefsIdx + orderData.m_ComponentIndex];
+				assert(compPtr != nullptr);
 				orderData.m_ComponentContext->InvokeOnEnableComponent(compPtr, entity);
 			}
 
@@ -1250,15 +1274,24 @@ namespace decs
 			for (uint64_t idx = 0; idx < refCount; idx++)
 			{
 				auto& typeData = componentsTypeData[idx];
-				m_ActivationChangeComponentPtrs.push_back(typeData.m_PackedContainer->GetComponentBasePtr(entityIndexInArchetype));
+				if (!typeData.IsTag())
+				{
+					m_ActivationChangeComponentPtrs.push_back(typeData.m_PackedContainer->GetComponentBasePtr(entityIndexInArchetype));
+				}
+				else
+				{
+					m_ActivationChangeComponentPtrs.push_back(nullptr);
+				}
 			}
 
 			// invoke components activation listeners:
 			auto& componentOrderData = entityData.m_Archetype->m_ComponentContextsInOrder;
-			for (uint64_t idx = 0; idx < refCount; idx++)
+			uint32_t componentInOrderCount = entityData.m_Archetype->GetComponentOnlyCount();
+			for (uint64_t idx = 0; idx < componentInOrderCount; idx++)
 			{
 				auto& orderData = componentOrderData[idx];
 				ComponentBase* compPtr = m_ActivationChangeComponentPtrs[startRefsIdx + orderData.m_ComponentIndex];
+				assert(compPtr != nullptr);
 				orderData.m_ComponentContext->InvokeOnDisableComponent(compPtr, entity);
 			}
 
