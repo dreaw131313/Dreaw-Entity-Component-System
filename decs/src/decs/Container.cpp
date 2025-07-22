@@ -1242,8 +1242,10 @@ namespace decs
 			{
 				auto& orderData = componentOrderData[idx];
 				ComponentBase* compPtr = m_ActivationChangeComponentPtrs[startRefsIdx + orderData.m_ComponentIndex];
-				assert(compPtr != nullptr);
-				orderData.m_ComponentContext->InvokeOnEnableComponent(compPtr, entity);
+				if (compPtr != nullptr)
+				{
+					orderData.m_ComponentContext->InvokeOnEnableComponent(compPtr, entity);
+				}
 			}
 
 			// erase used component refs:
@@ -1291,8 +1293,10 @@ namespace decs
 			{
 				auto& orderData = componentOrderData[idx];
 				ComponentBase* compPtr = m_ActivationChangeComponentPtrs[startRefsIdx + orderData.m_ComponentIndex];
-				assert(compPtr != nullptr);
-				orderData.m_ComponentContext->InvokeOnDisableComponent(compPtr, entity);
+				if (compPtr != nullptr)
+				{
+					orderData.m_ComponentContext->InvokeOnDisableComponent(compPtr, entity);
+				}
 			}
 
 			// erase used component refs:
