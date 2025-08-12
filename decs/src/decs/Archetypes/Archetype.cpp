@@ -19,9 +19,9 @@ namespace decs
 
 	uint32_t Archetype::FindTypeIndex(TypeID typeID) const
 	{
-		if (ComponentCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
+		if (GetComponentAndTagCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
 		{
-			for (uint32_t i = 0; i < ComponentCount(); i++)
+			for (uint32_t i = 0; i < GetComponentAndTagCount(); i++)
 				if (m_TypeData[i].m_TypeID == typeID) return i;
 
 			return std::numeric_limits<uint32_t>::max();
@@ -159,7 +159,7 @@ namespace decs
 
 		if (index == m_EntitiesCount - 1)
 		{
-			for (uint64_t i = 0; i < ComponentCount(); i++)
+			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
 				if (!typeData.IsTag())
@@ -173,7 +173,7 @@ namespace decs
 		}
 		else
 		{
-			for (uint64_t i = 0; i < ComponentCount(); i++)
+			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
 				if (!typeData.IsTag())
@@ -199,7 +199,7 @@ namespace decs
 		if (index == m_EntitiesCount - 1)
 		{
 			m_EntitiesData.pop_back();
-			for (uint64_t i = 0; i < ComponentCount(); i++)
+			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
 				if (!typeData.IsTag())
@@ -219,7 +219,7 @@ namespace decs
 			m_EntitiesData[index] = m_EntitiesData.back();
 			m_EntitiesData.pop_back();
 
-			for (uint64_t i = 0; i < ComponentCount(); i++)
+			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
 				if (!typeData.IsTag())
@@ -247,7 +247,7 @@ namespace decs
 		{
 			m_EntitiesData.reserve(desiredCapacity);
 
-			for (uint64_t idx = 0; idx < ComponentCount(); idx++)
+			for (uint64_t idx = 0; idx < GetComponentAndTagCount(); idx++)
 			{
 				auto& typeData = m_TypeData[idx];
 				if (!typeData.IsTag())
@@ -262,7 +262,7 @@ namespace decs
 	{
 		m_EntitiesCount = 0;
 		m_EntitiesData.clear();
-		for (uint64_t idx = 0; idx < ComponentCount(); idx++)
+		for (uint64_t idx = 0; idx < GetComponentAndTagCount(); idx++)
 		{
 			auto& typeData = m_TypeData[idx];
 			if (!typeData.IsTag())
@@ -274,7 +274,7 @@ namespace decs
 
 	void Archetype::InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts)
 	{
-		uint32_t componentsCount = other.ComponentCount();
+		uint32_t componentsCount = other.GetComponentAndTagCount();
 		m_TypeData.reserve(componentsCount);
 
 		for (uint32_t i = 0; i < componentsCount; i++)
@@ -312,7 +312,7 @@ namespace decs
 
 		this->AddEntityData(entityData);
 
-		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++, fromArchetypeIndex++)
+		for (; thisArchetypeIndex < GetComponentAndTagCount(); thisArchetypeIndex++, fromArchetypeIndex++)
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
 			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
@@ -338,7 +338,7 @@ namespace decs
 			return;
 		}
 
-		const uint32_t componentCount = ComponentCount();
+		const uint32_t componentCount = GetComponentAndTagCount();
 		if (entityIndex == m_EntitiesCount - 1)
 		{
 			for (uint64_t i = 0; i < componentCount; i++)
@@ -385,7 +385,7 @@ namespace decs
 		uint64_t thisArchetypeIndex = 0;
 		uint64_t fromArchetypeIndex = 0;
 
-		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++)
+		for (; thisArchetypeIndex < GetComponentAndTagCount(); thisArchetypeIndex++)
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
 			if (thisTypeData.m_TypeID == newComponentTypeID)
@@ -415,7 +415,7 @@ namespace decs
 		uint64_t thisArchetypeIndex = 0;
 		uint64_t fromArchetypeIndex = 0;
 
-		for (; thisArchetypeIndex < ComponentCount(); thisArchetypeIndex++)
+		for (; thisArchetypeIndex < GetComponentAndTagCount(); thisArchetypeIndex++)
 		{
 			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
 			if (thisTypeData.m_TypeID == addedComponentTypeID)
@@ -439,7 +439,7 @@ namespace decs
 	void Archetype::ShrinkToFit()
 	{
 		m_EntitiesData.shrink_to_fit();
-		for (uint64_t idx = 0; idx < ComponentCount(); idx++)
+		for (uint64_t idx = 0; idx < GetComponentAndTagCount(); idx++)
 		{
 			auto& typeData = m_TypeData[idx];
 			if (typeData.IsTag())

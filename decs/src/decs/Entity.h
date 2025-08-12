@@ -107,6 +107,34 @@ namespace decs
 			return false;
 		}
 
+		inline uint32_t GetComponentCount() const
+		{
+			if (IsValid())
+				return m_EntityData->GetComponentOnlyCount();
+			return 0;
+		}
+
+		inline uint32_t GetComponentAndTagCount() const
+		{
+			if (IsValid())
+				return m_EntityData->GetComponentAndTagCount();
+			return 0;
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="componentIndex"></param>
+		/// <returns>Components in observers order</returns>
+		inline ComponentBase* GetComponentAtIndex(uint32_t componentIndex)
+		{
+			if (IsValid())
+			{
+				return GetContainer_Internal()->GetComponentAtIndex(*m_EntityData, componentIndex);
+			}
+			return nullptr;
+		}
+
 		template<typename TComponent>
 		inline TComponent* GetComponent() const
 		{
@@ -198,13 +226,6 @@ namespace decs
 		inline EntityVersion GetVersion() const
 		{
 			return m_Version;
-		}
-
-		inline uint32_t ComponentCount() const
-		{
-			if (IsValid())
-				return m_EntityData->ComponentCount();
-			return 0;
 		}
 
 		inline const Archetype* GetArchetype() const
@@ -481,9 +502,9 @@ namespace decs
 			return m_Entity.GetVersion();
 		}
 
-		inline uint32_t ComponentCount() const
+		inline uint32_t GetComponentCount() const
 		{
-			return m_Entity.ComponentCount();
+			return m_Entity.GetComponentCount();
 		}
 
 		inline const Archetype* GetArchetype() const

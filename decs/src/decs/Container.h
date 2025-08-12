@@ -546,7 +546,7 @@ namespace decs
 			// archetype changed:
 			if (newArchetype != nullptr)
 			{
-				uint32_t removedComponents = currentArchetype->ComponentCount() - newArchetype->ComponentCount();
+				uint32_t removedComponents = currentArchetype->GetComponentAndTagCount() - newArchetype->GetComponentAndTagCount();
 				newArchetype->MoveEntityComponentsAfterRemoveComponent(currentArchetype, entityData.m_IndexInArchetype, &entityData);
 
 				return removedComponents;
@@ -557,7 +557,7 @@ namespace decs
 				entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
 				AddToEmptyEntities(entityData);
 
-				return currentArchetype->ComponentCount();
+				return currentArchetype->GetComponentAndTagCount();
 			}
 		}*/
 
@@ -599,12 +599,20 @@ namespace decs
 			return nullptr;
 		}
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="entityData"></param>
+		/// <param name="componentIndex"></param>
+		/// <returns>Component in order of observeres</returns>
+		ComponentBase* GetComponentAtIndex(EntityData& entityData, uint32_t componentIndex);
+
 		template<typename TComponent>
 		TComponent* GetComponentDynamic(EntityData& entityData)
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
 			{
-				uint32_t archetypeComponentCount = entityData.m_Archetype->ComponentCount();
+				uint32_t archetypeComponentCount = entityData.m_Archetype->GetComponentAndTagCount();
 				const auto& typeDataVector = entityData.m_Archetype->m_TypeData;
 				for (uint32_t i = 0; i < archetypeComponentCount; i++)
 				{
@@ -629,7 +637,7 @@ namespace decs
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
 			{
-				uint32_t archetypeComponentCount = entityData.m_Archetype->ComponentCount();
+				uint32_t archetypeComponentCount = entityData.m_Archetype->GetComponentAndTagCount();
 				const auto& typeDataVector = entityData.m_Archetype->m_TypeData;
 				for (uint32_t i = 0; i < archetypeComponentCount; i++)
 				{

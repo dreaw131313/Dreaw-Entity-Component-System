@@ -258,7 +258,7 @@ namespace decs
 	void Container::InvokeEntityComponentDestructionObservers(const Entity& entity)
 	{
 		Archetype* currentArchetype = entity.m_EntityData->m_Archetype;
-		const uint32_t componentsCount = currentArchetype->ComponentCount();
+		const uint32_t componentsCount = currentArchetype->GetComponentOnlyCount();
 		const uint32_t indexInArchetype = entity.m_EntityData->m_IndexInArchetype;
 
 		auto& typeDatas = currentArchetype->m_TypeData;
@@ -365,7 +365,6 @@ namespace decs
 			return spawnedEntity;
 		}
 
-		uint64_t componentsCount = prefabArchetype->ComponentCount();
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
@@ -412,7 +411,6 @@ namespace decs
 			return true;
 		}
 
-		uint64_t componentsCount = prefabArchetype->ComponentCount();
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
@@ -468,7 +466,6 @@ namespace decs
 			return true;
 		}
 
-		uint64_t componentsCount = prefabArchetype->ComponentCount();
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
@@ -527,7 +524,6 @@ namespace decs
 			return spawnedEntity;
 		}
 
-		uint64_t componentsCount = prefabArchetype->ComponentCount();
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
@@ -577,7 +573,6 @@ namespace decs
 			return true;
 		}
 
-		uint64_t componentsCount = prefabArchetype->ComponentCount();
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
@@ -637,7 +632,6 @@ namespace decs
 			return true;
 		}
 
-		uint64_t componentsCount = prefabArchetype->ComponentCount();
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
@@ -676,7 +670,7 @@ namespace decs
 		const Archetype& prefabArchetype = *prefabEntityData.m_Archetype;
 		const uint32_t prefabIndexInArchetype = prefabEntityData.m_IndexInArchetype;
 		Archetype* spawnedEntityArchetype = nullptr;
-		uint64_t componentsCount = prefabArchetype.ComponentCount();
+		uint64_t componentsCount = prefabArchetype.GetComponentAndTagCount();
 
 		if (prefabContainer == this)
 		{
@@ -722,7 +716,7 @@ namespace decs
 	)
 	{
 		Archetype* archetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
-		uint64_t componentsCount = archetype->ComponentCount() + spawnState.m_CompRefsStart;
+		uint64_t componentsCount = archetype->GetComponentAndTagCount() + spawnState.m_CompRefsStart;
 
 		archetype->AddEntityData(&spawnedEntityData);
 
@@ -807,7 +801,7 @@ namespace decs
 				if (currentArch != newArch)
 				{
 					uint32_t compIndex = newArch->FindTypeIndex(compTypeID);
-					if (compIndex < newArch->ComponentCount())
+					if (compIndex < newArch->GetComponentAndTagCount())
 					{
 						componentContext->InvokeOnEnableComponent(
 							newArch->m_TypeData[compIndex].m_PackedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype),
@@ -909,6 +903,20 @@ namespace decs
 		componentContext.InvokeOnDestroyComponent(componentPtr, entity);
 	}
 
+	ComponentBase* Container::GetComponentAtIndex(EntityData& entityData, uint32_t componentIndex)
+	{
+		if (entityData.IsAlive() && entityData.m_Archetype != nullptr && componentIndex < entityData.m_Archetype->GetComponentOnlyCount())
+		{
+			auto& orderData = entityData.m_Archetype->m_ComponentContextsInOrder[componentIndex];
+			auto& typeData = entityData.m_Archetype->m_TypeData[orderData.m_ComponentIndex];
+			if (typeData.IsTag())
+			{
+				return nullptr;
+			}
+			return typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
+		}
+		return nullptr;
+	}
 
 	bool Container::RemoveTag(EntityData& entityData, TypeID tagType)
 	{
@@ -1214,7 +1222,7 @@ namespace decs
 		if (entityData.m_Archetype != nullptr)
 		{
 			uint64_t startRefsIdx = m_ActivationChangeComponentPtrs.size();
-			uint64_t refCount = entityData.m_Archetype->ComponentCount();
+			uint64_t refCount = entityData.m_Archetype->GetComponentAndTagCount();
 
 			m_ActivationChangeComponentPtrs.reserve(startRefsIdx + refCount);
 
@@ -1267,7 +1275,7 @@ namespace decs
 		if (entityData.m_Archetype != nullptr)
 		{
 			uint64_t startRefsIdx = m_ActivationChangeComponentPtrs.size();
-			uint64_t refCount = entityData.m_Archetype->ComponentCount();
+			uint64_t refCount = entityData.m_Archetype->GetComponentAndTagCount();
 
 			m_ActivationChangeComponentPtrs.reserve(startRefsIdx + refCount);
 
@@ -1421,7 +1429,6 @@ namespace decs
 			return spawnedEntity;
 		}
 
-		uint64_t componentsCount = prefabArchetype->ComponentCount();
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
@@ -1454,7 +1461,6 @@ namespace decs
 			return true;
 		}
 
-		uint64_t componentsCount = prefabArchetype->ComponentCount();
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);
@@ -1496,7 +1502,6 @@ namespace decs
 			return true;
 		}
 
-		uint64_t componentsCount = prefabArchetype->ComponentCount();
 		SpawnDataState spawnState(m_SpawnData);
 
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer);

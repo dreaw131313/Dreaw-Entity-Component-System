@@ -168,7 +168,7 @@ namespace decs
 		/// Returns number of components and tags
 		/// </summary>
 		/// <returns></returns>
-		inline uint32_t ComponentCount() const
+		inline uint32_t GetComponentAndTagCount() const
 		{
 			return static_cast<uint32_t>(m_TypeData.size());
 		}
@@ -216,9 +216,9 @@ namespace decs
 		inline uint32_t FindTypeIndex() const
 		{
 			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
-			if (ComponentCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
+			if (GetComponentAndTagCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
 			{
-				for (uint32_t i = 0; i < ComponentCount(); i++)
+				for (uint32_t i = 0; i < GetComponentAndTagCount(); i++)
 					if (m_TypeData[i].m_TypeID == typeID) return i;
 
 				return std::numeric_limits<uint32_t>::max();

@@ -50,7 +50,7 @@ namespace decs
 						uint64_t entitesCount = archetype.EntityCount();
 						if (entitesCount > 0)
 						{
-							uint64_t componentCount = archetype.ComponentCount();
+							uint64_t componentCount = archetype.GetComponentAndTagCount();
 							for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 							{
 								entityBuffer.Set(archetype.m_EntitiesData[entityIdx].m_EntityData);
@@ -84,7 +84,7 @@ namespace decs
 		void FetchTagsTypeIDsFromArchetype(const Archetype& archetype, std::vector<TypeID>& entityTagsID)
 		{
 			entityTagsID.clear();
-			const uint32_t componentCount = archetype.ComponentCount();
+			const uint32_t componentCount = archetype.GetComponentAndTagCount();
 			for (uint32_t i = 0; i < componentCount; i++)
 			{
 				if (archetype.IsTypeTag(i))

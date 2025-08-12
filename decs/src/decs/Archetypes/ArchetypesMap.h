@@ -91,7 +91,7 @@ namespace decs
 		void AddArchetype(Archetype* archetype)
 		{
 			m_ArchetypesCount += 1;
-			uint64_t archetypesCount = archetype->ComponentCount();
+			uint64_t archetypesCount = archetype->GetComponentAndTagCount();
 			if (archetypesCount > m_Groups.size())
 			{
 				m_Groups.resize(archetypesCount);
@@ -329,7 +329,7 @@ namespace decs
 
 		void AddArchetypeToGroups(Archetype* arch)
 		{
-			uint64_t componentsCount = arch->ComponentCount();
+			uint64_t componentsCount = arch->GetComponentAndTagCount();
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
 				const TypeID& id = arch->GetTypeID(i);

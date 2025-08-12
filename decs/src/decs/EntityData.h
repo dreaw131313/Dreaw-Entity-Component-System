@@ -114,7 +114,9 @@ namespace decs
 
 		void SetStateRaw(EEntityState state);
 
-		uint32_t ComponentCount() const;
+		uint32_t GetComponentAndTagCount() const;
+
+		uint32_t GetComponentOnlyCount() const;
 
 		void SetActiveState(bool state);
 

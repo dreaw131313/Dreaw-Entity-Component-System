@@ -223,7 +223,7 @@ namespace decs
 		{
 			serializers.clear();
 
-			for (uint32_t i = 0; i < archetype.ComponentCount(); i++)
+			for (uint32_t i = 0; i < archetype.GetComponentAndTagCount(); i++)
 			{
 				TypeID componentType = archetype.GetTypeID(i);
 				if (!archetype.IsTypeTag(i))
@@ -240,7 +240,7 @@ namespace decs
 		{
 			serializers.clear();
 
-			for (uint32_t i = 0; i < archetype.ComponentCount(); i++)
+			for (uint32_t i = 0; i < archetype.GetComponentAndTagCount(); i++)
 			{
 				TypeID componentType = archetype.GetTypeID(i);
 				if (archetype.IsTypeTag(i))
