@@ -126,7 +126,7 @@ namespace decs
 		/// </summary>
 		/// <param name="componentIndex"></param>
 		/// <returns>Components in observers order</returns>
-		inline ComponentBase* GetComponentAtIndex(uint32_t componentIndex)
+		inline ComponentBase* GetComponentAtIndex(uint32_t componentIndex) const
 		{
 			if (IsValid())
 			{
