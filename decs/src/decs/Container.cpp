@@ -259,7 +259,6 @@ namespace decs
 	{
 		Archetype* currentArchetype = entity.m_EntityData->m_Archetype;
 		const uint32_t componentsCount = currentArchetype->GetComponentOnlyCount();
-		const uint32_t indexInArchetype = entity.m_EntityData->m_IndexInArchetype;
 
 		auto& typeDatas = currentArchetype->m_TypeData;
 		auto& orderDatas = currentArchetype->m_ComponentContextsInOrder;
@@ -270,6 +269,7 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
+				const uint32_t indexInArchetype = entity.m_EntityData->m_IndexInArchetype;
 				const auto& orderData = orderDatas[i];
 				ArchetypeTypeData& typeData = typeDatas[orderData.m_ComponentIndex];
 				if (!typeData.IsTag())
@@ -283,6 +283,7 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
+				const uint32_t indexInArchetype = entity.m_EntityData->m_IndexInArchetype;
 				const auto& orderData = orderDatas[i];
 				ArchetypeTypeData& typeData = typeDatas[orderData.m_ComponentIndex];
 				// typeData.m_ComponentContext->InvokeOnDisableEntity(typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype), entity); // no becouse entity is disabled
