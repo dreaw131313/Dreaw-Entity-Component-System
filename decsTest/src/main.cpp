@@ -67,6 +67,8 @@ public:
 	void OnCreateComponent(TestComponent& component, const decs::Entity& entity) override
 	{
 		PrintLine("TestComponent on create");
+
+		entity.AddComponent<Renderer>();
 	}
 
 	// Inherited via DestroyComponentObserver
