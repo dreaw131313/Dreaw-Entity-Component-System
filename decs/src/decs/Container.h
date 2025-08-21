@@ -1049,7 +1049,7 @@ namespace decs
 		/// Invokes only entity Create and Enable (if entity is enabled). If callbacks was invoked earliers then callbacks will not be invoked. This function should be used with CreateEntity_NoCallbacks method.
 		/// </summary>
 		/// <param name="entity"></param>
-		void InvokeEntityObservers(const decs::Entity& entity);
+		void InvokeEntityCreateEnableObservers(const decs::Entity& entity);
 
 	private:
 		std::vector<ComponentBase*> m_ActivationChangeComponentPtrs = {};

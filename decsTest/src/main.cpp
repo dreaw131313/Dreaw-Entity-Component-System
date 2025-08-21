@@ -96,11 +96,18 @@ int main()
 
 	decs::ObserversManager observerManager = {};
 	{
-		//observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
+		observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
 	}
 
 	decs::Container container = {};
 	observerManager.FillContainerObservers(container);
+
+	{
+		decs::Entity prefab = container.CreateEntity_NoCallbacks();
+		prefab.AddComponent_NoCallback<TestComponent>();
+
+		container.InvokeEntityCreateEnableObservers(prefab);
+	}
 
 	// TAG TEST:
 	{
