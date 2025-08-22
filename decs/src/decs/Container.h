@@ -112,7 +112,7 @@ namespace decs
 		bool m_HaveOwnEntityManager = false;
 
 	public:
-		Entity CreateEntity(bool bIsActive = true, void* userData = nullptr);
+		Entity CreateEntity(bool bIsActive = true);
 
 		inline uint32_t GetEntityCount() const
 		{
@@ -247,8 +247,7 @@ namespace decs
 	public:
 		Entity Spawn(
 			const Entity& prefab,
-			bool bIsActive = true,
-			void* userData = nullptr
+			bool bIsActive = true
 		);
 
 		bool Spawn(
@@ -267,8 +266,7 @@ namespace decs
 		Entity Spawn_WithCallback(
 			SpawnEntityCallback& callback,
 			const Entity& prefab,
-			bool bIsActive = true,
-			void* userData = nullptr
+			bool bIsActive = true
 		);
 
 		bool Spawn_WithCallback(

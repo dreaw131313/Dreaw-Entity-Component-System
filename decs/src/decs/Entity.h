@@ -301,23 +301,6 @@ namespace decs
 
 	#pragma endregion
 
-		void SetUserDataPtr(void* userData) const
-		{
-			if (IsValid())
-			{
-				m_EntityData->m_UserData = userData;
-			}
-		}
-
-		inline void* GetUserDataPtr() const
-		{
-			if (IsValid())
-			{
-				return m_EntityData->m_UserData;
-			}
-			return nullptr;
-		}
-
 	#pragma region TAGS:
 	public:
 		inline bool HasTag(TypeID tagType)const
@@ -516,12 +499,6 @@ namespace decs
 		{
 			return m_Entity.Destroy();
 		}
-
-		inline void* GetUserDataPtr() const
-		{
-			return m_Entity.GetUserDataPtr();
-		}
-
 
 		inline bool HasTag(TypeID tagType)const
 		{

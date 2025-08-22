@@ -25,7 +25,6 @@ namespace decs
 	private:
 		Archetype* m_Archetype = nullptr;
 		Container* m_Container = nullptr;
-		void* m_UserData = nullptr;
 
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
@@ -131,7 +130,6 @@ namespace decs
 			m_Archetype = nullptr;
 			m_Version += 1;
 			m_State = EEntityState::Dead;
-			m_UserData = nullptr;
 			m_Container = nullptr;
 		}
 

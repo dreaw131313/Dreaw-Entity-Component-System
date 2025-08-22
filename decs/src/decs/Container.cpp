@@ -118,12 +118,11 @@ namespace decs
 		}
 	}
 
-	Entity Container::CreateEntity(bool bIsActive, void* userData)
+	Entity Container::CreateEntity(bool bIsActive)
 	{
 		if (m_CanCreateEntities)
 		{
 			EntityData* entityData = CreateAliveEntityData(bIsActive);
-			entityData->m_UserData = userData;
 			Entity e(entityData);
 			AddToEmptyEntitiesRightAfterNewEntityCreation(*e.m_EntityData);
 			InvokeEntityCreateObserver_Internal(e);
@@ -336,8 +335,7 @@ namespace decs
 
 	Entity Container::Spawn(
 		const Entity& prefab,
-		bool bIsActive,
-		void* userData
+		bool bIsActive
 	)
 	{
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
@@ -349,7 +347,6 @@ namespace decs
 		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
 
 		EntityData* spawnedEntityData = CreateAliveEntityData(bIsActive);
-		spawnedEntityData->m_UserData = userData;
 		Entity spawnedEntity(spawnedEntityData);
 
 		if (prefabArchetype == nullptr)
@@ -495,7 +492,7 @@ namespace decs
 		return true;
 	}
 
-	Entity Container::Spawn_WithCallback(SpawnEntityCallback& callback, const Entity& prefab, bool bIsActive, void* userData)
+	Entity Container::Spawn_WithCallback(SpawnEntityCallback& callback, const Entity& prefab, bool bIsActive)
 	{
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
@@ -506,7 +503,6 @@ namespace decs
 		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
 
 		EntityData* spawnedEntityData = CreateAliveEntityData(bIsActive);
-		spawnedEntityData->m_UserData = userData;
 		Entity spawnedEntity(spawnedEntityData);
 
 		if (prefabArchetype == nullptr)
