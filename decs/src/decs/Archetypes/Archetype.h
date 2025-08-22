@@ -183,6 +183,11 @@ namespace decs
 			return m_TypeData[index].m_TypeID;
 		}
 
+		inline TypeID GetTypeIDFromOrderData(uint64_t index) const
+		{
+			return m_TypeData[m_ComponentContextsInOrder[index].m_ComponentIndex].m_TypeID;
+		}
+
 		inline uint32_t EntityCount() const
 		{
 			return m_EntitiesCount;

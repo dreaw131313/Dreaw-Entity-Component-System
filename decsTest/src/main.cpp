@@ -94,6 +94,11 @@ public:
 
 int main()
 {
+	using FloatTag = decs::tag<float>;
+	using IntTag = decs::tag<int>;
+	using DoubleTag = decs::tag<double>;
+	using BoolTag = decs::tag<bool>;
+
 	TestComponetObserver testComponentObserver = {};
 
 	decs::ObserversManager observerManager = {};
@@ -107,17 +112,14 @@ int main()
 	{
 		decs::Entity prefab = container.CreateEntity_NoCallbacks();
 		prefab.AddComponent_NoCallback<TestComponent>();
+		prefab.AddTag<FloatTag>();
 
-		container.InvokeEntityCreateEnableObservers(prefab);
+		decs::Container secondContainer{};
+		secondContainer.Spawn_NoCallback(prefab);
 	}
 
 	// TAG TEST:
 	{
-		using FloatTag = decs::tag<float>;
-		using IntTag = decs::tag<int>;
-		using DoubleTag = decs::tag<double>;
-		using BoolTag = decs::tag<bool>;
-
 		PrintLine(decs::Type<FloatTag>::Name());
 		PrintLine(decs::Type<std::vector<decs::Entity>>::Name());
 

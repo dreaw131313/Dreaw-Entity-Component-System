@@ -294,8 +294,10 @@ namespace decs
 			for (uint64_t i = 0; i < fromArchetype.GetComponentAndTagCount(); i++)
 			{
 				ArchetypeTypeData& fromArchetypeTypeData = fromArchetype.m_TypeData[i];
-
-				componentContextsManager->GetOrCreateComponentContextFromOtherContext(fromArchetypeTypeData.m_ComponentContext);
+				if (!fromArchetypeTypeData.IsTag())
+				{
+					componentContextsManager->GetOrCreateComponentContextFromOtherContext(fromArchetypeTypeData.m_ComponentContext);
+				}
 			}
 
 			archetype->InitEmptyFromOther(fromArchetype, componentContextsManager);
