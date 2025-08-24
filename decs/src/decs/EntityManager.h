@@ -15,11 +15,6 @@ namespace decs
 
 		EntityManager(uint64_t initialEntitiesCapacity);
 
-		uint64_t GetCreatedEntitiesCount() const
-		{
-			return m_CreatedEntitiesCount;
-		}
-
 		uint64_t GetEntitiesDataCount() const
 		{
 			return m_EntityData.Size();
@@ -52,8 +47,6 @@ namespace decs
 	private:
 		TChunkedVector<EntityData> m_EntityData = { 1000 };
 		std::vector<EntityData*> m_FreeEntities;
-
-		EntityID m_CreatedEntitiesCount = 0;
 
 	};
 }

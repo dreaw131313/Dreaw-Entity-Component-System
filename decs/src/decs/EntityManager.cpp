@@ -20,7 +20,6 @@ namespace decs
 
 	EntityData* EntityManager::CreateEntity(bool isActive)
 	{
-		m_CreatedEntitiesCount += 1;
 		if (GetFreeEntitiesCount() > 0)
 		{
 			auto it = m_FreeEntities.begin();
@@ -47,8 +46,6 @@ namespace decs
 	{
 		if (!entityData.IsDead())
 		{
-			m_CreatedEntitiesCount -= 1;
-
 			m_FreeEntities.push_back(&entityData);
 			entityData.SetIsInManager(true);
 
@@ -63,8 +60,6 @@ namespace decs
 	{
 		if (!entityData.IsInManager())
 		{
-			m_CreatedEntitiesCount -= 1;
-
 			m_FreeEntities.push_back(&entityData);
 			entityData.SetIsInManager(true);
 
@@ -94,7 +89,6 @@ namespace decs
 
 	void EntityManager::CreateEntityFromReservedEntityData(EntityData* entityData, bool bIsActive)
 	{
-		m_CreatedEntitiesCount += 1;
 		entityData->SetActiveState(bIsActive);
 		entityData->SetState(EEntityState::Alive);
 		entityData->m_bIsCreatedByContainer = false;
