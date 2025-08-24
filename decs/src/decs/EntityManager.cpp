@@ -87,14 +87,6 @@ namespace decs
 		}
 	}
 
-	void EntityManager::CreateEntityFromReservedEntityData(EntityData* entityData, bool bIsActive)
-	{
-		entityData->SetActiveState(bIsActive);
-		entityData->SetState(EEntityState::Alive);
-		entityData->m_bIsCreatedByContainer = false;
-		entityData->m_bIsEnabledByContainer = false;
-	}
-
 	void EntityManager::ReturnReservedEntityData(std::vector<EntityData*> reservedEntityData)
 	{
 		uint64_t entitiesToReturn = reservedEntityData.size();

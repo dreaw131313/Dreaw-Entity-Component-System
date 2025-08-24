@@ -301,9 +301,9 @@ namespace decs
 		if (!m_ReservedEntityData.empty())
 		{
 			EntityData* data = m_ReservedEntityData.back();
-			data->m_Container = this;
 			m_ReservedEntityData.pop_back();
-			m_EntityManager->CreateEntityFromReservedEntityData(data, bIsActive);
+			data->m_Container = this;
+			data->SetValidStateOnCreateFromReservedEntityData(bIsActive);
 			return data;
 		}
 		else

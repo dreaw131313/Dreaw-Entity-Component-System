@@ -40,8 +40,6 @@ namespace decs
 
 		void CreateReservedEntityData(uint32_t entitesToReserve, std::vector<EntityData*>& reservedEntityData);
 
-		void CreateEntityFromReservedEntityData(EntityData* entityData, bool bIsActive);
-
 		void ReturnReservedEntityData(std::vector<EntityData*> reservedEntityData);
 
 	private:

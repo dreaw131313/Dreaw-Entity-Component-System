@@ -124,6 +124,14 @@ namespace decs
 			return m_bIsInManager;
 		}
 
+		void SetValidStateOnCreateFromReservedEntityData(bool bIsActive)
+		{
+			SetActiveState(bIsActive);
+			SetState(EEntityState::Alive);
+			m_bIsCreatedByContainer = false;
+			m_bIsEnabledByContainer = false;
+		}
+
 	private:
 		inline void OnDestroyByEntityManager()
 		{
