@@ -108,8 +108,11 @@ int main()
 		prefab.AddComponent_NoCallback<TestComponent>();
 		prefab.AddTag<FloatTag>();
 
-		container.Spawn(prefab, 10, true);
+		container.MarkEntitiesDead();
 
+		auto comp = prefab.GetComponent<TestComponent>();
+
+		container.Spawn(prefab, 10, true);
 
 		uint32_t counter = 0;
 		auto testFunc = [&](const decs::ConstEntity& entity, const TestComponent&)

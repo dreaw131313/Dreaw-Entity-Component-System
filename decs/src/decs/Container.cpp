@@ -56,6 +56,12 @@ namespace decs
 		m_EntityCount = 0;
 	}
 
+
+	void Container::MarkEntitiesDead()
+	{
+		m_EntityManager.MarkEntitiesDead();
+	}
+
 	void Container::ReturnOwnedEntitiesToEntityManager_Internal()
 	{
 		ContainerIterator iterator = {};
@@ -88,7 +94,7 @@ namespace decs
 		return false;
 	}
 
-	bool Container::DestroyEntityInternal(Entity entity, bool bInvokeObservers)
+	bool Container::DestroyEntityInternal(const Entity& entity, bool bInvokeObservers)
 	{
 		if (m_CanDestroyEntities && entity.GetContainer() == this)
 		{

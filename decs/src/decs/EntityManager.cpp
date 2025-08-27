@@ -7,10 +7,13 @@ namespace decs
 {
 	EntityManager::EntityManager()
 	{
+		InitializeLifeTimeData();
 	}
 
 	EntityManager::EntityManager(uint64_t initialEntitiesCapacity)
 	{
+		InitializeLifeTimeData();
+
 		m_EntityDataHandles.reserve(initialEntitiesCapacity);
 		if (initialEntitiesCapacity > 0)
 		{
@@ -20,10 +23,7 @@ namespace decs
 
 	EntityManager::~EntityManager()
 	{
-		for (auto& handle : m_EntityDataHandles)
-		{
-			handle.GetEntityData()->m_Version++;
-		}
+		DestroyLifeTimeData();
 	}
 
 	EntityDataHandle EntityManager::CreateEntity(bool isActive, Container& container)
@@ -47,7 +47,7 @@ namespace decs
 		}
 		else
 		{
-			EntityData* entityData = new EntityData(static_cast<EntityID>(m_EntityDataHandles.size()), isActive);
+			EntityData* entityData = new EntityData(m_LifeTimeData, static_cast<EntityID>(m_EntityDataHandles.size()), isActive);
 			entityData->SetIsInManager(false);
 			entityData->m_Container = &container;
 
@@ -78,5 +78,15 @@ namespace decs
 			entityData->SetIsInManager(true);
 			entityData->OnDestroyByEntityManager();
 		}
+	}
+	void EntityManager::InitializeLifeTimeData()
+	{
+		m_LifeTimeData = new EnityLifeTimeData();
+		m_LifeTimeData->IncrementRefCount();
+	}
+	void EntityManager::DestroyLifeTimeData()
+	{
+		m_LifeTimeData->m_bIsContainerAlive.store(false);
+		m_LifeTimeData->DecrementRefCount();
 	}
 }

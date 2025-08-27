@@ -17,6 +17,43 @@ namespace decs
 		DelayedToDestruction = 3,
 	};
 
+	/// <summary>
+	/// Helper class which allows simple flag change to set all entities as dead
+	/// </summary>
+	struct EnityLifeTimeData
+	{
+		NON_COPYABLE(EnityLifeTimeData);
+		NON_MOVEABLE(EnityLifeTimeData);
+	public:
+		std::atomic<uint32_t> m_RefCount = 0;
+		std::atomic<bool> m_bIsContainerAlive = true;
+
+	public:
+		EnityLifeTimeData()
+		{
+			std::cout << "EnityLifeTimeData::Constructor" << "\n";
+		}
+
+		~EnityLifeTimeData()
+		{
+			std::cout << "EnityLifeTimeData::Destructor" << "\n";
+		}
+
+		void IncrementRefCount()
+		{
+			m_RefCount.fetch_add(1, std::memory_order_relaxed);
+		}
+
+		void DecrementRefCount()
+		{
+			if (m_RefCount.fetch_sub(1, std::memory_order_acq_rel) == 1)
+			{
+				std::atomic_thread_fence(std::memory_order_acquire);
+				delete this;
+			}
+		}
+	};
+
 	class EntityData
 	{
 		friend class Archetype;
@@ -27,6 +64,7 @@ namespace decs
 		friend struct EntityDataHandle;
 
 	private:
+		EnityLifeTimeData* m_LifeTimeData = nullptr;
 		Archetype* m_Archetype = nullptr;
 		Container* m_Container = nullptr;
 
@@ -34,6 +72,8 @@ namespace decs
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 
 		EntityVersion m_Version = 1;
+		std::atomic<uint32_t> m_RefCounter = 0;
+
 		EEntityState m_State = EEntityState::Alive;
 
 		bool m_bIsActive = false;
@@ -42,26 +82,27 @@ namespace decs
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByContainer = false;
 
-		std::atomic<uint32_t> m_RefCounter = 0;
 
 	public:
-		EntityData()
-		{
-			std::cout << "EntityData::Constructor" << "\n";
-		}
+		EntityData() = delete;
+		EntityData(const EntityData&) = delete;
+		EntityData(EntityData&&) = delete;
+		EntityData& operator=(const EntityData&) = delete;
+		EntityData& operator=(EntityData&&) = delete;
 
-		EntityData(EntityID id, bool bIsActive):
+		EntityData(EnityLifeTimeData* lifetimeData, EntityID id, bool bIsActive):
+			m_LifeTimeData(lifetimeData),
 			m_ID(id),
 			m_bIsActive(bIsActive)
 		{
-
-			std::cout << "EntityData::Constructor" << "\n";
+			m_LifeTimeData->IncrementRefCount();
 		}
 
 		~EntityData()
 		{
-			std::cout << "EntityData::Destructor" << "\n";
+			m_LifeTimeData->DecrementRefCount();
 		}
+
 
 		inline EntityVersion GetVersion() const
 		{
@@ -77,7 +118,7 @@ namespace decs
 
 		inline bool IsAlive() const noexcept
 		{
-			return m_State != EEntityState::Dead;
+			return m_State != EEntityState::Dead && m_LifeTimeData->m_bIsContainerAlive;
 		}
 
 		inline bool IsDead() const
@@ -221,7 +262,7 @@ namespace decs
 		EntityData* m_EntityData = nullptr;
 
 	private:
-		void IncrementRefCount() 
+		void IncrementRefCount()
 		{
 			if (m_EntityData != nullptr)
 			{
@@ -229,7 +270,7 @@ namespace decs
 			}
 		}
 
-		void DecrementRefCount() 
+		void DecrementRefCount()
 		{
 			if (m_EntityData != nullptr)
 			{

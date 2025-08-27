@@ -31,8 +31,20 @@ namespace decs
 
 		void ForceDestroyEntity(const EntityDataHandle& entityDataHandle);
 
+		void MarkEntitiesDead()
+		{
+			m_LifeTimeData->m_bIsContainerAlive = false;
+		}
+
 	private:
 		std::vector<EntityDataHandle> m_EntityDataHandles{};
 		std::vector<EntityDataHandle> m_FreeEntities{};
+
+		EnityLifeTimeData* m_LifeTimeData = nullptr;
+
+	private:
+		void InitializeLifeTimeData();
+
+		void DestroyLifeTimeData();
 	};
 }

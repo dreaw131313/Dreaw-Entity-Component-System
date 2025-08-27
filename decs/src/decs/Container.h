@@ -82,6 +82,12 @@ namespace decs
 		/// </summary>
 		void Clear();
 
+		/// <summary>
+		/// This function marks all entities dead, but do not destroy any component and observers. This is irreversible, and shoould be performed only to make all Entity class objects null.
+		/// Iterating over entities is still posible, but changing active state, adding/removing components/tags is forbidden
+		/// </summary>
+		void MarkEntitiesDead();
+
 	private:
 		void ReturnOwnedEntitiesToEntityManager_Internal();
 
@@ -110,7 +116,7 @@ namespace decs
 		}
 
 	private:
-		bool DestroyEntityInternal(Entity entity, bool bInvokeObservers);
+		bool DestroyEntityInternal(const Entity& entity, bool bInvokeObservers);
 
 		void SetEntityActive(const Entity& entity, bool bIsActive);
 
@@ -281,7 +287,7 @@ namespace decs
 		);
 
 		template<typename TComponent, typename ...Args>
-		TComponent* AddComponent(Entity entity, EntityData& entityData, Args&&... args)
+		TComponent* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			if constexpr (is_tag_v<TComponent>)
 			{
@@ -350,7 +356,7 @@ namespace decs
 		}
 
 		template<typename TComponent>
-		bool RemoveComponent(Entity entity)
+		bool RemoveComponent(const Entity& entity)
 		{
 			if constexpr (is_tag_v<TComponent>)
 			{
@@ -1163,7 +1169,7 @@ namespace decs
 		void SetEntityActive_NoCallback(const Entity& entity, bool bIsActive);
 
 		template<typename TComponent, typename ...Args>
-		TComponent* AddComponent_NoCallback(Entity entity, EntityData& entityData, Args&&... args)
+		TComponent* AddComponent_NoCallback(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			if constexpr (is_tag_v<TComponent>)
 			{
@@ -1233,7 +1239,7 @@ namespace decs
 		}
 
 		template<typename TComponent>
-		bool RemoveComponent_NoCallback(Entity entity)
+		bool RemoveComponent_NoCallback(const Entity& entity)
 		{
 			if constexpr (is_tag_v<TComponent>)
 			{
