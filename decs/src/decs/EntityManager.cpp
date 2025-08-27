@@ -9,12 +9,20 @@ namespace decs
 	{
 	}
 
-	EntityManager::EntityManager(uint64_t initialEntitiesCapacity):
-		m_EntityDataHandles(initialEntitiesCapacity)
+	EntityManager::EntityManager(uint64_t initialEntitiesCapacity)
 	{
+		m_EntityDataHandles.reserve(initialEntitiesCapacity);
 		if (initialEntitiesCapacity > 0)
 		{
 			m_FreeEntities.reserve(initialEntitiesCapacity / 3);
+		}
+	}
+
+	EntityManager::~EntityManager()
+	{
+		for (auto& handle : m_EntityDataHandles)
+		{
+			handle.GetEntityData()->m_Version++;
 		}
 	}
 
@@ -39,11 +47,11 @@ namespace decs
 		}
 		else
 		{
-			EntityData* entityData = new EntityData(static_cast<EntityID>(m_EntityDataHandles.Size()), isActive);
+			EntityData* entityData = new EntityData(static_cast<EntityID>(m_EntityDataHandles.size()), isActive);
 			entityData->SetIsInManager(false);
 			entityData->m_Container = &container;
 
-			return m_EntityDataHandles.EmplaceBack(entityData);
+			return m_EntityDataHandles.emplace_back(entityData);
 		}
 	}
 

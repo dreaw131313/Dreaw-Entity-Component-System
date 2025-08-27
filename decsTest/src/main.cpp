@@ -130,7 +130,10 @@ int main()
 		}
 	}
 
-	prefab = {};
+	if (prefab.IsValid())
+	{
+		PrintLine("Should not happend");
+	}
 
 	return 0;
 }

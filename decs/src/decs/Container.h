@@ -49,13 +49,6 @@ namespace decs
 			uint32_t stableComponentDefaultChunkSize
 		);
 
-		Container(
-			EntityManager* entityManager,
-			uint32_t stableComponentDefaultChunkSize
-		);
-
-		Container(bool bCreateInvalid);
-
 		~Container();
 
 	#pragma region Extension data
@@ -84,32 +77,21 @@ namespace decs
 		/// </summary>
 		void ValidateInternalState();
 
-		void SetDataIfCreatedInvalid(
-			EntityManager* entityManager,
-			uint32_t stableComponentDefaultChunkSize
-		);
-
 		/// <summary>
 		/// Returns all owned entites to entity manager. Clears all created components. Does not destroy created archetypes and does not clears seted observer manager. This function does not invoke any methods from observers.
 		/// </summary>
 		void Clear();
 
-		/// <summary>
-		/// Returns owned entites to entity manager. This is helper function. This function does not destroy all created components and archetypes. It returns entites to manager so if this container is using shared "entities manager" entites can be returned and then destroying of this object can be performed in desired moment (for example in different thread). After invoking this function this container is in invalid state and must be only destroyed. Creating entites or modifying entities is after invoking this method is undefined behavior. If this method is not invoked destroycotor of this object will return owned entites. If this method was invoked destrucor will not perform returning of owned entities.
-		/// </summary>
-		void ReturnOwnedEntitiesToEntityManager();
-
 	private:
-		void ReturnOwnedEntitiesToEntityManager_Internal(bool bNullEntityManagerIfIsNotHisOwner);
+		void ReturnOwnedEntitiesToEntityManager_Internal();
 
 	#pragma endregion
 
 	#pragma region ENTITIES:
 	private:
 		std::vector<EntityData*> m_EmptyEntities = {};
-		EntityManager* m_EntityManager = nullptr;
+		EntityManager m_EntityManager;
 		uint32_t m_EntityCount = 0;
-		bool m_HaveOwnEntityManager = false;
 
 	public:
 		Entity CreateEntity(bool bIsActive = true);
@@ -880,7 +862,7 @@ namespace decs
 	public:
 		void InvokeEntitesOnCreateListeners();
 
-		void InvokeEntitesOnDestroyListeners();
+		void InvokeEntitesOnDestroyListeners(bool bMarkEntitiesDead = true);
 
 		/// <summary>
 		/// Changes order of invoking function of component observers. Callback for component with lower order will be invoked first.

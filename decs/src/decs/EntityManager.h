@@ -13,9 +13,11 @@ namespace decs
 
 		EntityManager(uint64_t initialEntitiesCapacity);
 
+		~EntityManager();
+
 		uint64_t GetEntitiesDataCount() const
 		{
-			return m_EntityDataHandles.Size();
+			return m_EntityDataHandles.size();
 		}
 
 		uint64_t GetFreeEntitiesCount() const
@@ -30,7 +32,7 @@ namespace decs
 		void ForceDestroyEntity(const EntityDataHandle& entityDataHandle);
 
 	private:
-		TChunkedVector<EntityDataHandle> m_EntityDataHandles{};
+		std::vector<EntityDataHandle> m_EntityDataHandles{};
 		std::vector<EntityDataHandle> m_FreeEntities{};
 	};
 }
