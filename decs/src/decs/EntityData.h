@@ -1,5 +1,6 @@
 #pragma once
 #include "Core.h"
+
 #include "ComponentContainers\StableContainer.h"
 
 namespace decs
@@ -21,6 +22,7 @@ namespace decs
 		friend class Container;
 		friend class Entity;
 		friend class EntityManager;
+		friend struct EntityDataHandle;
 
 	private:
 		Archetype* m_Archetype = nullptr;
@@ -38,13 +40,15 @@ namespace decs
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByContainer = false;
 
+		std::atomic<uint32_t> m_RefCounter = 0;
+
 	public:
 		EntityData()
 		{
 
 		}
 
-		EntityData(EntityID id, bool bIsActive) :
+		EntityData(EntityID id, bool bIsActive):
 			m_ID(id),
 			m_bIsActive(bIsActive)
 		{
@@ -144,6 +148,95 @@ namespace decs
 		void SetIsInManager(bool bIsInManager)
 		{
 			m_bIsInManager = bIsInManager;
+		}
+	};
+
+	struct EntityDataHandle
+	{
+	public:
+		EntityDataHandle() = default;
+
+		EntityDataHandle(EntityData* entityData):
+			m_EntityData(entityData)
+		{
+
+		}
+
+		EntityDataHandle(const EntityDataHandle& other)
+		{
+			OnCopy(other);
+		}
+
+		EntityDataHandle(EntityDataHandle&& other) noexcept
+		{
+			OnMove(std::move(other));
+		}
+
+		~EntityDataHandle()
+		{
+			DecrementRefCount();
+		}
+
+		EntityDataHandle& operator = (const EntityDataHandle& other)
+		{
+			if (&other != this)
+			{
+				OnCopy(other);
+			}
+			return *this;
+		}
+
+		EntityDataHandle& operator=(EntityDataHandle&& other) noexcept
+		{
+			if (&other != this)
+			{
+				OnMove(std::move(other));
+			}
+			return *this;
+		}
+
+		inline EntityData* GetEntityData() const
+		{
+			return m_EntityData;
+		}
+
+	private:
+		EntityData* m_EntityData = nullptr;
+
+	private:
+		void IncrementRefCount() 
+		{
+			if (m_EntityData != nullptr)
+			{
+				m_EntityData->m_RefCounter.fetch_add(1, std::memory_order_relaxed);
+			}
+		}
+
+		void DecrementRefCount() 
+		{
+			if (m_EntityData != nullptr)
+			{
+				if (m_EntityData->m_RefCounter.fetch_sub(1, std::memory_order_acq_rel) == 1)
+				{
+					std::atomic_thread_fence(std::memory_order_acquire);
+					delete m_EntityData;
+					m_EntityData = nullptr;
+				}
+			}
+		}
+
+		void OnMove(EntityDataHandle&& other)
+		{
+			DecrementRefCount();
+			m_EntityData = other.m_EntityData;
+			other.m_EntityData = nullptr;
+		}
+
+		void OnCopy(const EntityDataHandle& other)
+		{
+			DecrementRefCount();
+			m_EntityData = other.m_EntityData;
+			IncrementRefCount();
 		}
 	};
 

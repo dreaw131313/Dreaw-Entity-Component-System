@@ -8,8 +8,6 @@ namespace decs
 {
 	class EntityManager
 	{
-		template<typename ...Types>
-		friend class Query;
 	public:
 		EntityManager();
 
@@ -31,13 +29,6 @@ namespace decs
 
 		void ForceDestroyEntity(EntityData& entityData);
 
-		inline EntityData& GetEntityData(EntityID entity)
-		{
-			return m_EntityData[entity];
-		}
-
-		inline const EntityData& GetEntityData(EntityID entity) const { return m_EntityData[entity]; }
-
 		void CreateReservedEntityData(uint32_t entitesToReserve, std::vector<EntityData*>& reservedEntityData);
 
 		void ReturnReservedEntityData(std::vector<EntityData*> reservedEntityData);
@@ -45,6 +36,5 @@ namespace decs
 	private:
 		TChunkedVector<EntityData> m_EntityData = { 1000 };
 		std::vector<EntityData*> m_FreeEntities;
-
 	};
 }

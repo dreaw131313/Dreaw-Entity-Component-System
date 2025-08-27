@@ -9,6 +9,7 @@
 #include <string>
 #include <typeinfo>
 #include <span>
+#include <atomic>
 
 #ifdef DECS_DEBUG
 #include <cassert>
