@@ -97,14 +97,13 @@ namespace decs
 	private:
 		std::vector<EntityData*> m_EmptyEntities = {};
 		EntityManager m_EntityManager;
-		uint32_t m_EntityCount = 0;
 
 	public:
 		Entity CreateEntity(bool bIsActive = true);
 
 		inline uint32_t GetEntityCount() const
 		{
-			return m_EntityCount;
+			return m_EntityManager.GetCreatedEntityCount();
 		}
 
 	public:

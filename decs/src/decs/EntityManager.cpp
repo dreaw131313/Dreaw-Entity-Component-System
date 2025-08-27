@@ -28,6 +28,8 @@ namespace decs
 
 	EntityDataHandle EntityManager::CreateEntity(bool isActive, Container& container)
 	{
+		m_CreatedEntityCount++;
+
 		if (GetFreeEntitiesCount() > 0)
 		{
 			auto it = m_FreeEntities.begin();
@@ -63,6 +65,8 @@ namespace decs
 			entityDataHandle.GetEntityData()->SetIsInManager(true);
 			entityDataHandle.GetEntityData()->OnDestroyByEntityManager();
 
+			m_CreatedEntityCount--;
+
 			return true;
 		}
 
@@ -77,6 +81,8 @@ namespace decs
 			m_FreeEntities.push_back(entityDataHandle);
 			entityData->SetIsInManager(true);
 			entityData->OnDestroyByEntityManager();
+
+			m_CreatedEntityCount--;
 		}
 	}
 
@@ -85,6 +91,7 @@ namespace decs
 		m_LifeTimeData = new EnityLifeTimeData();
 		m_LifeTimeData->IncrementRefCount();
 	}
+
 	void EntityManager::DestroyLifeTimeData()
 	{
 		m_LifeTimeData->m_bIsContainerAlive.store(false);

@@ -53,7 +53,6 @@ namespace decs
 		m_EmptyEntities.clear();
 		m_ArchetypesMap.ClearEntityDataAndComponents();
 		m_ComponentContextManager.ClearStableContainers();
-		m_EntityCount = 0;
 	}
 
 
@@ -80,6 +79,7 @@ namespace decs
 			AddToEmptyEntitiesRightAfterNewEntityCreation(*e.GetEntityData());
 			InvokeEntityCreateObserver_Internal(e);
 			InvokeEntityEnableObserver_Internal(e);
+
 			return e;
 		}
 		return Entity();
@@ -142,8 +142,6 @@ namespace decs
 			}
 
 			m_EntityManager.DestroyEntity(entity.m_Handle);
-
-			m_EntityCount -= 1;
 
 			return true;
 		}

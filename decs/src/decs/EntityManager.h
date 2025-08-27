@@ -15,14 +15,19 @@ namespace decs
 
 		~EntityManager();
 
-		uint64_t GetEntitiesDataCount() const
+		inline uint64_t GetEntitiesDataCount() const
 		{
 			return m_EntityDataHandles.Size();
 		}
 
-		uint64_t GetFreeEntitiesCount() const
+		inline uint64_t GetFreeEntitiesCount() const
 		{
 			return m_FreeEntities.size();
+		}
+
+		inline uint32_t GetCreatedEntityCount() const
+		{
+			return m_CreatedEntityCount;
 		}
 
 		EntityDataHandle CreateEntity(bool isActive, Container& container);
@@ -35,12 +40,13 @@ namespace decs
 		{
 			m_LifeTimeData->m_bIsContainerAlive = false;
 		}
-
 	private:
 		TChunkedVector<EntityDataHandle> m_EntityDataHandles{};
 		std::vector<EntityDataHandle> m_FreeEntities{};
 
 		EnityLifeTimeData* m_LifeTimeData = nullptr;
+
+		uint32_t m_CreatedEntityCount = 0;
 
 	private:
 		void InitializeLifeTimeData();
