@@ -156,7 +156,7 @@ namespace decs
 		EnableEntityObserver* m_EnableEntityObserver = nullptr;
 		DisableEntityObserver* m_DisableEntityObserver = nullptr;
 
-		std::unordered_map<TypeID, ComponentObserversGroupSetterBase*> m_ComponentObserverGroupIndexes = {};
+		ecsMap<TypeID, ComponentObserversGroupSetterBase*> m_ComponentObserverGroupIndexes = {};
 		std::vector<ComponentObserversGroupSetterBase*> m_ComponentObserverGroups = {};
 
 	private:

@@ -8,16 +8,16 @@ namespace decs
 {
 	class EntityManager
 	{
-		template<typename ...Types>
-		friend class Query;
 	public:
 		EntityManager();
 
-		EntityManager(uint64_t initialEntitiesCapacity);
+		EntityManager(uint64_t entityDataHandleChunkSize);
+
+		~EntityManager();
 
 		uint64_t GetEntitiesDataCount() const
 		{
-			return m_EntityData.Size();
+			return m_EntityDataHandles.Size();
 		}
 
 		uint64_t GetFreeEntitiesCount() const
@@ -25,26 +25,26 @@ namespace decs
 			return m_FreeEntities.size();
 		}
 
-		EntityData* CreateEntity(bool isActive = true);
+		EntityDataHandle CreateEntity(bool isActive, Container& container);
 
-		bool DestroyEntity(EntityData& entityData);
+		bool DestroyEntity(const EntityDataHandle& entityDataHandle);
 
-		void ForceDestroyEntity(EntityData& entityData);
+		void ForceDestroyEntity(const EntityDataHandle& entityDataHandle);
 
-		inline EntityData& GetEntityData(EntityID entity)
+		void MarkEntitiesDead()
 		{
-			return m_EntityData[entity];
+			m_LifeTimeData->m_bIsContainerAlive = false;
 		}
 
-		inline const EntityData& GetEntityData(EntityID entity) const { return m_EntityData[entity]; }
+	private:
+		TChunkedVector<EntityDataHandle> m_EntityDataHandles{};
+		std::vector<EntityDataHandle> m_FreeEntities{};
 
-		void CreateReservedEntityData(uint32_t entitesToReserve, std::vector<EntityData*>& reservedEntityData);
-
-		void ReturnReservedEntityData(std::vector<EntityData*> reservedEntityData);
+		EnityLifeTimeData* m_LifeTimeData = nullptr;
 
 	private:
-		TChunkedVector<EntityData> m_EntityData = { 1000 };
-		std::vector<EntityData*> m_FreeEntities;
+		void InitializeLifeTimeData();
 
+		void DestroyLifeTimeData();
 	};
 }

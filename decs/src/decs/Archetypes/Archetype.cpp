@@ -40,7 +40,11 @@ namespace decs
 		for (uint32_t i = 0; i < m_TypeData.size(); i++)
 		{
 			auto& typeData = m_TypeData[i];
-			typeData.m_PackedContainer->Clear();
+			if (!typeData.IsTag())
+			{
+				typeData.m_PackedContainer->Clear();
+			}
+
 		}
 		m_EntitiesCount = 0;
 	}

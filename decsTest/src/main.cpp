@@ -18,12 +18,10 @@ public:
 public:
 	Position()
 	{
-		PrintLine("Position constructior");
 	}
 
 	Position(float x, float y): X(x), Y(y)
 	{
-		PrintLine("Position constructior");
 	}
 
 	void TestFunc(int& i)
@@ -35,7 +33,6 @@ public:
 protected:
 	void OnPreCreate(const decs::Entity& entity) override final
 	{
-		PrintLine(std::format("Position X: {0}, Y: {1}", X, Y));
 	}
 };
 
@@ -66,7 +63,6 @@ public:
 	// Inherited via CreateComponentObserver
 	void OnCreateComponent(TestComponent& component, const decs::Entity& entity) override
 	{
-		PrintLine("TestComponent on create");
 
 		entity.AddComponent<Renderer>();
 	}
@@ -74,21 +70,18 @@ public:
 	// Inherited via DestroyComponentObserver
 	void OnDestroyComponent(TestComponent& component, const decs::Entity& entity) override
 	{
-		PrintLine("TestComponent on destroy");
 	}
 
 
 	// Inherited via EnableComponentObserver
 	void OnEnableComponent(TestComponent& component, const decs::Entity& entity) override
 	{
-		PrintLine("TestComponent on enable");
 	}
 
 
 	// Inherited via DisableComponentObserver
 	void OnDisableComponent(TestComponent& component, const decs::Entity& entity) override
 	{
-		PrintLine("TestComponent on disable");
 	}
 };
 
@@ -106,41 +99,18 @@ int main()
 		observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
 	}
 
-	decs::Container container = {};
-	observerManager.FillContainerObservers(container);
-
+	decs::Entity prefab{};
 	{
-		decs::Entity prefab = container.CreateEntity_NoCallbacks();
+		decs::Container container = {};
+		observerManager.FillContainerObservers(container);
+
+		prefab = container.CreateEntity_NoCallbacks();
 		prefab.AddComponent_NoCallback<TestComponent>();
 		prefab.AddTag<FloatTag>();
 
-		decs::Container secondContainer{};
-		secondContainer.Spawn_NoCallback(prefab);
-	}
+		auto comp = prefab.GetComponent<TestComponent>();
 
-	// TAG TEST:
-	{
-		PrintLine(decs::Type<FloatTag>::Name());
-		PrintLine(decs::Type<std::vector<decs::Entity>>::Name());
-
-		{
-			auto prefabEntity1 = container.CreateEntity();
-
-			prefabEntity1.AddComponent<Position>();
-
-			prefabEntity1.AddTag<FloatTag>();
-			prefabEntity1.AddComponent<TestComponent>();
-			auto spawnedEntity = container.Spawn(prefabEntity1, true);
-
-			if (spawnedEntity.HasTag<FloatTag>())
-			{
-				PrintLine("Spawned entity with tag!");
-			}
-			spawnedEntity.SetActive(false);
-			spawnedEntity.SetActive(true);
-
-		}
-
+		container.Spawn(prefab, 10, true);
 
 		uint32_t counter = 0;
 		auto testFunc = [&](const decs::ConstEntity& entity, const TestComponent&)
@@ -159,8 +129,11 @@ int main()
 		{
 			it.ForEach(testFunc);
 		}
+	}
 
-
+	if (prefab.IsValid())
+	{
+		PrintLine("Should not happend");
 	}
 
 	return 0;

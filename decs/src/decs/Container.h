@@ -49,13 +49,6 @@ namespace decs
 			uint32_t stableComponentDefaultChunkSize
 		);
 
-		Container(
-			EntityManager* entityManager,
-			uint32_t stableComponentDefaultChunkSize
-		);
-
-		Container(bool bCreateInvalid);
-
 		~Container();
 
 	#pragma region Extension data
@@ -84,32 +77,27 @@ namespace decs
 		/// </summary>
 		void ValidateInternalState();
 
-		void SetDataIfCreatedInvalid(
-			EntityManager* entityManager,
-			uint32_t stableComponentDefaultChunkSize
-		);
-
 		/// <summary>
 		/// Returns all owned entites to entity manager. Clears all created components. Does not destroy created archetypes and does not clears seted observer manager. This function does not invoke any methods from observers.
 		/// </summary>
 		void Clear();
 
 		/// <summary>
-		/// Returns owned entites to entity manager. This is helper function. This function does not destroy all created components and archetypes. It returns entites to manager so if this container is using shared "entities manager" entites can be returned and then destroying of this object can be performed in desired moment (for example in different thread). After invoking this function this container is in invalid state and must be only destroyed. Creating entites or modifying entities is after invoking this method is undefined behavior. If this method is not invoked destroycotor of this object will return owned entites. If this method was invoked destrucor will not perform returning of owned entities.
+		/// This function marks all entities dead, but do not destroy any component and observers. This is irreversible, and shoould be performed only to make all Entity class objects null.
+		/// Iterating over entities is still posible, but changing active state, adding/removing components/tags is forbidden
 		/// </summary>
-		void ReturnOwnedEntitiesToEntityManager();
+		void MarkEntitiesDead();
 
 	private:
-		void ReturnOwnedEntitiesToEntityManager_Internal(bool bNullEntityManagerIfIsNotHisOwner);
+		void ReturnOwnedEntitiesToEntityManager_Internal();
 
 	#pragma endregion
 
 	#pragma region ENTITIES:
 	private:
 		std::vector<EntityData*> m_EmptyEntities = {};
-		EntityManager* m_EntityManager = nullptr;
+		EntityManager m_EntityManager;
 		uint32_t m_EntityCount = 0;
-		bool m_HaveOwnEntityManager = false;
 
 	public:
 		Entity CreateEntity(bool bIsActive = true);
@@ -128,7 +116,7 @@ namespace decs
 		}
 
 	private:
-		bool DestroyEntityInternal(Entity entity, bool bInvokeObservers);
+		bool DestroyEntityInternal(const Entity& entity, bool bInvokeObservers);
 
 		void SetEntityActive(const Entity& entity, bool bIsActive);
 
@@ -139,19 +127,6 @@ namespace decs
 		void RemoveFromEmptyEntities(EntityData& data);
 
 		void InvokeEntityComponentDestructionObservers(const Entity& entity);
-
-		EntityData* CreateAliveEntityData(bool bIsActive);
-
-	#pragma endregion
-
-	#pragma region RESERVING ENTITIES:
-	public:
-		void ReserveEntities(uint32_t entitiesToReserve);
-
-		void FreeReservedEntities();
-
-	private:
-		std::vector<EntityData*> m_ReservedEntityData;
 
 	#pragma endregion
 
@@ -292,7 +267,6 @@ namespace decs
 
 		void CreateEntityFromSpawnData(
 			const Entity& entity,
-			EntityData& spawnedEntityData,
 			const SpawnDataState& spawnState
 		);
 
@@ -313,7 +287,7 @@ namespace decs
 		);
 
 		template<typename TComponent, typename ...Args>
-		TComponent* AddComponent(Entity entity, EntityData& entityData, Args&&... args)
+		TComponent* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			if constexpr (is_tag_v<TComponent>)
 			{
@@ -382,7 +356,7 @@ namespace decs
 		}
 
 		template<typename TComponent>
-		bool RemoveComponent(Entity entity)
+		bool RemoveComponent(const Entity& entity)
 		{
 			if constexpr (is_tag_v<TComponent>)
 			{
@@ -894,7 +868,7 @@ namespace decs
 	public:
 		void InvokeEntitesOnCreateListeners();
 
-		void InvokeEntitesOnDestroyListeners();
+		void InvokeEntitesOnDestroyListeners(bool bMarkEntitiesDead = true);
 
 		/// <summary>
 		/// Changes order of invoking function of component observers. Callback for component with lower order will be invoked first.
@@ -1175,27 +1149,27 @@ namespace decs
 
 		Entity Spawn_NoCallback(
 			const Entity& prefab,
-			bool isActive = true
+			bool bIsActive = true
 		);
 
 		bool Spawn_NoCallback(
 			const Entity& prefab,
 			uint64_t spawnCount,
-			bool areActive = true
+			bool bAreActive = true
 		);
 
 		bool Spawn_NoCallback(
 			const Entity& prefab,
 			std::vector<Entity>& spawnedEntities,
 			uint64_t spawnCount,
-			bool areActive = true
+			bool bAreActive = true
 		);
 
 	private:
 		void SetEntityActive_NoCallback(const Entity& entity, bool bIsActive);
 
 		template<typename TComponent, typename ...Args>
-		TComponent* AddComponent_NoCallback(Entity entity, EntityData& entityData, Args&&... args)
+		TComponent* AddComponent_NoCallback(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			if constexpr (is_tag_v<TComponent>)
 			{
@@ -1265,7 +1239,7 @@ namespace decs
 		}
 
 		template<typename TComponent>
-		bool RemoveComponent_NoCallback(Entity entity)
+		bool RemoveComponent_NoCallback(const Entity& entity)
 		{
 			if constexpr (is_tag_v<TComponent>)
 			{
