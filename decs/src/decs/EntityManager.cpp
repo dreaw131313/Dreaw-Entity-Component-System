@@ -10,14 +10,14 @@ namespace decs
 		InitializeLifeTimeData();
 	}
 
-	EntityManager::EntityManager(uint64_t initialEntitiesCapacity)
+	EntityManager::EntityManager(uint64_t entityDataHandleChunkSize):
+		m_EntityDataHandles(entityDataHandleChunkSize)
 	{
 		InitializeLifeTimeData();
 
-		m_EntityDataHandles.reserve(initialEntitiesCapacity);
-		if (initialEntitiesCapacity > 0)
+		if (entityDataHandleChunkSize > 0)
 		{
-			m_FreeEntities.reserve(initialEntitiesCapacity / 3);
+			m_FreeEntities.reserve(entityDataHandleChunkSize / 3);
 		}
 	}
 
@@ -47,11 +47,11 @@ namespace decs
 		}
 		else
 		{
-			EntityData* entityData = new EntityData(m_LifeTimeData, static_cast<EntityID>(m_EntityDataHandles.size()), isActive);
+			EntityData* entityData = new EntityData(m_LifeTimeData, static_cast<EntityID>(m_EntityDataHandles.Size()), isActive);
 			entityData->SetIsInManager(false);
 			entityData->m_Container = &container;
 
-			return m_EntityDataHandles.emplace_back(entityData);
+			return m_EntityDataHandles.EmplaceBack(entityData);
 		}
 	}
 
@@ -79,6 +79,7 @@ namespace decs
 			entityData->OnDestroyByEntityManager();
 		}
 	}
+
 	void EntityManager::InitializeLifeTimeData()
 	{
 		m_LifeTimeData = new EnityLifeTimeData();

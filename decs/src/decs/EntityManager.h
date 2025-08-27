@@ -11,13 +11,13 @@ namespace decs
 	public:
 		EntityManager();
 
-		EntityManager(uint64_t initialEntitiesCapacity);
+		EntityManager(uint64_t entityDataHandleChunkSize);
 
 		~EntityManager();
 
 		uint64_t GetEntitiesDataCount() const
 		{
-			return m_EntityDataHandles.size();
+			return m_EntityDataHandles.Size();
 		}
 
 		uint64_t GetFreeEntitiesCount() const
@@ -37,7 +37,7 @@ namespace decs
 		}
 
 	private:
-		std::vector<EntityDataHandle> m_EntityDataHandles{};
+		TChunkedVector<EntityDataHandle> m_EntityDataHandles{};
 		std::vector<EntityDataHandle> m_FreeEntities{};
 
 		EnityLifeTimeData* m_LifeTimeData = nullptr;

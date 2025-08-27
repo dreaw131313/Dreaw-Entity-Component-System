@@ -3,8 +3,6 @@
 
 #include "ComponentContainers\StableContainer.h"
 
-#include <iostream>
-
 namespace decs
 {
 	class Archetype;
@@ -29,15 +27,9 @@ namespace decs
 		std::atomic<bool> m_bIsContainerAlive = true;
 
 	public:
-		EnityLifeTimeData()
-		{
-			std::cout << "EnityLifeTimeData::Constructor" << "\n";
-		}
+		EnityLifeTimeData() = default;
 
-		~EnityLifeTimeData()
-		{
-			std::cout << "EnityLifeTimeData::Destructor" << "\n";
-		}
+		~EnityLifeTimeData() = default;
 
 		void IncrementRefCount()
 		{

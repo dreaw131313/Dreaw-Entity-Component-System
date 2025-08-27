@@ -108,8 +108,6 @@ int main()
 		prefab.AddComponent_NoCallback<TestComponent>();
 		prefab.AddTag<FloatTag>();
 
-		container.MarkEntitiesDead();
-
 		auto comp = prefab.GetComponent<TestComponent>();
 
 		container.Spawn(prefab, 10, true);
