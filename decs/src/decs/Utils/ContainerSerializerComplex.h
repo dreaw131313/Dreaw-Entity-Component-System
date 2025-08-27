@@ -26,7 +26,7 @@ namespace decs
 
 			for (uint32_t i = 0; i < container.m_EmptyEntities.size(); i++)
 			{
-				entityBuffer.Set(container.m_EmptyEntities[i]);
+				entityBuffer.Set_Internal(container.m_EmptyEntities[i]);
 
 				if (BeginEntitySerialize(entityBuffer))
 				{
@@ -53,7 +53,7 @@ namespace decs
 							uint64_t componentCount = archetype.GetComponentAndTagCount();
 							for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 							{
-								entityBuffer.Set(archetype.m_EntitiesData[entityIdx].m_EntityData);
+								entityBuffer.Set_Internal(archetype.m_EntitiesData[entityIdx].m_EntityData);
 								if (BeginEntitySerialize(entityBuffer))
 								{
 									for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)

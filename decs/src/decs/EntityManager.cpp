@@ -9,8 +9,8 @@ namespace decs
 	{
 	}
 
-	EntityManager::EntityManager(uint64_t initialEntitiesCapacity) :
-		m_EntityData(initialEntitiesCapacity)
+	EntityManager::EntityManager(uint64_t initialEntitiesCapacity):
+		m_EntityDataHandles(initialEntitiesCapacity)
 	{
 		if (initialEntitiesCapacity > 0)
 		{
@@ -18,83 +18,57 @@ namespace decs
 		}
 	}
 
-	EntityData* EntityManager::CreateEntity(bool isActive)
+	EntityDataHandle EntityManager::CreateEntity(bool isActive, Container& container)
 	{
 		if (GetFreeEntitiesCount() > 0)
 		{
 			auto it = m_FreeEntities.begin();
 
-			EntityData* entityData = m_FreeEntities.back();
+			EntityDataHandle entityDataHandle = std::move(m_FreeEntities.back());
 			m_FreeEntities.pop_back();
+
+			auto entityData = entityDataHandle.GetEntityData();
 			entityData->SetState(EEntityState::Alive);
 			entityData->SetActiveState(isActive);
 			entityData->SetIsInManager(false);
 			entityData->m_bIsCreatedByContainer = false;
 			entityData->m_bIsEnabledByContainer = false;
+			entityData->m_Container = &container;
 
-			return entityData;
+			return entityDataHandle;
 		}
 		else
 		{
-			EntityData& entityData = m_EntityData.EmplaceBack((EntityID)m_EntityData.Size(), isActive);
-			entityData.SetIsInManager(false);
-			return &entityData;
+			EntityData* entityData = new EntityData(static_cast<EntityID>(m_EntityDataHandles.Size()), isActive);
+			entityData->SetIsInManager(false);
+			entityData->m_Container = &container;
+
+			return m_EntityDataHandles.EmplaceBack(entityData);
 		}
 	}
 
-	bool EntityManager::DestroyEntity(EntityData& entityData)
+	bool EntityManager::DestroyEntity(const EntityDataHandle& entityDataHandle)
 	{
-		if (!entityData.IsDead())
+		if (entityDataHandle.IsValid() && !entityDataHandle.GetEntityData()->IsDead())
 		{
-			m_FreeEntities.push_back(&entityData);
-			entityData.SetIsInManager(true);
+			m_FreeEntities.push_back(entityDataHandle);
+			entityDataHandle.GetEntityData()->SetIsInManager(true);
+			entityDataHandle.GetEntityData()->OnDestroyByEntityManager();
 
-			entityData.OnDestroyByEntityManager();
 			return true;
 		}
 
 		return false;
 	}
 
-	void EntityManager::ForceDestroyEntity(EntityData& entityData)
+	void EntityManager::ForceDestroyEntity(const EntityDataHandle& entityDataHandle)
 	{
-		if (!entityData.IsInManager())
+		auto entityData = entityDataHandle.GetEntityData();
+		if (entityData != nullptr && !entityData->IsInManager())
 		{
-			m_FreeEntities.push_back(&entityData);
-			entityData.SetIsInManager(true);
-
-			entityData.OnDestroyByEntityManager();
-		}
-	}
-
-	void EntityManager::CreateReservedEntityData(uint32_t entitesToReserve, std::vector<EntityData*>& reservedEntityData)
-	{
-		for (uint32_t idx = 0; idx < entitesToReserve; idx++)
-		{
-			if (m_FreeEntities.size() > 0)
-			{
-				EntityData* data = m_FreeEntities.back();
-				m_FreeEntities.pop_back();
-				data->SetIsInManager(false);
-				reservedEntityData.push_back(data);
-			}
-			else
-			{
-				EntityData& data = m_EntityData.EmplaceBack((EntityID)m_EntityData.Size(), false);
-				data.SetIsInManager(false);
-				reservedEntityData.push_back(&data);
-			}
-		}
-	}
-
-	void EntityManager::ReturnReservedEntityData(std::vector<EntityData*> reservedEntityData)
-	{
-		uint64_t entitiesToReturn = reservedEntityData.size();
-		for (uint64_t idx = 0; idx < entitiesToReturn; idx++)
-		{
-			auto entityData = reservedEntityData[idx];
+			m_FreeEntities.push_back(entityDataHandle);
 			entityData->SetIsInManager(true);
-			m_FreeEntities.push_back(entityData);
+			entityData->OnDestroyByEntityManager();
 		}
 	}
 }

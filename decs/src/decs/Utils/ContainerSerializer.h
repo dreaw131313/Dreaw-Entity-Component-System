@@ -132,7 +132,7 @@ namespace decs
 
 			for (uint32_t i = 0; i < container.m_EmptyEntities.size(); i++)
 			{
-				entityBuffer.Set(container.m_EmptyEntities[i]);
+				entityBuffer.Set_Internal(container.m_EmptyEntities[i]);
 				if (BeginEntitySerialize(entityBuffer, serializerData))
 				{
 					EndEntitySerialize(entityBuffer, serializerData);
@@ -162,7 +162,7 @@ namespace decs
 							auto& archetypeEntityData = archetype.m_EntitiesData[entityIdx];
 							if (archetypeEntityData.IsValid())
 							{
-								entityBuffer.Set(archetypeEntityData.m_EntityData);
+								entityBuffer.Set_Internal(archetypeEntityData.m_EntityData);
 								if (BeginEntitySerialize(entityBuffer, serializerData))
 								{
 									for (uint64_t tagIdx = 0; tagIdx < tagCount; tagIdx++)

@@ -3,6 +3,8 @@
 
 #include "ComponentContainers\StableContainer.h"
 
+#include <iostream>
+
 namespace decs
 {
 	class Archetype;
@@ -45,7 +47,7 @@ namespace decs
 	public:
 		EntityData()
 		{
-
+			std::cout << "EntityData::Constructor" << "\n";
 		}
 
 		EntityData(EntityID id, bool bIsActive):
@@ -53,6 +55,12 @@ namespace decs
 			m_bIsActive(bIsActive)
 		{
 
+			std::cout << "EntityData::Constructor" << "\n";
+		}
+
+		~EntityData()
+		{
+			std::cout << "EntityData::Destructor" << "\n";
 		}
 
 		inline EntityVersion GetVersion() const
@@ -159,7 +167,7 @@ namespace decs
 		EntityDataHandle(EntityData* entityData):
 			m_EntityData(entityData)
 		{
-
+			IncrementRefCount();
 		}
 
 		EntityDataHandle(const EntityDataHandle& other)
@@ -195,11 +203,20 @@ namespace decs
 			return *this;
 		}
 
+		bool operator==(const EntityDataHandle& rhs)const
+		{
+			return this->m_EntityData == rhs.m_EntityData;
+		}
+
 		inline EntityData* GetEntityData() const
 		{
 			return m_EntityData;
 		}
 
+		inline bool IsValid() const
+		{
+			return m_EntityData != nullptr;
+		}
 	private:
 		EntityData* m_EntityData = nullptr;
 

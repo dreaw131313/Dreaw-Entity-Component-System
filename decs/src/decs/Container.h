@@ -140,19 +140,6 @@ namespace decs
 
 		void InvokeEntityComponentDestructionObservers(const Entity& entity);
 
-		EntityData* CreateAliveEntityData(bool bIsActive);
-
-	#pragma endregion
-
-	#pragma region RESERVING ENTITIES:
-	public:
-		void ReserveEntities(uint32_t entitiesToReserve);
-
-		void FreeReservedEntities();
-
-	private:
-		std::vector<EntityData*> m_ReservedEntityData;
-
 	#pragma endregion
 
 	#pragma region SPAWNING ENTITIES:
@@ -292,7 +279,6 @@ namespace decs
 
 		void CreateEntityFromSpawnData(
 			const Entity& entity,
-			EntityData& spawnedEntityData,
 			const SpawnDataState& spawnState
 		);
 
@@ -1175,20 +1161,20 @@ namespace decs
 
 		Entity Spawn_NoCallback(
 			const Entity& prefab,
-			bool isActive = true
+			bool bIsActive = true
 		);
 
 		bool Spawn_NoCallback(
 			const Entity& prefab,
 			uint64_t spawnCount,
-			bool areActive = true
+			bool bAreActive = true
 		);
 
 		bool Spawn_NoCallback(
 			const Entity& prefab,
 			std::vector<Entity>& spawnedEntities,
 			uint64_t spawnCount,
-			bool areActive = true
+			bool bAreActive = true
 		);
 
 	private:
