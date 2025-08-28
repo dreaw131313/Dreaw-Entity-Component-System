@@ -136,5 +136,7 @@ int main()
 		PrintLine("Should not happend");
 	}
 
+	prefab = {};
+
 	return 0;
 }

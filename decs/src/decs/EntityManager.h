@@ -17,7 +17,7 @@ namespace decs
 
 		inline uint64_t GetEntitiesDataCount() const
 		{
-			return m_EntityDataHandles.Size();
+			return m_EntityDatas.Size();
 		}
 
 		inline uint64_t GetFreeEntitiesCount() const
@@ -30,27 +30,18 @@ namespace decs
 			return m_CreatedEntityCount;
 		}
 
-		EntityDataHandle CreateEntity(bool isActive, Container& container);
+		EntityData* CreateEntity(bool isActive, Container& container);
 
-		bool DestroyEntity(const EntityDataHandle& entityDataHandle);
+		bool DestroyEntity(EntityData* entityData);
 
-		void ForceDestroyEntity(const EntityDataHandle& entityDataHandle);
+		void ForceDestroyEntity(EntityData* entityData);
 
-		void MarkEntitiesDead()
-		{
-			m_LifeTimeData->m_bIsContainerAlive = false;
-		}
 	private:
-		TChunkedVector<EntityDataHandle> m_EntityDataHandles{};
-		std::vector<EntityDataHandle> m_FreeEntities{};
-
-		EnityLifeTimeData* m_LifeTimeData = nullptr;
+		TChunkedVector<EntityData> m_EntityDatas{};
+		std::vector<EntityData*> m_FreeEntities{};
 
 		uint32_t m_CreatedEntityCount = 0;
 
 	private:
-		void InitializeLifeTimeData();
-
-		void DestroyLifeTimeData();
 	};
 }

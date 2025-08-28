@@ -156,7 +156,7 @@ namespace decs
 						{
 							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
-								entityBuffor.Set_Internal(entityData.m_EntityData);
+								entityBuffor.Set_Internal(*entityData.m_EntityData);
 								func(
 									entityBuffor,
 									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
@@ -219,7 +219,7 @@ namespace decs
 						{
 							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
-								entityBuffor.Set_Internal(entityData.m_EntityData);
+								entityBuffor.Set_Internal(*entityData.m_EntityData);
 								func(
 									entityBuffor,
 									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
@@ -285,7 +285,7 @@ namespace decs
 						{
 							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
-								entityBuffor.Set_Internal(entityData.m_EntityData);
+								entityBuffor.Set_Internal(*entityData.m_EntityData);
 								func(
 									entityBuffor,
 									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
@@ -345,7 +345,7 @@ namespace decs
 						{
 							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
-								entityBuffor.Set_Internal(entityData.m_EntityData);
+								entityBuffor.Set_Internal(*entityData.m_EntityData);
 								func(
 									entityBuffor,
 									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
@@ -617,7 +617,7 @@ namespace decs
 							{
 								if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 								{
-									entityBuffor.Set_Internal(entityData.m_EntityData);
+									entityBuffor.Set_Internal(*entityData.m_EntityData);
 									func(
 										entityBuffor,
 										std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
@@ -705,7 +705,7 @@ namespace decs
 							{
 								if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 								{
-									entityBuffor.Set_Internal(entityData.m_EntityData);
+									entityBuffor.Set_Internal(*entityData.m_EntityData);
 									func(
 										entityBuffor,
 										std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...

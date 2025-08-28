@@ -98,6 +98,8 @@ namespace decs
 		std::vector<EntityData*> m_EmptyEntities = {};
 		EntityManager m_EntityManager;
 
+		TRefCounterHandle<EnityLifeTimeData> m_EntitiesLifeTimeData{};
+
 	public:
 		Entity CreateEntity(bool bIsActive = true);
 
@@ -115,6 +117,10 @@ namespace decs
 		}
 
 	private:
+		void InitializeLifeTimeData();
+
+		void DestroyLifeTimeData();
+
 		bool DestroyEntityInternal(const Entity& entity, bool bInvokeObservers);
 
 		void SetEntityActive(const Entity& entity, bool bIsActive);

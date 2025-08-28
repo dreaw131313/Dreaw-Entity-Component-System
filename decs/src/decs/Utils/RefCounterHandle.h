@@ -23,7 +23,6 @@ namespace decs
 			m_RefCounter.fetch_add(1ull, std::memory_order_relaxed);
 		}
 
-
 		bool DecrementRefCount()
 		{
 			if (m_RefCounter.fetch_sub(1ull, std::memory_order_acq_rel) == 1)
@@ -113,6 +112,17 @@ namespace decs
 			return m_Object != nullptr;
 		}
 
+		void Reset()
+		{
+			DecrementRefCount();
+		}
+
+		template<typename...TArgs>
+		inline static TRefCounterHandle<TObject> Make(TArgs&&...args)
+		{
+			return TRefCounterHandle<TObject>(new TObject(std::forward<TArgs>(args)...));
+		}
+
 	private:
 		TObject* m_Object = nullptr;
 
@@ -129,10 +139,11 @@ namespace decs
 		void DecrementRefCount()
 		{
 			RefCountedObject* refCountedObject = m_Object;
-			if (refCountedObject != nullptr && refCountedObject->DecrementRefCount())
+			if (refCountedObject != nullptr)
 			{
-				m_Object = nullptr;
+				refCountedObject->DecrementRefCount();
 			}
+			m_Object = nullptr;
 		}
 
 		void OnMove(TRefCounterHandle&& other)

@@ -43,6 +43,7 @@ className& operator=(className&&) = delete;	\
 #define DECS_ASSERT(condition, message)
 #endif // DECS_DEBUG
 
+#include "Utils/RefCounterHandle.h"
 
 namespace decs
 {

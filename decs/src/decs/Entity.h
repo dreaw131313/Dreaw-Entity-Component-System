@@ -33,9 +33,10 @@ namespace decs
 
 		}
 
-		Entity(const EntityDataHandle& entityDataHandle):
-			m_Handle(entityDataHandle),
-			m_Version(entityDataHandle.GetEntityData() != nullptr ? entityDataHandle.GetEntityData()->GetVersion() : std::numeric_limits<EntityVersion>::max())
+		Entity(EntityData& entityData):
+			m_EntityData(&entityData),
+			m_LifeTimeData(entityData.m_Container->m_EntitiesLifeTimeData),
+			m_Version(entityData.GetVersion())
 		{
 
 		}
@@ -43,13 +44,12 @@ namespace decs
 	public:
 		bool operator==(const Entity& rhs)const
 		{
-			return this->m_Handle == rhs.m_Handle && this->m_Version == rhs.m_Version;
+			return this->m_EntityData == rhs.m_EntityData && this->m_Version == rhs.m_Version;
 		}
 
 		inline bool IsValid() const
 		{
-			auto entityData = m_Handle.GetEntityData();
-			return entityData != nullptr && m_Version == entityData->GetVersion() && entityData->IsAlive();
+			return m_LifeTimeData.IsValid() && m_LifeTimeData->IsAlive() && m_EntityData != nullptr && m_EntityData->IsAliveWithVersion(m_Version);
 		}
 
 		inline bool IsNull() const
@@ -61,7 +61,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_Handle.GetEntityData()->IsInDestructionOrDelayedToDestruction();
+				return m_EntityData->IsInDestructionOrDelayedToDestruction();
 			}
 			return false;
 		}
@@ -70,7 +70,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_Handle.GetEntityData()->GetID();
+				return m_EntityData->GetID();
 			}
 			return std::numeric_limits< EntityID>::max();
 		}
@@ -79,14 +79,14 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_Handle.GetEntityData()->m_Container;
+				return m_EntityData->m_Container;
 			}
 			return nullptr;
 		}
 
 		inline bool IsActive() const
 		{
-			return IsValid() && m_Handle.GetEntityData()->IsActive();
+			return IsValid() && m_EntityData->IsActive();
 		}
 
 		inline void SetActive(const bool& isActive) const
@@ -112,7 +112,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_Handle.GetEntityData()->GetComponentOnlyCount();
+				return m_EntityData->GetComponentOnlyCount();
 			}
 			return 0;
 		}
@@ -121,7 +121,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_Handle.GetEntityData()->GetComponentAndTagCount();
+				return m_EntityData->GetComponentAndTagCount();
 			}
 			return 0;
 		}
@@ -135,7 +135,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->GetComponentAtIndex(*m_Handle.GetEntityData(), componentIndex);
+				return GetContainer_Internal()->GetComponentAtIndex(*m_EntityData, componentIndex);
 			}
 			return nullptr;
 		}
@@ -155,7 +155,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->GetComponent(*m_Handle.GetEntityData(), componentType);
+				return GetContainer_Internal()->GetComponent(*m_EntityData, componentType);
 			}
 
 			return nullptr;
@@ -241,7 +241,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_Handle.GetEntityData()->m_Archetype;
+				return m_EntityData->m_Archetype;
 			}
 
 			return nullptr;
@@ -316,7 +316,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->HasTag(*m_Handle.GetEntityData(), tagType);
+				return GetContainer()->HasTag(*m_EntityData, tagType);
 			}
 			return false;
 		}
@@ -326,7 +326,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->HasTag<TTag>(*m_Handle.GetEntityData());
+				return GetContainer()->HasTag<TTag>(*m_EntityData);
 			}
 			return false;
 		}
@@ -336,7 +336,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->AddTag<TTag>(*m_Handle.GetEntityData());
+				return GetContainer()->AddTag<TTag>(*m_EntityData);
 			}
 			return false;
 		}
@@ -345,7 +345,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->RemoveTag(*m_Handle.GetEntityData(), tagType);
+				return GetContainer()->RemoveTag(*m_EntityData, tagType);
 			}
 			return false;
 		}
@@ -355,7 +355,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->RemoveTag<TTag>(*m_Handle.GetEntityData());
+				return GetContainer()->RemoveTag<TTag>(*m_EntityData);
 			}
 			return false;
 		}
@@ -363,30 +363,33 @@ namespace decs
 	#pragma endregion
 
 	private:
-		mutable EntityDataHandle m_Handle{};
+		mutable EntityData* m_EntityData = nullptr;
+		mutable TRefCounterHandle<EnityLifeTimeData> m_LifeTimeData{};
 		mutable EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
 
 	private:
-		inline void Set_Internal(const EntityDataHandle& data)
+		inline void Set_Internal(EntityData& data)
 		{
-			m_Handle = data;
-			m_Version = data.GetEntityData() != nullptr ? data.GetEntityData()->GetVersion() : std::numeric_limits<EntityVersion>::max();
+			m_EntityData = &data;
+			m_Version = m_EntityData->GetVersion();
+			m_LifeTimeData = m_EntityData->m_Container->m_EntitiesLifeTimeData;
 		}
 
 		inline void Invalidate() const
 		{
-			m_Handle = {};
+			m_EntityData = nullptr;
+			m_LifeTimeData.Reset();
 			m_Version = std::numeric_limits<EntityVersion>::max();
 		}
 
 		Container* GetContainer_Internal() const
 		{
-			return m_Handle.GetEntityData()->m_Container;
+			return m_EntityData->m_Container;
 		}
 
 		EntityData* GetEntityData() const
 		{
-			return m_Handle.GetEntityData();
+			return m_EntityData;
 		}
 	};
 
@@ -523,7 +526,7 @@ namespace decs
 		Entity m_Entity = {};
 
 	private:
-		inline void Set(const EntityDataHandle& data)
+		inline void Set(EntityData& data)
 		{
 			m_Entity.Set_Internal(data);
 		}
@@ -542,7 +545,7 @@ struct std::hash<decs::Entity>
 {
 	std::size_t operator()(const decs::Entity& entity) const
 	{
-		uint64_t entityDataHash = std::hash<decs::EntityData*>{}(entity.m_Handle.GetEntityData());
+		uint64_t entityDataHash = std::hash<decs::EntityData*>{}(entity.m_EntityData);
 		uint64_t entityVersionHash = std::hash<decs::EntityVersion>{}(entity.GetVersion());
 
 		return entityDataHash ^ (entityVersionHash + 0x9e3779b9 + (entityDataHash << 6) + (entityDataHash >> 2));
