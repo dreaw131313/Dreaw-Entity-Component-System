@@ -125,6 +125,7 @@
     <ClInclude Include="src\decs\Type.h" />
     <ClInclude Include="src\decs\Iteration\Query.h" />
     <ClInclude Include="src\decs\Utils\ContainerSerializerComplex.h" />
+    <ClInclude Include="src\decs\Utils\RefCounterHandle.h" />
     <ClInclude Include="src\decs\Utils\UtilityClasses.h" />
   </ItemGroup>
   <ItemGroup>
