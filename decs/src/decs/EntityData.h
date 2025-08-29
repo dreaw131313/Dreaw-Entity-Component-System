@@ -55,13 +55,9 @@ namespace decs
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 
 		EntityVersion m_Version = 1;
-		std::atomic<uint32_t> m_RefCounter = 0;
-
 		EEntityState m_State = EEntityState::Alive;
 
 		bool m_bIsActive = false;
-		bool m_bIsUsedAsPrefab = false;
-		bool m_bIsInManager = true;
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByContainer = false;
 
@@ -124,7 +120,7 @@ namespace decs
 
 		inline bool IsValidToPerformComponentOperation() const
 		{
-			return m_State == EEntityState::Alive && !m_bIsUsedAsPrefab;
+			return m_State == EEntityState::Alive;
 		}
 
 		inline bool IsValidToChangeActiveState()
@@ -134,17 +130,12 @@ namespace decs
 
 		inline bool CanBeDestructed() const
 		{
-			return m_State == EEntityState::Alive && !m_bIsUsedAsPrefab;
+			return m_State == EEntityState::Alive;
 		}
 
 		inline bool IsDelayedToDestruction() const
 		{
 			return m_State == EEntityState::DelayedToDestruction;
-		}
-
-		inline bool IsUsedAsPrefab() const
-		{
-			return m_bIsUsedAsPrefab;
 		}
 
 		void SetState(EEntityState state);
@@ -159,7 +150,7 @@ namespace decs
 
 		inline bool IsInManager() const
 		{
-			return m_bIsInManager;
+			return m_Container == nullptr;
 		}
 
 		void SetValidStateOnCreateFromReservedEntityData(bool bIsActive)
@@ -173,15 +164,10 @@ namespace decs
 	private:
 		inline void OnDestroyByEntityManager()
 		{
+			m_Container = nullptr;
 			m_Archetype = nullptr;
 			m_Version += 1;
 			m_State = EEntityState::Dead;
-			m_Container = nullptr;
-		}
-
-		void SetIsInManager(bool bIsInManager)
-		{
-			m_bIsInManager = bIsInManager;
 		}
 	};
 

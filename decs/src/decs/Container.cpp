@@ -269,8 +269,6 @@ namespace decs
 		EntityData& prefabEntityData = *prefab.GetEntityData();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
-		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
-
 		Entity spawnedEntity(*m_EntityManager.CreateEntity(bIsActive, *this));
 		EntityData* spawnedEntityData = spawnedEntity.GetEntityData();
 
@@ -313,7 +311,6 @@ namespace decs
 		Container* prefabContainer = prefab.GetContainer();
 		EntityData& prefabEntityData = *prefab.GetEntityData();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
-		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
 
 		if (prefabArchetype == nullptr)
 		{
@@ -365,7 +362,6 @@ namespace decs
 		Container* prefabContainer = prefab.GetContainer();
 		EntityData& prefabEntityData = *prefab.GetEntityData();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
-		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
 
 		spawnedEntities.reserve(spawnedEntities.size() + spawnCount);
 
@@ -420,8 +416,6 @@ namespace decs
 		EntityData& prefabEntityData = *prefab.GetEntityData();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
-		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
-
 		Entity spawnedEntity(*m_EntityManager.CreateEntity(bIsActive, *this));
 
 		if (prefabArchetype == nullptr)
@@ -466,7 +460,6 @@ namespace decs
 		Container* prefabContainer = prefab.GetContainer();
 		EntityData& prefabEntityData = *prefab.GetEntityData();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
-		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
 
 		if (prefabArchetype == nullptr)
 		{
@@ -521,7 +514,6 @@ namespace decs
 		Container* prefabContainer = prefab.GetContainer();
 		EntityData& prefabEntityData = *prefab.GetEntityData();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
-		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
 
 		spawnedEntities.reserve(spawnedEntities.size() + spawnCount);
 
@@ -1395,8 +1387,6 @@ namespace decs
 		EntityData& prefabEntityData = *prefab.GetEntityData();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
-		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
-
 		Entity spawnedEntity(*m_EntityManager.CreateEntity(bIsActive, *this));
 
 		if (prefabArchetype == nullptr)
@@ -1423,7 +1413,6 @@ namespace decs
 		Container* prefabContainer = prefab.GetContainer();
 		EntityData& prefabEntityData = *prefab.GetEntityData();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
-		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
 
 		if (prefabArchetype == nullptr)
 		{
@@ -1460,7 +1449,6 @@ namespace decs
 		Container* prefabContainer = prefab.GetContainer();
 		EntityData& prefabEntityData = *prefab.GetEntityData();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
-		BoolSwitch prefabOperationsLock = { prefabEntityData.m_bIsUsedAsPrefab, true };
 
 		spawnedEntities.reserve(spawnedEntities.size() + spawnCount);
 

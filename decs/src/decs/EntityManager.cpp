@@ -35,7 +35,6 @@ namespace decs
 
 			entityData->SetState(EEntityState::Alive);
 			entityData->SetActiveState(isActive);
-			entityData->SetIsInManager(false);
 			entityData->m_bIsCreatedByContainer = false;
 			entityData->m_bIsEnabledByContainer = false;
 			entityData->m_Container = &container;
@@ -46,7 +45,6 @@ namespace decs
 		{
 			uint32_t id = static_cast<uint32_t>(m_EntityDatas.Size());
 			EntityData* entityData = &m_EntityDatas.EmplaceBack(id, isActive);
-			entityData->SetIsInManager(false);
 			entityData->m_Container = &container;
 
 			return entityData;
@@ -58,7 +56,6 @@ namespace decs
 		if (entityData!= nullptr && !entityData->IsDead())
 		{
 			m_FreeEntities.push_back(entityData);
-			entityData->SetIsInManager(true);
 			entityData->OnDestroyByEntityManager();
 
 			m_CreatedEntityCount--;
@@ -74,7 +71,6 @@ namespace decs
 		if (entityData != nullptr && !entityData->IsInManager())
 		{
 			m_FreeEntities.push_back(entityData);
-			entityData->SetIsInManager(true);
 			entityData->OnDestroyByEntityManager();
 
 			m_CreatedEntityCount--;
