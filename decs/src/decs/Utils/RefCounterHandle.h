@@ -12,7 +12,29 @@ namespace decs
 		friend struct TRefCounterHandle;
 
 	public:
+		RefCountedObject() = default;
+
+		RefCountedObject(const RefCountedObject& other)
+		{
+
+		}
+
+		RefCountedObject(RefCountedObject&& other) noexcept
+		{
+
+		}
+
 		virtual ~RefCountedObject() = default;
+
+		RefCountedObject& operator =(const RefCountedObject& other)
+		{
+			return *this;
+		}
+
+		RefCountedObject& operator =(RefCountedObject&& other) noexcept
+		{
+			return *this;
+		}
 
 	private:
 		std::atomic<uint64_t> m_RefCounter{ 0 };
