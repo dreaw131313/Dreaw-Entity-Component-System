@@ -78,15 +78,15 @@ bool isActive = entity.IsActive();
 **decs::Query<typename... Components>** object serves to iterating over entities. It has 3 methods for iteration:
 ```cpp
 // Iterates over entities in archetypes from first to last
-template<typename Callable
+template<typename Callable>
 Query::ForEach(Callable&& func);
 
 // Iterates over entities in archetypes form last to first
-template<typename Callable
+template<typename Callable>
 Query::ForEachBackward(Callable&& func);
 
 // Iterates over entities in archetypes form last to first
-template<typename Callable
+template<typename Callable>
 Query::ForEachSafe(Callable&& func);
 
 ```
