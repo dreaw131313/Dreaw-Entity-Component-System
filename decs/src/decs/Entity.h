@@ -110,6 +110,40 @@ namespace decs
 			}
 		}
 
+		void SetEntityActiveOverride(bool bIsActiveOverride)
+		{
+			if (IsValid())
+			{
+				GetContainer()->SetEntityActiveOverride(*this, bIsActiveOverride);
+			}
+		}
+
+		void SetEntityDisabledOverrideCount(uint32_t disabledOverrideCount)
+		{
+			if (IsValid())
+			{
+				GetContainer()->SetEntityDisabledOverrideCount(*this, disabledOverrideCount);
+			}
+		}
+
+		void ResetDisabledOverrideCount()
+		{
+			if (IsValid())
+			{
+				GetContainer()->ResetDisabledOverrideCount(*this);
+			}
+		}
+
+		uint32_t GetEntityActiveOverrideCount()
+		{
+			if (IsValid())
+			{
+				return m_EntityData->GetDisabledOverrideCount();
+			}
+
+			return 0;
+		}
+
 		inline bool Destroy() const
 		{
 			if (IsValid())
@@ -319,6 +353,30 @@ namespace decs
 		inline bool RemoveComponent_NoCallback(TypeID componentTypeID) const
 		{
 			return IsValid() && GetContainer_Internal()->RemoveComponent_NoCallback(*this, componentTypeID);
+		}
+
+		void SetEntityActiveOverride_NoCallback(bool bIsActiveOverride)
+		{
+			if (IsValid())
+			{
+				GetContainer()->SetEntityActiveOverride_NoCallback(*this, bIsActiveOverride);
+			}
+		}
+
+		void SetEntityDisabledOverrideCount_NoCallback(uint32_t disabledOverrideCount)
+		{
+			if (IsValid())
+			{
+				GetContainer()->SetEntityDisabledOverrideCount_NoCallback(*this, disabledOverrideCount);
+			}
+		}
+
+		void ResetDisabledOverrideCount_NoCallback()
+		{
+			if (IsValid())
+			{
+				GetContainer()->ResetDisabledOverrideCount_NoCallback(*this);
+			}
 		}
 
 	#pragma endregion
