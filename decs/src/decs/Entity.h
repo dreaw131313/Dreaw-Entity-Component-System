@@ -110,7 +110,7 @@ namespace decs
 			}
 		}
 
-		void SetEntityActiveOverride(bool bIsActiveOverride)
+		void SetEntityActiveOverride(bool bIsActiveOverride) const
 		{
 			if (IsValid())
 			{
@@ -118,7 +118,7 @@ namespace decs
 			}
 		}
 
-		void SetEntityDisabledOverrideCount(uint32_t disabledOverrideCount)
+		void SetEntityDisabledOverrideCount(uint32_t disabledOverrideCount) const
 		{
 			if (IsValid())
 			{
@@ -126,7 +126,7 @@ namespace decs
 			}
 		}
 
-		void ResetDisabledOverrideCount()
+		void ResetDisabledOverrideCount() const
 		{
 			if (IsValid())
 			{
@@ -134,7 +134,7 @@ namespace decs
 			}
 		}
 
-		uint32_t GetEntityActiveOverrideCount()
+		uint32_t GetEntityActiveOverrideCount() const
 		{
 			if (IsValid())
 			{
@@ -355,7 +355,7 @@ namespace decs
 			return IsValid() && GetContainer_Internal()->RemoveComponent_NoCallback(*this, componentTypeID);
 		}
 
-		void SetEntityActiveOverride_NoCallback(bool bIsActiveOverride)
+		void SetEntityActiveOverride_NoCallback(bool bIsActiveOverride) const
 		{
 			if (IsValid())
 			{
@@ -363,7 +363,7 @@ namespace decs
 			}
 		}
 
-		void SetEntityDisabledOverrideCount_NoCallback(uint32_t disabledOverrideCount)
+		void SetEntityDisabledOverrideCount_NoCallback(uint32_t disabledOverrideCount) const
 		{
 			if (IsValid())
 			{
@@ -371,7 +371,7 @@ namespace decs
 			}
 		}
 
-		void ResetDisabledOverrideCount_NoCallback()
+		void ResetDisabledOverrideCount_NoCallback() const
 		{
 			if (IsValid())
 			{
