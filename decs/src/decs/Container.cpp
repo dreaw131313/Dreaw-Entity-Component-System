@@ -162,24 +162,95 @@ namespace decs
 		return false;
 	}
 
-	void Container::SetEntityActive(const Entity& entity, bool isActive)
+	void Container::SetEntityActive(const Entity& entity, bool bIsActive)
 	{
 		if (entity.GetContainer() == this
 			&& entity.GetEntityData()->IsValidToChangeActiveState()
-			&& entity.GetEntityData()->IsActive() != isActive
+			&& entity.GetEntityData()->IsActiveFlag() != bIsActive
 			)
 		{
-			entity.GetEntityData()->SetActiveState(isActive);
-			if (isActive)
-			{
-				InvokeEntityAndComponentEnableObservers_Internal(entity);
-			}
-			else
-			{
-				InvokeEntityAndComponentsDisableObservers_Internal(entity);
-			}
+			const bool bOldEntityActiveState = entity.GetEntityData()->IsActive();
+			entity.GetEntityData()->SetActiveState(bIsActive);
+			const bool bNewEntityActiveState = entity.GetEntityData()->IsActive();
 
+			if (bOldEntityActiveState != bNewEntityActiveState)
+			{
+				if (bNewEntityActiveState)
+				{
+					InvokeEntityAndComponentEnableObservers_Internal(entity);
+				}
+				else
+				{
+					InvokeEntityAndComponentsDisableObservers_Internal(entity);
+				}
+			}
 		}
+	}
+
+	void Container::SetEntityActiveOverride(const Entity& entity, bool bIsActiveOverride)
+	{
+		if (entity.GetContainer() == this)
+		{
+			auto entityData = entity.GetEntityData();
+			if (entityData->IsValidToChangeActiveState())
+			{
+				const bool bOldEntityActiveState = entityData->IsActive();
+				entityData->SetDisableOverride(bIsActiveOverride);
+				const bool bNewEntityActiveState = entityData->IsActive();
+
+				if (bOldEntityActiveState != bNewEntityActiveState)
+				{
+					if (bNewEntityActiveState)
+					{
+						InvokeEntityAndComponentEnableObservers_Internal(entity);
+					}
+					else
+					{
+						InvokeEntityAndComponentsDisableObservers_Internal(entity);
+					}
+				}
+			}
+		}
+	}
+
+	void Container::SetEntityDisabledOverrideCount(const Entity& entity, uint32_t disabledOverrideCount)
+	{
+		if (entity.GetContainer() == this)
+		{
+			auto entityData = entity.GetEntityData();
+			if (entityData->IsValidToChangeActiveState())
+			{
+				const bool bOldEntityActiveState = entityData->IsActive();
+				entityData->SetDisabledOverrideCount(disabledOverrideCount);
+				const bool bNewEntityActiveState = entityData->IsActive();
+
+				if (bOldEntityActiveState != bNewEntityActiveState)
+				{
+					if (bNewEntityActiveState)
+					{
+						InvokeEntityAndComponentEnableObservers_Internal(entity);
+					}
+					else
+					{
+						InvokeEntityAndComponentsDisableObservers_Internal(entity);
+					}
+				}
+			}
+		}
+	}
+
+	void Container::ResetDisabledOverrideCount(const Entity& entity)
+	{
+		SetEntityDisabledOverrideCount(entity, 0);
+	}
+
+	uint32_t Container::GetEntityActiveOverrides(const Entity& entity)
+	{
+		if (entity.GetContainer() == this && entity.GetEntityData()->IsValidToChangeActiveState())
+		{
+			return entity.GetEntityData()->GetDisabledOverrideCount();
+		}
+		return 0;
 	}
 
 	void Container::AddToEmptyEntitiesRightAfterNewEntityCreation(EntityData& data)
@@ -1484,7 +1555,7 @@ namespace decs
 	{
 		if (entity.GetContainer() == this
 			&& entity.GetEntityData()->IsAlive()
-			&& entity.GetEntityData()->IsActive() != bIsActive)
+			&& entity.GetEntityData()->IsActiveFlag() != bIsActive)
 		{
 			entity.GetEntityData()->SetActiveState(bIsActive);
 		}
@@ -1546,6 +1617,39 @@ namespace decs
 		}
 
 		return true;
+	}
+
+	void Container::SetEntityActiveOverride_NoCallback(const Entity& entity, bool bIsActiveOverride)
+	{
+		if (entity.GetContainer() == this)
+		{
+			auto entityData = entity.GetEntityData();
+			if (entityData->IsValidToChangeActiveState())
+			{
+				const bool bOldEntityActiveState = entityData->IsActive();
+				entityData->SetDisableOverride(bIsActiveOverride);
+				const bool bNewEntityActiveState = entityData->IsActive();
+			}
+		}
+	}
+
+	void Container::SetEntityDisabledOverrideCount_NoCallback(const Entity& entity, uint32_t disabledOverrideCount)
+	{
+		if (entity.GetContainer() == this)
+		{
+			auto entityData = entity.GetEntityData();
+			if (entityData->IsValidToChangeActiveState())
+			{
+				const bool bOldEntityActiveState = entityData->IsActive();
+				entityData->SetDisabledOverrideCount(disabledOverrideCount);
+				const bool bNewEntityActiveState = entityData->IsActive();
+			}
+		}
+	}
+
+	void Container::ResetDisabledOverrideCount_NoCallback(const Entity& entity)
+	{
+		SetEntityDisabledOverrideCount_NoCallback(entity, 0);
 	}
 
 }

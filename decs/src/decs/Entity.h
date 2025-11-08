@@ -84,9 +84,22 @@ namespace decs
 			return nullptr;
 		}
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns>Active state with disable overrides taken into account</returns>
 		inline bool IsActive() const
 		{
 			return IsValid() && m_EntityData->IsActive();
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns>Active state without disable overrides taken into account</returns>
+		inline bool IsActiveFlag() const
+		{
+			return IsValid() && m_EntityData->IsActiveFlag();
 		}
 
 		inline void SetActive(const bool& isActive) const
@@ -432,19 +445,24 @@ namespace decs
 			return rhs == m_Entity;
 		}
 
-		inline bool IsValid() const
+		inline bool IsValid() const noexcept
 		{
 			return m_Entity.IsValid();
 		}
 
-		inline bool IsNull() const
+		inline bool IsNull() const noexcept
 		{
 			return m_Entity.IsNull();
 		}
 
-		inline bool IsActive() const
+		inline bool IsActive() const noexcept
 		{
 			return m_Entity.IsActive();
+		}
+
+		inline bool IsActiveFlag() const noexcept
+		{
+			return m_Entity.IsActiveFlag();
 		}
 
 		inline EntityID GetID() const

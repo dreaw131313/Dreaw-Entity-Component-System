@@ -49,11 +49,51 @@ namespace decs
 
 	void EntityData::SetActiveState(bool state)
 	{
-		m_bIsActive = state;
-
-		if (m_Archetype != nullptr)
+		bool bOldActiveState = IsActive();
 		{
-			m_Archetype->SetEntityActiveState(m_IndexInArchetype, state);
+			m_bIsActive = state;
 		}
+		bool bNewActiveState = IsActive();
+
+		if (m_Archetype != nullptr && bOldActiveState != bNewActiveState)
+		{
+			m_Archetype->SetEntityActiveState(m_IndexInArchetype, bNewActiveState);
+		}
+	}
+
+	void EntityData::SetDisableOverride(bool bDisableOverride)
+	{
+		bool bOldActiveState = IsActive();
+		if (bDisableOverride)
+		{
+			m_DisabledOverrideCount = m_DisabledOverrideCount > 0 ? m_DisabledOverrideCount - 1 : 0;
+		}
+		else
+		{
+			m_DisabledOverrideCount++;
+		}
+		bool bNewActiveState = IsActive();
+
+		if (m_Archetype != nullptr && bOldActiveState != bNewActiveState)
+		{
+			m_Archetype->SetEntityActiveState(m_IndexInArchetype, bNewActiveState);
+		}
+	}
+
+	void EntityData::SetDisabledOverrideCount(uint32_t disableOverrideCount)
+	{
+		bool bOldActiveState = IsActive();
+		m_DisabledOverrideCount = disableOverrideCount;
+		bool bNewActiveState = IsActive();
+
+		if (m_Archetype != nullptr && bOldActiveState != bNewActiveState)
+		{
+			m_Archetype->SetEntityActiveState(m_IndexInArchetype, bNewActiveState);
+		}
+	}
+
+	void EntityData::ResetDisableOverrideCount()
+	{
+		SetDisabledOverrideCount(0);
 	}
 }

@@ -125,6 +125,21 @@ namespace decs
 
 		void SetEntityActive(const Entity& entity, bool bIsActive);
 
+	public:
+		/// <summary>
+		/// Needed for Try Engine to make hierarchies active state changes correct
+		/// </summary>
+		/// <param name="entity"></param>
+		/// <param name="bIsActive"></param>
+		void SetEntityActiveOverride(const Entity& entity, bool bIsActiveOverride);
+
+		void SetEntityDisabledOverrideCount(const Entity& entity, uint32_t disabledOverrideCount);
+
+		void ResetDisabledOverrideCount(const Entity& entity);
+
+		uint32_t GetEntityActiveOverrides(const Entity& entity);
+
+	private:
 		void AddToEmptyEntitiesRightAfterNewEntityCreation(EntityData& data);
 
 		void AddToEmptyEntities(EntityData& data);
@@ -1259,6 +1274,13 @@ namespace decs
 		}
 
 		bool RemoveComponent_NoCallback(const Entity& entity, TypeID componentTypeID);
+
+	public:
+		void SetEntityActiveOverride_NoCallback(const Entity& entity, bool bIsActiveOverride);
+
+		void SetEntityDisabledOverrideCount_NoCallback(const Entity& entity, uint32_t disabledOverrideCount);
+
+		void ResetDisabledOverrideCount_NoCallback(const Entity& entity);
 
 	#pragma endregion
 

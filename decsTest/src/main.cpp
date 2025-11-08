@@ -63,8 +63,6 @@ public:
 	// Inherited via CreateComponentObserver
 	void OnCreateComponent(TestComponent& component, const decs::Entity& entity) override
 	{
-
-		entity.AddComponent<Renderer>();
 	}
 
 	// Inherited via DestroyComponentObserver
@@ -104,9 +102,10 @@ int main()
 		decs::Container container = {};
 		observerManager.FillContainerObservers(container);
 
-		prefab = container.CreateEntity_NoCallbacks();
+		prefab = container.CreateEntity();
 		prefab.AddComponent_NoCallback<TestComponent>();
 		prefab.AddTag<FloatTag>();
+		container.SetEntityActiveOverride(prefab, false);
 
 		auto comp = prefab.GetComponent<TestComponent>();
 

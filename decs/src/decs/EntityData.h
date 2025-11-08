@@ -55,12 +55,16 @@ namespace decs
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 
 		EntityVersion m_Version = 1;
+		/// <summary>
+		/// how many times disabled override was performed. Every disable override increments disable counter, and enable decrements. If counter is equal 0 means there is no disable overrides, and enabling override do not change counter value.
+		/// </summary>
+		uint32_t m_DisabledOverrideCount = 0; 
+
 		EEntityState m_State = EEntityState::Alive;
 
 		bool m_bIsActive = false;
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByContainer = false;
-
 
 	public:
 		EntityData() = delete;
@@ -87,9 +91,19 @@ namespace decs
 
 		inline EntityID GetID() const noexcept { return m_ID; }
 
-		inline bool IsActive() const
+		inline bool IsActive() const noexcept
+		{
+			return m_bIsActive && m_DisabledOverrideCount == 0;
+		}
+
+		inline bool IsActiveFlag() const noexcept
 		{
 			return m_bIsActive;
+		}
+
+		inline uint32_t GetDisabledOverrideCount() const noexcept
+		{
+			return m_DisabledOverrideCount;
 		}
 
 		inline bool IsAlive() const noexcept
@@ -147,6 +161,12 @@ namespace decs
 		uint32_t GetComponentOnlyCount() const;
 
 		void SetActiveState(bool state);
+
+		void SetDisableOverride(bool bDisableOverride);
+
+		void SetDisabledOverrideCount(uint32_t disableOverrideCount);
+
+		void ResetDisableOverrideCount();
 
 		inline bool IsInManager() const
 		{
