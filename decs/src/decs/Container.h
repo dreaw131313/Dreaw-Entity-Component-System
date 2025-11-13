@@ -101,6 +101,11 @@ namespace decs
 		TRefCounterHandle<EnityLifeTimeData> m_EntitiesLifeTimeData{};
 
 	public:
+		const TRefCounterHandle<EnityLifeTimeData>& GetLifeTimeData() const 
+		{
+			return m_EntitiesLifeTimeData;
+		}
+
 		Entity CreateEntity(bool bIsActive = true);
 
 		inline uint32_t GetEntityCount() const

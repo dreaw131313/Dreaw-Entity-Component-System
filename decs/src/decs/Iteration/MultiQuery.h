@@ -137,6 +137,11 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
+				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+				{
+					entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+				}
+
 				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
 				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
 
@@ -156,7 +161,7 @@ namespace decs
 						{
 							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
-								entityBuffor.Set_Internal(*entityData.m_EntityData);
+								entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
 								func(
 									entityBuffor,
 									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
@@ -200,6 +205,11 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
+				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+				{
+					entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+				}
+
 				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
 				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
 
@@ -219,7 +229,7 @@ namespace decs
 						{
 							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
-								entityBuffor.Set_Internal(*entityData.m_EntityData);
+								entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
 								func(
 									entityBuffor,
 									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
@@ -266,6 +276,11 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
+				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+				{
+					entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+				}
+
 				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
 				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
 
@@ -285,7 +300,7 @@ namespace decs
 						{
 							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
-								entityBuffor.Set_Internal(*entityData.m_EntityData);
+								entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
 								func(
 									entityBuffor,
 									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
@@ -323,6 +338,11 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
+				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+				{
+					entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+				}
+
 				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
 				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
 
@@ -345,7 +365,7 @@ namespace decs
 						{
 							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 							{
-								entityBuffor.Set_Internal(*entityData.m_EntityData);
+								entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
 								func(
 									entityBuffor,
 									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
@@ -571,6 +591,11 @@ namespace decs
 						continue; // Skip if container context is disabled
 					}
 
+					if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+					{
+						entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+					}
+
 					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
 					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
 
@@ -617,7 +642,7 @@ namespace decs
 							{
 								if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 								{
-									entityBuffor.Set_Internal(*entityData.m_EntityData);
+									entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
 									func(
 										entityBuffor,
 										std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
@@ -654,6 +679,11 @@ namespace decs
 					if (!containerContext.m_bIsEnabled)
 					{
 						continue; // Skip if container context is disabled
+					}
+
+					if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+					{
+						entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 					}
 
 					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
@@ -705,7 +735,7 @@ namespace decs
 							{
 								if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 								{
-									entityBuffor.Set_Internal(*entityData.m_EntityData);
+									entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
 									func(
 										entityBuffor,
 										std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...

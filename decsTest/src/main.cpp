@@ -117,16 +117,24 @@ int main()
 			PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
 		};
 
-		decs::MultiQuery<TestComponent> query{};
-		query.AddContainer(&container);
 
-
-		std::vector<decs::MultiQuery<TestComponent> ::BatchIterator> iterators{};
-		query.CreateBatchIteratorsWithMaxNumberPerBatch(iterators, 7);
-
-		for (auto& it : iterators)
 		{
-			it.ForEach(testFunc);
+			decs::Query<TestComponent> query(&container);
+			query.ForEachBackward(testFunc);
+		}
+
+		{
+			decs::MultiQuery<TestComponent> multiQuery{};
+			multiQuery.AddContainer(&container);
+
+
+			std::vector<decs::MultiQuery<TestComponent> ::BatchIterator> iterators{};
+			multiQuery.CreateBatchIteratorsWithMaxNumberPerBatch(iterators, 7);
+
+			for (auto& it : iterators)
+			{
+				it.ForEach(testFunc);
+			}
 		}
 	}
 

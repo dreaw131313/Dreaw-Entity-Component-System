@@ -453,6 +453,17 @@ namespace decs
 			m_Version = std::numeric_limits<EntityVersion>::max();
 		}
 
+		inline void SetWithoutLifeTimeDataInvalidation_Internal(EntityData& data)
+		{
+			m_EntityData = &data;
+			m_Version = m_EntityData->GetVersion();
+		}
+
+		inline void SetLifeTimeData_Internal(const TRefCounterHandle<EnityLifeTimeData>& lifeTimeData)
+		{
+			m_LifeTimeData = lifeTimeData;
+		}
+
 		Container* GetContainer_Internal() const
 		{
 			return m_EntityData->m_Container;
