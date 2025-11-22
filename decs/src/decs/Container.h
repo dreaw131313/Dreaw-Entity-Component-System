@@ -20,6 +20,14 @@ namespace decs
 	class Entity;
 	class SpawnEntityCallback;
 
+	struct ContainerConfig
+	{
+	public:
+		uint64_t EntityChunkSize = 1000;
+		uint64_t DefaultComponentChunkSize = 1000;
+		uint64_t ArchetypeChunkSize = 1000;
+	};
+
 	class Container
 	{
 		template<TComponentConcept ...Types>
@@ -44,10 +52,7 @@ namespace decs
 	public:
 		Container();
 
-		Container(
-			uint64_t enititesChunkSize,
-			uint32_t stableComponentDefaultChunkSize
-		);
+		Container(const ContainerConfig& config);
 
 		~Container();
 
@@ -96,7 +101,7 @@ namespace decs
 	#pragma region ENTITIES:
 	private:
 		std::vector<EntityData*> m_EmptyEntities = {};
-		EntityManager m_EntityManager;
+		EntityManager m_EntityManager{};
 
 		TRefCounterHandle<EnityLifeTimeData> m_EntitiesLifeTimeData{};
 
@@ -816,7 +821,7 @@ namespace decs
 		}
 
 	private:
-		ArchetypesMap m_ArchetypesMap;
+		ArchetypesMap m_ArchetypesMap{};
 
 	private:
 		template<typename TComponent>

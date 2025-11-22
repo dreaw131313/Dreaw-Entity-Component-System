@@ -7,7 +7,7 @@ namespace decs
 	class TChunkedVector
 	{
 	private:
-#pragma region TChunk class
+	#pragma region TChunk class
 		class TChunk final
 		{
 		public:
@@ -125,7 +125,7 @@ namespace decs
 			T* m_Data = nullptr;
 		};
 
-#pragma endregion
+	#pragma endregion
 
 	public:
 		struct EmplaceBackData final
@@ -139,7 +139,7 @@ namespace decs
 				uint64_t chunkIndex,
 				uint64_t elementIndex,
 				T* data
-			) :
+			):
 				ChunkIndex(chunkIndex),
 				ElementIndex(elementIndex),
 				Data(data)
@@ -164,7 +164,7 @@ namespace decs
 			}
 		}
 
-		TChunkedVector(uint64_t chunkCapacity) :
+		TChunkedVector(uint64_t chunkCapacity):
 			m_ChunkCapacity(chunkCapacity)
 		{
 			AddChunk();
@@ -186,7 +186,7 @@ namespace decs
 			}
 		}
 
-		TChunkedVector(TChunkedVector&& other) noexcept :
+		TChunkedVector(TChunkedVector&& other) noexcept:
 			m_ChunkCapacity(other.m_ChunkCapacity),
 			m_ChunksCount(other.m_ChunksCount),
 			m_CreatedElements(other.m_CreatedElements)

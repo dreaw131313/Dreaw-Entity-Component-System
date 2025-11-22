@@ -43,6 +43,16 @@ namespace decs
 
 		}
 
+		[[nodiscard]] uint64_t GetEntityCount()
+		{
+			Fetch();
+
+			uint64_t entityCount = 0;
+
+
+			return entityCount;
+		}
+
 		inline uint64_t GetMinComponentsCount() const
 		{
 			uint64_t includesCount = sizeof...(ComponentsTypes);

@@ -99,7 +99,12 @@ int main()
 
 	decs::Entity prefab{};
 	{
-		decs::Container container = {};
+		decs::ContainerConfig containerConfig{
+			.EntityChunkSize = 1000,
+			.DefaultComponentChunkSize = 200,
+			.ArchetypeChunkSize = 200,
+		};
+		decs::Container container = { containerConfig };
 		observerManager.FillContainerObservers(container);
 
 		prefab = container.CreateEntity();
@@ -137,6 +142,8 @@ int main()
 			query.ForEachBackward_Safe(testFunc);
 			query.ForEach_IngoreEntityActiveState(testFunc);*/
 
+			uint64_t queryEntityCount = query.GetEntityCount();
+
 			std::vector<QueryType::BatchIterator> iterators{};
 			query.CreateBatchIterators(iterators, 10, 3);
 
@@ -150,6 +157,8 @@ int main()
 		{
 			decs::MultiQuery<TestComponent> multiQuery{};
 			multiQuery.AddContainer(&container);
+
+			uint64_t queryEntityCount = multiQuery.GetEntityCount();
 
 			/*multiQuery.ForEach(testFunc);
 			multiQuery.ForEach_Safe(testFunc);

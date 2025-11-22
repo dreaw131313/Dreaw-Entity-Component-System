@@ -13,12 +13,10 @@ namespace decs
 		InitializeLifeTimeData();
 	}
 
-	Container::Container(
-		uint64_t enititesChunkSize,
-		uint32_t stableComponentDefaultChunkSize
-	):
-		m_EntityManager(enititesChunkSize),
-		m_ComponentContextManager(stableComponentDefaultChunkSize)
+	Container::Container(const ContainerConfig& config):
+		m_EntityManager(config.EntityChunkSize),
+		m_ComponentContextManager(static_cast<uint32_t>(config.DefaultComponentChunkSize)),
+		m_ArchetypesMap(config.ArchetypeChunkSize, 100)
 	{
 		InitializeLifeTimeData();
 	}

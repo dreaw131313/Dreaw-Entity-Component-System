@@ -113,6 +113,17 @@ namespace decs
 			}
 		}
 
+		uint64_t GetEntityCount()
+		{
+			uint64_t entityCount = 0;
+
+			for (const auto& archetypeCtx : m_ArchetypesContexts)
+			{
+				entityCount += archetypeCtx.GetEntityCount();
+			}
+
+			return entityCount;
+		}
 	private:
 
 		inline bool ContainArchetype(Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }

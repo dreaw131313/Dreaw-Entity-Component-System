@@ -56,6 +56,22 @@ namespace decs
 
 		inline bool IsValid()const { return m_Container != nullptr; }
 
+		[[nodiscard]] inline uint64_t GetEntityCount()
+		{
+			if (IsValid())
+			{
+				Fetch();
+
+				uint64_t entityCount = 0;
+				for (auto& archetypeCtx : m_ArchetypesContexts)
+				{
+					entityCount += archetypeCtx.GetEntityCount();
+				}
+			}
+
+			return 0;
+		}
+
 		template<TComponentOrTagConcept... ComponentsTypes>
 		Query& Without()
 		{
@@ -328,7 +344,6 @@ namespace decs
 			}
 		}
 
-
 		inline void Fetch()
 		{
 			if (!IsValid()) return;
@@ -340,7 +355,7 @@ namespace decs
 		/// </summary>
 		/// <param name="entity"></param>
 		/// <returns></returns>
-		bool Contain(const decs::Entity& entity)
+		[[nodiscard]] bool Contain(const decs::Entity& entity)
 		{
 			if (entity.IsValid())
 			{
