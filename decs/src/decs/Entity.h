@@ -392,7 +392,7 @@ namespace decs
 			return false;
 		}
 
-		template<typename TTag>
+		template<TTagConcept TTag>
 		inline bool HasTag()const
 		{
 			if (IsValid())
@@ -402,7 +402,7 @@ namespace decs
 			return false;
 		}
 
-		template<typename TTag>
+		template<TTagConcept TTag>
 		bool AddTag()const
 		{
 			if (IsValid())
@@ -421,7 +421,7 @@ namespace decs
 			return false;
 		}
 
-		template<typename TTag>
+		template<TTagConcept TTag>
 		bool RemoveTag() const
 		{
 			if (IsValid())
@@ -603,7 +603,7 @@ namespace decs
 			return m_Entity.HasTag(tagType);
 		}
 
-		template<typename TTag>
+		template<TTagConcept TTag>
 		inline bool HasTag()const
 		{
 			return m_Entity.HasTag<TTag>();

@@ -6,6 +6,7 @@
 #include "decs/ComponentContainers/StableContainer.h"
 #include "decs/EntityData.h"
 
+#include "decs/trait.h"
 
 namespace decs
 {
@@ -247,7 +248,7 @@ namespace decs
 			return m_TypeData[index].IsTag();
 		}
 
-		template<typename TTag>
+		template<TTagConcept TTag>
 		inline bool HasTag() const
 		{
 			return HasTag(Type<TTag>::ID());

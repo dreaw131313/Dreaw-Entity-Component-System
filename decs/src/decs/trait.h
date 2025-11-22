@@ -31,4 +31,7 @@ namespace decs
 	template<typename... Ts>
 	inline constexpr bool contain_tags_v = (is_tag_v<Ts> || ...);
 
+	template<typename TTag>
+	concept TTagConcept = is_tag_v<TTag>;
+
 }

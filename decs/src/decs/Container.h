@@ -702,24 +702,15 @@ namespace decs
 			return entityData.m_Archetype->HasTag(tagType);
 		}
 
-		template<typename TTag>
+		template<TTagConcept TTag>
 		inline bool HasTag(const EntityData& entityData)
 		{
-			if constexpr (!is_tag_v<TTag>)
-			{
-				return false;
-			}
 			return HasTag(entityData, Type<TTag>::ID());
 		}
 
-		template<typename TTag>
+		template<TTagConcept TTag>
 		bool AddTag(EntityData& entityData)
 		{
-			if constexpr (!is_tag_v<TTag>)
-			{
-				return false;
-			}
-
 			if (!m_CanAddComponents || !entityData.IsValidToPerformComponentOperation())
 			{
 				return HasTag<TTag>(entityData);
@@ -773,14 +764,9 @@ namespace decs
 
 		bool RemoveTag(EntityData& entityData, TypeID tagType);
 
-		template<typename TTag>
+		template<TTagConcept TTag>
 		bool RemoveTag(EntityData& entityData)
 		{
-			if constexpr (!is_tag_v<TTag>)
-			{
-				return false;
-			}
-
 			return RemoveTag(entityData, Type<TTag>::ID());
 		}
 
