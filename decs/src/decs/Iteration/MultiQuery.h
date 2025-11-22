@@ -35,6 +35,8 @@ namespace decs
 		template<typename TComponent>
 		using PackedContainerType = StablePackedContainer<TComponent>*;
 
+		using ContainersTupleType = std::tuple<PackedContainerType<ComponentsTypes>...>;
+
 	public:
 		MultiQuery()
 		{
@@ -127,8 +129,8 @@ namespace decs
 		{
 			Fetch();
 
-			decs::Entity entityBuffor = {};
-			std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
+			decs::Entity entityBuffer = {};
+			ContainersTupleType containersTuple = {};
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
@@ -141,7 +143,7 @@ namespace decs
 
 				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 				{
-					entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 				}
 
 				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
@@ -161,23 +163,63 @@ namespace decs
 						const auto& entityData = entitiesData[idx];
 						if (entityData.IsActive())
 						{
-							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
-							{
-								entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
-								func(
-									entityBuffor,
-									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
-								);
-							}
-							else
-							{
-								func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
-							}
+							InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 						}
 					}
 				}
 			}
+		}
 
+		/// <summary>
+		/// Works exacly like ForEach.
+		/// There may be need to iterate over entities during certian component creattion or enable callbacks. In such cases destruction of component or entity can be deffered if functions like "Container::InvokeEntitesOnCreateListeners" are used. At that moment entities are not removed from archetype, but their records are invalidated. This function checks during iteration whether entity record is valid. It is not default behavior for iteration methods, as they are optimized for maximum performance.
+		/// </summary>
+		/// <typeparam name="Callable"></typeparam>
+		/// <param name="func"></param>
+		template<typename Callable>
+		inline void ForEach_Safe(Callable&& func) noexcept
+		{
+			Fetch();
+
+			decs::Entity entityBuffer = {};
+			ContainersTupleType containersTuple = {};
+
+			uint64_t contextSize = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
+			{
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				if (!containerContext.m_bIsEnabled)
+				{
+					continue; // Skip if container context is disabled
+				}
+
+				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+				{
+					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+				}
+
+				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+
+				for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+				{
+					ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+					uint64_t ctxEntityCount = ctx.GetEntityCount();
+					if (ctxEntityCount == 0) continue;
+
+					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+					{
+						const auto& entityData = entitiesData[idx];
+						if (entityData.m_EntityData != nullptr && entityData.IsActive())
+						{
+							InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+						}
+					}
+				}
+			}
 		}
 
 		/// <summary>
@@ -195,8 +237,8 @@ namespace decs
 		{
 			Fetch();
 
-			decs::Entity entityBuffor = {};
-			std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
+			decs::Entity entityBuffer = {};
+			ContainersTupleType containersTuple = {};
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
@@ -209,7 +251,7 @@ namespace decs
 
 				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 				{
-					entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 				}
 
 				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
@@ -229,18 +271,7 @@ namespace decs
 						const auto& entityData = entitiesData[idx];
 						if (entityData.IsActive())
 						{
-							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
-							{
-								entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
-								func(
-									entityBuffor,
-									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
-								);
-							}
-							else
-							{
-								func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
-							}
+							InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 						}
 					}
 				}
@@ -248,7 +279,7 @@ namespace decs
 		}
 
 		/// <summary>
-		/// Works exacly like foreach backward.
+		/// Works exacly like ForEachBackward.
 		/// There may be need to iterate over entities during certian component creattion or enable callbacks. In such cases destruction of component or entity can be deffered if functions like "Container::InvokeEntitesOnCreateListeners" are used. At that moment entities are not removed from archetype, but their records are invalidated. This function checks during iteration whether entity record is valid. It is not default behavior for iteration methods, as they are optimized for maximum performance.
 		/// </summary>
 		/// <typeparam name="Callable"></typeparam>
@@ -258,8 +289,8 @@ namespace decs
 		{
 			Fetch();
 
-			decs::Entity entityBuffor = {};
-			std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
+			decs::Entity entityBuffer = {};
+			ContainersTupleType containersTuple = {};
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
@@ -272,7 +303,7 @@ namespace decs
 
 				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 				{
-					entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 				}
 
 				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
@@ -292,18 +323,7 @@ namespace decs
 						const auto& entityData = entitiesData[idx];
 						if (entityData.m_EntityData != nullptr && entityData.IsActive())
 						{
-							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
-							{
-								entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
-								func(
-									entityBuffor,
-									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
-								);
-							}
-							else
-							{
-								func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
-							}
+							InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 						}
 					}
 				}
@@ -319,8 +339,8 @@ namespace decs
 		{
 			Fetch();
 
-			decs::Entity entityBuffor = {};
-			std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
+			decs::Entity entityBuffer = {};
+			ContainersTupleType containersTuple = {};
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
@@ -333,7 +353,7 @@ namespace decs
 
 				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 				{
-					entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 				}
 
 				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
@@ -351,23 +371,9 @@ namespace decs
 					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 					{
 						const auto& entityData = entitiesData[idx];
-						// Add safety check since the entity can sometimes be null, meaning the record is invalid.
-						// When iterating with entity state checks, an explicit validity check is unnecessary—
-						// if the entity data is nullptr, the archetype's "is active" flag will already be false.
 						if (entityData.m_EntityData != nullptr)
 						{
-							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
-							{
-								entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
-								func(
-									entityBuffor,
-									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
-								);
-							}
-							else
-							{
-								func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
-							}
+							InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 						}
 					}
 				}
@@ -514,7 +520,7 @@ namespace decs
 
 		template<typename T = void, typename... Args>
 		void CreatePackedContainersTuple(
-			std::tuple<PackedContainerType<ComponentsTypes>...>& containersTuple,
+			ContainersTupleType& containersTuple,
 			const ArchetypeContextType& context
 		) const noexcept
 		{
@@ -531,12 +537,39 @@ namespace decs
 
 		template<>
 		void CreatePackedContainersTuple<void>(
-			std::tuple<PackedContainerType<ComponentsTypes>...>& containersTuple,
+			ContainersTupleType& containersTuple,
 			const ArchetypeContextType& context
 		) const noexcept
 		{
 
 		}
+
+
+	private:
+		template<typename Callable>
+		inline static void InvokeEntityIteration(
+			Callable&& func,
+			Entity& entityBuffer,
+			EntityData& entityData,
+			uint64_t entityIndexInArchetype,
+			const ContainersTupleType& containersTuple
+		)
+		{
+			if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+			{
+				entityBuffer.SetWithoutLifeTimeDataInvalidation_Internal(entityData);
+				func(
+					entityBuffer,
+					std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(entityIndexInArchetype)...
+				);
+			}
+			else
+			{
+				func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
+			}
+		}
+
+	public:
 
 	public:
 		struct BatchIterator
@@ -570,8 +603,8 @@ namespace decs
 			void ForEach(Callable&& func) noexcept
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
-				decs::Entity entityBuffor = {};
-				std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
+				decs::Entity entityBuffer = {};
+				ContainersTupleType containersTuple = {};
 
 				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
@@ -586,7 +619,7 @@ namespace decs
 
 					if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 					{
-						entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+						entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 					}
 
 					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
@@ -633,18 +666,7 @@ namespace decs
 							const auto& entityData = entitiesData[idx];
 							if (entityData.IsActive())
 							{
-								if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
-								{
-									entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
-									func(
-										entityBuffor,
-										std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
-									);
-								}
-								else
-								{
-									func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
-								}
+								InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 							}
 						}
 
@@ -660,8 +682,8 @@ namespace decs
 			void ForEach_IngoreEntityActiveState(Callable&& func)
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
-				decs::Entity entityBuffor = {};
-				std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
+				decs::Entity entityBuffer = {};
+				ContainersTupleType containersTuple = {};
 
 				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
@@ -676,7 +698,7 @@ namespace decs
 
 					if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 					{
-						entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+						entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 					}
 
 					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
@@ -721,23 +743,9 @@ namespace decs
 						for (uint64_t idx = startEntitiyIndex; idx < entitiesCount; idx++)
 						{
 							const auto& entityData = entitiesData[idx];
-							// Add safety check since the entity can sometimes be null, meaning the record is invalid.
-							// When iterating with entity state checks, an explicit validity check is unnecessary—
-							// if the entity data is nullptr, the archetype's "is active" flag will already be false.
 							if (entityData.m_EntityData != nullptr)
 							{
-								if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
-								{
-									entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
-									func(
-										entityBuffor,
-										std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
-									);
-								}
-								else
-								{
-									func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
-								}
+								InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 							}
 						}
 
@@ -759,7 +767,7 @@ namespace decs
 		private:
 			template<typename T = void, typename... Args>
 			void CreatePackedContainersTuple(
-				std::tuple<PackedContainerType<ComponentsTypes>...>& containersTuple,
+				ContainersTupleType& containersTuple,
 				const ArchetypeContextType& context
 			) const noexcept
 			{
@@ -775,7 +783,7 @@ namespace decs
 
 			template<>
 			void CreatePackedContainersTuple<void>(
-				std::tuple<PackedContainerType<ComponentsTypes>...>& containersTuple,
+				ContainersTupleType& containersTuple,
 				const ArchetypeContextType& context
 			) const noexcept
 			{
