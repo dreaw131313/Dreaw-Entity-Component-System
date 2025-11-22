@@ -248,6 +248,68 @@ namespace decs
 		}
 
 		/// <summary>
+		/// Works exacly like foreach backward.
+		/// There may be need to iterate over entities during certian component creattion or enable callbacks. In such cases destruction of component or entity can be deffered if functions like "Container::InvokeEntitesOnCreateListeners" are used. At that moment entities are not removed from archetype, but their records are invalidated. This function checks during iteration whether entity record is valid. It is not default behavior for iteration methods, as they are optimized for maximum performance.
+		/// </summary>
+		/// <typeparam name="Callable"></typeparam>
+		/// <param name="func"></param>
+		template<typename Callable>
+		void ForEachBackward_Safe(Callable&& func) noexcept
+		{
+			Fetch();
+
+			decs::Entity entityBuffor = {};
+			std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
+
+			uint64_t contextSize = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
+			{
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				if (!containerContext.m_bIsEnabled)
+				{
+					continue; // Skip if container context is disabled
+				}
+
+				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+				{
+					entityBuffor.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+				}
+
+				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
+				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
+
+				for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
+				{
+					ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+					uint64_t ctxEntityCount = ctx.GetEntityCount();
+					if (ctxEntityCount == 0) continue;
+
+					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+
+					for (int64_t idx = (int64_t)ctxEntityCount - 1; idx > -1; idx--)
+					{
+						const auto& entityData = entitiesData[idx];
+						if (entityData.m_EntityData != nullptr && entityData.IsActive())
+						{
+							if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+							{
+								entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
+								func(
+									entityBuffor,
+									std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
+								);
+							}
+							else
+							{
+								func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
+							}
+						}
+					}
+				}
+			}
+		}
+		/// <summary>
 		/// Same rules apply like in Foreach methods. But here iteration is for every entity even if entity is not active
 		/// </summary>
 		/// <typeparam name="Callable"></typeparam>

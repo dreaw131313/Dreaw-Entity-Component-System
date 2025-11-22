@@ -23,6 +23,8 @@ namespace decs
 		template<typename TComponent>
 		using PackedContainerType = StablePackedContainer<TComponent>*;
 
+		using ContainersTuple = std::tuple<std::tuple<PackedContainerType<ComponentsTypes>...>>;
+
 	public:
 		Query()
 		{
@@ -229,6 +231,58 @@ namespace decs
 		}
 
 		/// <summary>
+		/// Works exacly like foreach backward.
+		/// There may be need to iterate over entities during certian component creattion or enable callbacks. In such cases destruction of component or entity can be deffered if functions like "Container::InvokeEntitesOnCreateListeners" are used. At that moment entities are not removed from archetype, but their records are invalidated. This function checks during iteration whether entity record is valid. It is not default behavior for iteration methods, as they are optimized for maximum performance.
+		/// </summary>
+		/// <typeparam name="Callable"></typeparam>
+		/// <param name="func"></param>
+		template<typename Callable>
+		void ForEachBackward_Safe(Callable&& func) noexcept
+		{
+			if (!IsValid()) return;
+			FetchInternal();
+
+			Entity entityBuffor = {};
+			if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+			{
+				entityBuffor.SetLifeTimeData_Internal(m_Container->GetLifeTimeData());
+			}
+
+			std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
+			const uint64_t contextCount = m_ArchetypesContexts.size();
+			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
+			{
+				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
+				uint64_t ctxEntityCount = ctx.GetEntityCount();
+				if (ctxEntityCount == 0) continue;
+
+				std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+				CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+				int64_t idx = ctxEntityCount - 1;
+
+				for (; idx > -1; idx--)
+				{
+					const auto& entityData = entitiesData[idx];
+					if (entityData.m_EntityData != nullptr && entityData.IsActive())
+					{
+						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+						{
+							entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
+							func(
+								entityBuffor,
+								std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
+							);
+						}
+						else
+						{
+							func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
+						}
+					}
+				}
+			}
+		}
+
+		/// <summary>
 		/// Same rules apply like in Foreach methods. But here iteration is for every entity even if entity is not active
 		/// </summary>
 		/// <typeparam name="Callable"></typeparam>
@@ -264,6 +318,15 @@ namespace decs
 					// if the entity data is nullptr, the archetype's "is active" flag will already be false.
 					if (entityData.m_EntityData != nullptr)
 					{
+						/*InvokeEntityIteration(
+							func,
+							entityBuffor,
+							*entityData.m_EntityData,
+							idx,
+							containersTuple
+						);*/
+
+
 						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
 						{
 							entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
@@ -280,6 +343,31 @@ namespace decs
 				}
 			}
 		}
+	private:
+		template<typename Callable>
+		inline void InvokeEntityIteration(
+			Callable&& func,
+			Entity& entityBuffer,
+			EntityData& entityData,
+			uint64_t entityIndex,
+			const ContainersTuple& containersTuple
+		)
+		{
+			if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+			{
+				entityBuffer.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
+				func(
+					entityBuffer,
+					std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(entityIndex)...
+				);
+			}
+			else
+			{
+				func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(entityIndex)...);
+			}
+		}
+
+	public:
 
 		inline void Fetch()
 		{

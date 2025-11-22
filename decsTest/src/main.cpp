@@ -130,27 +130,26 @@ int main()
 
 		{
 			decs::Query<TestComponent> query(&container);
-			query.With<Renderer, FloatTag>();
-			query.Without<Renderer, FloatTag>();
-			query.WithAnyFrom<Renderer, FloatTag>();
+			query.ForEach(testFunc);
 			query.ForEachBackward(testFunc);
+			query.ForEachBackward_Safe(testFunc);
+			query.ForEach_IngoreEntityActiveState(testFunc);
 		}
 
 		{
 			decs::MultiQuery<TestComponent> multiQuery{};
-			multiQuery.With<Renderer, FloatTag>();
-			multiQuery.Without<Renderer, FloatTag>();
-			multiQuery.WithAnyFrom<Renderer, FloatTag>();
 			multiQuery.AddContainer(&container);
 
+			multiQuery.ForEachBackward_Safe(testFunc);
 
-			std::vector<decs::MultiQuery<TestComponent> ::BatchIterator> iterators{};
+
+			/*std::vector<decs::MultiQuery<TestComponent> ::BatchIterator> iterators{};
 			multiQuery.CreateBatchIteratorsWithMaxNumberPerBatch(iterators, 7);
 
 			for (auto& it : iterators)
 			{
 				it.ForEach(testFunc);
-			}
+			}*/
 		}
 	}
 
