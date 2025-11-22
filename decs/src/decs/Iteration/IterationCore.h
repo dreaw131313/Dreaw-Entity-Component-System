@@ -32,7 +32,7 @@ namespace decs
 	};
 
 
-	template<typename ArchetypeContextType, typename... ComponentsTypes>
+	template<typename ArchetypeContextType, TComponentConcept... ComponentsTypes>
 	class IterationContainerContext
 	{
 	public:

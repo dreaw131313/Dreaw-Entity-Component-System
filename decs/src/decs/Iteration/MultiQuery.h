@@ -6,6 +6,8 @@
 
 #include "IterationCore.h"
 
+#include "decs/Component/Component.h"
+
 namespace decs
 {
 	class MultiQueryBase
@@ -21,7 +23,7 @@ namespace decs
 		virtual void SetContainerEnabled(Container* container, bool isEnabled) = 0;
 	};
 
-	template<typename... ComponentsTypes>
+	template<TComponentConcept... ComponentsTypes>
 	class MultiQuery : public MultiQueryBase
 	{
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "MultiQuery must not use tags in as ComponentTypes!");
@@ -46,7 +48,7 @@ namespace decs
 			return sizeof...(ComponentsTypes) + m_WithAll.size();
 		}
 
-		template<typename... ComponentsTypes>
+		template<TComponentConcept... ComponentsTypes>
 		MultiQuery& Without()
 		{
 			m_IsDirty = true;
@@ -62,7 +64,7 @@ namespace decs
 			return *this;
 		}
 
-		template<typename... ComponentsTypes>
+		template<TComponentConcept... ComponentsTypes>
 		MultiQuery& WithAnyFrom()
 		{
 			m_IsDirty = true;
@@ -78,7 +80,7 @@ namespace decs
 			return *this;
 		}
 
-		template<typename... ComponentsTypes>
+		template<TComponentConcept... ComponentsTypes>
 		MultiQuery& With()
 		{
 			m_IsDirty = true;

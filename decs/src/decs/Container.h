@@ -22,11 +22,11 @@ namespace decs
 
 	class Container
 	{
-		template<typename ...Types>
+		template<TComponentConcept ...Types>
 		friend class Query;
-		template<typename ...Types>
+		template<TComponentConcept ...Types>
 		friend class MultiQuery;
-		template<typename, typename...>
+		template<typename, TComponentConcept...>
 		friend class IterationContainerContext;
 		friend class Entity;
 		template<typename>
@@ -311,14 +311,9 @@ namespace decs
 			TypeID compTypeID
 		);
 
-		template<typename TComponent, typename ...Args>
+		template<TComponentConcept TComponent, typename ...Args>
 		TComponent* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
-			if constexpr (is_tag_v<TComponent>)
-			{
-				return nullptr;
-			}
-
 			if (!m_CanAddComponents || !entityData.IsValidToPerformComponentOperation())
 			{
 				return nullptr;
@@ -380,19 +375,15 @@ namespace decs
 			return componentPtr;
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		bool RemoveComponent(const Entity& entity)
 		{
-			if constexpr (is_tag_v<TComponent>)
-			{
-				return false;
-			}
 			return RemoveComponent(entity, Type<TComponent>::ID());
 		}
 
 		bool RemoveComponent(const Entity& entity, TypeID componentTypeID);
 
-		template<typename TComponent, typename TCallable>
+		template<TComponentConcept TComponent, typename TCallable>
 		bool RemoveComponent_If(EntityData& entityData, TCallable&& canRemoveFunc)
 		{
 			if constexpr (is_tag_v<TComponent>)
@@ -553,7 +544,7 @@ namespace decs
 		}
 	}*/
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		TComponent* GetComponent(EntityData& entityData) const
 		{
 			if constexpr (is_tag_v<TComponent>)
@@ -599,7 +590,7 @@ namespace decs
 		/// <returns>Component in order of observeres</returns>
 		ComponentBase* GetComponentAtIndex(EntityData& entityData, uint32_t componentIndex);
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		TComponent* GetComponentDynamic(EntityData& entityData)
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
@@ -624,7 +615,7 @@ namespace decs
 			return nullptr;
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		void GetComponentsDynamic(EntityData& entityData, std::vector<TComponent*>& outComponents)
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
@@ -647,7 +638,7 @@ namespace decs
 			}
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		TComponent* GetComponentWithoutCheckingIsAlive(EntityData& entityData) const
 		{
 			if (entityData.m_Archetype != nullptr)
@@ -671,7 +662,7 @@ namespace decs
 			return false;
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		bool HasComponent(EntityData& entityData) const
 		{
 			if constexpr (is_tag_v<TComponent>)
@@ -797,7 +788,7 @@ namespace decs
 
 	#pragma region STABLE COMPONENTS:
 	public:
-		template<typename T>
+		template<TComponentConcept T>
 		bool SetComponentChunkSize(uint32_t chunkSize)
 		{
 			return m_ComponentContextManager.SetComponentChunkSize<T>(chunkSize);
@@ -808,7 +799,7 @@ namespace decs
 			return m_ComponentContextManager.SetComponentChunkSize(typeID, chunkSize);
 		}
 
-		template<typename T>
+		template<TComponentConcept T>
 		uint64_t GetComponentChunkSize()
 		{
 			return m_ComponentContextManager.GetComponentChunkSize<T>();
@@ -895,7 +886,7 @@ namespace decs
 		/// </summary>
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <param name="order"></param>
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		void SetComponentOrder(int order)
 		{
 			if (m_ComponentContextManager.SetComponentOrder<TComponent>(order))
@@ -972,7 +963,7 @@ namespace decs
 			m_DisableEntityObserver = disableEntityObserver;
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		void SetComponentObservers(
 			CreateComponentObserver<TComponent>* createObserver,
 			DestroyComponentObserver<TComponent>* destroyObserver,
@@ -987,21 +978,21 @@ namespace decs
 			componentContext->m_Observers.m_DisableObserver = disableObserver;
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		void SetCreateComponentObserver(CreateComponentObserver<TComponent>* createObserver)
 		{
 			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
 			componentContext->m_Observers.m_CreateObserver = createObserver;
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		void SetDestroyComponentObserver(DestroyComponentObserver<TComponent>* destroyObserver)
 		{
 			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
 			componentContext->m_Observers.m_DestroyObserver = destroyObserver;
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		void SetCreateDestroyComponentObservers(
 			CreateComponentObserver<TComponent>* createObserver,
 			DestroyComponentObserver<TComponent>* destroyObserver
@@ -1012,21 +1003,21 @@ namespace decs
 			componentContext->m_Observers.m_DestroyObserver = destroyObserver;
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		void SetEnableComponentObserver(EnableComponentObserver<TComponent>* enableObserver)
 		{
 			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
 			componentContext->m_Observers.m_EnableObserver = enableObserver;
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		void SetDisableComponentObserver(DisableComponentObserver<TComponent>* disableObserver)
 		{
 			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
 			componentContext->m_Observers.m_DisableObserver = disableObserver;
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		void SetEnableDisableComponentObservers(
 			EnableComponentObserver<TComponent>* enableObserver,
 			DisableComponentObserver<TComponent>* disableObserver
@@ -1188,7 +1179,7 @@ namespace decs
 	private:
 		void SetEntityActive_NoCallback(const Entity& entity, bool bIsActive);
 
-		template<typename TComponent, typename ...Args>
+		template<TComponentConcept TComponent, typename ...Args>
 		TComponent* AddComponent_NoCallback(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			if constexpr (is_tag_v<TComponent>)
@@ -1258,7 +1249,7 @@ namespace decs
 			return componentPtr;
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		bool RemoveComponent_NoCallback(const Entity& entity)
 		{
 			if constexpr (is_tag_v<TComponent>)

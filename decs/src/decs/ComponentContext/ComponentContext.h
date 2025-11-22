@@ -15,7 +15,7 @@ namespace decs
 	{
 		friend class Container;
 	public:
-		ComponentContextBase(int observerOrder = 0) :
+		ComponentContextBase(int observerOrder = 0):
 			m_ObserverOrder(observerOrder)
 		{
 
@@ -66,7 +66,7 @@ namespace decs
 		friend class Container;
 
 	public:
-		ComponentContext(int order, uint32_t stableComponentChunkSize) :
+		ComponentContext(int order, uint32_t stableComponentChunkSize):
 			ComponentContextBase(order),
 			m_StableContainer(stableComponentChunkSize > 0 ? stableComponentChunkSize : 1000)
 		{

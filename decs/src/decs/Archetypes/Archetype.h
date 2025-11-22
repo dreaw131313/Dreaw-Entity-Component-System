@@ -130,14 +130,14 @@ namespace decs
 		friend class ContainerSerializer;
 		friend class ContainerSerializerComplex;
 
-		template<typename...>
+		template<TComponentConcept...>
 		friend class Query;
-		template<typename...>
+		template<TComponentConcept...>
 		friend class MultiQuery;
-		template<typename, typename...>
+		template<typename, TComponentConcept...>
 		friend class IterationContainerContext;
 
-		template<typename...>
+		template<TComponentConcept...>
 		friend class BatchIterator;
 
 
@@ -359,7 +359,7 @@ namespace decs
 		void ShrinkToFit();
 
 		// Edges utility functions:
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		void AddEdge(Archetype* archetype, EComponentEdgeType edgeType)
 		{
 			auto& edge = m_Edges[Type<TComponent>::ID()];
@@ -380,7 +380,7 @@ namespace decs
 			}
 		}
 
-		template<typename TComponent>
+		template<TComponentConcept TComponent>
 		ArchetypeEdge GetEdge() const
 		{
 			auto it = m_Edges.find(Type<TComponent>::ID());

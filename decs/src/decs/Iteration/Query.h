@@ -6,11 +6,13 @@
 
 #include "IterationCore.h"
 
+#include "decs/Component/Component.h"
+
 #include <type_traits>
 
 namespace decs
 {
-	template<typename... ComponentsTypes>
+	template<TComponentConcept... ComponentsTypes>
 	class Query
 	{
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "Query must not use tags in as ComponentTypes!");
@@ -52,7 +54,7 @@ namespace decs
 
 		inline bool IsValid()const { return m_Container != nullptr; }
 
-		template<typename... ComponentsTypes>
+		template<TComponentConcept... ComponentsTypes>
 		Query& Without()
 		{
 			m_IsDirty = true;
@@ -68,7 +70,7 @@ namespace decs
 			return *this;
 		}
 
-		template<typename... ComponentsTypes>
+		template<TComponentConcept... ComponentsTypes>
 		Query& WithAnyFrom()
 		{
 			m_IsDirty = true;
@@ -84,7 +86,7 @@ namespace decs
 			return *this;
 		}
 
-		template<typename... ComponentsTypes>
+		template<TComponentConcept... ComponentsTypes>
 		Query& With()
 		{
 			m_IsDirty = true;
@@ -536,7 +538,7 @@ namespace decs
 		{
 			using QueryType = Query<ComponentsTypes...>;
 
-			template<typename... Types>
+			template<TComponentConcept... Types>
 			friend class Query;
 		public:
 			BatchIterator() {}

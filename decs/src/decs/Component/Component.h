@@ -110,5 +110,5 @@ namespace decs
 	};
 
 	template<typename TComponentType>
-	concept TComponentConcept = std::derived_from<ComponentBase, TComponentType>;
+	concept TComponentConcept = std::derived_from<TComponentType, ComponentBase>;
 }
