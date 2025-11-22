@@ -130,11 +130,17 @@ int main()
 
 		{
 			decs::Query<TestComponent> query(&container);
+			query.With<Renderer, FloatTag>();
+			query.Without<Renderer, FloatTag>();
+			query.WithAnyFrom<Renderer, FloatTag>();
 			query.ForEachBackward(testFunc);
 		}
 
 		{
 			decs::MultiQuery<TestComponent> multiQuery{};
+			multiQuery.With<Renderer, FloatTag>();
+			multiQuery.Without<Renderer, FloatTag>();
+			multiQuery.WithAnyFrom<Renderer, FloatTag>();
 			multiQuery.AddContainer(&container);
 
 

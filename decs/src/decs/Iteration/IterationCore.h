@@ -6,6 +6,10 @@
 
 namespace decs
 {
+	template<typename T>
+	concept TComponentOrTagConcept = TComponentConcept<T> || TTagConcept<T>;
+
+
 	template<uint64_t elementsCount>
 	class IterationArchetypeContext
 	{

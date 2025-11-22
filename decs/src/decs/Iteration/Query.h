@@ -54,7 +54,7 @@ namespace decs
 
 		inline bool IsValid()const { return m_Container != nullptr; }
 
-		template<TComponentConcept... ComponentsTypes>
+		template<TComponentOrTagConcept... ComponentsTypes>
 		Query& Without()
 		{
 			m_IsDirty = true;
@@ -70,7 +70,7 @@ namespace decs
 			return *this;
 		}
 
-		template<TComponentConcept... ComponentsTypes>
+		template<TComponentOrTagConcept... ComponentsTypes>
 		Query& WithAnyFrom()
 		{
 			m_IsDirty = true;
@@ -86,7 +86,7 @@ namespace decs
 			return *this;
 		}
 
-		template<TComponentConcept... ComponentsTypes>
+		template<TComponentOrTagConcept... ComponentsTypes>
 		Query& With()
 		{
 			m_IsDirty = true;

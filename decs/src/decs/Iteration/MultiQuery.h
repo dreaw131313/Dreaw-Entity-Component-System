@@ -48,7 +48,7 @@ namespace decs
 			return sizeof...(ComponentsTypes) + m_WithAll.size();
 		}
 
-		template<TComponentConcept... ComponentsTypes>
+		template<TComponentOrTagConcept... ComponentsTypes>
 		MultiQuery& Without()
 		{
 			m_IsDirty = true;
@@ -64,7 +64,7 @@ namespace decs
 			return *this;
 		}
 
-		template<TComponentConcept... ComponentsTypes>
+		template<TComponentOrTagConcept... ComponentsTypes>
 		MultiQuery& WithAnyFrom()
 		{
 			m_IsDirty = true;
@@ -80,7 +80,7 @@ namespace decs
 			return *this;
 		}
 
-		template<TComponentConcept... ComponentsTypes>
+		template<TComponentOrTagConcept... ComponentsTypes>
 		MultiQuery& With()
 		{
 			m_IsDirty = true;
