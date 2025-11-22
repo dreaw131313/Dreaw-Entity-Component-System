@@ -103,9 +103,19 @@ int main()
 		observerManager.FillContainerObservers(container);
 
 		prefab = container.CreateEntity();
-		prefab.AddComponent_NoCallback<TestComponent>();
+		prefab.AddComponent<TestComponent>();
+		prefab.AddComponent<Renderer>();
+		prefab.AddComponent<Position>();
 		prefab.AddTag<FloatTag>();
-		container.SetEntityActiveOverride(prefab, false);
+
+
+		auto rendererRemoveCond = [](const Renderer& renderer)
+		{
+			return true;
+		};
+
+		//prefab.RemoveComponent<Renderer>();
+		prefab.RemoveComponent_If<Renderer>(rendererRemoveCond);
 
 		auto comp = prefab.GetComponent<TestComponent>();
 

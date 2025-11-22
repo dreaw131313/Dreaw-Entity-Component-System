@@ -108,4 +108,7 @@ namespace decs
 			m_bIsEnabledByECS = bIsEnabled;
 		}
 	};
+
+	template<typename TComponentType>
+	concept TComponentConcept = std::derived_from<ComponentBase, TComponentType>;
 }

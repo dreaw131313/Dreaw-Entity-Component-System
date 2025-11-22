@@ -284,6 +284,8 @@ namespace decs
 
 		void RemoveSwapBackEntity(uint64_t index);
 
+		void RemoveSwapBackEntityAfterRemoveComponent(uint64_t index);
+
 		/// <summary>
 		/// Removes entity data and components on index. Do not destroy stable components and do not change in any way entity data.
 		/// </summary>
@@ -399,22 +401,5 @@ namespace decs
 			return {};
 		}
 
-		/// <summary>
-		/// Used only when calling on destroy and on disable observers when removing components
-		/// </summary>
-		/// <param name="entityData"></param>
-		/// <param name="index"></param>
-		/// <returns></returns>
-		bool SetPlaceHolderEntityData(EntityData* entityData, uint32_t index)
-		{
-			if (index < m_EntitiesCount)
-			{
-				auto& archetypeEntityData = m_EntitiesData[index];
-				archetypeEntityData.m_EntityData = entityData;
-				archetypeEntityData.m_bIsActive = false;
-				return true;
-			}
-			return false;
-		}
 	};
 }

@@ -790,13 +790,13 @@ namespace decs
 		Archetype* oldArchetype = entityData.m_Archetype;
 		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
 
-		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
-		if (archetypeTypeData.IsTag())
+		ArchetypeTypeData& oldArchetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
+		if (oldArchetypeTypeData.IsTag())
 		{
 			return false;
 		}
 
-		auto packedContainer = archetypeTypeData.m_PackedContainer;
+		auto packedContainer = oldArchetypeTypeData.m_PackedContainer;
 		ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
 		if (componentPtr->GetDependecyCount() > 0)
 		{
@@ -822,40 +822,33 @@ namespace decs
 			AddToEmptyEntities(entityData);
 		}
 
-		// Invoking remove observers:
-		{
-			oldArchetype->SetPlaceHolderEntityData(nullptr, static_cast<uint32_t>(entityIndexInOldArchetype));
-
-			auto componentContext = archetypeTypeData.m_ComponentContext;
-			componentContext->InvokeOnDisableComponent(componentPtr, entity);
-			componentContext->InvokeOnDestroyComponent(componentPtr, entity);
-		}
-
 		if (m_PerformDelayedDestruction)
 		{
 			AddArchetypeRecordToDelayedRemove(oldArchetype, static_cast<uint32_t>(entityIndexInOldArchetype), true, componentTypeID);
 		}
 		else
 		{
-			oldArchetype->RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(entityIndexInOldArchetype, componentTypeID);
+			oldArchetype->RemoveSwapBackEntityAfterRemoveComponent(entityIndexInOldArchetype);
+		}
+
+		// Invoking remove observers:
+		{
+			auto componentContext = oldArchetypeTypeData.m_ComponentContext;
+			componentContext->InvokeOnDisableComponent(componentPtr, entity);
+			componentContext->InvokeOnDestroyComponent(componentPtr, entity);
+
+			oldArchetypeTypeData.m_StableContainer->Destroy(componentPtr);
 		}
 
 		return true;
 	}
 
-	void Container::InvokeRemoveComponentObserverCallbacks(
-		EntityData& entityData,
-		ComponentBase* componentPtr,
-		Archetype& oldArchetype,
-		uint32_t entityIndexInOldArchetype,
-		ComponentContextBase& componentContext
-
-	)
+	void Container::InvokeComponentDestroyObservers(ComponentContextBase& compCtx, ComponentBase& comp, EntityData& entityData)
 	{
-		Entity entity(entityData);
-		oldArchetype.SetPlaceHolderEntityData(nullptr, static_cast<uint32_t>(entityIndexInOldArchetype));
-		componentContext.InvokeOnDisableComponent(componentPtr, entity);
-		componentContext.InvokeOnDestroyComponent(componentPtr, entity);
+		Entity e(entityData);
+
+		compCtx.InvokeOnDisableComponent(&comp, e);
+		compCtx.InvokeOnDestroyComponent(&comp, e);
 	}
 
 	ComponentBase* Container::GetComponentAtIndex(EntityData& entityData, uint32_t componentIndex)

@@ -193,6 +193,42 @@ namespace decs
 
 	}
 
+	void Archetype::RemoveSwapBackEntityAfterRemoveComponent(uint64_t index)
+	{
+		if (index >= m_EntitiesCount)
+		{
+			return;
+		}
+
+		if (index == m_EntitiesCount - 1)
+		{
+			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
+			{
+				auto& typeData = m_TypeData[i];
+				if (!typeData.IsTag())
+				{
+					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
+					typeData.m_PackedContainer->PopBack();
+				}
+			}
+
+		}
+		else
+		{
+			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
+			{
+				auto& typeData = m_TypeData[i];
+				if (!typeData.IsTag())
+				{
+					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
+					typeData.m_PackedContainer->RemoveSwapBack(index);
+				}
+			}
+		}
+
+		RemoveSwapBackEntityData(index);
+	}
+
 	void Archetype::RemoveSwapBackRecordRaw(uint64_t index)
 	{
 		if (index >= m_EntitiesCount)

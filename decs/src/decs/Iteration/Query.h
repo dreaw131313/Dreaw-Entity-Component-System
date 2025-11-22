@@ -177,7 +177,6 @@ namespace decs
 		/// Destroying entities other than currently iterated and removing or adding component from them can cause index out of bound.
 		/// Creating new entities will not cause index out of bound, but if created entity has components which satisfys this query, it is undefined if that entity will be iterated or not in this function. If created entity will be placed in archetype that is not valid for this query it is safe to create it.
 		/// Adding or removing components from currnet iterated entity will not cause index out of bound, but it can cause that this entity will be iterated again. If after add or remove component, entity will be moved to archetype which is not valid for this query it is known that entity will not be iterated again.
-		/// Desrtoying 
 		/// </summary>
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
@@ -199,66 +198,6 @@ namespace decs
 			{
 				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
 				uint64_t ctxEntityCount = ctx.GetEntityCount();
-				if (ctxEntityCount == 0) continue;
-
-				std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
-				CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
-				int64_t idx = ctxEntityCount - 1;
-
-				for (; idx > -1; idx--)
-				{
-					const auto& entityData = entitiesData[idx];
-					if (entityData.IsActive())
-					{
-						if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
-						{
-							entityBuffor.SetWithoutLifeTimeDataInvalidation_Internal(*entityData.m_EntityData);
-							func(
-								entityBuffor,
-								std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...
-							);
-						}
-						else
-						{
-							func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(idx)...);
-						}
-					}
-				}
-			}
-		}
-
-		/// <summary>
-		/// Iterates over entities in archetypes from last to first. 
-		/// During iteration with this method:
-		/// Is forbiden to:
-		///		- Destroying entities different than currently iterated entity. It can cause index out of bound
-		///		- Adding or removing components in entities different than currently iterated entity. It can cause index out of bound
-		/// It is safe to:
-		///		- Destroy currently iterated entity
-		///		- Add or remove components in curently iterated entity
-		///		- Create new entities
-		/// </summary>
-		/// <typeparam name="Callable"></typeparam>
-		/// <param name="func"></param>
-		template<typename Callable>
-		void ForEachSafe(Callable&& func) noexcept
-		{
-			if (!IsValid()) return;
-			FetchInternal();
-			CollectArchetypesEntityCount();
-
-			Entity entityBuffor = {};
-			if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
-			{
-				entityBuffor.SetLifeTimeData_Internal(m_Container->GetLifeTimeData());
-			}
-
-			std::tuple<PackedContainerType<ComponentsTypes>...> containersTuple = {};
-			const uint64_t contextCount = m_ArchetypesContexts.size();
-			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
-			{
-				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
-				uint64_t ctxEntityCount = ctx.GetCachedEntityCount();
 				if (ctxEntityCount == 0) continue;
 
 				std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
