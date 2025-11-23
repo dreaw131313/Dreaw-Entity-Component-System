@@ -324,7 +324,7 @@ namespace decs
 				return nullptr;
 			}
 
-			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<TComponent>::ID();
+			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<TComponent>::ID();
 
 			auto currentComponent = GetComponentWithoutCheckingIsAlive<TComponent>(entityData);
 			if (currentComponent != nullptr)
@@ -332,9 +332,12 @@ namespace decs
 				return currentComponent;
 			}
 
+			Archetype* oldArchetype = entityData.m_Archetype;
+			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
+
 			uint32_t componentContainerIndex = 0;
-			Archetype* entityNewArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype, componentContainerIndex);
-			ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
+			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype, componentContainerIndex);
+			ArchetypeTypeData& archetypeTypeData = newArchetype->m_TypeData[componentContainerIndex];
 
 			// Adding component to stable component container
 			StableContainer<TComponent>* stableContainer = static_cast<StableContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
@@ -345,37 +348,27 @@ namespace decs
 			archetypeTypeData.m_PackedContainer->PushBack(componentPtr);
 
 			// Adding entity to archetype
-			if (entityData.m_Archetype != nullptr)
+			if (oldArchetype != nullptr)
 			{
 				if (m_PerformDelayedDestruction)
 				{
-					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
-					entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
-						entityData.m_Archetype,
-						entityData.m_IndexInArchetype,
-						copmonentTypeID,
-						&entityData
-					);
+					AddArchetypeRecordToDelayedRemove(oldArchetype, indexInOldArchetype, false, componentTypeID);
+					Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype, indexInOldArchetype, componentTypeID);
 				}
 				else
 				{
-					entityNewArchetype->MoveEntityComponentsAfterAddComponent(
-						copmonentTypeID,
-						entityData.m_Archetype,
-						entityData.m_IndexInArchetype,
-						&entityData
-					);
+					Archetype::MoveEntityComponentsAfterAddComponent(*oldArchetype, *newArchetype, indexInOldArchetype, componentTypeID);
 				}
 			}
 			else
 			{
 				RemoveFromEmptyEntities(entityData);
-				entityNewArchetype->AddEntityData(&entityData);
+				newArchetype->AddEntityData(&entityData);
 			}
 
 			static_cast<ComponentBase*>(componentPtr)->OnPreCreate(entity);
 
-			OnAddComponentInvokeObservers(entity, archetypeTypeData.m_ComponentContext, archetypeTypeData.m_PackedContainer, copmonentTypeID);
+			OnAddComponentInvokeObservers(entity, archetypeTypeData.m_ComponentContext, archetypeTypeData.m_PackedContainer, componentTypeID);
 
 			return componentPtr;
 		}
@@ -409,7 +402,7 @@ namespace decs
 			if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
 
 			Archetype* oldArchetype = entityData.m_Archetype;
-			uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
+			uint64_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
 			ArchetypeTypeData& oldArchetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
 			if (oldArchetypeTypeData.IsTag())
@@ -418,7 +411,7 @@ namespace decs
 			}
 
 			auto packedContainer = oldArchetypeTypeData.m_PackedContainer;
-			ComponentBase* componentBasePtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
+			ComponentBase* componentBasePtr = packedContainer->GetComponentBasePtr(indexInOldArchetype);
 			if (componentBasePtr->GetDependecyCount() > 0)
 			{
 				return false;
@@ -430,19 +423,14 @@ namespace decs
 				return false;
 			}
 
-			Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
-				*entityData.m_Archetype,
+			Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
+				*oldArchetype,
 				componentTypeID
 			);
 
-			if (newEntityArchetype != nullptr)
+			if (newArchetype != nullptr)
 			{
-				newEntityArchetype->MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
-					componentTypeID,
-					entityData.m_Archetype,
-					entityData.m_IndexInArchetype,
-					&entityData
-				);
+				Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype, indexInOldArchetype, componentTypeID);
 			}
 			else
 			{
@@ -451,11 +439,11 @@ namespace decs
 
 			if (m_PerformDelayedDestruction)
 			{
-				AddArchetypeRecordToDelayedRemove(oldArchetype, static_cast<uint32_t>(entityIndexInOldArchetype), true, componentTypeID);
+				AddArchetypeRecordToDelayedRemove(oldArchetype, static_cast<uint32_t>(indexInOldArchetype), true, componentTypeID);
 			}
 			else
 			{
-				oldArchetype->RemoveSwapBackEntityAfterRemoveComponent(entityIndexInOldArchetype);
+				oldArchetype->RemoveSwapBackEntityAfterRemoveComponent(indexInOldArchetype);
 			}
 
 			// Invoking remove observers:
@@ -729,32 +717,19 @@ namespace decs
 
 			TYPE_ID_CONSTEXPR const TypeID tagTypeID = Type<TTag>::ID();
 
+			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 			Archetype* newArchetype = GetArchetypeAfterAddTag(oldArchetype, tagTypeID);
 
 			if (oldArchetype != nullptr)
 			{
 				if (m_PerformDelayedDestruction)
 				{
-					// Change to respect tag
 					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, tagTypeID);
-
-					//move entity to new archetype
-					newArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
-						entityData.m_Archetype,
-						entityData.m_IndexInArchetype,
-						tagTypeID,
-						&entityData
-					);
+					Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype,indexInOldArchetype, tagTypeID);
 				}
 				else
 				{
-					// move entity to new archetype
-					newArchetype->MoveEntityComponentsAfterAddComponent(
-						tagTypeID,
-						entityData.m_Archetype,
-						entityData.m_IndexInArchetype,
-						&entityData
-					);
+					Archetype::MoveEntityComponentsAfterAddComponent(*oldArchetype, *newArchetype,indexInOldArchetype, tagTypeID);
 				}
 			}
 			else
@@ -1193,9 +1168,12 @@ namespace decs
 
 			TYPE_ID_CONSTEXPR TypeID copmonentTypeID = Type<TComponent>::ID();
 
+			Archetype* oldArchetype = entityData.m_Archetype;
+			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
+
 			uint32_t componentContainerIndex = 0;
-			Archetype* entityNewArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype, componentContainerIndex);
-			ArchetypeTypeData& archetypeTypeData = entityNewArchetype->m_TypeData[componentContainerIndex];
+			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype, componentContainerIndex);
+			ArchetypeTypeData& archetypeTypeData = newArchetype->m_TypeData[componentContainerIndex];
 
 			// Adding component to stable component container
 			StableContainer<TComponent>* stableContainer = static_cast<StableContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
@@ -1206,33 +1184,24 @@ namespace decs
 			archetypeTypeData.m_PackedContainer->PushBack(componentPtr);
 
 			// Adding entity to archetype
-			uint32_t entityIndexBuffor = entityNewArchetype->EntityCount();
-			if (entityData.m_Archetype != nullptr)
+			uint32_t entityIndexBuffor = newArchetype->EntityCount();
+			if (oldArchetype != nullptr)
 			{
 				if (m_PerformDelayedDestruction)
 				{
 					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
-					entityNewArchetype->MoveEntityAfterAddComponentWithoutDestroyingFromSource(
-						entityData.m_Archetype,
-						entityData.m_IndexInArchetype,
-						copmonentTypeID,
-						&entityData
-					);
+					Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype, indexInOldArchetype, copmonentTypeID);
+
 				}
 				else
 				{
-					entityNewArchetype->MoveEntityComponentsAfterAddComponent(
-						copmonentTypeID,
-						entityData.m_Archetype,
-						entityData.m_IndexInArchetype,
-						&entityData
-					);
+					Archetype::MoveEntityComponentsAfterAddComponent(*oldArchetype, *newArchetype, indexInOldArchetype, copmonentTypeID);
 				}
 			}
 			else
 			{
 				RemoveFromEmptyEntities(entityData);
-				entityNewArchetype->AddEntityData(&entityData);
+				newArchetype->AddEntityData(&entityData);
 			}
 
 			static_cast<ComponentBase*>(componentPtr)->OnPreCreate(entity);

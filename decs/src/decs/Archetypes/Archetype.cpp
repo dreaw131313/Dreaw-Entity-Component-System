@@ -130,7 +130,7 @@ namespace decs
 		}
 
 		entityData->m_Archetype = this;
-		entityData->m_IndexInArchetype = EntityCount();
+		entityData->m_IndexInArchetype = static_cast<uint32_t>(EntityCount());
 
 		m_EntitiesData.push_back(entityData);
 	}
@@ -311,14 +311,14 @@ namespace decs
 		}
 	}
 
-	void Archetype::InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts)
+	void Archetype::InitEmptyFromOther(const Archetype& other, ComponentContextsManager* componentContexts)
 	{
 		uint32_t componentsCount = other.GetComponentAndTagCount();
 		m_TypeData.reserve(componentsCount);
 
 		for (uint32_t i = 0; i < componentsCount; i++)
 		{
-			ArchetypeTypeData& otherTypeData = other.m_TypeData[i];
+			const ArchetypeTypeData& otherTypeData = other.m_TypeData[i];
 			otherTypeData.m_TypeID;
 			m_TypeIDsIndexes[otherTypeData.m_TypeID] = i;
 
@@ -337,37 +337,6 @@ namespace decs
 				);
 			}
 		}
-	}
-
-	void Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
-		TypeID removedComponentTypeID,
-		Archetype* fromArchetype,
-		uint64_t fromIndex,
-		EntityData* entityData
-	)
-	{
-		uint64_t thisArchetypeIndex = 0;
-		uint64_t fromArchetypeIndex = 0;
-
-		this->AddEntityData(entityData);
-
-		for (; thisArchetypeIndex < GetComponentAndTagCount(); thisArchetypeIndex++, fromArchetypeIndex++)
-		{
-			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-			if (fromArchetypeData.m_TypeID == removedComponentTypeID)
-			{
-				fromArchetypeIndex += 1;
-			}
-
-			if (!thisTypeData.IsTag())
-			{
-				ArchetypeTypeData& updatetFromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-				thisTypeData.m_PackedContainer->PushBack(updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex));
-			}
-		}
-
-		fromArchetype->m_EntitiesData[fromIndex].m_bIsActive = false;
 	}
 
 	void Archetype::RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(uint64_t entityIndex, TypeID removedComponentTypeID)
@@ -416,65 +385,7 @@ namespace decs
 		RemoveSwapBackEntityData(entityIndex);
 
 	}
-
-	void Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource(Archetype* fromArchetype, uint64_t fromIndex, TypeID newComponentTypeID, EntityData* entityData)
-	{
-		this->AddEntityData(entityData);
-
-		uint64_t thisArchetypeIndex = 0;
-		uint64_t fromArchetypeIndex = 0;
-
-		for (; thisArchetypeIndex < GetComponentAndTagCount(); thisArchetypeIndex++)
-		{
-			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-			if (thisTypeData.m_TypeID == newComponentTypeID)
-			{
-				continue;
-			}
-
-			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-			if (!fromArchetypeData.IsTag())
-			{
-				thisTypeData.m_PackedContainer->PushBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(fromIndex));
-			}
-
-			fromArchetypeIndex++;
-		}
-	}
-
-	void Archetype::MoveEntityComponentsAfterAddComponent(
-		TypeID addedComponentTypeID,
-		Archetype* fromArchetype,
-		uint64_t entityIndex,
-		EntityData* entityData
-	)
-	{
-		this->AddEntityData(entityData);
-
-		uint64_t thisArchetypeIndex = 0;
-		uint64_t fromArchetypeIndex = 0;
-
-		for (; thisArchetypeIndex < GetComponentAndTagCount(); thisArchetypeIndex++)
-		{
-			ArchetypeTypeData& thisTypeData = m_TypeData[thisArchetypeIndex];
-			if (thisTypeData.m_TypeID == addedComponentTypeID)
-			{
-				continue;
-			}
-
-			ArchetypeTypeData& fromArchetypeData = fromArchetype->m_TypeData[fromArchetypeIndex];
-			if (!fromArchetypeData.IsTag())
-			{
-				thisTypeData.m_PackedContainer->PushBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
-				fromArchetypeData.m_PackedContainer->RemoveSwapBack(entityIndex);
-			}
-
-			fromArchetypeIndex++;
-		}
-
-		fromArchetype->RemoveSwapBackEntityData(entityIndex);
-	}
-
+	
 	void Archetype::ShrinkToFit()
 	{
 		m_EntitiesData.shrink_to_fit();
@@ -490,7 +401,7 @@ namespace decs
 	}
 
 
-	bool Archetype::MoveEntityComponentsAfterAddComponent_S(
+	bool Archetype::MoveEntityComponentsAfterAddComponent(
 		Archetype& fromArchetype,
 		Archetype& toArchetype,
 		uint64_t entityIndex,
@@ -532,7 +443,7 @@ namespace decs
 		return true;
 	}
 
-	bool Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource_S(
+	bool Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource(
 		Archetype& fromArchetype,
 		Archetype& toArchetype,
 		uint64_t entityIndex,
@@ -571,7 +482,7 @@ namespace decs
 		return true;
 	}
 
-	bool Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource_S(
+	bool Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
 		Archetype& fromArchetype,
 		Archetype& toArchetype,
 		uint64_t entityIndex,

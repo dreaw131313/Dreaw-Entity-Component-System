@@ -303,41 +303,14 @@ namespace decs
 
 		void Reset();
 
-		void InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts);
-
-
-		void MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
-			TypeID removedComponentTypeID,
-			Archetype* fromArchetype,
-			uint64_t fromIndex,
-			EntityData* entityData
-		);
+		void InitEmptyFromOther(const Archetype& other, ComponentContextsManager* componentContexts);
 
 		void RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(uint64_t entityIndex, TypeID removedComponentTypeID);
 
-		void MoveEntityAfterAddComponentWithoutDestroyingFromSource(
-			Archetype* fromArchetype,
-			uint64_t fromIndex,
-			TypeID newComponentTypeID,
-			EntityData* entityData
-		);
-
-		/// <summary>
-		/// Moves entity components from "fromArchetype" to this archetype.
-		/// </summary>
-		/// <typeparam name="ComponentType"></typeparam>
-		/// <param name="fromArchetype"></param>
-		/// <param name="fromIndex"></param>
-		void MoveEntityComponentsAfterAddComponent(
-			TypeID addedComponentTypeID,
-			Archetype* fromArchetype,
-			uint64_t entityIndex,
-			EntityData* entityData
-		);
-
 		void ShrinkToFit();
 
-		// Edges utility functions:
+	#pragma region EDGES
+	private:
 		template<TComponentConcept TComponent>
 		void AddEdge(Archetype* archetype, EComponentEdgeType edgeType)
 		{
@@ -380,24 +353,26 @@ namespace decs
 			return {};
 		}
 
+	#pragma endregion
+
 	#pragma region STATICS
 	private:
 
-		static bool MoveEntityComponentsAfterAddComponent_S(
+		static bool MoveEntityComponentsAfterAddComponent(
 			Archetype& fromArchetype,
 			Archetype& toArchetype,
 			uint64_t entityIndex,
 			TypeID addedComponentTypeID
 		);
 
-		static bool MoveEntityAfterAddComponentWithoutDestroyingFromSource_S(
+		static bool MoveEntityAfterAddComponentWithoutDestroyingFromSource(
 			Archetype& fromArchetype,
 			Archetype& toArchetype,
 			uint64_t entityIndex,
 			TypeID addedComponentTypeID
 		);
 
-		static bool MoveEntityAfterRemoveComponentWithoutDestroyingFromSource_S(
+		static bool MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
 			Archetype& fromArchetype,
 			Archetype& toArchetype,
 			uint64_t entityIndex,

@@ -110,8 +110,10 @@ int main()
 		prefab = container.CreateEntity();
 		prefab.AddComponent<TestComponent>();
 		prefab.AddComponent<Renderer>();
-		prefab.AddComponent<Position>();
 		prefab.AddTag<FloatTag>();
+		prefab.AddTag<IntTag>();
+		prefab.AddTag<BoolTag>();
+		prefab.AddComponent<Position>();
 
 
 		auto rendererRemoveCond = [](const Renderer& renderer)
@@ -121,6 +123,7 @@ int main()
 
 		//prefab.RemoveComponent<Renderer>();
 		prefab.RemoveComponent_If<Renderer>(rendererRemoveCond);
+		prefab.RemoveTag<IntTag>();
 
 		auto comp = prefab.GetComponent<TestComponent>();
 

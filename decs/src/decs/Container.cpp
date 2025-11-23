@@ -786,7 +786,7 @@ namespace decs
 		if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
 
 		Archetype* oldArchetype = entityData.m_Archetype;
-		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
+		uint64_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
 		ArchetypeTypeData& oldArchetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
 		if (oldArchetypeTypeData.IsTag())
@@ -795,25 +795,20 @@ namespace decs
 		}
 
 		auto packedContainer = oldArchetypeTypeData.m_PackedContainer;
-		ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
+		ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(indexInOldArchetype);
 		if (componentPtr->GetDependecyCount() > 0)
 		{
 			return false;
 		}
 
-		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
+		Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
 			*entityData.m_Archetype,
 			componentTypeID
 		);
 
-		if (newEntityArchetype != nullptr)
+		if (newArchetype != nullptr)
 		{
-			newEntityArchetype->MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
-				componentTypeID,
-				entityData.m_Archetype,
-				entityData.m_IndexInArchetype,
-				&entityData
-			);
+			Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype, indexInOldArchetype, componentTypeID);
 		}
 		else
 		{
@@ -822,11 +817,11 @@ namespace decs
 
 		if (m_PerformDelayedDestruction)
 		{
-			AddArchetypeRecordToDelayedRemove(oldArchetype, static_cast<uint32_t>(entityIndexInOldArchetype), true, componentTypeID);
+			AddArchetypeRecordToDelayedRemove(oldArchetype, static_cast<uint32_t>(indexInOldArchetype), true, componentTypeID);
 		}
 		else
 		{
-			oldArchetype->RemoveSwapBackEntityAfterRemoveComponent(entityIndexInOldArchetype);
+			oldArchetype->RemoveSwapBackEntityAfterRemoveComponent(indexInOldArchetype);
 		}
 
 		// Invoking remove observers:
@@ -876,28 +871,25 @@ namespace decs
 		}
 
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(tagType);
-		if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
+		if (compIdxInArch == std::numeric_limits<uint32_t>::max())
+		{
+			return false;
+		}
 
 		Archetype* oldArchetype = entityData.m_Archetype;
+		const uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
+
 		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
 		if (!archetypeTypeData.IsTag())
 		{
 			return false;
 		}
 
-		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
+		Archetype* newArchetype = GetArchetypeAfterRemoveTag(*oldArchetype, tagType);
 
-		Archetype* newEntityArchetype = GetArchetypeAfterRemoveTag(*oldArchetype, tagType);
-
-		if (newEntityArchetype != nullptr)
+		if (newArchetype != nullptr)
 		{
-			// move entity to new archetype without destroying from source
-			newEntityArchetype->MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
-				tagType,
-				entityData.m_Archetype,
-				entityData.m_IndexInArchetype,
-				&entityData
-			);
+			Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype, entityIndexInOldArchetype, tagType);
 		}
 		else
 		{
@@ -1579,19 +1571,14 @@ namespace decs
 			return false;
 		}
 
-		Archetype* newEntityArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
+		Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
 			*entityData.m_Archetype,
 			componentTypeID
 		);
 
-		if (newEntityArchetype != nullptr)
+		if (newArchetype != nullptr)
 		{
-			newEntityArchetype->MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
-				componentTypeID,
-				entityData.m_Archetype,
-				entityData.m_IndexInArchetype,
-				&entityData
-			);
+			Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype, entityIndexInOldArchetype, componentTypeID);
 		}
 		else
 		{
