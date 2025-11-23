@@ -132,7 +132,7 @@ namespace decs
 		entityData->m_Archetype = this;
 		entityData->m_IndexInArchetype = static_cast<uint32_t>(EntityCount());
 
-		m_EntitiesData.push_back(entityData);
+		m_EntitiesData.emplace_back(entityData);
 	}
 
 	void Archetype::RemoveSwapBackEntityData(uint64_t index)
