@@ -45,17 +45,17 @@ namespace decs
 			return this->m_EntityData == rhs.m_EntityData && this->m_Version == rhs.m_Version;
 		}
 
-		inline bool IsValid() const
+		[[nodiscard]] inline bool IsValid() const
 		{
 			return m_LifeTimeData.IsValid() && m_LifeTimeData->IsAlive() && m_EntityData != nullptr && m_EntityData->IsAliveWithVersion(m_Version);
 		}
 
-		inline bool IsNull() const
+		[[nodiscard]] inline bool IsNull() const
 		{
 			return !IsValid();
 		}
 
-		inline bool IsInDestruction() const
+		[[nodiscard]] inline bool IsInDestruction() const
 		{
 			if (IsValid())
 			{
@@ -64,7 +64,7 @@ namespace decs
 			return false;
 		}
 
-		inline EntityID GetID() const
+		[[nodiscard]] inline EntityID GetID() const
 		{
 			if (IsValid())
 			{
@@ -73,7 +73,7 @@ namespace decs
 			return std::numeric_limits< EntityID>::max();
 		}
 
-		inline Container* GetContainer() const
+		[[nodiscard]] inline Container* GetContainer() const
 		{
 			if (IsValid())
 			{
@@ -86,7 +86,7 @@ namespace decs
 		/// 
 		/// </summary>
 		/// <returns>Active state with disable overrides taken into account</returns>
-		inline bool IsActive() const
+		[[nodiscard]] inline bool IsActive() const
 		{
 			return IsValid() && m_EntityData->IsActive();
 		}
@@ -95,7 +95,7 @@ namespace decs
 		/// 
 		/// </summary>
 		/// <returns>Active state without disable overrides taken into account</returns>
-		inline bool IsActiveFlag() const
+		[[nodiscard]] inline bool IsActiveFlag() const
 		{
 			return IsValid() && m_EntityData->IsActiveFlag();
 		}
@@ -132,7 +132,7 @@ namespace decs
 			}
 		}
 
-		uint32_t GetDisabledOverrideCount() const
+		[[nodiscard]] uint32_t GetDisabledOverrideCount() const
 		{
 			if (IsValid())
 			{
@@ -153,7 +153,7 @@ namespace decs
 			return false;
 		}
 
-		inline uint32_t GetComponentCount() const
+		[[nodiscard]] inline uint32_t GetComponentCount() const
 		{
 			if (IsValid())
 			{
@@ -162,7 +162,7 @@ namespace decs
 			return 0;
 		}
 
-		inline uint32_t GetComponentAndTagCount() const
+		[[nodiscard]] inline uint32_t GetComponentAndTagCount() const
 		{
 			if (IsValid())
 			{
@@ -176,7 +176,7 @@ namespace decs
 		/// </summary>
 		/// <param name="componentIndex"></param>
 		/// <returns>Components in observers order</returns>
-		inline ComponentBase* GetComponentAtIndex(uint32_t componentIndex) const
+		[[nodiscard]] inline ComponentBase* GetComponentAtIndex(uint32_t componentIndex) const
 		{
 			if (IsValid())
 			{
@@ -186,7 +186,7 @@ namespace decs
 		}
 
 		template<TComponentConcept TComponent>
-		inline TComponent* GetComponent() const
+		[[nodiscard]] inline TComponent* GetComponent() const
 		{
 			if (IsValid())
 			{
@@ -196,7 +196,7 @@ namespace decs
 			return nullptr;
 		}
 
-		inline ComponentBase* GetComponent(TypeID componentType) const
+		[[nodiscard]] inline ComponentBase* GetComponent(TypeID componentType) const
 		{
 			if (IsValid())
 			{
@@ -212,7 +212,7 @@ namespace decs
 		/// <typeparam name="TComponent"></typeparam>
 		/// <returns></returns>
 		template<TComponentConcept TComponent>
-		inline TComponent* GetComponentDynamic() const
+		[[nodiscard]] inline TComponent* GetComponentDynamic() const
 		{
 			if (IsValid())
 				return GetContainer_Internal()->GetComponentDynamic<TComponent>(*GetEntityData());
@@ -235,7 +235,7 @@ namespace decs
 		}
 
 		template<TComponentConcept TComponent>
-		inline bool HasComponent() const
+		[[nodiscard]] inline bool HasComponent() const
 		{
 			return IsValid() && GetContainer_Internal()->HasComponent<TComponent>(*GetEntityData());
 		}
@@ -277,12 +277,12 @@ namespace decs
 			return IsValid() && GetContainer_Internal()->RemoveComponent_If<TComponent>(*GetEntityData(), canRemoveFunc);
 		}
 
-		inline EntityVersion GetVersion() const
+		[[nodiscard]] inline EntityVersion GetVersion() const
 		{
 			return m_Version;
 		}
 
-		inline const Archetype* GetArchetype() const
+		[[nodiscard]] inline const Archetype* GetArchetype() const
 		{
 			if (IsValid())
 			{
@@ -381,7 +381,7 @@ namespace decs
 
 	#pragma region TAGS:
 	public:
-		inline bool HasTag(TypeID tagType)const
+		[[nodiscard]] inline bool HasTag(TypeID tagType)const
 		{
 			if (IsValid())
 			{
@@ -391,7 +391,7 @@ namespace decs
 		}
 
 		template<TTagConcept TTag>
-		inline bool HasTag()const
+		[[nodiscard]] inline bool HasTag()const
 		{
 			if (IsValid())
 			{
@@ -512,50 +512,50 @@ namespace decs
 			return rhs == m_Entity;
 		}
 
-		inline bool IsValid() const noexcept
+		[[nodiscard]] inline bool IsValid() const noexcept
 		{
 			return m_Entity.IsValid();
 		}
 
-		inline bool IsNull() const noexcept
+		[[nodiscard]] inline bool IsNull() const noexcept
 		{
 			return m_Entity.IsNull();
 		}
 
-		inline bool IsActive() const noexcept
+		[[nodiscard]] inline bool IsActive() const noexcept
 		{
 			return m_Entity.IsActive();
 		}
 
-		inline bool IsActiveFlag() const noexcept
+		[[nodiscard]] inline bool IsActiveFlag() const noexcept
 		{
 			return m_Entity.IsActiveFlag();
 		}
 
-		inline EntityID GetID() const
+		[[nodiscard]] inline EntityID GetID() const
 		{
 			return m_Entity.GetID();
 		}
 
-		inline Container* GetContainer() const
+		[[nodiscard]] inline Container* GetContainer() const
 		{
 			return m_Entity.GetContainer();
 		}
 
 		template<TComponentConcept TComponent>
-		inline bool HasComponent() const
+		[[nodiscard]] inline bool HasComponent() const
 		{
 			return m_Entity.HasComponent<TComponent>();
 		}
 
 		template<TComponentConcept TComponent>
-		inline TComponent* GetComponent() const
+		[[nodiscard]] inline TComponent* GetComponent() const
 		{
 			return m_Entity.GetComponent<TComponent>();
 		}
 
 		template<TComponentConcept TComponent>
-		inline TComponent* GetComponentDynamic() const
+		[[nodiscard]] inline TComponent* GetComponentDynamic() const
 		{
 			return m_Entity.GetComponentDynamic<TComponent>();
 		}
@@ -570,23 +570,24 @@ namespace decs
 		{
 			m_Entity.GetComponentDynamic<TComponent>(components);
 		}
+
 		template<TComponentConcept TComponent>
 		inline bool TryGetComponent(typename TComponent*& component) const
 		{
 			return m_Entity.TryGetComponent(component);
 		}
 
-		inline EntityVersion GetVersion() const
+		[[nodiscard]] inline EntityVersion GetVersion() const
 		{
 			return m_Entity.GetVersion();
 		}
 
-		inline uint32_t GetComponentCount() const
+		[[nodiscard]] inline uint32_t GetComponentCount() const
 		{
 			return m_Entity.GetComponentCount();
 		}
 
-		inline const Archetype* GetArchetype() const
+		[[nodiscard]] inline const Archetype* GetArchetype() const
 		{
 			return m_Entity.GetArchetype();
 		}
@@ -596,13 +597,13 @@ namespace decs
 			return m_Entity.Destroy();
 		}
 
-		inline bool HasTag(TypeID tagType)const
+		[[nodiscard]] inline bool HasTag(TypeID tagType)const
 		{
 			return m_Entity.HasTag(tagType);
 		}
 
 		template<TTagConcept TTag>
-		inline bool HasTag()const
+		[[nodiscard]] inline bool HasTag()const
 		{
 			return m_Entity.HasTag<TTag>();
 		}

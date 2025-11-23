@@ -115,7 +115,6 @@ int main()
 		prefab.AddTag<BoolTag>();
 		prefab.AddComponent<Position>();
 
-
 		auto rendererRemoveCond = [](const Renderer& renderer)
 		{
 			return true;
