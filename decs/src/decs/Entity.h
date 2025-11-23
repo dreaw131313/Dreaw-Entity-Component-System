@@ -6,8 +6,6 @@
 
 namespace decs
 {
-	class Container;
-
 	class Entity final
 	{
 		template<TComponentConcept ...>

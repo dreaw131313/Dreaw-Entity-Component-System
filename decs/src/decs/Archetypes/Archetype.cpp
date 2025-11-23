@@ -46,7 +46,6 @@ namespace decs
 			}
 
 		}
-		m_EntitiesCount = 0;
 	}
 
 	void Archetype::InsertComponentContextInCorrectPlace(ComponentContextBase* componentContext, uint32_t typeDataIndex)
@@ -125,22 +124,25 @@ namespace decs
 
 	void Archetype::AddEntityData(EntityData* entityData)
 	{
-		m_EntitiesData.emplace_back(entityData);
-
-		entityData->m_Archetype = this;
-		entityData->m_IndexInArchetype = m_EntitiesCount;
-
-		m_EntitiesCount += 1;
-	}
-
-	void Archetype::RemoveSwapBackEntityData(uint64_t index)
-	{
-		if (index >= m_EntitiesCount)
+		if (entityData == nullptr)
 		{
 			return;
 		}
 
-		if (index < (m_EntitiesCount - 1))
+		entityData->m_Archetype = this;
+		entityData->m_IndexInArchetype = EntityCount();
+
+		m_EntitiesData.push_back(entityData);
+	}
+
+	void Archetype::RemoveSwapBackEntityData(uint64_t index)
+	{
+		if (index >= EntityCount())
+		{
+			return;
+		}
+
+		if (index < (EntityCount() - 1))
 		{
 			auto& backEntityData = m_EntitiesData.back();
 			m_EntitiesData[index] = backEntityData;
@@ -151,17 +153,16 @@ namespace decs
 
 		}
 		m_EntitiesData.pop_back();
-		m_EntitiesCount -= 1;
 	}
 
 	void Archetype::RemoveSwapBackEntity(uint64_t index)
 	{
-		if (index >= m_EntitiesCount)
+		if (index >= EntityCount())
 		{
 			return;
 		}
 
-		if (index == m_EntitiesCount - 1)
+		if (index == EntityCount() - 1)
 		{
 			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
 			{
@@ -195,12 +196,12 @@ namespace decs
 
 	void Archetype::RemoveSwapBackEntityAfterRemoveComponent(uint64_t index)
 	{
-		if (index >= m_EntitiesCount)
+		if (index >= EntityCount())
 		{
 			return;
 		}
 
-		if (index == m_EntitiesCount - 1)
+		if (index == EntityCount() - 1)
 		{
 			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
 			{
@@ -231,12 +232,12 @@ namespace decs
 
 	void Archetype::RemoveSwapBackRecordRaw(uint64_t index)
 	{
-		if (index >= m_EntitiesCount)
+		if (index >= EntityCount())
 		{
 			return;
 		}
 
-		if (index == m_EntitiesCount - 1)
+		if (index == EntityCount() - 1)
 		{
 			m_EntitiesData.pop_back();
 			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
@@ -269,12 +270,11 @@ namespace decs
 			}
 		}
 
-		m_EntitiesCount -= 1;
 	}
 
 	void Archetype::SetRecordAsIntendedToDelayedDestroy(uint64_t index)
 	{
-		if (index >= m_EntitiesCount)
+		if (index >= EntityCount())
 		{
 			return;
 		}
@@ -300,7 +300,6 @@ namespace decs
 
 	void Archetype::Reset()
 	{
-		m_EntitiesCount = 0;
 		m_EntitiesData.clear();
 		for (uint64_t idx = 0; idx < GetComponentAndTagCount(); idx++)
 		{
@@ -373,13 +372,13 @@ namespace decs
 
 	void Archetype::RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(uint64_t entityIndex, TypeID removedComponentTypeID)
 	{
-		if (entityIndex >= m_EntitiesCount)
+		if (entityIndex >= EntityCount())
 		{
 			return;
 		}
 
 		const uint32_t componentCount = GetComponentAndTagCount();
-		if (entityIndex == m_EntitiesCount - 1)
+		if (entityIndex == EntityCount() - 1)
 		{
 			for (uint64_t i = 0; i < componentCount; i++)
 			{
@@ -490,4 +489,123 @@ namespace decs
 		}
 	}
 
+
+	bool Archetype::MoveEntityComponentsAfterAddComponent_S(
+		Archetype& fromArchetype,
+		Archetype& toArchetype,
+		uint64_t entityIndex,
+		TypeID addedComponentTypeID
+	)
+	{
+		if (entityIndex >= fromArchetype.EntityCount())
+		{
+			return false;
+		}
+
+		EntityData* entityData = fromArchetype.m_EntitiesData[entityIndex].GetEntityData();
+
+		toArchetype.AddEntityData(entityData);
+
+		uint64_t thisArchetypeIndex = 0;
+		uint64_t fromArchetypeIndex = 0;
+
+		for (; thisArchetypeIndex < toArchetype.GetComponentAndTagCount(); thisArchetypeIndex++)
+		{
+			ArchetypeTypeData& thisTypeData = toArchetype.m_TypeData[thisArchetypeIndex];
+			if (thisTypeData.m_TypeID == addedComponentTypeID)
+			{
+				continue;
+			}
+
+			ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];
+			if (!fromArchetypeData.IsTag())
+			{
+				thisTypeData.m_PackedContainer->PushBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+				fromArchetypeData.m_PackedContainer->RemoveSwapBack(entityIndex);
+			}
+
+			fromArchetypeIndex++;
+		}
+
+		fromArchetype.RemoveSwapBackEntityData(entityIndex);
+
+		return true;
+	}
+
+	bool Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource_S(
+		Archetype& fromArchetype,
+		Archetype& toArchetype,
+		uint64_t entityIndex,
+		TypeID addedComponentTypeID
+	)
+	{
+		if (entityIndex >= fromArchetype.EntityCount())
+		{
+			return false;
+		}
+
+		ArchetypeEntityData& archetypeEntityData = fromArchetype.m_EntitiesData[entityIndex];
+		toArchetype.AddEntityData(archetypeEntityData.GetEntityData());
+		archetypeEntityData.Invalidate();
+
+		uint64_t thisArchetypeIndex = 0;
+		uint64_t fromArchetypeIndex = 0;
+
+		for (; thisArchetypeIndex < toArchetype.GetComponentAndTagCount(); thisArchetypeIndex++)
+		{
+			ArchetypeTypeData& thisTypeData = toArchetype.m_TypeData[thisArchetypeIndex];
+			if (thisTypeData.m_TypeID == addedComponentTypeID)
+			{
+				continue;
+			}
+
+			ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];
+			if (!fromArchetypeData.IsTag())
+			{
+				thisTypeData.m_PackedContainer->PushBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+			}
+
+			fromArchetypeIndex++;
+		}
+
+		return true;
+	}
+
+	bool Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource_S(
+		Archetype& fromArchetype,
+		Archetype& toArchetype,
+		uint64_t entityIndex,
+		TypeID removedComponentTypeID
+	)
+	{
+		if (entityIndex >= fromArchetype.EntityCount())
+		{
+			return false;
+		}
+
+		ArchetypeEntityData& archetypeEntityData = fromArchetype.m_EntitiesData[entityIndex];
+		toArchetype.AddEntityData(archetypeEntityData.GetEntityData());
+		archetypeEntityData.Invalidate();
+
+		uint64_t thisArchetypeIndex = 0;
+		uint64_t fromArchetypeIndex = 0;
+
+		for (; thisArchetypeIndex < toArchetype.GetComponentAndTagCount(); thisArchetypeIndex++, fromArchetypeIndex++)
+		{
+			ArchetypeTypeData& thisTypeData = toArchetype.m_TypeData[thisArchetypeIndex];
+			ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];
+			if (fromArchetypeData.m_TypeID == removedComponentTypeID)
+			{
+				fromArchetypeIndex += 1;
+			}
+
+			if (!thisTypeData.IsTag())
+			{
+				ArchetypeTypeData& updatetFromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];
+				thisTypeData.m_PackedContainer->PushBack(updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+			}
+		}
+
+		return true;
+	}
 }

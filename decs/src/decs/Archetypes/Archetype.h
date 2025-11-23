@@ -158,7 +158,6 @@ namespace decs
 
 		std::vector<OrderData> m_ComponentContextsInOrder = {};
 
-		uint32_t m_EntitiesCount = 0;
 
 	public:
 		Archetype();
@@ -189,15 +188,15 @@ namespace decs
 			return m_TypeData[m_ComponentContextsInOrder[index].m_ComponentIndex].m_TypeID;
 		}
 
-		inline uint32_t EntityCount() const
+		inline uint64_t EntityCount() const noexcept
 		{
-			return m_EntitiesCount;
+			return m_EntitiesData.size();
 		}
 
 		inline float GetLoadFactor()const
 		{
 			if (m_EntitiesData.capacity() == 0) return 1.f;
-			return (float)m_EntitiesCount / (float)m_EntitiesData.capacity();
+			return (float)EntityCount() / (float)m_EntitiesData.capacity();
 		}
 
 		inline bool ContainType(TypeID typeID) const
@@ -254,7 +253,7 @@ namespace decs
 			return HasTag(Type<TTag>::ID());
 		}
 
-		inline bool IsTypeTag(uint32_t typeIndex) const 
+		inline bool IsTypeTag(uint32_t typeIndex) const
 		{
 			return m_TypeData[typeIndex].IsTag();
 		}
@@ -273,7 +272,7 @@ namespace decs
 
 		inline void SetEntityActiveState(uint32_t index, bool isActive)
 		{
-			if (index < m_EntitiesCount)
+			if (index < EntityCount())
 			{
 				m_EntitiesData[index].m_bIsActive = isActive;
 			}
@@ -306,27 +305,6 @@ namespace decs
 
 		void InitEmptyFromOther(Archetype& other, ComponentContextsManager* componentContexts);
 
-		/*
-		/// <summary>
-		/// Moves entity components from "fromArchetype" to this archetype.
-		/// </summary>
-		/// <param name="componentTypeID"></param>
-		/// <param name="fromArchetype"></param>
-		/// <param name="fromIndex"></param>
-		void MoveEntityComponentsAfterRemoveComponent(
-			TypeID removedComponentTypeID,
-			Archetype* fromArchetype,
-			uint64_t fromIndex,
-			EntityData* entityData
-		);
-
-		void MoveEntityComponentsAfterRemoveComponent(
-			Archetype* fromArchetype,
-			uint64_t fromIndex,
-			EntityData* entityData
-		);
-
-		*/
 
 		void MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
 			TypeID removedComponentTypeID,
@@ -351,9 +329,9 @@ namespace decs
 		/// <param name="fromArchetype"></param>
 		/// <param name="fromIndex"></param>
 		void MoveEntityComponentsAfterAddComponent(
-			TypeID addedComponentTypeID, 
+			TypeID addedComponentTypeID,
 			Archetype* fromArchetype,
-			uint64_t entityIndex, 
+			uint64_t entityIndex,
 			EntityData* entityData
 		);
 
@@ -401,6 +379,33 @@ namespace decs
 			}
 			return {};
 		}
+
+	#pragma region STATICS
+	private:
+
+		static bool MoveEntityComponentsAfterAddComponent_S(
+			Archetype& fromArchetype,
+			Archetype& toArchetype,
+			uint64_t entityIndex,
+			TypeID addedComponentTypeID
+		);
+
+		static bool MoveEntityAfterAddComponentWithoutDestroyingFromSource_S(
+			Archetype& fromArchetype,
+			Archetype& toArchetype,
+			uint64_t entityIndex,
+			TypeID addedComponentTypeID
+		);
+
+		static bool MoveEntityAfterRemoveComponentWithoutDestroyingFromSource_S(
+			Archetype& fromArchetype,
+			Archetype& toArchetype,
+			uint64_t entityIndex,
+			TypeID removedComponentTypeID
+		);
+
+
+	#pragma endregion
 
 	};
 }
