@@ -52,9 +52,9 @@ namespace decs
 			}
 		}
 
-		inline Container* GetContainer() const { return m_Container; }
+		[[nodiscard]] inline Container* GetContainer() const { return m_Container; }
 
-		inline bool IsValid()const { return m_Container != nullptr; }
+		[[nodiscard]] inline bool IsValid()const { return m_Container != nullptr; }
 
 		[[nodiscard]] inline uint64_t GetEntityCount()
 		{

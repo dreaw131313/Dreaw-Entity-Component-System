@@ -53,7 +53,7 @@ namespace decs
 			return entityCount;
 		}
 
-		inline uint64_t GetMinComponentsCount() const
+		[[nodiscard]] inline uint64_t GetMinComponentsCount() const
 		{
 			uint64_t includesCount = sizeof...(ComponentsTypes);
 			if (m_WithAnyOf.size() > 0) includesCount += 1;
@@ -434,7 +434,7 @@ namespace decs
 			}
 		}
 
-		bool Contain(const decs::Entity& entity)
+		[[nodiscard]] bool Contain(const decs::Entity& entity)
 		{
 			if (entity.IsValid())
 			{

@@ -65,7 +65,7 @@ namespace decs
 		}
 
 		template<typename T>
-		T* GetExtensionData()
+		[[nodiscard]] T* GetExtensionData()
 		{
 			return static_cast<T*>(m_ExtensionData);
 		}
@@ -106,22 +106,21 @@ namespace decs
 		TRefCounterHandle<EnityLifeTimeData> m_EntitiesLifeTimeData{};
 
 	public:
-		const TRefCounterHandle<EnityLifeTimeData>& GetLifeTimeData() const
+		[[nodiscard]] const TRefCounterHandle<EnityLifeTimeData>& GetLifeTimeData() const
 		{
 			return m_EntitiesLifeTimeData;
 		}
 
-		Entity CreateEntity(bool bIsActive = true);
+		[[nodiscard]] Entity CreateEntity(bool bIsActive = true);
 
-		inline uint32_t GetEntityCount() const
+		[[nodiscard]] inline uint32_t GetEntityCount() const
 		{
 			return m_EntityManager.GetCreatedEntityCount();
 		}
 
-	public:
 		bool DestroyEntity(const Entity& entity);
 
-		inline uint64_t GetEmptyEntitiesCount() const
+		[[nodiscard]] inline uint64_t GetEmptyEntitiesCount() const
 		{
 			return m_EmptyEntities.size();
 		}
