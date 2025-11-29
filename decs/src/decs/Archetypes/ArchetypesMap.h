@@ -305,6 +305,15 @@ namespace decs
 			return nullptr;
 		}
 
+		template<TComponentConcept TComponent>
+		Archetype* GetSingleComponentArchetype()
+		{
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<TComponent>::ID();
+			auto it = m_SingleComponentArchetypes.find(typeID);
+
+			return it != m_SingleComponentArchetypes.end() ? it->second : nullptr;
+		}
+
 		inline ArchetypesGroupByOneType* GetArchetypesGroup(TypeID id)
 		{
 			ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
@@ -340,14 +349,6 @@ namespace decs
 
 		// CREATING ARCHETYPES
 	private:
-		template<TComponentConcept TComponent>
-		Archetype* GetSingleComponentArchetype()
-		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<TComponent>::ID();
-			auto it = m_SingleComponentArchetypes.find(typeID);
-
-			return it != m_SingleComponentArchetypes.end() ? it->second : nullptr;
-		}
 
 		Archetype* CreateSingleComponentArchetype(TypeID componentTypeID, ComponentContextBase* componentContext);
 
