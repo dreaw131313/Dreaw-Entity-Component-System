@@ -407,7 +407,7 @@ namespace decs
 		archetype->AddTypeData_WithoutCheck(componentTypeID, nullptr);
 		AddArchetypeToCorrectContainers(*archetype, false);
 		MakeArchetypeEdges(*archetype);
-		return archetype;Œ
+		return archetype;
 	}
 
 	void ArchetypesMap::AddTypeDataAfterRemoveComponent(const Archetype& fromArchetype, Archetype& toArchetype, TypeID compType)

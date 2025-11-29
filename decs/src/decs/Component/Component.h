@@ -62,7 +62,7 @@ namespace decs
 		inline void SetBit(uint8_t bitIndex, bool bValue)
 		{
 			// we assert in debug builds because internal bits can only be changed by this library
-			DECS_ASSERT(bitIndex != s_IsCreatedBitIndex && bitIndex != s_IsEnabledBitIndex);
+			DECS_ASSERT(bitIndex != s_IsCreatedBitIndex && bitIndex != s_IsEnabledBitIndex, "Bit indices used internaly must not be used!");
 
 			if (bValue)
 			{
