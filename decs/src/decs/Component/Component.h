@@ -14,8 +14,10 @@ namespace decs
 	struct EntityComponentFlags
 	{
 	private:
-		inline static constexpr const uint32_t s_IsCreatedBit = 1u << 30;
-		inline static constexpr const uint32_t s_IsEnabledBit = 1u << 31;
+		inline static constexpr const uint8_t s_IsCreatedBitIndex = 30;
+		inline static constexpr const uint8_t s_IsEnabledBitIndex = 31;
+		inline static constexpr const uint32_t s_IsCreatedBit = 1u << s_IsCreatedBitIndex;
+		inline static constexpr const uint32_t s_IsEnabledBit = 1u << s_IsEnabledBitIndex;
 
 	public:
 		inline bool IsCreated() const noexcept
@@ -59,6 +61,9 @@ namespace decs
 
 		inline void SetBit(uint8_t bitIndex, bool bValue)
 		{
+			// we assert in debug builds because internal bits can only be changed by this library
+			DECS_ASSERT(bitIndex != s_IsCreatedBitIndex && bitIndex != s_IsEnabledBitIndex);
+
 			if (bValue)
 			{
 				m_Data = m_Data | (1u << bitIndex);
