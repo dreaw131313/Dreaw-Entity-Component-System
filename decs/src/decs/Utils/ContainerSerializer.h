@@ -23,7 +23,7 @@ namespace decs
 		inline virtual std::string GetComponentTypeName() const = 0;
 
 	protected:
-		virtual void SerializeComponentFromVoid(ComponentBase* component, SerializerData& serializerData) const = 0;
+		virtual void SerializeComponentFromVoid(EntityComponent* component, SerializerData& serializerData) const = 0;
 
 	};
 
@@ -47,7 +47,7 @@ namespace decs
 
 
 	private:
-		virtual void SerializeComponentFromVoid(ComponentBase* component, SerializerData& serializerData) const override final
+		virtual void SerializeComponentFromVoid(EntityComponent* component, SerializerData& serializerData) const override final
 		{
 			SerializeComponent(*static_cast<TComponent*>(component), serializerData);
 		}

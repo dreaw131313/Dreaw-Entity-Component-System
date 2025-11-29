@@ -687,7 +687,8 @@ namespace decs
 		Archetype* archetype = m_SpawnData.m_SpawnArchetypes[spawnState.m_ArchetypeIndex];
 		uint64_t componentsCount = archetype->GetComponentAndTagCount() + spawnState.m_CompRefsStart;
 
-		archetype->AddEntityData(entity.GetEntityData());
+		auto entityData = entity.GetEntityData();
+		archetype->AddEntityData(entityData);
 
 		auto& typeDataVector = archetype->m_TypeData;
 		for (uint32_t i = spawnState.m_CompRefsStart; i < componentsCount; i++)
@@ -699,12 +700,12 @@ namespace decs
 				continue;
 			}
 
-			ComponentBase* componentPtr = spawnRefData.m_StableContainer->CreateFromComponentBase(spawnRefData.m_ComponentPtr);
+			EntityComponent* componentPtr = spawnRefData.m_StableContainer->CreateFromComponentBase(spawnRefData.m_ComponentPtr);
 			currentTypeData.m_PackedContainer->PushBack(componentPtr);
 
 			m_SpawnData.m_SpawnedEntityComponentPtrs[i] = componentPtr;
 
-			componentPtr->OnPreCreate(entity);
+			componentPtr->OnPreCreate(entityData);
 		}
 	}
 
@@ -720,7 +721,7 @@ namespace decs
 			auto& orderData = orderContextVector[idx];
 			const uint32_t componentIdx = orderData.m_ComponentIndex;
 
-			ComponentBase* componentPtr = m_SpawnData.m_SpawnedEntityComponentPtrs[compRefIdx + componentIdx];
+			EntityComponent* componentPtr = m_SpawnData.m_SpawnedEntityComponentPtrs[compRefIdx + componentIdx];
 			if (componentPtr != nullptr)
 			{
 				orderData.m_ComponentContext->InvokeOnCreateComponent(componentPtr, entity);
@@ -744,7 +745,7 @@ namespace decs
 		{
 			Archetype* currentArch = entityData->m_Archetype;
 
-			ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+			EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
 			componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
 
 			// All this checks are here to check if this entity containe components after OnCreateMethod
@@ -795,7 +796,7 @@ namespace decs
 		}
 
 		auto packedContainer = oldArchetypeTypeData.m_PackedContainer;
-		ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(indexInOldArchetype);
+		EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(indexInOldArchetype);
 		if (componentPtr->GetDependecyCount() > 0)
 		{
 			return false;
@@ -836,7 +837,7 @@ namespace decs
 		return true;
 	}
 
-	void Container::InvokeComponentDestroyObservers(ComponentContextBase& compCtx, ComponentBase& comp, EntityData& entityData)
+	void Container::InvokeComponentDestroyObservers(ComponentContextBase& compCtx, EntityComponent& comp, EntityData& entityData)
 	{
 		Entity e(entityData);
 
@@ -844,7 +845,7 @@ namespace decs
 		compCtx.InvokeOnDestroyComponent(&comp, e);
 	}
 
-	ComponentBase* Container::GetComponentAtIndex(EntityData& entityData, uint32_t componentIndex)
+	EntityComponent* Container::GetComponentAtIndex(EntityData& entityData, uint32_t componentIndex)
 	{
 		if (entityData.IsAlive() && entityData.m_Archetype != nullptr && componentIndex < entityData.m_Archetype->GetComponentOnlyCount())
 		{
@@ -987,7 +988,7 @@ namespace decs
 							entity.Set_Internal(*entityData);
 
 							Archetype* currentArch = entityData->m_Archetype;
-							ComponentBase* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+							EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
 							componentContext->InvokeOnCreateComponent(componentPtr, entity);
 
 							if (entity.IsActive())
@@ -1123,7 +1124,7 @@ namespace decs
 					TypeID lastComponentTypeID = typeData.m_TypeID;
 					int observerOrder = orderData.m_ComponentContext->GetObserverOrder();
 
-					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype);
+					EntityComponent* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype);
 
 					if (componentPtr != nullptr)
 					{
@@ -1274,7 +1275,7 @@ namespace decs
 			for (uint64_t idx = 0; idx < componentInOrderCount; idx++)
 			{
 				auto& orderData = componentOrderData[idx];
-				ComponentBase* compPtr = m_ActivationChangeComponentPtrs[startRefsIdx + orderData.m_ComponentIndex];
+				EntityComponent* compPtr = m_ActivationChangeComponentPtrs[startRefsIdx + orderData.m_ComponentIndex];
 				if (compPtr != nullptr)
 				{
 					orderData.m_ComponentContext->InvokeOnEnableComponent(compPtr, entity);
@@ -1325,7 +1326,7 @@ namespace decs
 			for (uint64_t idx = 0; idx < componentInOrderCount; idx++)
 			{
 				auto& orderData = componentOrderData[idx];
-				ComponentBase* compPtr = m_ActivationChangeComponentPtrs[startRefsIdx + orderData.m_ComponentIndex];
+				EntityComponent* compPtr = m_ActivationChangeComponentPtrs[startRefsIdx + orderData.m_ComponentIndex];
 				if (compPtr != nullptr)
 				{
 					orderData.m_ComponentContext->InvokeOnDisableComponent(compPtr, entity);

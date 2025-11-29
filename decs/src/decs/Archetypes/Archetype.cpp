@@ -169,7 +169,7 @@ namespace decs
 				auto& typeData = m_TypeData[i];
 				if (!typeData.IsTag())
 				{
-					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
+					EntityComponent* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
 					typeData.m_PackedContainer->PopBack();
 					typeData.m_StableContainer->Destroy(componentPtr);
 				}
@@ -183,7 +183,7 @@ namespace decs
 				auto& typeData = m_TypeData[i];
 				if (!typeData.IsTag())
 				{
-					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
+					EntityComponent* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
 					typeData.m_PackedContainer->RemoveSwapBack(index);
 					typeData.m_StableContainer->Destroy(componentPtr);
 				}
@@ -208,7 +208,7 @@ namespace decs
 				auto& typeData = m_TypeData[i];
 				if (!typeData.IsTag())
 				{
-					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
+					EntityComponent* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
 					typeData.m_PackedContainer->PopBack();
 				}
 			}
@@ -221,7 +221,7 @@ namespace decs
 				auto& typeData = m_TypeData[i];
 				if (!typeData.IsTag())
 				{
-					ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
+					EntityComponent* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(index);
 					typeData.m_PackedContainer->RemoveSwapBack(index);
 				}
 			}
@@ -356,7 +356,7 @@ namespace decs
 				{
 					if (removedComponentTypeID == typeData.m_TypeID)
 					{
-						ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
+						EntityComponent* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
 						typeData.m_StableContainer->Destroy(componentPtr);
 					}
 
@@ -373,7 +373,7 @@ namespace decs
 				{
 					if (removedComponentTypeID == typeData.m_TypeID)
 					{
-						ComponentBase* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
+						EntityComponent* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityIndex);
 						typeData.m_StableContainer->Destroy(componentPtr);
 					}
 
