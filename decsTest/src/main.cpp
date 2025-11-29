@@ -108,6 +108,18 @@ int main()
 		observerManager.FillContainerObservers(container);
 
 		prefab = container.CreateEntity();
+
+		if (prefab)
+		{
+
+		}
+
+		decs::ConstEntity constPrefab = prefab;
+		if(constPrefab)
+		{
+
+		}
+
 		prefab.AddComponent<TestComponent>();
 		prefab.AddComponent<Renderer>();
 		prefab.AddTag<FloatTag>();

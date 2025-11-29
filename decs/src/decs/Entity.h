@@ -39,7 +39,11 @@ namespace decs
 
 		}
 
-	public:
+		inline operator bool() const noexcept
+		{
+			return IsValid();
+		}
+
 		bool operator==(const Entity& rhs)const
 		{
 			return this->m_EntityData == rhs.m_EntityData && this->m_Version == rhs.m_Version;
@@ -500,6 +504,11 @@ namespace decs
 			m_Entity(entity)
 		{
 
+		}
+
+		inline operator bool() const noexcept
+		{
+			return IsValid();
 		}
 
 		bool operator==(const ConstEntity& rhs)const
