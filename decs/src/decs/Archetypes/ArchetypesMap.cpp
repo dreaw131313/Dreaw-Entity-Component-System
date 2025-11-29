@@ -78,7 +78,6 @@ namespace decs
 	void ArchetypesMap::FullClear()
 	{
 		m_Archetypes.Clear();
-		m_SingleComponentArchetypes.clear();
 		m_ArchetypesGroupedByComponentsCount.clear();
 		m_ArchetrypesGroupsByOneTypeVector.Clear();
 		m_ArchetypesGroupedByOneType.clear();
@@ -158,7 +157,7 @@ namespace decs
 					auto& testArchetype = *archetypesListToCreateEdges[archIdx];
 
 					uint64_t incorrectTests = 0;
-					TypeID lastIncorrectType;
+					TypeID lastIncorrectType = std::numeric_limits<TypeID>::max();
 					bool isArchetypeValid = true;
 
 					for (uint64_t typeIdx = 0; typeIdx < testArchetype.GetComponentAndTagCount(); typeIdx++)
@@ -190,13 +189,8 @@ namespace decs
 		}
 	}
 
-	void ArchetypesMap::AddArchetypeToCorrectContainers(Archetype& archetype, bool bTryAddToSingleComponentsMap)
+	void ArchetypesMap::AddArchetypeToCorrectContainers(Archetype& archetype)
 	{
-		if (bTryAddToSingleComponentsMap && archetype.GetComponentAndTagCount() == 1)
-		{
-			m_SingleComponentArchetypes[archetype.GetTypeID(0)] = &archetype;
-		}
-
 		if (archetype.GetComponentAndTagCount() > m_ArchetypesGroupedByComponentsCount.size())
 		{
 			m_ArchetypesGroupedByComponentsCount.resize(archetype.GetComponentAndTagCount());
@@ -301,7 +295,7 @@ namespace decs
 			}
 
 			archetype->InitEmptyFromOther(fromArchetype, componentContextsManager);
-			AddArchetypeToCorrectContainers(*archetype, true);
+			AddArchetypeToCorrectContainers(*archetype);
 		}
 
 		return archetype;
@@ -309,11 +303,14 @@ namespace decs
 
 	Archetype* ArchetypesMap::CreateSingleComponentArchetype(TypeID componentTypeID, ComponentContextBase* componentContext)
 	{
-		auto& archetype = m_SingleComponentArchetypes[componentTypeID];
-		if (archetype != nullptr) return archetype;
+		auto archetype = GetSingleComponentArchetype(componentTypeID);
+		if (archetype != nullptr)
+		{
+			return archetype;
+		}
 		archetype = &m_Archetypes.EmplaceBack();
 		archetype->AddTypeData_WithoutCheck(componentTypeID, componentContext);
-		AddArchetypeToCorrectContainers(*archetype, false);
+		AddArchetypeToCorrectContainers(*archetype);
 		MakeArchetypeEdges(*archetype);
 		return archetype;
 	}
@@ -398,14 +395,14 @@ namespace decs
 
 	Archetype* ArchetypesMap::CreateSingleTagArchetype(TypeID componentTypeID)
 	{
-		auto& archetype = m_SingleComponentArchetypes[componentTypeID];
+		auto archetype = GetSingleComponentArchetype(componentTypeID);
 		if (archetype != nullptr)
 		{
 			return archetype;
 		}
 		archetype = &m_Archetypes.EmplaceBack();
 		archetype->AddTypeData_WithoutCheck(componentTypeID, nullptr);
-		AddArchetypeToCorrectContainers(*archetype, false);
+		AddArchetypeToCorrectContainers(*archetype);
 		MakeArchetypeEdges(*archetype);
 		return archetype;
 	}

@@ -85,19 +85,43 @@ namespace decs
 
 		}
 
-		inline uint64_t ArchetypesCount() const { return m_ArchetypesCount; }
-		inline uint32_t MaxComponentsCount() const { return (uint32_t)m_Groups.size(); }
+		inline TypeID GetMainTypeID() const noexcept
+		{
+			return m_MainTypeID;
+		}
+
+		inline Archetype* GetMainTypeArchetype() const
+		{
+			return m_MainTypeArchetype;
+		}
+
+		inline uint64_t ArchetypesCount() const
+		{
+			return m_ArchetypesCount;
+		}
+
+		inline uint32_t MaxComponentsCount() const
+		{
+			return (uint32_t)m_Groups.size();
+		}
 
 		void AddArchetype(Archetype* archetype)
 		{
 			m_ArchetypesCount += 1;
-			uint64_t archetypesCount = archetype->GetComponentAndTagCount();
-			if (archetypesCount > m_Groups.size())
+			const uint64_t componentAndTagCount = archetype->GetComponentAndTagCount();
+
+			if (componentAndTagCount == 1)
 			{
-				m_Groups.resize(archetypesCount);
+				DECS_ASSERT(m_MainTypeID == archetype->GetTypeID(0), "Single component archetype must have component type same as m_MainTypeID!");
+				m_MainTypeArchetype = archetype;
 			}
 
-			auto& archetypeGroup = m_Groups[archetypesCount - 1];
+			if (componentAndTagCount > m_Groups.size())
+			{
+				m_Groups.resize(componentAndTagCount);
+			}
+
+			auto& archetypeGroup = m_Groups[componentAndTagCount - 1];
 			if (archetypeGroup == nullptr)
 			{
 				archetypeGroup = &m_ArchetypeGroupAllocator.EmplaceBack();
@@ -157,9 +181,8 @@ namespace decs
 
 	private:
 		TChunkedVector<ArchetypeGroup>& m_ArchetypeGroupAllocator;
-
 		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
-
+		Archetype* m_MainTypeArchetype = nullptr;
 		std::vector<ArchetypeGroup*> m_Groups;
 		uint64_t m_ArchetypesCount = 0;
 	};
@@ -279,39 +302,30 @@ namespace decs
 		TChunkedVector<ArchetypeGroup> m_ArchetrypesGroupsAllocator = { 100 };
 		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeVector = { 100 };
 
-		ecsMap<TypeID, Archetype*> m_SingleComponentArchetypes = {};
 		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount = {};
-
 		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType;
 
 		// UTILITY
 	private:
 		void MakeArchetypeEdges(Archetype& archetype);
 
-		void AddArchetypeToCorrectContainers(Archetype& archetype, bool bTryAddToSingleComponentsMap = true);
+		void AddArchetypeToCorrectContainers(Archetype& archetype);
 
 		/// <summary>
 		/// Can be used to get single tags components
 		/// </summary>
 		/// <param name="typeID"></param>
 		/// <returns></returns>
-		inline Archetype* GetSingleComponentArchetype(TypeID typeID)
+		inline Archetype* GetSingleComponentArchetype(TypeID typeID) const
 		{
-			auto it = m_SingleComponentArchetypes.find(typeID);
-			if (it != m_SingleComponentArchetypes.end())
-			{
-				return it->second;
-			}
-			return nullptr;
+			auto it = m_ArchetypesGroupedByOneType.find(typeID);
+			return it != m_ArchetypesGroupedByOneType.end() ? it->second->GetMainTypeArchetype() : nullptr;
 		}
 
 		template<TComponentConcept TComponent>
-		Archetype* GetSingleComponentArchetype()
+		Archetype* GetSingleComponentArchetype() const
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<TComponent>::ID();
-			auto it = m_SingleComponentArchetypes.find(typeID);
-
-			return it != m_SingleComponentArchetypes.end() ? it->second : nullptr;
+			return GetSingleComponentArchetype(Type<TComponent>::ID());
 		}
 
 		inline ArchetypesGroupByOneType* GetArchetypesGroup(TypeID id)
@@ -375,8 +389,8 @@ namespace decs
 
 		Archetype* CreateSingleTagArchetype(TypeID componentTypeID);
 
-		void AddTypeDataAfterRemoveComponent(const Archetype& fromArchetype,Archetype& toArchetype, TypeID compType);
+		void AddTypeDataAfterRemoveComponent(const Archetype& fromArchetype, Archetype& toArchetype, TypeID compType);
 
-		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype,TypeID componentTypeID, ComponentContextBase* addedComponentContext);
+		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, ComponentContextBase* addedComponentContext);
 	};
 }
