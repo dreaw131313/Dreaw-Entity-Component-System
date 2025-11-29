@@ -165,7 +165,7 @@ namespace decs
 		{
 		public:
 			StableContainerBase* m_StableContainer = nullptr;
-			ComponentBase* m_ComponentPtr = nullptr;
+			EntityComponent* m_ComponentPtr = nullptr;
 
 		public:
 			SpawnComponentRefData()
@@ -175,7 +175,7 @@ namespace decs
 
 			SpawnComponentRefData(
 				StableContainerBase* stableContainer,
-				ComponentBase* componentPtr
+				EntityComponent* componentPtr
 			):
 				m_StableContainer(stableContainer), m_ComponentPtr(componentPtr)
 			{
@@ -193,7 +193,7 @@ namespace decs
 		public:
 			std::vector<SpawnComponentRefData> m_PrefabComponentRefs;
 			std::vector <Archetype*> m_SpawnArchetypes;
-			std::vector<ComponentBase*> m_SpawnedEntityComponentPtrs;
+			std::vector<EntityComponent*> m_SpawnedEntityComponentPtrs;
 
 		public:
 			void Reserve(uint64_t size)
@@ -365,7 +365,7 @@ namespace decs
 				newArchetype->AddEntityData(&entityData);
 			}
 
-			static_cast<ComponentBase*>(componentPtr)->OnPreCreate(entity);
+			static_cast<EntityComponent*>(componentPtr)->OnPreCreate(&entityData);
 
 			OnAddComponentInvokeObservers(entity, archetypeTypeData.m_ComponentContext, archetypeTypeData.m_PackedContainer, componentTypeID);
 
@@ -410,7 +410,7 @@ namespace decs
 			}
 
 			auto packedContainer = oldArchetypeTypeData.m_PackedContainer;
-			ComponentBase* componentBasePtr = packedContainer->GetComponentBasePtr(indexInOldArchetype);
+			EntityComponent* componentBasePtr = packedContainer->GetComponentBasePtr(indexInOldArchetype);
 			if (componentBasePtr->GetDependecyCount() > 0)
 			{
 				return false;
@@ -454,7 +454,7 @@ namespace decs
 			return true;
 		}
 	private:
-		void InvokeComponentDestroyObservers(ComponentContextBase& compCtx, ComponentBase& comp, EntityData& entityData);
+		void InvokeComponentDestroyObservers(ComponentContextBase& compCtx, EntityComponent& comp, EntityData& entityData);
 
 
 	public:
@@ -556,7 +556,7 @@ namespace decs
 			return nullptr;
 		}
 
-		ComponentBase* GetComponent(EntityData& entityData, TypeID componentType) const
+		EntityComponent* GetComponent(EntityData& entityData, TypeID componentType) const
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
 			{
@@ -580,7 +580,7 @@ namespace decs
 		/// <param name="entityData"></param>
 		/// <param name="componentIndex"></param>
 		/// <returns>Component in order of observeres</returns>
-		ComponentBase* GetComponentAtIndex(EntityData& entityData, uint32_t componentIndex);
+		EntityComponent* GetComponentAtIndex(EntityData& entityData, uint32_t componentIndex);
 
 		template<TComponentConcept TComponent>
 		TComponent* GetComponentDynamic(EntityData& entityData)
@@ -724,11 +724,11 @@ namespace decs
 				if (m_PerformDelayedDestruction)
 				{
 					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, tagTypeID);
-					Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype,indexInOldArchetype, tagTypeID);
+					Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype, indexInOldArchetype, tagTypeID);
 				}
 				else
 				{
-					Archetype::MoveEntityComponentsAfterAddComponent(*oldArchetype, *newArchetype,indexInOldArchetype, tagTypeID);
+					Archetype::MoveEntityComponentsAfterAddComponent(*oldArchetype, *newArchetype, indexInOldArchetype, tagTypeID);
 				}
 			}
 			else
@@ -1000,7 +1000,7 @@ namespace decs
 		void InvokeEntityCreateEnableObservers(const decs::Entity& entity);
 
 	private:
-		std::vector<ComponentBase*> m_ActivationChangeComponentPtrs = {};
+		std::vector<EntityComponent*> m_ActivationChangeComponentPtrs = {};
 
 		CreateEntityObserver* m_CreateEntityObserver = nullptr;
 		DestroyEntityObserver* m_DestroyEntityObserver = nullptr;
@@ -1203,7 +1203,7 @@ namespace decs
 				newArchetype->AddEntityData(&entityData);
 			}
 
-			static_cast<ComponentBase*>(componentPtr)->OnPreCreate(entity);
+			static_cast<EntityComponent*>(componentPtr)->OnPreCreate(&entityData);
 
 			return componentPtr;
 		}

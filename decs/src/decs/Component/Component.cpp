@@ -4,9 +4,9 @@
 
 namespace decs
 {
-
-	void ComponentBase::OnPreCreate(const Entity& entity)
+	Entity EntityComponent::GetEntity() const noexcept
 	{
+		return Entity(m_EntityData);
 	}
 
 }

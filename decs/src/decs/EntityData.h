@@ -39,7 +39,7 @@ namespace decs
 		std::atomic<bool> m_bIsContainerAlive = true;
 	};
 
-	class EntityData
+	class EntityData final
 	{
 		friend class Archetype;
 		friend class EntityManager;

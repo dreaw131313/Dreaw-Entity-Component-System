@@ -9,7 +9,7 @@ void PrintLine(std::string message = "")
 }
 
 
-struct Position : public decs::ComponentBase
+struct Position : public decs::EntityComponent
 {
 public:
 	float X = 0;
@@ -30,13 +30,9 @@ public:
 		//i += 1;
 	}
 
-protected:
-	void OnPreCreate(const decs::Entity& entity) override final
-	{
-	}
 };
 
-struct TestComponent : public decs::ComponentBase
+struct TestComponent : public decs::EntityComponent
 {
 public:
 	int table[10];
@@ -45,7 +41,7 @@ public:
 
 };
 
-struct Renderer :public decs::ComponentBase
+struct Renderer :public decs::EntityComponent
 {
 public:
 	double mesh;

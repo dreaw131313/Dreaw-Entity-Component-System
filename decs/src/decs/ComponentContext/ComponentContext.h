@@ -32,13 +32,13 @@ namespace decs
 			m_ObserverOrder = order;
 		}
 
-		virtual void InvokeOnCreateComponent(ComponentBase* component, const Entity& entity) = 0;
+		virtual void InvokeOnCreateComponent(EntityComponent* component, const Entity& entity) = 0;
 
-		virtual void InvokeOnDestroyComponent(ComponentBase* component, const Entity& entity) = 0;
+		virtual void InvokeOnDestroyComponent(EntityComponent* component, const Entity& entity) = 0;
 
-		virtual void InvokeOnEnableComponent(ComponentBase* component, const Entity& entity) = 0;
+		virtual void InvokeOnEnableComponent(EntityComponent* component, const Entity& entity) = 0;
 
-		virtual void InvokeOnDisableComponent(ComponentBase* component, const  Entity& entity) = 0;
+		virtual void InvokeOnDisableComponent(EntityComponent* component, const  Entity& entity) = 0;
 
 		inline virtual bool HasCreateObserver() const = 0;
 
@@ -97,11 +97,11 @@ namespace decs
 			return new ComponentContext<TComponent>(observerOrder, stableComponentChunkSize);
 		}
 
-		void InvokeOnCreateComponent(ComponentBase* component, const Entity& entity)override
+		void InvokeOnCreateComponent(EntityComponent* component, const Entity& entity)override
 		{
-			if (!component->m_bIsCreatedByContainer)
+			if (!component->IsCreatedByECS())
 			{
-				component->m_bIsCreatedByContainer = true;
+				component->SetCreated(true);
 				if (m_Observers.m_CreateObserver != nullptr)
 				{
 					m_Observers.m_CreateObserver->OnCreateComponent(*static_cast<TComponent*>(component), entity);
@@ -109,11 +109,11 @@ namespace decs
 			}
 		}
 
-		void InvokeOnDestroyComponent(ComponentBase* component, const Entity& entity)override
+		void InvokeOnDestroyComponent(EntityComponent* component, const Entity& entity)override
 		{
-			if (component->m_bIsCreatedByContainer)
+			if (component->IsCreatedByECS())
 			{
-				component->m_bIsCreatedByContainer = false;
+				component->SetCreated(false);
 				if (m_Observers.m_DestroyObserver != nullptr)
 				{
 					m_Observers.m_DestroyObserver->OnDestroyComponent(*static_cast<TComponent*>(component), entity);
@@ -121,11 +121,11 @@ namespace decs
 			}
 		}
 
-		void InvokeOnEnableComponent(ComponentBase* component, const Entity& entity) override
+		void InvokeOnEnableComponent(EntityComponent* component, const Entity& entity) override
 		{
-			if (!component->m_bIsEnabledByECS)
+			if (!component->IsEnabledByECS())
 			{
-				component->m_bIsEnabledByECS = true;
+				component->SetEnabled(true);
 				if (m_Observers.m_EnableObserver != nullptr)
 				{
 					m_Observers.m_EnableObserver->OnEnableComponent(*static_cast<TComponent*>(component), entity);
@@ -133,11 +133,11 @@ namespace decs
 			}
 		}
 
-		void InvokeOnDisableComponent(ComponentBase* component, const Entity& entity) override
+		void InvokeOnDisableComponent(EntityComponent* component, const Entity& entity) override
 		{
-			if (component->m_bIsEnabledByECS)
+			if (component->IsEnabledByECS())
 			{
-				component->m_bIsEnabledByECS = false;
+				component->SetEnabled(false);
 				if (m_Observers.m_DisableObserver != nullptr)
 				{
 					m_Observers.m_DisableObserver->OnDisableComponent(*static_cast<TComponent*>(component), entity);

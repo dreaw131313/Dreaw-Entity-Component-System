@@ -39,6 +39,14 @@ namespace decs
 
 		}
 
+		Entity(EntityData* entityData):
+			m_EntityData(entityData),
+			m_LifeTimeData(entityData != nullptr ? entityData->m_Container->GetLifeTimeData() : nullptr),
+			m_Version(entityData != nullptr ? entityData->GetVersion() : 0)
+		{
+
+		}
+
 		inline operator bool() const noexcept
 		{
 			return IsValid();
@@ -180,7 +188,7 @@ namespace decs
 		/// </summary>
 		/// <param name="componentIndex"></param>
 		/// <returns>Components in observers order</returns>
-		[[nodiscard]] inline ComponentBase* GetComponentAtIndex(uint32_t componentIndex) const
+		[[nodiscard]] inline EntityComponent* GetComponentAtIndex(uint32_t componentIndex) const
 		{
 			if (IsValid())
 			{
@@ -200,7 +208,7 @@ namespace decs
 			return nullptr;
 		}
 
-		[[nodiscard]] inline ComponentBase* GetComponent(TypeID componentType) const
+		[[nodiscard]] inline EntityComponent* GetComponent(TypeID componentType) const
 		{
 			if (IsValid())
 			{

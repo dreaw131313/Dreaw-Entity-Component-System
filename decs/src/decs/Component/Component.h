@@ -5,12 +5,82 @@
 
 namespace decs
 {
+
+	/// <summary>
+	/// Two last bits are taken. Bits from 0 to 29 are available (30 in total);
+	/// Bits 30 and 31 must not be used!
+	/// TODO: Add asserts to setting this bits!
+	/// </summary>
+	struct EntityComponentFlags
+	{
+	private:
+		inline static constexpr const uint32_t s_IsCreatedBit = 1u << 30;
+		inline static constexpr const uint32_t s_IsEnabledBit = 1u << 31;
+
+	public:
+		inline bool IsCreated() const noexcept
+		{
+			return m_Data & s_IsCreatedBit;
+		}
+
+		inline bool IsEnabled() const noexcept
+		{
+			return m_Data & s_IsEnabledBit;
+		}
+
+		inline void SetCreated(bool bIsCreated)
+		{
+			if (bIsCreated)
+			{
+				m_Data = m_Data | s_IsCreatedBit;
+			}
+			else
+			{
+				m_Data = m_Data & ~s_IsCreatedBit;
+			}
+		}
+
+		inline void SetEnabled(bool bIsEnabled)
+		{
+			if (bIsEnabled)
+			{
+				m_Data = m_Data | s_IsEnabledBit;
+			}
+			else
+			{
+				m_Data = m_Data & ~s_IsEnabledBit;
+			}
+		}
+
+		inline bool GetBit(uint8_t bitIndex) const noexcept
+		{
+			return m_Data & (1u << bitIndex);
+		}
+
+		inline bool SetBit(uint8_t bitIndex, bool bValue)
+		{
+			if (bValue)
+			{
+				m_Data = m_Data | (1u << bitIndex);
+			}
+			else
+			{
+				m_Data = m_Data & ~(1u << bitIndex);
+			}
+		}
+
+	private:
+		uint32_t m_Data = 0;
+	};
+
+
+	class EntityData;
 	class Entity;
 	class StableContainerBase;
 	template<typename TComponentType>
 	class StableContainer;
 
-	class ComponentBase : public ChunkAllocatorResource
+	class EntityComponent : public ChunkAllocatorResource
 	{
 		friend class Container;
 		template<typename>
@@ -25,27 +95,27 @@ namespace decs
 		friend class StableContainer;
 
 	public:
-		ComponentBase() = default;
+		EntityComponent() = default;
 
-		ComponentBase(const ComponentBase& other):
+		EntityComponent(const EntityComponent& other):
 			ChunkAllocatorResource(other)
 		{
 
 		}
 
-		ComponentBase(ComponentBase&& other) noexcept:
+		EntityComponent(EntityComponent&& other) noexcept:
 			ChunkAllocatorResource(std::move(other))
 		{
 
 		}
 
-		ComponentBase& operator =(const ComponentBase& other)
+		EntityComponent& operator =(const EntityComponent& other)
 		{
 			ChunkAllocatorResource::operator=(other);
 			return *this;
 		}
 
-		ComponentBase& operator=(ComponentBase&& other) noexcept
+		EntityComponent& operator=(EntityComponent&& other) noexcept
 		{
 			if (this != &other)
 			{
@@ -55,16 +125,18 @@ namespace decs
 			return *this;
 		}
 
-		virtual ~ComponentBase() = default;
+		virtual ~EntityComponent() = default;
 
-		inline bool IsCreatedByECS() const
+		Entity GetEntity() const noexcept;
+
+		inline bool IsCreatedByECS() const noexcept
 		{
-			return m_bIsCreatedByContainer;
+			return m_Flags.IsCreated();
 		}
 
-		inline bool IsEnabledByECS() const
+		inline bool IsEnabledByECS() const noexcept
 		{
-			return m_bIsEnabledByECS;
+			return m_Flags.IsEnabled();
 		}
 
 		inline uint16_t GetDependecyCount() const
@@ -90,25 +162,50 @@ namespace decs
 		}
 
 	protected:
-		/// <summary>
-		/// This function is called always when adding component to entity (and when entity is spawned). Removing any other component or removing this component is forbidden because it cause undefined behavior.
-		/// </summary>
-		/// <param name="entity"></param>
-		virtual void OnPreCreate(const Entity& entity);
+		inline void SetInternalFlag(uint8_t flagIndex, bool bValue)
+		{
+			m_Flags.SetBit(flagIndex, bValue);
+		}
+
+		inline bool GetInternalFlag(uint8_t flagIndex) const noexcept
+		{
+			return m_Flags.GetBit(flagIndex);
+		}
 
 	private:
+		EntityData* m_EntityData = nullptr;
+		EntityComponentFlags m_Flags{};
 		uint16_t m_DependencyCount = 0;
-		bool m_bIsCreatedByContainer = false;
-		bool m_bIsEnabledByECS = false;
+
+
+		//bool m_bIsCreatedByContainer = false;
+		//bool m_bIsEnabledByECS = false;
 
 	private:
+		inline void OnPreCreate(EntityData* entitydata)
+		{
+			m_EntityData = entitydata;
+		}
+
 		inline void SetFlags(bool bIsCreated, bool bIsEnabled)
 		{
-			m_bIsCreatedByContainer = bIsCreated;
-			m_bIsEnabledByECS = bIsEnabled;
+			m_Flags.SetCreated(bIsCreated);
+			m_Flags.SetEnabled(bIsEnabled);
 		}
+
+		inline void SetCreated(bool bIsCreated)
+		{
+			m_Flags.SetCreated(bIsCreated);
+		}
+
+		inline void SetEnabled(bool bIsEnabled)
+		{
+			m_Flags.SetEnabled(bIsEnabled);
+		}
+
+
 	};
 
 	template<typename TComponentType>
-	concept TComponentConcept = std::derived_from<TComponentType, ComponentBase>;
+	concept TComponentConcept = std::derived_from<TComponentType, EntityComponent>;
 }
