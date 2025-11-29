@@ -57,7 +57,7 @@ namespace decs
 			return m_Data & (1u << bitIndex);
 		}
 
-		inline bool SetBit(uint8_t bitIndex, bool bValue)
+		inline void SetBit(uint8_t bitIndex, bool bValue)
 		{
 			if (bValue)
 			{
