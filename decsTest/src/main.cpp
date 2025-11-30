@@ -37,7 +37,20 @@ struct TestComponent : public decs::EntityComponent
 public:
 	int table[10];
 
-	TestComponent() = default;
+	TestComponent()
+	{
+		PrintLine("TestComponent::TestComponent");
+	}
+
+	TestComponent(const TestComponent& other)
+	{
+		PrintLine("TestComponent::TestComponent(const TestComponent&)");
+	}
+
+	~TestComponent()
+	{
+		PrintLine("TestComponent::~TestComponent");
+	}
 
 };
 
@@ -111,7 +124,7 @@ int main()
 		}
 
 		decs::ConstEntity constPrefab = prefab;
-		if(constPrefab)
+		if (constPrefab)
 		{
 
 		}

@@ -214,35 +214,6 @@ namespace decs
 
 				return false;
 			}
-
-			/*TChunk* CreateCopy()
-			{
-			TChunk* chunk = new TChunk(m_Capacity);
-			chunk->m_FreeSpaces = m_FreeSpaces;
-			chunk->m_Capacity = m_Capacity;
-			chunk->m_CurrentAllocationOffset = m_CurrentAllocationOffset;
-			chunk->m_Size = m_Size;
-			chunk->m_Index = m_Index;
-			chunk->m_IndexInFreeSpaces = m_IndexInFreeSpaces;
-			chunk->m_IsInFreeSpaces = m_IsInFreeSpaces;
-
-			for (uint32_t i = 0; i < m_Capacity; i++)
-			{
-			auto& record = m_Data[i];
-			if (record.bIsAllocated)
-			{
-			auto& newRecord = chunk->m_Data[i];
-			newRecord.bIsAllocated = true;
-			auto data = new(&newRecord.Value)T(record.Value);
-
-			ChunkResource* r = static_cast<ChunkResource*>(data);
-			r->m_Chunk = this;
-			r->m_IndexInChunk = i;
-			}
-			}
-
-			return chunk;
-			}*/
 		};
 
 		template<typename T>
@@ -319,24 +290,6 @@ namespace decs
 			}
 
 			TAllocator& operator=(const TAllocator& other) = delete;
-			/*TAllocator operator=(const TAllocator& other)
-			{
-			Clear();
-
-			m_ChunkCapacity = other.m_Capacity;
-			for (auto otherChunk : other.m_Chunks)
-			{
-			m_Chunks.push_back(otherChunk->CreateCopy());
-			}
-
-			for (auto& otherChunk : other.m_ChunksWithFreeSpace)
-			{
-			m_ChunksWithFreeSpace.push_back(m_Chunks[otherChunk->m_Index]);
-			}
-
-			m_CurrentChunk = m_Chunks[other.m_CurrentChunk->m_Index];
-			return *this;
-			}*/
 
 			TAllocator& operator=(TAllocator&& other) noexcept
 			{
