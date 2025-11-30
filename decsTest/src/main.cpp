@@ -143,26 +143,26 @@ int main()
 		};
 
 
-		//{
-		//	using QueryType = decs::Query<TestComponent>;
-		//	QueryType query(&container);
-		//	/*query.ForEach(testFunc);
-		//	query.ForEach_Safe(testFunc);
-		//	query.ForEachBackward(testFunc);
-		//	query.ForEachBackward_Safe(testFunc);
-		//	query.ForEach_IngoreEntityActiveState(testFunc);*/
+		{
+			using QueryType = decs::Query<TestComponent>;
+			QueryType query(&container);
+			/*query.ForEach(testFunc);
+			query.ForEach_Safe(testFunc);
+			query.ForEachBackward(testFunc);
+			query.ForEachBackward_Safe(testFunc);
+			query.ForEach_IngoreEntityActiveState(testFunc);*/
 
-		//	uint64_t queryEntityCount = query.GetEntityCount();
+			uint64_t queryEntityCount = query.GetEntityCount();
 
-		//	std::vector<QueryType::BatchIterator> iterators{};
-		//	query.CreateBatchIterators(iterators, 10, 3);
+			std::vector<QueryType::BatchIterator> iterators{};
+			query.CreateBatchIterators(iterators, 10, 3);
 
-		//	for (auto& it : iterators)
-		//	{
-		//		it.ForEach(testFunc);
-		//		it.ForEach_IngoreEntityActiveState(testFunc);
-		//	}
-		//}
+			for (auto& it : iterators)
+			{
+				it.ForEach(testFunc);
+				it.ForEach_IngoreEntityActiveState(testFunc);
+			}
+		}
 
 		{
 			decs::MultiQuery<TestComponent> multiQuery{};

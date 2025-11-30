@@ -3,6 +3,8 @@
 #include <vector>
 #include <limits>
 
+#include "decs/Memory.h"
+
 namespace decs
 {
 
@@ -74,34 +76,15 @@ namespace decs
 			template<typename T>
 			friend class TAllocator;
 
-			struct RecordData final
-			{
-			public:
-				union
-				{
-					T Value;
-				};
-				bool bIsAllocated = false;
-
-			public:
-				RecordData():
-					bIsAllocated(false)
-				{
-				}
-
-				~RecordData()
-				{
-					if (bIsAllocated)
-					{
-						Value.~T();
-					}
-				}
-			};
 
 		private:
 			std::vector<uint32_t> m_FreeSpaces;
 
-			RecordData* m_Data = nullptr;
+			uint8_t* m_MemoryBlock = nullptr;
+			uint64_t m_MemoryBlockSize = 0;
+			T* m_Data = nullptr;
+			bool* m_AllocationFlags = nullptr;
+
 			uint32_t m_Capacity = 0;
 
 			uint32_t m_CurrentAllocationOffset = 0;
@@ -115,14 +98,28 @@ namespace decs
 			TChunk(uint32_t capacity):
 				m_Capacity(capacity > 0 ? capacity : 100)
 			{
-				//m_Data = (RecordData*)::operator new(capacity * sizeof(RecordData));
+				const uint64_t dataSize = m_Capacity * sizeof(T);
+				const uint64_t flagsOffset = Memory::Align(dataSize, alignof(bool));
+				const uint64_t flagsSize = m_Capacity * sizeof(bool);
+				m_MemoryBlockSize = flagsOffset + flagsSize;
 
-				m_Data = new RecordData[m_Capacity];
+				m_MemoryBlock = (uint8_t*)operator new(m_MemoryBlockSize, static_cast<std::align_val_t>(alignof(T)));
+
+				m_Data = reinterpret_cast<T*>(m_MemoryBlock);
+				m_AllocationFlags = reinterpret_cast<bool*>(m_MemoryBlock + dataSize);
 			}
 
 			~TChunk()
 			{
-				delete[] m_Data;
+				for (uint32_t i = 0; i < m_CurrentAllocationOffset; i++)
+				{
+					if (m_AllocationFlags[i])
+					{
+						m_Data[i].~T();
+					}
+				}
+
+				operator delete(m_MemoryBlock, m_MemoryBlockSize, static_cast<std::align_val_t>(alignof(T)));
 			}
 
 			uint32_t GetChunkIndex() const
@@ -145,11 +142,6 @@ namespace decs
 				return m_Data[index].Value;
 			}
 
-			bool IsAllocatedAt(uint32_t index) const
-			{
-				return m_Data[index].bIsAllocated;
-			}
-
 			template<typename... Args>
 			AllocationResult Create(Args&&... args)
 			{
@@ -162,22 +154,24 @@ namespace decs
 					uint32_t freeSpaceIndex = m_FreeSpaces.back();
 					m_FreeSpaces.pop_back();
 
-					RecordData& record = m_Data[freeSpaceIndex];
-					record.bIsAllocated = true;
-					T* data = new(&record.Value)T(std::forward<Args>(args)...);
+					T& data = m_Data[freeSpaceIndex];
+					m_AllocationFlags[freeSpaceIndex] = true;
 
-					return AllocationResult(data, freeSpaceIndex);
+					T* dataPtr = new(&data)T(std::forward<Args>(args)...);
+
+					return AllocationResult(dataPtr, freeSpaceIndex);
 				}
 
 				{
 					uint32_t allocationIndex = m_CurrentAllocationOffset;
-					RecordData& record = m_Data[m_CurrentAllocationOffset];
-					record.bIsAllocated = true;
-					T* data = new(&record.Value)T(std::forward<Args>(args)...);
+					T& data = m_Data[m_CurrentAllocationOffset];
+					m_AllocationFlags[m_CurrentAllocationOffset] = true;
+
+					T* dataPtr = new(&data)T(std::forward<Args>(args)...);
 
 					m_CurrentAllocationOffset += 1;
 
-					return AllocationResult(data, allocationIndex);
+					return AllocationResult(dataPtr, allocationIndex);
 				}
 			}
 
@@ -188,27 +182,33 @@ namespace decs
 					return false;
 				}
 
-				RecordData& record = m_Data[index];
-				if (record.bIsAllocated && (&record.Value) == value)
+				T& data = m_Data[index];
+				bool& allocationFlag = m_AllocationFlags[index];
+				if (allocationFlag && (&data) == value)
 				{
 					m_Size -= 1;
-					if (index == (m_CurrentAllocationOffset - 1))
-					{
-						m_CurrentAllocationOffset -= 1;
-					}
-					else
-					{
-						m_FreeSpaces.push_back(index);
-					}
 
 					if (IsEmpty())
 					{
 						m_FreeSpaces.clear();
 						m_CurrentAllocationOffset = 0;
 					}
+					else
+					{
+						const uint32_t allocationOffsetMinusOne = m_CurrentAllocationOffset - 1;
 
-					record.bIsAllocated = false;
-					record.Value.~T();
+						if (index == allocationOffsetMinusOne)
+						{
+							m_CurrentAllocationOffset = allocationOffsetMinusOne;
+						}
+						else
+						{
+							m_FreeSpaces.push_back(index);
+						}
+					}
+
+					allocationFlag = false;
+					data.~T();
 					return true;
 				}
 
@@ -416,7 +416,7 @@ namespace decs
 					return false;
 				}
 
-				if (resourceIndexInAllocator < (recordCount -1))
+				if (resourceIndexInAllocator < (recordCount - 1))
 				{
 					ResourceRecord& lastRecord = m_ResourceRecords.back();
 					lastRecord.m_Resource->m_IndexInAllocator = resourceIndexInAllocator;
