@@ -298,12 +298,12 @@ namespace decs
 		void ClearEntityDataAndComponents();
 
 	private:
-		TChunkedVector<Archetype> m_Archetypes = { 100 };
-		TChunkedVector<ArchetypeGroup> m_ArchetrypesGroupsAllocator = { 100 };
-		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeVector = { 100 };
+		TChunkedVector<Archetype> m_Archetypes{ 100 };
+		TChunkedVector<ArchetypeGroup> m_ArchetrypesGroupsAllocator{ 100 };
+		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeVector{ 100 };
 
-		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount = {};
-		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType;
+		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount{};
+		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
 
 		// UTILITY
 	private:

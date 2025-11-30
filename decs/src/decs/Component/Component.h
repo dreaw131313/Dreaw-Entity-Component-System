@@ -182,10 +182,6 @@ namespace decs
 		EntityComponentFlags m_Flags{};
 		uint16_t m_DependencyCount = 0;
 
-
-		//bool m_bIsCreatedByContainer = false;
-		//bool m_bIsEnabledByECS = false;
-
 	private:
 		inline void OnPreCreate(EntityData* entitydata)
 		{
