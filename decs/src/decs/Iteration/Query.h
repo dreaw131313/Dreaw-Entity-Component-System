@@ -513,11 +513,11 @@ namespace decs
 
 				// includes
 				{
-					ArchetypeContextType& context = m_ArchetypesContexts.emplace_back();
-
+					ArchetypeContextType context{};
 					if (context.Initialize(&archetype))
 					{
 						m_ContainedArchetypes.insert(&archetype);
+						m_ArchetypesContexts.push_back(context);
 					}
 					else
 					{

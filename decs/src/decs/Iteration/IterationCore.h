@@ -15,8 +15,8 @@ namespace decs
 	{
 	public:
 		template<typename TComponent>
-		using TPackedContainer = StablePackedContainer<drop_const_t<TComponent>>*;
-		using ContainersTuple = std::tuple<TPackedContainer<ComponentsTypes>...>;
+		using TPackedContainer = StablePackedContainer<drop_const_t<TComponent>>;
+		using ContainersTuple = std::tuple<TPackedContainer<ComponentsTypes>*...>;
 
 	public:
 		inline static constexpr uint64_t s_ComponentCount = sizeof...(ComponentsTypes);
@@ -67,13 +67,13 @@ namespace decs
 		{
 			constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
 
-			TPackedContainer<drop_const_t<T>> componentContainer = m_Archetype->GetTypePackedContainer<drop_const_t<T>>();
+			TPackedContainer<drop_const_t<T>>* componentContainer = m_Archetype->GetTypePackedContainer<drop_const_t<T>>();
 			if (componentContainer == nullptr)
 			{
 				return false;
 			}
 
-			std::get<TPackedContainer<T>>(m_ContainersTuple) = componentContainer;
+			std::get<TPackedContainer<T>*>(m_ContainersTuple) = componentContainer;
 
 			if constexpr (sizeof...(Args) == 0) return true;
 
@@ -260,11 +260,11 @@ namespace decs
 
 				// includes
 				{
-					ArchetypeContextType& context = m_ArchetypesContexts.emplace_back();
-
+					ArchetypeContextType context{};
 					if (context.Initialize(&archetype))
 					{
 						m_ContainedArchetypes.insert(&archetype);
+						m_ArchetypesContexts.push_back(context);
 					}
 					else
 					{
