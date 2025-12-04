@@ -196,7 +196,7 @@ namespace decs
 		friend class ContainerSerializerComplex;
 		template<TComponentConcept...>
 		friend class Query;
-		template<typename, TComponentConcept...>
+		template<TComponentConcept...>
 		friend class IterationContainerContext;
 
 	public:

@@ -106,10 +106,6 @@ int main()
 		observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
 	}
 
-
-	std::cout << decs::Type< decs::drop_const_t<const float>>::ID() << "\n";
-	std::cout << decs::Type<float>::ID() << "\n";
-
 	decs::Entity prefab{};
 	{
 		decs::ContainerConfig containerConfig{

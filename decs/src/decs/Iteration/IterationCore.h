@@ -10,15 +10,23 @@ namespace decs
 	concept TComponentOrTagConcept = TComponentConcept<T> || TTagConcept<T>;
 
 
-	template<uint64_t elementsCount>
+	template<TComponentConcept... ComponentsTypes>
 	class IterationArchetypeContext
 	{
 	public:
-		Archetype* m_Archetype = nullptr;
-		PackedContainerBase* m_Containers[elementsCount] = { nullptr };
-		int64_t m_CachedEntityCount = 0;
+		template<typename TComponent>
+		using TPackedContainer = StablePackedContainer<drop_const_t<TComponent>>;
+		using ContainersTuple = std::tuple<TPackedContainer<ComponentsTypes>*...>;
 
 	public:
+		inline static constexpr uint64_t s_ComponentCount = sizeof...(ComponentsTypes);
+
+	public:
+		inline const Archetype* GetArchetype() const noexcept
+		{
+			return m_Archetype;
+		}
+
 		inline uint64_t GetEntityCount() const
 		{
 			return m_Archetype->EntityCount();
@@ -29,16 +37,63 @@ namespace decs
 			return m_CachedEntityCount;
 		}
 
+		inline const ContainersTuple& GetContainersTuple() const noexcept
+		{
+			return m_ContainersTuple;
+		}
+
+		bool Initialize(const Archetype* archetype)
+		{
+			DECS_ASSERT(archetype != nullptr, "Archetype must not be nullptr!");
+
+			m_Archetype = archetype;
+
+			return CreatePackedContainersTuple<ComponentsTypes...>();
+		}
+
 		inline void ValidateCachedEntityCount()
 		{
 			m_CachedEntityCount = m_Archetype->EntityCount();
 		}
+
+	private:
+		const Archetype* m_Archetype = nullptr;
+		ContainersTuple m_ContainersTuple{};
+		int64_t m_CachedEntityCount = 0;
+
+	private:
+		template<typename T = void, typename... Args>
+		bool CreatePackedContainersTuple()
+		{
+			constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
+
+			TPackedContainer<drop_const_t<T>>* componentContainer = m_Archetype->GetTypePackedContainer<drop_const_t<T>>();
+			if (componentContainer == nullptr)
+			{
+				return false;
+			}
+
+			std::get<TPackedContainer<T>*>(m_ContainersTuple) = componentContainer;
+
+			if constexpr (sizeof...(Args) == 0) return true;
+
+			return CreatePackedContainersTuple<Args...>();
+		}
+
+		template<>
+		bool CreatePackedContainersTuple<void>()
+		{
+			return true;
+		}
 	};
 
 
-	template<typename ArchetypeContextType, TComponentConcept... ComponentsTypes>
+	template<TComponentConcept... ComponentsTypes>
 	class IterationContainerContext
 	{
+	public:
+		using ArchetypeContextType = IterationArchetypeContext<ComponentsTypes...>;
+
 	public:
 		std::vector<ArchetypeContextType> m_ArchetypesContexts;
 		ecsSet<const Archetype*> m_ContainedArchetypes;
@@ -205,22 +260,16 @@ namespace decs
 
 				// includes
 				{
-					ArchetypeContextType& context = m_ArchetypesContexts.emplace_back();
-
-					for (uint32_t typeIdx = 0; typeIdx < includes.Size(); typeIdx++)
+					ArchetypeContextType context{};
+					if (context.Initialize(&archetype))
 					{
-						auto typeIDIndex = archetype.FindTypeIndex(includes.IDs()[typeIdx]);
-						if (typeIDIndex == std::numeric_limits<uint32_t>::max())
-						{
-							m_ArchetypesContexts.pop_back();
-							return;
-						}
-
-						auto& packedContainer = archetype.m_TypeData[typeIDIndex].m_PackedContainer;
-						context.m_Containers[typeIdx] = packedContainer;
+						m_ContainedArchetypes.insert(&archetype);
+						m_ArchetypesContexts.push_back(context);
 					}
-					m_ContainedArchetypes.insert(&archetype);
-					context.m_Archetype = &archetype;
+					else
+					{
+						m_ArchetypesContexts.pop_back();
+					}
 				}
 			}
 		}
