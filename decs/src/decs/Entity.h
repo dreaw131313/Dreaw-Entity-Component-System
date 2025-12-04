@@ -202,7 +202,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->GetComponent<TComponent>(*GetEntityData());
+				return GetContainer_Internal()->GetComponent<drop_const_t<TComponent>>(*GetEntityData());
 			}
 
 			return nullptr;
@@ -227,7 +227,7 @@ namespace decs
 		[[nodiscard]] inline TComponent* GetComponentDynamic() const
 		{
 			if (IsValid())
-				return GetContainer_Internal()->GetComponentDynamic<TComponent>(*GetEntityData());
+				return GetContainer_Internal()->GetComponentDynamic<drop_const_t<TComponent>>(*GetEntityData());
 
 			return nullptr;
 		}
@@ -242,21 +242,21 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				GetContainer_Internal()->GetComponentsDynamic<TComponent>(*GetEntityData(), components);
+				GetContainer_Internal()->GetComponentsDynamic<drop_const_t<TComponent>>(*GetEntityData(), components);
 			}
 		}
 
 		template<TComponentConcept TComponent>
 		[[nodiscard]] inline bool HasComponent() const
 		{
-			return IsValid() && GetContainer_Internal()->HasComponent<TComponent>(*GetEntityData());
+			return IsValid() && GetContainer_Internal()->HasComponent<drop_const_t<TComponent>>(*GetEntityData());
 		}
 
 		template<TComponentConcept TComponent>
 		inline bool TryGetComponent(TComponent*& component) const
 		{
 			if (IsValid())
-				component = GetContainer_Internal()->GetComponent<TComponent>(*GetEntityData());
+				component = GetContainer_Internal()->GetComponent<drop_const_t<TComponent>>(*GetEntityData());
 			else
 				component = nullptr;
 
@@ -267,7 +267,7 @@ namespace decs
 		inline typename TComponent* AddComponent(Args&&... args) const
 		{
 			if (IsValid())
-				return GetContainer_Internal()->AddComponent<TComponent>(*this, *GetEntityData(), std::forward<Args>(args)...);
+				return GetContainer_Internal()->AddComponent<drop_const_t<TComponent>>(*this, *GetEntityData(), std::forward<Args>(args)...);
 
 			return nullptr;
 		}
@@ -275,7 +275,7 @@ namespace decs
 		template<TComponentConcept TComponent>
 		inline bool RemoveComponent() const
 		{
-			return IsValid() && GetContainer_Internal()->RemoveComponent<TComponent>(*this);
+			return IsValid() && GetContainer_Internal()->RemoveComponent<drop_const_t<TComponent>>(*this);
 		}
 
 		inline bool RemoveComponent(TypeID componentTypeID) const
@@ -286,7 +286,7 @@ namespace decs
 		template<TComponentConcept TComponent, typename TCallable>
 		inline bool RemoveComponent_If(TCallable&& canRemoveFunc) const
 		{
-			return IsValid() && GetContainer_Internal()->RemoveComponent_If<TComponent>(*GetEntityData(), canRemoveFunc);
+			return IsValid() && GetContainer_Internal()->RemoveComponent_If<drop_const_t<TComponent>>(*GetEntityData(), canRemoveFunc);
 		}
 
 		[[nodiscard]] inline EntityVersion GetVersion() const
@@ -341,7 +341,7 @@ namespace decs
 		inline typename TComponent* AddComponent_NoCallback(Args&&... args) const
 		{
 			if (IsValid())
-				return GetContainer_Internal()->AddComponent_NoCallback<TComponent>(*this, *GetEntityData(), std::forward<Args>(args)...);
+				return GetContainer_Internal()->AddComponent_NoCallback<drop_const_t<TComponent>>(*this, *GetEntityData(), std::forward<Args>(args)...);
 
 			return nullptr;
 		}
@@ -353,7 +353,7 @@ namespace decs
 		template<TComponentConcept TComponent>
 		inline bool RemoveComponent_NoCallback() const
 		{
-			return IsValid() && GetContainer_Internal()->RemoveComponent_NoCallback<TComponent>(*this);
+			return IsValid() && GetContainer_Internal()->RemoveComponent_NoCallback<drop_const_t<TComponent>>(*this);
 		}
 
 		/// <summary>

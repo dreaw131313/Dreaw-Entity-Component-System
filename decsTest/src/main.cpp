@@ -106,6 +106,10 @@ int main()
 		observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
 	}
 
+
+	std::cout << decs::Type< decs::drop_const_t<const float>>::ID() << "\n";
+	std::cout << decs::Type<float>::ID() << "\n";
+
 	decs::Entity prefab{};
 	{
 		decs::ContainerConfig containerConfig{
@@ -130,11 +134,15 @@ int main()
 		}
 
 		prefab.AddComponent<TestComponent>();
+
+
 		prefab.AddComponent<Renderer>();
 		prefab.AddTag<FloatTag>();
 		prefab.AddTag<IntTag>();
 		prefab.AddTag<BoolTag>();
-		prefab.AddComponent<Position>();
+
+		prefab.AddComponent<Position>(10.f, 10.f);
+		auto position = prefab.GetComponent<const Position>();
 
 		auto rendererRemoveCond = [](const Renderer& renderer)
 		{
@@ -200,14 +208,19 @@ int main()
 				it.ForEach_IngoreEntityActiveState(testFunc);
 			}
 		}
-	}
 
-	if (prefab.IsValid())
-	{
-		PrintLine("Should not happend");
-	}
+		// new Query test
+		{
+			decs::Query<const TestComponent, const Position> query{ &container };
 
-	prefab = {};
+			auto func = [](const decs::Entity& e, const TestComponent& testComp, const Position& p)
+			{
+				PrintLine("Testing query!");
+			};
+
+			query.ForEach(func);
+		}
+	}
 
 	return 0;
 }
