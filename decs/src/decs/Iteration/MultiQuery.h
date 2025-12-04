@@ -29,13 +29,13 @@ namespace decs
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "MultiQuery must not use tags in as ComponentTypes!");
 
 	private:
-		using ArchetypeContextType = IterationArchetypeContext<sizeof...(ComponentsTypes)>;
-		using ContainerContextType = IterationContainerContext<ArchetypeContextType, drop_const_t<ComponentsTypes>...>;
+		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
+		using ArchetypeContextType = ContainerContextType::ArchetypeContextType;
+		using ContainersTupleType = ArchetypeContextType::ContainersTuple;
 
 		template<typename TComponent>
 		using PackedContainerType = StablePackedContainer<TComponent>*;
 
-		using ContainersTupleType = std::tuple<PackedContainerType<drop_const_t<ComponentsTypes>>...>;
 
 	public:
 		MultiQuery()
@@ -141,7 +141,6 @@ namespace decs
 			Fetch();
 
 			decs::Entity entityBuffer = {};
-			ContainersTupleType containersTuple = {};
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
@@ -166,8 +165,8 @@ namespace decs
 					uint64_t ctxEntityCount = ctx.GetEntityCount();
 					if (ctxEntityCount == 0) continue;
 
-					std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
-					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+					const auto& containersTuple = ctx.GetContainersTuple();
+					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
 
 					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 					{
@@ -194,7 +193,6 @@ namespace decs
 			Fetch();
 
 			decs::Entity entityBuffer = {};
-			ContainersTupleType containersTuple = {};
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
@@ -219,8 +217,8 @@ namespace decs
 					uint64_t ctxEntityCount = ctx.GetEntityCount();
 					if (ctxEntityCount == 0) continue;
 
-					std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
-					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+					const auto& containersTuple = ctx.GetContainersTuple();
+					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
 
 					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 					{
@@ -251,7 +249,6 @@ namespace decs
 			Fetch();
 
 			decs::Entity entityBuffer = {};
-			ContainersTupleType containersTuple = {};
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
@@ -276,8 +273,8 @@ namespace decs
 					uint64_t ctxEntityCount = ctx.GetEntityCount();
 					if (ctxEntityCount == 0) continue;
 
-					std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
-					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+					const auto& containersTuple = ctx.GetContainersTuple();
+					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
 
 					for (int64_t idx = (int64_t)ctxEntityCount - 1; idx > -1; idx--)
 					{
@@ -304,7 +301,6 @@ namespace decs
 			Fetch();
 
 			decs::Entity entityBuffer = {};
-			ContainersTupleType containersTuple = {};
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
@@ -329,8 +325,8 @@ namespace decs
 					uint64_t ctxEntityCount = ctx.GetEntityCount();
 					if (ctxEntityCount == 0) continue;
 
-					std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
-					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+					const auto& containersTuple = ctx.GetContainersTuple();
+					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
 
 					for (int64_t idx = (int64_t)ctxEntityCount - 1; idx > -1; idx--)
 					{
@@ -355,7 +351,6 @@ namespace decs
 			Fetch();
 
 			decs::Entity entityBuffer = {};
-			ContainersTupleType containersTuple = {};
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
@@ -380,8 +375,8 @@ namespace decs
 					uint64_t ctxEntityCount = ctx.GetEntityCount();
 					if (ctxEntityCount == 0) continue;
 
-					std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
-					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+					const auto& containersTuple = ctx.GetContainersTuple();
+					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
 
 					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 					{
@@ -533,33 +528,6 @@ namespace decs
 			return entitiesCount;
 		}
 
-		template<typename T = void, typename... Args>
-		void CreatePackedContainersTuple(
-			ContainersTupleType& containersTuple,
-			const ArchetypeContextType& context
-		) const noexcept
-		{
-			constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
-			std::get<PackedContainerType<drop_const_t<T>>>(containersTuple) = (static_cast<PackedContainerType<drop_const_t<T>>>(context.m_Containers[compIdx]));
-
-			if constexpr (sizeof...(Args) == 0) return;
-
-			CreatePackedContainersTuple<Args...>(
-				containersTuple,
-				context
-			);
-		}
-
-		template<>
-		void CreatePackedContainersTuple<void>(
-			ContainersTupleType& containersTuple,
-			const ArchetypeContextType& context
-		) const noexcept
-		{
-
-		}
-
-
 	private:
 		template<typename Callable>
 		inline static void InvokeEntityIteration(
@@ -620,7 +588,6 @@ namespace decs
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
 				decs::Entity entityBuffer = {};
-				ContainersTupleType containersTuple = {};
 
 				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
@@ -674,8 +641,8 @@ namespace decs
 							leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
 						}
 
-						std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
-						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+						const auto& containersTuple = ctx.GetContainersTuple();
+						const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
 
 						for (uint64_t idx = startEntitiyIndex; idx < entitiesCount; idx++)
 						{
@@ -700,7 +667,6 @@ namespace decs
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
 				decs::Entity entityBuffer = {};
-				ContainersTupleType containersTuple = {};
 
 				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
@@ -754,8 +720,8 @@ namespace decs
 							leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
 						}
 
-						std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
-						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
+						const auto& containersTuple = ctx.GetContainersTuple();
+						const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
 
 						for (uint64_t idx = startEntitiyIndex; idx < entitiesCount; idx++)
 						{
@@ -781,31 +747,6 @@ namespace decs
 			uint64_t m_StartEntityIndex = 0;
 			uint64_t m_EntitiesCount = 0;
 
-		private:
-			template<typename T = void, typename... Args>
-			void CreatePackedContainersTuple(
-				ContainersTupleType& containersTuple,
-				const ArchetypeContextType& context
-			) const noexcept
-			{
-				constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
-				std::get<PackedContainerType<drop_const_t<T>>>(containersTuple) = (static_cast<PackedContainerType<drop_const_t<T>>>(context.m_Containers[compIdx]));
-
-				if constexpr (sizeof...(Args) == 0) return;
-				CreatePackedContainersTuple<Args...>(
-					containersTuple,
-					context
-				);
-			}
-
-			template<>
-			void CreatePackedContainersTuple<void>(
-				ContainersTupleType& containersTuple,
-				const ArchetypeContextType& context
-			) const noexcept
-			{
-
-			}
 		};
 
 	public:

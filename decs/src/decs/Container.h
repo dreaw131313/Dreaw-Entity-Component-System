@@ -34,7 +34,7 @@ namespace decs
 		friend class Query;
 		template<TComponentConcept ...Types>
 		friend class MultiQuery;
-		template<typename, TComponentConcept...>
+		template<TComponentConcept...>
 		friend class IterationContainerContext;
 		friend class Entity;
 		template<typename>

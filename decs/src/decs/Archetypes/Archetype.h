@@ -135,7 +135,9 @@ namespace decs
 		friend class Query;
 		template<TComponentConcept...>
 		friend class MultiQuery;
-		template<typename, TComponentConcept...>
+		template<TComponentConcept... ComponentsTypes>
+		friend class IterationArchetypeContext;
+		template<TComponentConcept...>
 		friend class IterationContainerContext;
 
 		template<TComponentConcept...>
@@ -257,7 +259,22 @@ namespace decs
 		{
 			return m_TypeData[typeIndex].IsTag();
 		}
+
 	private:
+		template<typename TComponentType>
+		StablePackedContainer<TComponentType>* GetTypePackedContainer() const 
+		{
+			uint32_t compIdx = FindTypeIndex<TComponentType>();
+			if (compIdx == std::numeric_limits<uint32_t>::max())
+			{
+				return nullptr;
+			}
+
+			auto& typeData = m_TypeData[compIdx];
+
+			return static_cast<StablePackedContainer<TComponentType>*>(typeData.m_PackedContainer);
+		}
+
 		void ClearEntityDataAndComponents();
 
 		// it must be called only from "AddTypeData_WithoutCheck" function
