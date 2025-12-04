@@ -89,7 +89,7 @@ namespace decs
 		}
 
 		template<TComponentOrTagConcept... WithAnyTypes>
-		Query& WithAnyFrom()
+		Query& WithAny()
 		{
 			m_IsDirty = true;
 			if constexpr (sizeof...(WithAnyTypes) == 0)

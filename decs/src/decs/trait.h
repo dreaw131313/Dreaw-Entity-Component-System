@@ -50,6 +50,23 @@ namespace decs
 	};
 
 	template<typename T>
+	struct is_const
+	{
+	public:
+		inline static constexpr bool value = false;
+	};
+
+	template<typename T>
+	struct is_const<const T>
+	{
+	public:
+		inline static constexpr bool value = true;
+	};
+
+	template<typename T>
+	constexpr bool is_const_v = is_const<T>::value;
+
+	template<typename T>
 	using drop_const_t = drop_const<T>::Type;
 
 	template<typename TCallable, typename... TComponentTypes>

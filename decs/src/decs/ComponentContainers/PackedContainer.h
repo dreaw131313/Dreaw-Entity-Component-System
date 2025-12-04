@@ -50,6 +50,8 @@ namespace decs
 	template<typename TComponent>
 	class StablePackedContainer final : public PackedContainerBase
 	{
+		static_assert(!is_const_v<TComponent> && "Component must not be const!");
+
 		friend class Container;
 		friend class Archetype;
 	private:

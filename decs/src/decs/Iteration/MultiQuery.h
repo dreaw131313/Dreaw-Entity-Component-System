@@ -30,12 +30,12 @@ namespace decs
 
 	private:
 		using ArchetypeContextType = IterationArchetypeContext<sizeof...(ComponentsTypes)>;
-		using ContainerContextType = IterationContainerContext<ArchetypeContextType, ComponentsTypes...>;
+		using ContainerContextType = IterationContainerContext<ArchetypeContextType, drop_const_t<ComponentsTypes>...>;
 
 		template<typename TComponent>
 		using PackedContainerType = StablePackedContainer<TComponent>*;
 
-		using ContainersTupleType = std::tuple<PackedContainerType<ComponentsTypes>...>;
+		using ContainersTupleType = std::tuple<PackedContainerType<drop_const_t<ComponentsTypes>>...>;
 
 	public:
 		MultiQuery()
@@ -60,50 +60,50 @@ namespace decs
 			return sizeof...(ComponentsTypes) + m_WithAll.size();
 		}
 
-		template<TComponentOrTagConcept... ComponentsTypes>
+		template<TComponentOrTagConcept... WithoutTypes>
 		MultiQuery& Without()
 		{
 			m_IsDirty = true;
-			if constexpr (sizeof...(ComponentsTypes) == 0)
+			if constexpr (sizeof...(WithoutTypes) == 0)
 			{
 				m_Without.clear();
 			}
 			else
 			{
-				m_Without.resize(sizeof...(ComponentsTypes));
-				find_type_ids<ComponentsTypes...>(m_Without.data());
+				m_Without.resize(sizeof...(WithoutTypes));
+				find_type_ids<drop_const_t<WithoutTypes>...>(m_Without.data());
 			}
 			return *this;
 		}
 
-		template<TComponentOrTagConcept... ComponentsTypes>
-		MultiQuery& WithAnyFrom()
+		template<TComponentOrTagConcept... WithAnyTypes>
+		MultiQuery& WithAny()
 		{
 			m_IsDirty = true;
-			if constexpr (sizeof...(ComponentsTypes) == 0)
+			if constexpr (sizeof...(WithAnyTypes) == 0)
 			{
 				m_WithAnyOf.clear();
 			}
 			else
 			{
-				m_WithAnyOf.resize(sizeof...(ComponentsTypes));
-				find_type_ids<ComponentsTypes...>(m_WithAnyOf.data());
+				m_WithAnyOf.resize(sizeof...(WithAnyTypes));
+				find_type_ids<drop_const_t<WithAnyTypes>...>(m_WithAnyOf.data());
 			}
 			return *this;
 		}
 
-		template<TComponentOrTagConcept... ComponentsTypes>
+		template<TComponentOrTagConcept... WithTypes>
 		MultiQuery& With()
 		{
 			m_IsDirty = true;
-			if constexpr (sizeof...(ComponentsTypes) == 0)
+			if constexpr (sizeof...(WithTypes) == 0)
 			{
 				m_WithAll.clear();
 			}
 			else
 			{
-				m_WithAll.resize(sizeof...(ComponentsTypes));
-				find_type_ids<ComponentsTypes...>(m_WithAll.data());
+				m_WithAll.resize(sizeof...(WithTypes));
+				find_type_ids<drop_const_t<WithTypes>...>(m_WithAll.data());
 			}
 			return *this;
 		}
@@ -135,6 +135,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
+			requires query_callable<Callable, ComponentsTypes...>
 		inline void ForEach(Callable&& func) noexcept
 		{
 			Fetch();
@@ -151,7 +152,7 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
 					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 				}
@@ -187,6 +188,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
+			requires query_callable<Callable, ComponentsTypes...>
 		inline void ForEach_Safe(Callable&& func) noexcept
 		{
 			Fetch();
@@ -203,7 +205,7 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
 					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 				}
@@ -243,6 +245,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
+			requires query_callable<Callable, ComponentsTypes...>
 		void ForEachBackward(Callable&& func) noexcept
 		{
 			Fetch();
@@ -259,7 +262,7 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
 					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 				}
@@ -295,6 +298,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
+			requires query_callable<Callable, ComponentsTypes...>
 		void ForEachBackward_Safe(Callable&& func) noexcept
 		{
 			Fetch();
@@ -311,7 +315,7 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
 					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 				}
@@ -345,6 +349,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
+			requires query_callable<Callable, ComponentsTypes...>
 		void ForEach_IngoreEntityActiveState(Callable&& func)
 		{
 			Fetch();
@@ -361,7 +366,7 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
 					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 				}
@@ -492,7 +497,7 @@ namespace decs
 		}
 	private:
 		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
-		TypeGroup<ComponentsTypes...> m_Includes = {};
+		TypeGroup<drop_const_t<ComponentsTypes>...> m_Includes = {};
 		std::vector<TypeID> m_Without;
 		std::vector<TypeID> m_WithAnyOf;
 		std::vector<TypeID> m_WithAll;
@@ -535,7 +540,7 @@ namespace decs
 		) const noexcept
 		{
 			constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
-			std::get<PackedContainerType<T>>(containersTuple) = (static_cast<PackedContainerType<T>>(context.m_Containers[compIdx]));
+			std::get<PackedContainerType<drop_const_t<T>>>(containersTuple) = (static_cast<PackedContainerType<drop_const_t<T>>>(context.m_Containers[compIdx]));
 
 			if constexpr (sizeof...(Args) == 0) return;
 
@@ -565,17 +570,17 @@ namespace decs
 			const ContainersTupleType& containersTuple
 		)
 		{
-			if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 			{
 				entityBuffer.SetWithoutLifeTimeDataInvalidation_Internal(entityData);
 				func(
 					entityBuffer,
-					std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(entityIndexInArchetype)...
+					std::get<PackedContainerType<drop_const_t<ComponentsTypes>>>(containersTuple)->GetAsRef(entityIndexInArchetype)...
 				);
 			}
 			else
 			{
-				func(std::get<PackedContainerType<ComponentsTypes>>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
+				func(std::get<PackedContainerType<drop_const_t<ComponentsTypes>>>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
 			}
 		}
 
@@ -610,6 +615,7 @@ namespace decs
 			}
 
 			template<typename Callable>
+				requires query_callable<Callable, ComponentsTypes...>
 			void ForEach(Callable&& func) noexcept
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
@@ -627,7 +633,7 @@ namespace decs
 						continue; // Skip if container context is disabled
 					}
 
-					if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+					if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 					{
 						entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 					}
@@ -689,6 +695,7 @@ namespace decs
 			}
 
 			template<typename Callable>
+				requires query_callable<Callable, ComponentsTypes...>
 			void ForEach_IngoreEntityActiveState(Callable&& func)
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
@@ -706,7 +713,7 @@ namespace decs
 						continue; // Skip if container context is disabled
 					}
 
-					if constexpr (std::is_invocable<Callable, Entity&, ComponentsTypes&...>())
+					if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 					{
 						entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 					}
@@ -782,7 +789,7 @@ namespace decs
 			) const noexcept
 			{
 				constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
-				std::get<PackedContainerType<T>>(containersTuple) = (static_cast<PackedContainerType<T>>(context.m_Containers[compIdx]));
+				std::get<PackedContainerType<drop_const_t<T>>>(containersTuple) = (static_cast<PackedContainerType<drop_const_t<T>>>(context.m_Containers[compIdx]));
 
 				if constexpr (sizeof...(Args) == 0) return;
 				CreatePackedContainersTuple<Args...>(

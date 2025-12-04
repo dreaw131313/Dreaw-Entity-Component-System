@@ -165,7 +165,7 @@ int main()
 
 
 		{
-			using QueryType = decs::Query<TestComponent>;
+			using QueryType = decs::Query< const TestComponent>;
 			QueryType query(&container);
 			/*query.ForEach(testFunc);
 			query.ForEach_Safe(testFunc);
@@ -186,20 +186,21 @@ int main()
 		}
 
 		{
-			decs::MultiQuery<TestComponent> multiQuery{};
-			multiQuery.WithAnyFrom<FloatTag, IntTag>();
+			using QueryType = decs::MultiQuery<const TestComponent>;
+			QueryType multiQuery{};
+			multiQuery.WithAny<FloatTag, IntTag>();
 			multiQuery.AddContainer(&container);
 
 			uint64_t queryEntityCount = multiQuery.GetEntityCount();
 
-			/*multiQuery.ForEach(testFunc);
+			multiQuery.ForEach(testFunc);
 			multiQuery.ForEach_Safe(testFunc);
 			multiQuery.ForEachBackward(testFunc);
 			multiQuery.ForEachBackward_Safe(testFunc);
-			multiQuery.ForEach_IngoreEntityActiveState(testFunc);*/
+			multiQuery.ForEach_IngoreEntityActiveState(testFunc);
 
 
-			std::vector<decs::MultiQuery<TestComponent> ::BatchIterator> iterators{};
+			std::vector<QueryType::BatchIterator> iterators{};
 			multiQuery.CreateBatchIteratorsWithMaxNumberPerBatch(iterators, 7);
 
 			for (auto& it : iterators)
@@ -209,17 +210,6 @@ int main()
 			}
 		}
 
-		// new Query test
-		{
-			decs::Query<const TestComponent, const Position> query{ &container };
-
-			auto func = [](const decs::Entity& e, const TestComponent& testComp, const Position& p)
-			{
-				PrintLine("Testing query!");
-			};
-
-			query.ForEach(func);
-		}
 	}
 
 	return 0;
