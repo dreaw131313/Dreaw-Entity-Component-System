@@ -266,10 +266,6 @@ namespace decs
 						m_ContainedArchetypes.insert(&archetype);
 						m_ArchetypesContexts.push_back(context);
 					}
-					else
-					{
-						m_ArchetypesContexts.pop_back();
-					}
 				}
 			}
 		}
