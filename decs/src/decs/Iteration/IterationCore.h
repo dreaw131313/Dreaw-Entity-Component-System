@@ -14,14 +14,14 @@ namespace decs
 	class IterationArchetypeContext
 	{
 	public:
-		Archetype* Arch = nullptr;
+		Archetype* m_Archetype = nullptr;
 		PackedContainerBase* m_Containers[elementsCount] = { nullptr };
 		int64_t m_CachedEntityCount = 0;
 
 	public:
 		inline uint64_t GetEntityCount() const
 		{
-			return Arch->EntityCount();
+			return m_Archetype->EntityCount();
 		}
 
 		inline int64_t GetCachedEntityCount() const
@@ -31,7 +31,7 @@ namespace decs
 
 		inline void ValidateCachedEntityCount()
 		{
-			m_CachedEntityCount = Arch->EntityCount();
+			m_CachedEntityCount = m_Archetype->EntityCount();
 		}
 	};
 
@@ -220,7 +220,7 @@ namespace decs
 						context.m_Containers[typeIdx] = packedContainer;
 					}
 					m_ContainedArchetypes.insert(&archetype);
-					context.Arch = &archetype;
+					context.m_Archetype = &archetype;
 				}
 			}
 		}

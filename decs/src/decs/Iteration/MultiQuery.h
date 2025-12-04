@@ -166,7 +166,7 @@ namespace decs
 					uint64_t ctxEntityCount = ctx.GetEntityCount();
 					if (ctxEntityCount == 0) continue;
 
-					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+					std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
 					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
 					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
@@ -219,7 +219,7 @@ namespace decs
 					uint64_t ctxEntityCount = ctx.GetEntityCount();
 					if (ctxEntityCount == 0) continue;
 
-					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+					std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
 					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
 					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
@@ -276,7 +276,7 @@ namespace decs
 					uint64_t ctxEntityCount = ctx.GetEntityCount();
 					if (ctxEntityCount == 0) continue;
 
-					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+					std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
 					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
 					for (int64_t idx = (int64_t)ctxEntityCount - 1; idx > -1; idx--)
@@ -329,7 +329,7 @@ namespace decs
 					uint64_t ctxEntityCount = ctx.GetEntityCount();
 					if (ctxEntityCount == 0) continue;
 
-					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+					std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
 					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
 					for (int64_t idx = (int64_t)ctxEntityCount - 1; idx > -1; idx--)
@@ -380,7 +380,7 @@ namespace decs
 					uint64_t ctxEntityCount = ctx.GetEntityCount();
 					if (ctxEntityCount == 0) continue;
 
-					std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+					std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
 					CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
 					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
@@ -674,7 +674,7 @@ namespace decs
 							leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
 						}
 
-						std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+						std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
 						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
 						for (uint64_t idx = startEntitiyIndex; idx < entitiesCount; idx++)
@@ -754,7 +754,7 @@ namespace decs
 							leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
 						}
 
-						std::vector<ArchetypeEntityData>& entitiesData = ctx.Arch->m_EntitiesData;
+						std::vector<ArchetypeEntityData>& entitiesData = ctx.m_Archetype->m_EntitiesData;
 						CreatePackedContainersTuple<ComponentsTypes...>(containersTuple, ctx);
 
 						for (uint64_t idx = startEntitiyIndex; idx < entitiesCount; idx++)
