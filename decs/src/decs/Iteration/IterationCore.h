@@ -11,6 +11,111 @@ namespace decs
 
 
 	template<TComponentConcept... ComponentsTypes>
+	struct QueryFiltersConfig
+	{
+	public:
+		using TypeGroupType = TypeGroup<drop_const_t<ComponentsTypes>...>;
+
+	public:
+		const TypeGroupType& GetIncludes() const
+		{
+			return m_Includes;
+		}
+
+		const std::vector<TypeID>& GetWithoutFilter() const noexcept
+		{
+			return m_Without;
+		}
+
+		const std::vector<TypeID>& GetWithAnyFilter() const noexcept
+		{
+			return 	m_WithAnyOf;
+		}
+
+		const std::vector<TypeID>& GetWithAllFilter() const noexcept
+		{
+			return m_WithAll;
+		}
+
+		inline uint64_t GetMinComponentsCount() const
+		{
+			uint64_t includesCount = sizeof...(ComponentsTypes);
+			if (m_WithAnyOf.size() > 0) includesCount += 1;
+			return sizeof...(ComponentsTypes) + m_WithAll.size();
+		}
+
+		template<TComponentOrTagConcept... WithoutTypes>
+		void Without()
+		{
+			if constexpr (sizeof...(WithoutTypes) == 0)
+			{
+				m_Without.clear();
+			}
+			else
+			{
+				m_Without.resize(sizeof...(WithoutTypes));
+				find_type_ids<drop_const_t<WithoutTypes>...>(m_Without.data());
+			}
+		}
+
+		template<TComponentOrTagConcept... WithAnyTypes>
+		void WithAny()
+		{
+			if constexpr (sizeof...(WithAnyTypes) == 0)
+			{
+				m_WithAnyOf.clear();
+			}
+			else
+			{
+				m_WithAnyOf.resize(sizeof...(WithAnyTypes));
+				find_type_ids<drop_const_t<WithAnyTypes>...>(m_WithAnyOf.data());
+			}
+		}
+
+		template<TComponentOrTagConcept... WithTypes>
+		void With()
+		{
+			if constexpr (sizeof...(WithTypes) == 0)
+			{
+				m_WithAll.clear();
+			}
+			else
+			{
+				m_WithAll.resize(sizeof...(WithTypes));
+				find_type_ids<drop_const_t<WithTypes>...>(m_WithAll.data());
+			}
+		}
+
+		[[nodiscard]] bool Clear()
+		{
+			bool bResult = false;
+			if (m_WithAll.size() > 0)
+			{
+				bResult = true;
+				m_WithAll.clear();
+			}
+			if (m_WithAnyOf.size() > 0)
+			{
+				bResult = true;
+				m_WithAnyOf.clear();
+			}
+			if (m_Without.size() > 0)
+			{
+				bResult = true;
+				m_Without.clear();
+			}
+
+			return bResult;
+		}
+
+	private:
+		TypeGroupType m_Includes = {};
+		std::vector<TypeID> m_Without{};
+		std::vector<TypeID> m_WithAnyOf{};
+		std::vector<TypeID> m_WithAll{};
+	};
+
+	template<TComponentConcept... ComponentsTypes>
 	class IterationArchetypeContext
 	{
 	public:
@@ -82,6 +187,7 @@ namespace decs
 	{
 	public:
 		using ArchetypeContextType = IterationArchetypeContext<ComponentsTypes...>;
+		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 
 	public:
 		std::vector<ArchetypeContextType> m_ArchetypesContexts{};
@@ -131,14 +237,10 @@ namespace decs
 			m_Container = container;
 		}
 
-		void Fetch(
-			const TypeGroup<ComponentsTypes...>& includes,
-			const std::vector<TypeID>& without,
-			const std::vector<TypeID>& withAnyOf,
-			const std::vector<TypeID>& withAll,
-			uint64_t minComponentsCount
-		)
+		void Fetch(const QueryFilterConfigType& filter)
 		{
+			uint64_t minComponentsCount = filter.GetMinComponentsCount();
+
 			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.ArchetypesCount();
 			if (m_ArchetypesCountDirty != containerArchetypesCount)
 			{
@@ -151,13 +253,13 @@ namespace decs
 				if (newArchetypesCount > m_ArchetypesContexts.size())
 				{
 					// performing normal finding of archetypes
-					auto group = GetBestArchetypesGroup(includes);
-					FetchArchetypesFromArchetypesGroup(group, includes, without, withAnyOf, withAll, minComponentsCount);
+					auto group = GetBestArchetypesGroup(filter.GetIncludes());
+					FetchArchetypesFromArchetypesGroup(group, filter);
 				}
 				else
 				{
 					// checking only new archetypes:
-					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, minComponentsCount, includes, without, withAnyOf, withAll);
+					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, filter);
 				}
 
 				m_ArchetypesCountDirty = containerArchetypesCount;
@@ -189,6 +291,7 @@ namespace decs
 
 			return entityCount;
 		}
+
 	private:
 
 		inline bool ContainArchetype(Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
@@ -217,18 +320,14 @@ namespace decs
 			return bestGroup;
 		}
 
-		void TryAddArchetypeFromGroup(
-			Archetype& archetype,
-			const TypeGroup<ComponentsTypes...>& includes,
-			const std::vector<TypeID>& without,
-			const std::vector<TypeID>& withAnyOf,
-			const std::vector<TypeID>& withAll
-		)
+		void TryAddArchetypeFromGroup(Archetype& archetype, const QueryFilterConfigType& filter)
 		{
 			if (!ContainArchetype(&archetype) && archetype.GetComponentAndTagCount())
 			{
 				// without test
 				{
+					auto& without = filter.GetWithoutFilter();
+
 					uint64_t excludeCount = without.size();
 					for (int i = 0; i < excludeCount; i++)
 					{
@@ -241,6 +340,8 @@ namespace decs
 
 				// with any test
 				{
+					auto& withAnyOf = filter.GetWithAnyFilter();
+
 					uint64_t requiredAnyCount = withAnyOf.size();
 					bool containRequiredAny = requiredAnyCount == 0;
 
@@ -257,6 +358,7 @@ namespace decs
 
 				// required all test
 				{
+					auto& withAll = filter.GetWithAllFilter();
 					uint64_t requiredAllCount = withAll.size();
 
 					for (int i = 0; i < requiredAllCount; i++)
@@ -280,49 +382,36 @@ namespace decs
 			}
 		}
 
-		void FetchArchetypesFromArchetypesGroup(
-			ArchetypesGroupByOneType* group,
-			const TypeGroup<ComponentsTypes...>& includes,
-			const std::vector<TypeID>& without,
-			const std::vector<TypeID>& withAnyOf,
-			const std::vector<TypeID>& withAll,
-			uint64_t minComponentsCount
-		)
+		void FetchArchetypesFromArchetypesGroup(ArchetypesGroupByOneType* group, const QueryFilterConfigType& filter)
 		{
 			if (group == nullptr) return;
 			uint64_t maxComponentCountsInGroup = group->MaxComponentsCount();
 
-			for (uint64_t i = minComponentsCount; i <= maxComponentCountsInGroup; i++)
+			for (uint64_t i = filter.GetMinComponentsCount(); i <= maxComponentCountsInGroup; i++)
 			{
 				auto archetypesToCheckPtr = group->GetArchetypesWithComponentsCount(i);
 				if (archetypesToCheckPtr != nullptr)
 				{
 					for (auto archetype : *archetypesToCheckPtr)
 					{
-						TryAddArchetypeFromGroup(*archetype, includes, without, withAnyOf, withAll);
+						TryAddArchetypeFromGroup(*archetype, filter);
 					}
 				}
 			}
 		}
 
-		void AddingArchetypesWithCheckingOnlyNewArchetypes(
-			ArchetypesMap& map,
-			uint64_t startArchetypesIndex,
-			uint64_t minRequiredComponentsCount,
-			const TypeGroup<ComponentsTypes...>& includes,
-			const std::vector<TypeID>& without,
-			const std::vector<TypeID>& withAnyOf,
-			const std::vector<TypeID>& withAll
-		)
+		void AddingArchetypesWithCheckingOnlyNewArchetypes(ArchetypesMap& map, uint64_t startArchetypesIndex, const QueryFilterConfigType& filter)
 		{
 			auto& archetypes = map.m_Archetypes;
 			uint64_t archetypesCount = map.m_Archetypes.Size();
+			uint64_t minRequiredComponentsCount = filter.GetMinComponentsCount();
+
 			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
 			{
 				Archetype& arch = archetypes[i];
 				if (arch.GetComponentAndTagCount() >= minRequiredComponentsCount)
 				{
-					TryAddArchetypeFromGroup(arch, includes, without, withAnyOf, withAll);
+					TryAddArchetypeFromGroup(arch, filter);
 				}
 			}
 		}

@@ -32,6 +32,7 @@ namespace decs
 		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
 		using ArchetypeContextType = ContainerContextType::ArchetypeContextType;
 		using ContainersTupleType = ArchetypeContextType::ContainersTuple;
+		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 
 		template<typename TComponent>
 		using PackedContainerType = StablePackedContainer<TComponent>*;
@@ -53,26 +54,11 @@ namespace decs
 			return entityCount;
 		}
 
-		[[nodiscard]] inline uint64_t GetMinComponentsCount() const
-		{
-			uint64_t includesCount = sizeof...(ComponentsTypes);
-			if (m_WithAnyOf.size() > 0) includesCount += 1;
-			return sizeof...(ComponentsTypes) + m_WithAll.size();
-		}
-
 		template<TComponentOrTagConcept... WithoutTypes>
 		MultiQuery& Without()
 		{
 			m_IsDirty = true;
-			if constexpr (sizeof...(WithoutTypes) == 0)
-			{
-				m_Without.clear();
-			}
-			else
-			{
-				m_Without.resize(sizeof...(WithoutTypes));
-				find_type_ids<drop_const_t<WithoutTypes>...>(m_Without.data());
-			}
+			m_FilterConfig.Without<WithoutTypes...>();
 			return *this;
 		}
 
@@ -80,15 +66,7 @@ namespace decs
 		MultiQuery& WithAny()
 		{
 			m_IsDirty = true;
-			if constexpr (sizeof...(WithAnyTypes) == 0)
-			{
-				m_WithAnyOf.clear();
-			}
-			else
-			{
-				m_WithAnyOf.resize(sizeof...(WithAnyTypes));
-				find_type_ids<drop_const_t<WithAnyTypes>...>(m_WithAnyOf.data());
-			}
+			m_FilterConfig.WithAny<WithAnyTypes...>();
 			return *this;
 		}
 
@@ -96,34 +74,15 @@ namespace decs
 		MultiQuery& With()
 		{
 			m_IsDirty = true;
-			if constexpr (sizeof...(WithTypes) == 0)
-			{
-				m_WithAll.clear();
-			}
-			else
-			{
-				m_WithAll.resize(sizeof...(WithTypes));
-				find_type_ids<drop_const_t<WithTypes>...>(m_WithAll.data());
-			}
+			m_FilterConfig.With<WithTypes...>();
 			return *this;
 		}
 
 		void ClearFilters()
 		{
-			if (m_WithAll.size() > 0)
+			if (m_FilterConfig.Clear())
 			{
 				m_IsDirty = true;
-				m_WithAll.clear();
-			}
-			if (m_WithAnyOf.size() > 0)
-			{
-				m_IsDirty = true;
-				m_WithAnyOf.clear();
-			}
-			if (m_Without.size() > 0)
-			{
-				m_IsDirty = true;
-				m_Without.clear();
 			}
 		}
 
@@ -442,13 +401,7 @@ namespace decs
 				if (containerCtxIdxIt != m_ContainerContextsIndexes.end())
 				{
 					auto& ctx = m_ContainerContexts[containerCtxIdxIt->second];
-					ctx.Fetch(
-						m_Includes,
-						m_Without,
-						m_WithAnyOf,
-						m_WithAll,
-						GetMinComponentsCount()
-					);
+					ctx.Fetch(m_FilterConfig);
 					return ctx.Contain(entity);
 				}
 			}
@@ -458,7 +411,6 @@ namespace decs
 		void Fetch()
 		{
 			uint64_t containerContextsSize = m_ContainerContexts.size();
-			uint64_t minComponentsCount = GetMinComponentsCount();
 			if (m_IsDirty)
 			{
 				m_IsDirty = false;
@@ -466,13 +418,7 @@ namespace decs
 				{
 					ContainerContextType& containerContext = m_ContainerContexts[i];
 					containerContext.Clear();
-					containerContext.Fetch(
-						m_Includes,
-						m_Without,
-						m_WithAnyOf,
-						m_WithAll,
-						minComponentsCount
-					);
+					containerContext.Fetch(m_FilterConfig);
 				}
 			}
 			else
@@ -480,22 +426,13 @@ namespace decs
 				for (uint64_t i = 0; i < containerContextsSize; i++)
 				{
 					ContainerContextType& containerContext = m_ContainerContexts[i];
-					m_ContainerContexts[i].Fetch(
-						m_Includes,
-						m_Without,
-						m_WithAnyOf,
-						m_WithAll,
-						minComponentsCount
-					);
+					m_ContainerContexts[i].Fetch(m_FilterConfig);
 				}
 			}
 		}
 	private:
 		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
-		TypeGroup<drop_const_t<ComponentsTypes>...> m_Includes = {};
-		std::vector<TypeID> m_Without;
-		std::vector<TypeID> m_WithAnyOf;
-		std::vector<TypeID> m_WithAll;
+		QueryFilterConfigType m_FilterConfig{};
 
 		std::vector<ContainerContextType> m_ContainerContexts = {};
 
