@@ -480,8 +480,6 @@ namespace decs
 		}
 
 	public:
-
-	public:
 		struct BatchIterator
 		{
 			using QueryType = typename MultiQuery<ComponentsTypes...>;

@@ -22,17 +22,17 @@ namespace decs
 			return m_Includes;
 		}
 
-		const std::vector<TypeID>& GetWithoutFilter() const noexcept
+		const std::vector<TypeID>& GetWithoutTypes() const noexcept
 		{
 			return m_Without;
 		}
 
-		const std::vector<TypeID>& GetWithAnyFilter() const noexcept
+		const std::vector<TypeID>& GetWithAnyTypes() const noexcept
 		{
 			return 	m_WithAnyOf;
 		}
 
-		const std::vector<TypeID>& GetWithAllFilter() const noexcept
+		const std::vector<TypeID>& GetWithAllTypes() const noexcept
 		{
 			return m_WithAll;
 		}
@@ -121,7 +121,7 @@ namespace decs
 	public:
 		template<typename TComponent>
 		using TPackedContainer = StablePackedContainer<drop_const_t<TComponent>>;
-		using ContainersTuple = std::tuple<TPackedContainer<ComponentsTypes>*...>;
+		using ContainersTuple = std::tuple<TPackedContainer<drop_const_t<ComponentsTypes>>*...>;
 
 	public:
 		inline static constexpr uint64_t s_ComponentCount = sizeof...(ComponentsTypes);
@@ -148,37 +148,13 @@ namespace decs
 
 			m_Archetype = archetype;
 
-			return CreatePackedContainersTuple<ComponentsTypes...>();
+			m_ContainersTuple = { m_Archetype->GetTypePackedContainer<drop_const_t<ComponentsTypes>>()... };
+			return (( std::get<TPackedContainer<drop_const_t<ComponentsTypes>>*>(m_ContainersTuple) != nullptr) && ...);
 		}
 
 	private:
 		const Archetype* m_Archetype = nullptr;
 		ContainersTuple m_ContainersTuple{};
-
-	private:
-		template<typename T = void, typename... Args>
-		bool CreatePackedContainersTuple()
-		{
-			constexpr uint64_t compIdx = sizeof...(ComponentsTypes) - sizeof...(Args) - 1;
-
-			TPackedContainer<drop_const_t<T>>* componentContainer = m_Archetype->GetTypePackedContainer<drop_const_t<T>>();
-			if (componentContainer == nullptr)
-			{
-				return false;
-			}
-
-			std::get<TPackedContainer<T>*>(m_ContainersTuple) = componentContainer;
-
-			if constexpr (sizeof...(Args) == 0) return true;
-
-			return CreatePackedContainersTuple<Args...>();
-		}
-
-		template<>
-		bool CreatePackedContainersTuple<void>()
-		{
-			return true;
-		}
 	};
 
 
@@ -326,7 +302,7 @@ namespace decs
 			{
 				// without test
 				{
-					auto& without = filter.GetWithoutFilter();
+					auto& without = filter.GetWithoutTypes();
 
 					uint64_t excludeCount = without.size();
 					for (int i = 0; i < excludeCount; i++)
@@ -340,7 +316,7 @@ namespace decs
 
 				// with any test
 				{
-					auto& withAnyOf = filter.GetWithAnyFilter();
+					auto& withAnyOf = filter.GetWithAnyTypes();
 
 					uint64_t requiredAnyCount = withAnyOf.size();
 					bool containRequiredAny = requiredAnyCount == 0;
@@ -358,7 +334,7 @@ namespace decs
 
 				// required all test
 				{
-					auto& withAll = filter.GetWithAllFilter();
+					auto& withAll = filter.GetWithAllTypes();
 					uint64_t requiredAllCount = withAll.size();
 
 					for (int i = 0; i < requiredAllCount; i++)

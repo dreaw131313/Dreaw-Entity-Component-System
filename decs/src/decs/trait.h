@@ -34,7 +34,6 @@ namespace decs
 	template<typename TTag>
 	concept TTagConcept = is_tag_v<TTag>;
 
-
 	template<typename T>
 	struct drop_const
 	{
