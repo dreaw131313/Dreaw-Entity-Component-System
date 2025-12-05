@@ -154,7 +154,7 @@ int main()
 		container.Spawn(prefab, 10, true);
 
 		uint32_t counter = 0;
-		auto testFunc = [&](const decs::ConstEntity& entity, const TestComponent&)
+		auto testFunc = [&](const decs::ConstEntity& entity, const TestComponent& test)
 		{
 			PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
 		};
@@ -174,9 +174,14 @@ int main()
 			std::vector<QueryType::BatchIterator> iterators{};
 			query.CreateBatchIterators(iterators, 10, 3);
 
+			PrintLine();
 			for (auto& it : iterators)
 			{
 				it.ForEach(testFunc);
+			}
+			PrintLine();
+			for (auto& it : iterators)
+			{
 				it.ForEach_IngoreEntityActiveState(testFunc);
 			}
 		}
@@ -189,19 +194,30 @@ int main()
 
 			uint64_t queryEntityCount = multiQuery.GetEntityCount();
 
+			PrintLine();
 			multiQuery.ForEach(testFunc);
+			PrintLine();
 			multiQuery.ForEach_Safe(testFunc);
+			PrintLine();
 			multiQuery.ForEachBackward(testFunc);
+			PrintLine();
 			multiQuery.ForEachBackward_Safe(testFunc);
+			PrintLine();
 			multiQuery.ForEach_IngoreEntityActiveState(testFunc);
 
 
 			std::vector<QueryType::BatchIterator> iterators{};
 			multiQuery.CreateBatchIteratorsWithMaxNumberPerBatch(iterators, 7);
 
+			PrintLine();
 			for (auto& it : iterators)
 			{
 				it.ForEach(testFunc);
+			}
+
+			PrintLine();
+			for (auto& it : iterators)
+			{
 				it.ForEach_IngoreEntityActiveState(testFunc);
 			}
 		}

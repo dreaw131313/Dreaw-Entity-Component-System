@@ -32,11 +32,6 @@ namespace decs
 			return m_Archetype->EntityCount();
 		}
 
-		inline int64_t GetCachedEntityCount() const
-		{
-			return m_CachedEntityCount;
-		}
-
 		inline const ContainersTuple& GetContainersTuple() const noexcept
 		{
 			return m_ContainersTuple;
@@ -51,15 +46,9 @@ namespace decs
 			return CreatePackedContainersTuple<ComponentsTypes...>();
 		}
 
-		inline void ValidateCachedEntityCount()
-		{
-			m_CachedEntityCount = m_Archetype->EntityCount();
-		}
-
 	private:
 		const Archetype* m_Archetype = nullptr;
 		ContainersTuple m_ContainersTuple{};
-		int64_t m_CachedEntityCount = 0;
 
 	private:
 		template<typename T = void, typename... Args>
@@ -95,8 +84,8 @@ namespace decs
 		using ArchetypeContextType = IterationArchetypeContext<ComponentsTypes...>;
 
 	public:
-		std::vector<ArchetypeContextType> m_ArchetypesContexts;
-		ecsSet<const Archetype*> m_ContainedArchetypes;
+		std::vector<ArchetypeContextType> m_ArchetypesContexts{};
+		ecsSet<const Archetype*> m_ContainedArchetypes{};
 		Container* m_Container = nullptr;
 		uint64_t m_ArchetypesCountDirty = 0;
 		bool m_bIsEnabled = true;
@@ -114,11 +103,32 @@ namespace decs
 
 		}
 
-		void Invalidate()
+		inline Container* GetContainer() const
+		{
+			return m_Container;
+		}
+
+		const std::vector<ArchetypeContextType>& GetArchetypeContexts() const noexcept
+		{
+			return m_ArchetypesContexts;
+		}
+
+		const ecsSet<const Archetype*>& GetArchetypes() const
+		{
+			return m_ContainedArchetypes;
+		}
+
+		void Clear()
 		{
 			m_ArchetypesContexts.clear();
 			m_ContainedArchetypes.clear();
 			m_ArchetypesCountDirty = 0;
+		}
+
+		void SetContainer(Container* container)
+		{
+			Clear();
+			m_Container = container;
 		}
 
 		void Fetch(
@@ -126,7 +136,7 @@ namespace decs
 			const std::vector<TypeID>& without,
 			const std::vector<TypeID>& withAnyOf,
 			const std::vector<TypeID>& withAll,
-			const uint64_t& minComponentsCount
+			uint64_t minComponentsCount
 		)
 		{
 			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.ArchetypesCount();

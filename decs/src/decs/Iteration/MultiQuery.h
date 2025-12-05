@@ -465,7 +465,7 @@ namespace decs
 				for (uint64_t i = 0; i < containerContextsSize; i++)
 				{
 					ContainerContextType& containerContext = m_ContainerContexts[i];
-					containerContext.Invalidate();
+					containerContext.Clear();
 					containerContext.Fetch(
 						m_Includes,
 						m_Without,
@@ -502,16 +502,6 @@ namespace decs
 		bool m_IsDirty = true;
 
 	private:
-
-		void CollectArchetypesEntityCount()
-		{
-			const uint64_t containerCtxCount = m_ContainerContexts.size();
-			for (uint64_t containerCtxIdx = 0; containerCtxIdx < containerCtxCount; containerCtxIdx++)
-			{
-				m_ContainerContexts[containerCtxIdx].ValidateCachedEntityCount();
-			}
-		}
-
 		uint64_t CalculateEntityCount()
 		{
 			uint64_t entitiesCount = 0;

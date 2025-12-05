@@ -31,7 +31,7 @@ namespace decs
 		}
 
 		Query(Container* container):
-			m_Container(container)
+			m_ContainerContext(container, true)
 		{
 
 		}
@@ -43,17 +43,22 @@ namespace decs
 
 		inline void SetContainer(Container* container)
 		{
-			if (container != m_Container)
+			if (m_ContainerContext.GetContainer() != container)
 			{
 				m_IsDirty = true;
-				m_Container = container;
-				Invalidate();
+				m_ContainerContext.SetContainer(container);
 			}
 		}
 
-		[[nodiscard]] inline Container* GetContainer() const { return m_Container; }
+		[[nodiscard]] inline Container* GetContainer() const
+		{
+			return m_ContainerContext.m_Container;
+		}
 
-		[[nodiscard]] inline bool IsValid()const { return m_Container != nullptr; }
+		[[nodiscard]] inline bool IsValid()const
+		{
+			return GetContainer() != nullptr;
+		}
 
 		[[nodiscard]] inline uint64_t GetEntityCount()
 		{
@@ -61,8 +66,9 @@ namespace decs
 			{
 				Fetch();
 
+				const auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
 				uint64_t entityCount = 0;
-				for (auto& archetypeCtx : m_ArchetypesContexts)
+				for (auto& archetypeCtx : archetypeContexts)
 				{
 					entityCount += archetypeCtx.GetEntityCount();
 				}
@@ -152,16 +158,19 @@ namespace decs
 			if (!IsValid()) return;
 			FetchInternal();
 
+			Container* container = m_ContainerContext.GetContainer();
+			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
+			const uint64_t contextCount = archetypeContexts.size();
+
 			Entity entityBuffer = {};
 			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 			{
-				entityBuffer.SetLifeTimeData_Internal(m_Container->GetLifeTimeData());
+				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 			}
 
-			const uint64_t contextCount = m_ArchetypesContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
+				const ArchetypeContextType& ctx = archetypeContexts[contextIndex];
 				uint64_t ctxEntityCount = ctx.GetEntityCount();
 				if (ctxEntityCount == 0) continue;
 
@@ -192,16 +201,19 @@ namespace decs
 			if (!IsValid()) return;
 			FetchInternal();
 
+			Container* container = m_ContainerContext.GetContainer();
+			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
+			const uint64_t contextCount = archetypeContexts.size();
+
 			Entity entityBuffer = {};
 			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 			{
-				entityBuffer.SetLifeTimeData_Internal(m_Container->GetLifeTimeData());
+				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 			}
 
-			const uint64_t contextCount = m_ArchetypesContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
+				const ArchetypeContextType& ctx = archetypeContexts[contextIndex];
 				uint64_t ctxEntityCount = ctx.GetEntityCount();
 				if (ctxEntityCount == 0) continue;
 
@@ -235,16 +247,19 @@ namespace decs
 			if (!IsValid()) return;
 			FetchInternal();
 
+			Container* container = m_ContainerContext.GetContainer();
+			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
+			const uint64_t contextCount = archetypeContexts.size();
+
 			Entity entityBuffer = {};
 			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 			{
-				entityBuffer.SetLifeTimeData_Internal(m_Container->GetLifeTimeData());
+				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 			}
 
-			const uint64_t contextCount = m_ArchetypesContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
+				const ArchetypeContextType& ctx = archetypeContexts[contextIndex];
 				uint64_t ctxEntityCount = ctx.GetEntityCount();
 				if (ctxEntityCount == 0) continue;
 
@@ -277,16 +292,19 @@ namespace decs
 			if (!IsValid()) return;
 			FetchInternal();
 
+			Container* container = m_ContainerContext.GetContainer();
+			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
+			const uint64_t contextCount = archetypeContexts.size();
+
 			Entity entityBuffer = {};
-			if constexpr ( is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 			{
-				entityBuffer.SetLifeTimeData_Internal(m_Container->GetLifeTimeData());
+				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 			}
 
-			const uint64_t contextCount = m_ArchetypesContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
+				const ArchetypeContextType& ctx = archetypeContexts[contextIndex];
 				uint64_t ctxEntityCount = ctx.GetEntityCount();
 				if (ctxEntityCount == 0) continue;
 
@@ -318,16 +336,19 @@ namespace decs
 			if (!IsValid()) return;
 			FetchInternal();
 
+			Container* container = m_ContainerContext.GetContainer();
+			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
+			const uint64_t contextCount = archetypeContexts.size();
+
 			Entity entityBuffer = {};
 			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 			{
-				entityBuffer.SetLifeTimeData_Internal(m_Container->GetLifeTimeData());
+				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 			}
 
-			const uint64_t contextCount = m_ArchetypesContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextCount; contextIndex++)
 			{
-				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
+				const ArchetypeContextType& ctx = archetypeContexts[contextIndex];
 				uint64_t ctxEntityCount = ctx.GetEntityCount();
 				if (ctxEntityCount == 0) continue;
 
@@ -361,23 +382,18 @@ namespace decs
 			if (entity.IsValid())
 			{
 				Fetch();
-				return m_ContainedArchetypes.find(entity.GetArchetype()) != m_ContainedArchetypes.end();
+				return m_ContainerContext.GetArchetypes().contains(entity.GetArchetype());
 			}
 			return false;
 		}
 
 	private:
-		ecsSet<const Archetype*> m_ContainedArchetypes;
 		TypeGroup<drop_const_t<ComponentsTypes>...> m_Includes = {};
 		std::vector<TypeID> m_Without;
 		std::vector<TypeID> m_WithAnyOf;
 		std::vector<TypeID> m_WithAll;
-		std::vector<ArchetypeContextType> m_ArchetypesContexts;
+		IterationContainerContext<drop_const_t<ComponentsTypes>...> m_ContainerContext{};
 
-		// cache value to check if query should be updated:
-		uint64_t m_ArchetypesCountDirty = 0;
-
-		Container* m_Container = nullptr;
 		bool m_IsDirty = true;
 
 	private:
@@ -389,39 +405,13 @@ namespace decs
 				Invalidate();
 			}
 
-			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.ArchetypesCount();
-			if (m_ArchetypesCountDirty != containerArchetypesCount)
-			{
-				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
-				uint64_t minComponentsCountInArchetype = GetMinComponentsCount();
-
-				const ArchetypesMap& map = m_Container->m_ArchetypesMap;
-				uint64_t maxComponentsInArchetype = map.MaxNumberOfTypesInArchetype();
-				if (maxComponentsInArchetype < minComponentsCountInArchetype) return;
-
-				if (newArchetypesCount > m_ArchetypesContexts.size())
-				{
-					// performing normal finding of archetypes
-					auto group = GetBestArchetypesGroup();
-					FetchArchetypesFromArchetypesGroup(group);
-				}
-				else
-				{
-					// checking only new archetypes:
-					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, minComponentsCountInArchetype);
-				}
-
-				m_ArchetypesCountDirty = containerArchetypesCount;
-			}
-		}
-
-		void CollectArchetypesEntityCount()
-		{
-			const uint64_t ctxCount = m_ArchetypesContexts.size();
-			for (uint64_t ctxIdx = 0; ctxIdx < ctxCount; ctxIdx++)
-			{
-				m_ArchetypesContexts[ctxIdx].ValidateCachedEntityCount();
-			}
+			m_ContainerContext.Fetch(
+				m_Includes,
+				m_Without,
+				m_WithAnyOf,
+				m_WithAll,
+				GetMinComponentsCount()
+			);
 		}
 
 		inline uint64_t GetMinComponentsCount() const
@@ -429,135 +419,6 @@ namespace decs
 			uint64_t includesCount = sizeof...(ComponentsTypes);
 			if (m_WithAnyOf.size() > 0) includesCount += 1;
 			return sizeof...(ComponentsTypes) + m_WithAll.size();
-		}
-
-		void Invalidate()
-		{
-			m_ArchetypesContexts.clear();
-			m_ContainedArchetypes.clear();
-			m_ArchetypesCountDirty = 0;
-		}
-
-		inline bool ContainArchetype(Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
-
-		// FETCHING ARCHETYPE
-
-		ArchetypesGroupByOneType* GetBestArchetypesGroup()
-		{
-			auto& groupsMap = m_Container->m_ArchetypesMap.m_ArchetypesGroupedByOneType;
-
-			uint64_t bestArchetypesCount = std::numeric_limits<uint64_t>::max();
-			ArchetypesGroupByOneType* bestGroup = nullptr;
-
-			for (uint64_t i = 0; i < m_Includes.Size(); i++)
-			{
-				auto it = groupsMap.find(m_Includes[i]);
-				if (it != groupsMap.end())
-				{
-					uint64_t bufforGroupArchetypesCount = it->second->ArchetypesCount();
-					if (bufforGroupArchetypesCount < bestArchetypesCount)
-					{
-						bestArchetypesCount = bufforGroupArchetypesCount;
-						bestGroup = it->second;
-					}
-				}
-			}
-
-			return bestGroup;
-		}
-
-		void TryAddArchetypeFromGroup(Archetype& archetype)
-		{
-			if (!ContainArchetype(&archetype) && archetype.GetComponentAndTagCount())
-			{
-				// without test
-				{
-					uint64_t excludeCount = m_Without.size();
-					for (int i = 0; i < excludeCount; i++)
-					{
-						if (archetype.ContainType(m_Without[i]))
-						{
-							return;
-						}
-					}
-				}
-
-				// with any test
-				{
-					uint64_t requiredAnyCount = m_WithAnyOf.size();
-					bool containRequiredAny = requiredAnyCount == 0;
-
-					for (int i = 0; i < requiredAnyCount; i++)
-					{
-						if (archetype.ContainType(m_WithAnyOf[i]))
-						{
-							containRequiredAny = true;
-							break;
-						}
-					}
-					if (!containRequiredAny) return;
-				}
-
-				// required all test
-				{
-					uint64_t requiredAllCount = m_WithAll.size();
-
-					for (int i = 0; i < requiredAllCount; i++)
-					{
-						if (!archetype.ContainType(m_WithAll[i]))
-						{
-							return;
-						}
-					}
-				}
-
-				// includes
-				{
-					ArchetypeContextType context{};
-					if (context.Initialize(&archetype))
-					{
-						m_ContainedArchetypes.insert(&archetype);
-						m_ArchetypesContexts.push_back(context);
-					}
-				}
-			}
-		}
-
-		void FetchArchetypesFromArchetypesGroup(ArchetypesGroupByOneType* group)
-		{
-			if (group == nullptr) return;
-			uint64_t minComponentsCount = GetMinComponentsCount();
-			uint64_t maxComponentCountsInGroup = group->MaxComponentsCount();
-
-			for (uint64_t i = minComponentsCount; i <= maxComponentCountsInGroup; i++)
-			{
-				auto archetypesToCheckPtr = group->GetArchetypesWithComponentsCount(i);
-				if (archetypesToCheckPtr != nullptr)
-				{
-					for (auto& archetype : *archetypesToCheckPtr)
-					{
-						TryAddArchetypeFromGroup(*archetype);
-					}
-				}
-			}
-		}
-
-		void AddingArchetypesWithCheckingOnlyNewArchetypes(
-			const ArchetypesMap& map,
-			uint64_t startArchetypesIndex,
-			uint64_t minRequiredComponentsCount
-		)
-		{
-			auto& archetypes = map.m_Archetypes;
-			uint64_t archetypesCount = map.m_Archetypes.Size();
-			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
-			{
-				Archetype& arch = archetypes[i];
-				if (arch.GetComponentAndTagCount() >= minRequiredComponentsCount)
-				{
-					TryAddArchetypeFromGroup(arch);
-				}
-			}
 		}
 
 		template<typename Callable>
@@ -581,6 +442,11 @@ namespace decs
 			{
 				func(std::get<PackedContainerType<drop_const_t<ComponentsTypes>>>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
 			}
+		}
+
+		void Invalidate()
+		{
+			m_ContainerContext.Clear();
 		}
 
 	#pragma region BATCH ITERATOR
@@ -618,7 +484,9 @@ namespace decs
 			{
 				if (!m_IsValid) return;
 
-				Container* container = m_Query->m_Container;
+				Container* container = m_Query->GetContainer();
+				auto& archetypeContexts = m_Query->m_ContainerContext.GetArchetypeContexts();
+
 				Entity entityBuffer = {};
 				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
@@ -626,8 +494,7 @@ namespace decs
 				}
 
 				uint64_t contextIndex = m_FirstArchetypeIndex;
-				uint64_t contextCount = m_Query->m_ArchetypesContexts.size();
-				ArchetypeContextType* archetypeContexts = m_Query->m_ArchetypesContexts.data();
+				uint64_t contextCount = archetypeContexts.size();
 
 				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
@@ -692,7 +559,9 @@ namespace decs
 			{
 				if (!m_IsValid) return;
 
-				Container* container = m_Query->m_Container;
+				Container* container = m_Query->GetContainer();
+				auto& archetypeContexts = m_Query->m_ContainerContext.GetArchetypeContexts();
+
 				Entity entityBuffer = {};
 				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
@@ -700,8 +569,7 @@ namespace decs
 				}
 
 				uint64_t contextIndex = m_FirstArchetypeIndex;
-				uint64_t contextCount = m_Query->m_ArchetypesContexts.size();
-				ArchetypeContextType* archetypeContexts = m_Query->m_ArchetypesContexts.data();
+				uint64_t contextCount = archetypeContexts.size();
 
 				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
@@ -783,8 +651,10 @@ namespace decs
 
 			Fetch();
 
+			const auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
+
 			uint64_t entitiesCount = 0;
-			for (ArchetypeContextType& archContext : m_ArchetypesContexts)
+			for (const ArchetypeContextType& archContext : archetypeContexts)
 			{
 				entitiesCount += archContext.GetEntityCount();
 			}
@@ -793,17 +663,20 @@ namespace decs
 			uint64_t finalBatchSize;
 
 			if (realDesiredBatchSize < minBatchSize)
+			{
 				finalBatchSize = minBatchSize;
+			}
 			else
+			{
 				finalBatchSize = realDesiredBatchSize;
-
+			}
 
 			BatchIterator* currentIterator = nullptr;
 
-			uint64_t contextsCount = m_ArchetypesContexts.size();
+			uint64_t contextsCount = archetypeContexts.size();
 			for (uint64_t contextIndex = 0; contextIndex < contextsCount; contextIndex++)
 			{
-				const ArchetypeContextType& ctx = m_ArchetypesContexts[contextIndex];
+				const ArchetypeContextType& ctx = archetypeContexts[contextIndex];
 				uint64_t ctxEntitiesCount = ctx.GetEntityCount();
 				if (ctxEntitiesCount == 0) continue;
 
