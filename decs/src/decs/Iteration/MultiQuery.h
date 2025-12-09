@@ -99,8 +99,6 @@ namespace decs
 		{
 			Fetch();
 
-			decs::Entity entityBuffer = {};
-
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
@@ -112,28 +110,19 @@ namespace decs
 
 				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
+					decs::Entity entityBuffer = {};
 					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
-				}
 
-				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
-				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
-
-				for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
-				{
-					ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-					uint64_t ctxEntityCount = ctx.GetEntityCount();
-					if (ctxEntityCount == 0) continue;
-
-					const auto& containersTuple = ctx.GetContainersTuple();
-					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
-
-					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
-						const auto& entityData = entitiesData[idx];
-						if (entityData.IsActive())
-						{
-							InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-						}
+						ctx.ForEach_WithEntity(func, entityBuffer);
+					}
+				}
+				else
+				{
+					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					{
+						ctx.ForEach(func);
 					}
 				}
 			}
@@ -151,8 +140,6 @@ namespace decs
 		{
 			Fetch();
 
-			decs::Entity entityBuffer = {};
-
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
@@ -164,28 +151,19 @@ namespace decs
 
 				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
+					decs::Entity entityBuffer = {};
 					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
-				}
 
-				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
-				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
-
-				for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
-				{
-					ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-					uint64_t ctxEntityCount = ctx.GetEntityCount();
-					if (ctxEntityCount == 0) continue;
-
-					const auto& containersTuple = ctx.GetContainersTuple();
-					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
-
-					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
-						const auto& entityData = entitiesData[idx];
-						if (entityData.m_EntityData != nullptr && entityData.IsActive())
-						{
-							InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-						}
+						ctx.ForEach_WithEntity_Safe(func, entityBuffer);
+					}
+				}
+				else
+				{
+					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					{
+						ctx.ForEach_Safe(func);
 					}
 				}
 			}
@@ -207,8 +185,6 @@ namespace decs
 		{
 			Fetch();
 
-			decs::Entity entityBuffer = {};
-
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
@@ -220,28 +196,19 @@ namespace decs
 
 				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
+					decs::Entity entityBuffer = {};
 					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
-				}
 
-				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
-				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
-
-				for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
-				{
-					ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-					uint64_t ctxEntityCount = ctx.GetEntityCount();
-					if (ctxEntityCount == 0) continue;
-
-					const auto& containersTuple = ctx.GetContainersTuple();
-					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
-
-					for (int64_t idx = (int64_t)ctxEntityCount - 1; idx > -1; idx--)
+					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
-						const auto& entityData = entitiesData[idx];
-						if (entityData.IsActive())
-						{
-							InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-						}
+						ctx.ForEachBackward_WithEntity(func, entityBuffer);
+					}
+				}
+				else
+				{
+					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					{
+						ctx.ForEachBackward(func);
 					}
 				}
 			}
@@ -259,8 +226,6 @@ namespace decs
 		{
 			Fetch();
 
-			decs::Entity entityBuffer = {};
-
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
@@ -272,28 +237,19 @@ namespace decs
 
 				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
+					decs::Entity entityBuffer = {};
 					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
-				}
 
-				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
-				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
-
-				for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
-				{
-					ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-					uint64_t ctxEntityCount = ctx.GetEntityCount();
-					if (ctxEntityCount == 0) continue;
-
-					const auto& containersTuple = ctx.GetContainersTuple();
-					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
-
-					for (int64_t idx = (int64_t)ctxEntityCount - 1; idx > -1; idx--)
+					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
-						const auto& entityData = entitiesData[idx];
-						if (entityData.m_EntityData != nullptr && entityData.IsActive())
-						{
-							InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-						}
+						ctx.ForEachBackward_WithEntity_Safe(func, entityBuffer);
+					}
+				}
+				else
+				{
+					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					{
+						ctx.ForEachBackward_Safe(func);
 					}
 				}
 			}
@@ -309,8 +265,6 @@ namespace decs
 		{
 			Fetch();
 
-			decs::Entity entityBuffer = {};
-
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
@@ -322,32 +276,22 @@ namespace decs
 
 				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
+					decs::Entity entityBuffer = {};
 					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
-				}
 
-				auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
-				const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
-
-				for (uint64_t archetypeContextIdx = 0; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
-				{
-					ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-					uint64_t ctxEntityCount = ctx.GetEntityCount();
-					if (ctxEntityCount == 0) continue;
-
-					const auto& containersTuple = ctx.GetContainersTuple();
-					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
-
-					for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
-						const auto& entityData = entitiesData[idx];
-						if (entityData.m_EntityData != nullptr)
-						{
-							InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-						}
+						ctx.ForEach_IngoreEntityActiveState_WithEntity(func, entityBuffer);
+					}
+				}
+				else
+				{
+					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					{
+						ctx.ForEach_IngoreEntityActiveState(func);
 					}
 				}
 			}
-
 		}
 
 		virtual bool AddContainer(Container* container, bool bIsEnabled = true) override

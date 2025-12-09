@@ -164,7 +164,7 @@ int main()
 		};
 
 
-		{
+		/*{
 			using QueryType = decs::Query< const TestComponent>;
 			QueryType query(&container);
 
@@ -194,7 +194,7 @@ int main()
 			std::vector<QueryType::BatchIterator> iterators{};
 			query.CreateBatchIterators(iterators, 10, 3);
 
-			/*PrintLine();
+			PrintLine();
 			for (auto& it : iterators)
 			{
 				it.ForEach(testFunc);
@@ -203,30 +203,37 @@ int main()
 			for (auto& it : iterators)
 			{
 				it.ForEach_IngoreEntityActiveState(testFunc);
-			}*/
-		}
+			}
+		}*/
 
-		/*{
+		{
 			using QueryType = decs::MultiQuery<const TestComponent>;
 			QueryType multiQuery{};
 			multiQuery.WithAny<FloatTag, IntTag>();
 			multiQuery.AddContainer(&container);
 
-			uint64_t queryEntityCount = multiQuery.GetEntityCount();
-
-			PrintLine();
+			PrintLine("ForEach");
 			multiQuery.ForEach(testFunc);
-			PrintLine();
+			PrintLine("ForEach With Entity");
+			multiQuery.ForEach(testFuncWithEntity);
+			PrintLine("ForEach Safe");
 			multiQuery.ForEach_Safe(testFunc);
-			PrintLine();
+			PrintLine("ForEach With Entity Safe");
+			multiQuery.ForEach_Safe(testFuncWithEntity);
+			PrintLine("ForEachBackward");
 			multiQuery.ForEachBackward(testFunc);
-			PrintLine();
+			PrintLine("ForEachBackward With Entity");
+			multiQuery.ForEachBackward(testFuncWithEntity);
+			PrintLine("ForEachBackward Safe");
 			multiQuery.ForEachBackward_Safe(testFunc);
-			PrintLine();
+			PrintLine("ForEachBackward With Entity Safe");
+			multiQuery.ForEachBackward_Safe(testFuncWithEntity);
+			PrintLine("ForEach_IngoreEntityActiveState");
 			multiQuery.ForEach_IngoreEntityActiveState(testFunc);
+			PrintLine("ForEach_IngoreEntityActiveState With Entity");
+			multiQuery.ForEach_IngoreEntityActiveState(testFuncWithEntity);
 
-
-			std::vector<QueryType::BatchIterator> iterators{};
+			/*std::vector<QueryType::BatchIterator> iterators{};
 			multiQuery.CreateBatchIteratorsWithMaxNumberPerBatch(iterators, 7);
 
 			PrintLine();
@@ -239,8 +246,8 @@ int main()
 			for (auto& it : iterators)
 			{
 				it.ForEach_IngoreEntityActiveState(testFunc);
-			}
-		}*/
+			}*/
+		}
 
 	}
 
