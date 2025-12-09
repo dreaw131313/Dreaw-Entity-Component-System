@@ -54,6 +54,11 @@ namespace decs
 		{
 			return m_EntityData != nullptr;
 		}
+
+		inline bool IsValidAndActive() const noexcept
+		{
+			return m_EntityData != nullptr && m_bIsActive;
+		}
 	};
 
 	struct ArchetypeTypeData
@@ -262,7 +267,7 @@ namespace decs
 
 	private:
 		template<typename TComponentType>
-		StablePackedContainer<TComponentType>* GetTypePackedContainer() const 
+		StablePackedContainer<TComponentType>* GetTypePackedContainer() const
 		{
 			uint32_t compIdx = FindTypeIndex<TComponentType>();
 			if (compIdx == std::numeric_limits<uint32_t>::max())

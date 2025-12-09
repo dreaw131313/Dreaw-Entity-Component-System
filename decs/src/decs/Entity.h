@@ -20,6 +20,7 @@ namespace decs
 		friend class ContainerSerializer;
 		friend class ContainerSerializerComplex;
 		friend class ContainerIterator;
+		friend class Iteration;
 
 		friend class ConstEntity;
 

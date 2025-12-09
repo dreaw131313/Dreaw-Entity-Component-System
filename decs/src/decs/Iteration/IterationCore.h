@@ -9,6 +9,35 @@ namespace decs
 	template<typename T>
 	concept TComponentOrTagConcept = TComponentConcept<T> || TTagConcept<T>;
 
+	class Iteration
+	{
+	public:
+		template<typename Callable, typename... ComponentTypes>
+		inline static void InvokeEntityIteration(
+			Callable&& func,
+			uint64_t entityIndexInArchetype,
+			const std::tuple<StablePackedContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
+		)
+		{
+			func(std::get<StablePackedContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
+		}
+
+		template<typename Callable, typename... ComponentTypes>
+		inline static void InvokeEntityIteration(
+			Callable&& func,
+			Entity& entityBuffer,
+			EntityData& entityData,
+			uint64_t entityIndexInArchetype,
+			const std::tuple<StablePackedContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
+		)
+		{
+			entityBuffer.SetWithoutLifeTimeDataInvalidation_Internal(entityData);
+			func(
+				entityBuffer,
+				std::get<StablePackedContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
+			);
+		}
+	};
 
 	template<TComponentConcept... ComponentsTypes>
 	struct QueryFiltersConfig
@@ -149,8 +178,252 @@ namespace decs
 			m_Archetype = archetype;
 
 			m_ContainersTuple = { m_Archetype->GetTypePackedContainer<drop_const_t<ComponentsTypes>>()... };
-			return (( std::get<TPackedContainer<drop_const_t<ComponentsTypes>>*>(m_ContainersTuple) != nullptr) && ...);
+			return ((std::get<TPackedContainer<drop_const_t<ComponentsTypes>>*>(m_ContainersTuple) != nullptr) && ...);
 		}
+
+	#pragma region FOREACH
+	public:
+		template<typename Callable>
+		void ForEach(Callable&& func) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+
+			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+			{
+				const auto& entityData = entitiesData[idx];
+				if (entityData.IsActive())
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
+				}
+			}
+		}
+
+		template<typename Callable>
+		void ForEach_WithEntity(Callable&& func, Entity& entityBuffer) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+
+			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+			{
+				const auto& entityData = entitiesData[idx];
+				if (entityData.IsActive())
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+				}
+			}
+		}
+
+	#pragma endregion
+
+	#pragma region FOREACH SAFE
+	public:
+		template<typename Callable>
+		void ForEach_Safe(Callable&& func) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+
+			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+			{
+				const auto& entityData = entitiesData[idx];
+				if (entityData.IsValidAndActive())
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
+				}
+			}
+		}
+
+		template<typename Callable>
+		void ForEach_WithEntity_Safe(Callable&& func, Entity& entityBuffer) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+
+			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+			{
+				const auto& entityData = entitiesData[idx];
+				if (entityData.IsValidAndActive())
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+				}
+			}
+		}
+
+	#pragma endregion
+
+	#pragma region FOREACH BACKWARD
+	public:
+		template<typename Callable>
+		void ForEachBackward(Callable&& func) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+
+			int64_t idx = ctxEntityCount - 1;
+			for (; idx > -1; idx--)
+			{
+				const auto& entityData = entitiesData[idx];
+				if (entityData.IsActive())
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
+				}
+			}
+		}
+
+		template<typename Callable>
+		void ForEachBackward_WithEntity(Callable&& func, Entity& entityBuffer) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+
+			int64_t idx = ctxEntityCount - 1;
+			for (; idx > -1; idx--)
+			{
+				const auto& entityData = entitiesData[idx];
+				if (entityData.IsActive())
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+				}
+			}
+		}
+
+	#pragma endregion
+
+	#pragma region FOREACH BACKWARD SAFE
+	public:
+		template<typename Callable>
+		void ForEachBackward_Safe(Callable&& func) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+
+			int64_t idx = ctxEntityCount - 1;
+			for (; idx > -1; idx--)
+			{
+				const auto& entityData = entitiesData[idx];
+				if (entityData.IsValidAndActive())
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
+				}
+			}
+		}
+
+		template<typename Callable>
+		void ForEachBackward_WithEntity_Safe(Callable&& func, Entity& entityBuffer) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+
+			int64_t idx = ctxEntityCount - 1;
+			for (; idx > -1; idx--)
+			{
+				const auto& entityData = entitiesData[idx];
+				if (entityData.IsValidAndActive())
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+				}
+			}
+		}
+
+	#pragma endregion
+
+	#pragma region FOR EACH INGORE ENTITY ACTIVE STATE
+	public:
+		template<typename Callable>
+		void ForEach_IngoreEntityActiveState(Callable&& func) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+
+			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+			{
+				const auto& entityData = entitiesData[idx];
+				if (entityData.IsValid())
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
+				}
+			}
+		}
+
+		template<typename Callable>
+		void ForEach_IngoreEntityActiveState_WithEntity(Callable&& func, Entity& entityBuffer) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+
+			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+			{
+				const auto& entityData = entitiesData[idx];
+				if (entityData.IsValid())
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+				}
+			}
+		}
+
+	#pragma endregion
 
 	private:
 		const Archetype* m_Archetype = nullptr;
