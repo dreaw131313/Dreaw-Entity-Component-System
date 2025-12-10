@@ -48,10 +48,10 @@
     <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\ComponentContainers\PackedContainer.h">
+    <ClInclude Include="src\decs\Component\PackedComponentContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\ComponentContainers\StableContainer.h">
+    <ClInclude Include="src\decs\Component\StableComponentContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\ComponentContext\ComponentContext.h">
@@ -122,7 +122,7 @@
     <ClCompile Include="src\decs\decs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decs\ComponentContainers\ChunkAllocator.h">
+    <ClCompile Include="src\decs\Component\ChunkAllocator.h">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

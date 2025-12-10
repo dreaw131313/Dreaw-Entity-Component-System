@@ -70,13 +70,13 @@ namespace decs
 
 	template<typename TCallable, typename... TComponentTypes>
 	concept query_callable = std::is_invocable_v<TCallable, TComponentTypes...> 
-		|| std::is_invocable_v<TCallable, Entity&, TComponentTypes...>
+		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes...>
 		|| std::is_invocable_v<TCallable, TComponentTypes&...>
-		|| std::is_invocable_v<TCallable, Entity&, TComponentTypes&...>;
+		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
 
 
 	template<typename TCallable, typename... TComponentTypes>
-	constexpr bool is_invocable_with_entity_v = std::is_invocable_v<TCallable, Entity&, TComponentTypes...> 
-		|| std::is_invocable_v<TCallable, Entity&, TComponentTypes&...>;
+	constexpr bool is_invocable_with_entity_v = std::is_invocable_v<TCallable, const Entity&, TComponentTypes...> 
+		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
 
 }

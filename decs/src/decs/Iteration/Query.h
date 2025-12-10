@@ -23,7 +23,7 @@ namespace decs
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 
 		template<typename TComponent>
-		using PackedContainerType = StablePackedContainer<TComponent>*;
+		using PackedContainerType = PackedStableComponentContainer<TComponent>*;
 
 	public:
 		Query()

@@ -10,8 +10,8 @@
 
 #include "Component/Component.h"
 
-#include "decs/ComponentContainers/PackedContainer.h"
-#include "decs/ComponentContainers/StableContainer.h"
+#include "decs/Component/PackedComponentContainer.h"
+#include "decs/Component/StableComponentContainer.h"
 
 #include "trait.h"
 
@@ -164,7 +164,7 @@ namespace decs
 		struct SpawnComponentRefData
 		{
 		public:
-			StableContainerBase* m_StableContainer = nullptr;
+			IStableComponentContainer* m_StableContainer = nullptr;
 			EntityComponent* m_ComponentPtr = nullptr;
 
 		public:
@@ -174,7 +174,7 @@ namespace decs
 			}
 
 			SpawnComponentRefData(
-				StableContainerBase* stableContainer,
+				IStableComponentContainer* stableContainer,
 				EntityComponent* componentPtr
 			):
 				m_StableContainer(stableContainer), m_ComponentPtr(componentPtr)
@@ -311,7 +311,7 @@ namespace decs
 		void OnAddComponentInvokeObservers(
 			const Entity& entity,
 			ComponentContextBase* componentContext,
-			PackedContainerBase* packedContainer,
+			IPackedComponentContainer* packedContainer,
 			TypeID compTypeID
 		);
 
@@ -339,7 +339,7 @@ namespace decs
 			ArchetypeTypeData& archetypeTypeData = newArchetype->m_TypeData[componentContainerIndex];
 
 			// Adding component to stable component container
-			StableContainer<TComponent>* stableContainer = static_cast<StableContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
+			StableComponentContainer<TComponent>* stableContainer = static_cast<StableComponentContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
 			TComponent* componentPtr = stableContainer->Create(std::forward<Args>(args)...);
 
 			//StableComponentRef componentNodeInfo = {};
@@ -549,7 +549,7 @@ namespace decs
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
 				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
 				{
-					StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
+					PackedStableComponentContainer<TComponent>* container = static_cast<PackedStableComponentContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
 					return container->GetAsPtr(entityData.m_IndexInArchetype);
 				}
 			}
@@ -638,7 +638,7 @@ namespace decs
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
 				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
 				{
-					StablePackedContainer<TComponent>* container = static_cast<StablePackedContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
+					PackedStableComponentContainer<TComponent>* container = static_cast<PackedStableComponentContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
 					return container->GetAsPtr(entityData.m_IndexInArchetype);
 				}
 			}
@@ -1175,7 +1175,7 @@ namespace decs
 			ArchetypeTypeData& archetypeTypeData = newArchetype->m_TypeData[componentContainerIndex];
 
 			// Adding component to stable component container
-			StableContainer<TComponent>* stableContainer = static_cast<StableContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
+			StableComponentContainer<TComponent>* stableContainer = static_cast<StableComponentContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
 			TComponent* componentPtr = stableContainer->Create(std::forward<Args>(args)...);
 
 			//StableComponentRef componentNodeInfo = {};

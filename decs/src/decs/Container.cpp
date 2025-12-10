@@ -737,7 +737,7 @@ namespace decs
 	void Container::OnAddComponentInvokeObservers(
 		const Entity& entity,
 		ComponentContextBase* componentContext,
-		PackedContainerBase* packedContainer,
+		IPackedComponentContainer* packedContainer,
 		TypeID compTypeID
 	)
 	{

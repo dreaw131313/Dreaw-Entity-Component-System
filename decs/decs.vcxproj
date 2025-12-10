@@ -109,8 +109,8 @@
     <ClInclude Include="src\decs\Utils\ContainerIterator.h" />
     <ClInclude Include="src\decs\Utils\ContainerSerializer.h" />
     <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h" />
-    <ClInclude Include="src\decs\ComponentContainers\PackedContainer.h" />
-    <ClInclude Include="src\decs\ComponentContainers\StableContainer.h" />
+    <ClInclude Include="src\decs\Component\PackedComponentContainer.h" />
+    <ClInclude Include="src\decs\Component\StableComponentContainer.h" />
     <ClInclude Include="src\decs\ComponentContext\ComponentContext.h" />
     <ClInclude Include="src\decs\ComponentContext\ComponentContextsManager.h" />
     <ClInclude Include="src\decs\EntityManager.h" />
@@ -132,7 +132,7 @@
   <ItemGroup>
     <ClCompile Include="src\decs\Archetypes\Archetype.cpp" />
     <ClCompile Include="src\decs\Archetypes\ArchetypesMap.cpp" />
-    <ClCompile Include="src\decs\ComponentContainers\ChunkAllocator.h" />
+    <ClCompile Include="src\decs\Component\ChunkAllocator.h" />
     <ClCompile Include="src\decs\Component\Component.cpp" />
     <ClCompile Include="src\decs\Container.cpp" />
     <ClCompile Include="src\decs\decs.cpp" />

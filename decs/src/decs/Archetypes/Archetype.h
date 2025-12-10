@@ -2,8 +2,8 @@
 #include "decs/Core.h"
 #include "decs/ComponentContext/ComponentContextsManager.h"
 #include "decs/Type.h"
-#include "decs/ComponentContainers/PackedContainer.h"
-#include "decs/ComponentContainers/StableContainer.h"
+#include "decs/Component/PackedComponentContainer.h"
+#include "decs/Component/StableComponentContainer.h"
 #include "decs/EntityData.h"
 
 #include "decs/trait.h"
@@ -65,9 +65,9 @@ namespace decs
 	{
 	public:
 		TypeID m_TypeID = std::numeric_limits<TypeID>::max();
-		PackedContainerBase* m_PackedContainer = nullptr;
+		IPackedComponentContainer* m_PackedContainer = nullptr;
 		ComponentContextBase* m_ComponentContext = nullptr;
-		StableContainerBase* m_StableContainer = nullptr;
+		IStableComponentContainer* m_StableContainer = nullptr;
 
 	public:
 		ArchetypeTypeData()
@@ -77,9 +77,9 @@ namespace decs
 
 		ArchetypeTypeData(
 			TypeID typeID,
-			PackedContainerBase* packedContainer,
+			IPackedComponentContainer* packedContainer,
 			ComponentContextBase* componentContext,
-			StableContainerBase* stableContainer
+			IStableComponentContainer* stableContainer
 		):
 			m_TypeID(typeID), m_PackedContainer(packedContainer), m_ComponentContext(componentContext), m_StableContainer(stableContainer)
 		{
@@ -267,7 +267,7 @@ namespace decs
 
 	private:
 		template<typename TComponentType>
-		StablePackedContainer<TComponentType>* GetTypePackedContainer() const
+		PackedStableComponentContainer<TComponentType>* GetTypePackedContainer() const
 		{
 			uint32_t compIdx = FindTypeIndex<TComponentType>();
 			if (compIdx == std::numeric_limits<uint32_t>::max())
@@ -277,7 +277,7 @@ namespace decs
 
 			auto& typeData = m_TypeData[compIdx];
 
-			return static_cast<StablePackedContainer<TComponentType>*>(typeData.m_PackedContainer);
+			return static_cast<PackedStableComponentContainer<TComponentType>*>(typeData.m_PackedContainer);
 		}
 
 		void ClearEntityDataAndComponents();
@@ -316,7 +316,7 @@ namespace decs
 
 		void SetRecordAsIntendedToDelayedDestroy(uint64_t index);
 
-		inline PackedContainerBase* GetPackedContainerAt(uint64_t index)
+		inline IPackedComponentContainer* GetPackedContainerAt(uint64_t index)
 		{
 			return m_TypeData[index].m_PackedContainer;
 		}

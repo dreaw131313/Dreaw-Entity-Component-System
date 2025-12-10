@@ -5,7 +5,7 @@
 #include "decs\Core.h"
 #include "decs\Type.h"
 #include "decs\ComponentContext\ComponentContextsManager.h"
-#include "decs\ComponentContainers\PackedContainer.h"
+#include "decs\Component\PackedComponentContainer.h"
 
 #include "Archetype.h"
 

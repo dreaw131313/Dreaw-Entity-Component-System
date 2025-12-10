@@ -1,26 +1,26 @@
 #pragma once
 #include "decs/Core.h"
 #include "decs/Containers/TChunkedVector.h"
-#include "StableContainer.h"
+#include "StableComponentContainer.h"
 
 #include "decs/Component/Component.h"
 
 namespace decs
 {
-	class PackedContainerBase
+	class IPackedComponentContainer
 	{
 	public:
-		PackedContainerBase()
+		IPackedComponentContainer()
 		{
 
 		}
 
-		virtual ~PackedContainerBase()
+		virtual ~IPackedComponentContainer()
 		{
 
 		}
 
-		//inline virtual PackedContainerBase* Clone() const = 0;
+		//inline virtual IPackedComponentContainer* Clone() const = 0;
 
 		inline virtual void PopBack() = 0;
 
@@ -48,7 +48,7 @@ namespace decs
 	};
 
 	template<typename TComponent>
-	class StablePackedContainer final : public PackedContainerBase
+	class PackedStableComponentContainer final : public IPackedComponentContainer
 	{
 		static_assert(!is_const_v<TComponent> && "Component must not be const!");
 
@@ -58,12 +58,12 @@ namespace decs
 		std::vector<TComponent*> m_Data;
 
 	public:
-		StablePackedContainer()
+		PackedStableComponentContainer()
 		{
 
 		}
 
-		~StablePackedContainer()
+		~PackedStableComponentContainer()
 		{
 
 		}
@@ -73,9 +73,9 @@ namespace decs
 			return sizeof(TComponent);
 		}
 
-		/*virtual PackedContainerBase* Clone() const  override
+		/*virtual IPackedComponentContainer* Clone() const  override
 		{
-			return new StablePackedContainer<TComponent>();
+			return new PackedStableComponentContainer<TComponent>();
 		}*/
 
 		inline virtual void PopBack() override

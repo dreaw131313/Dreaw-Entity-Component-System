@@ -87,7 +87,7 @@ namespace decs
 		{
 		public:
 			const ComponentSerializerBase<SerializerData>* m_Serializer = nullptr;
-			PackedContainerBase* m_PackedContainer = nullptr;
+			IPackedComponentContainer* m_PackedContainer = nullptr;
 		};
 		struct TagSerializationData
 		{

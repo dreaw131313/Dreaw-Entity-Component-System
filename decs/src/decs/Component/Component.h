@@ -1,7 +1,7 @@
 #pragma once
 #include "decs/Core.h"
 
-#include "decs/ComponentContainers/ChunkAllocator.h"
+#include "decs/Component/ChunkAllocator.h"
 
 namespace decs
 {
@@ -81,9 +81,9 @@ namespace decs
 
 	class EntityData;
 	class Entity;
-	class StableContainerBase;
+	class IStableComponentContainer;
 	template<typename TComponentType>
-	class StableContainer;
+	class StableComponentContainer;
 
 	class EntityComponent : public ChunkAllocatorResource
 	{
@@ -93,11 +93,11 @@ namespace decs
 		template<typename>
 		friend class PackedContainer;
 		template<typename>
-		friend class StablePackedContainer;
+		friend class PackedStableComponentContainer;
 
-		friend class StableContainerBase;
+		friend class IStableComponentContainer;
 		template<typename TComponentType>
-		friend class StableContainer;
+		friend class StableComponentContainer;
 
 	public:
 		EntityComponent() = default;

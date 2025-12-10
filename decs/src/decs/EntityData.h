@@ -1,7 +1,7 @@
 #pragma once
 #include "Core.h"
 
-#include "ComponentContainers\StableContainer.h"
+#include "Component\StableComponentContainer.h"
 
 namespace decs
 {

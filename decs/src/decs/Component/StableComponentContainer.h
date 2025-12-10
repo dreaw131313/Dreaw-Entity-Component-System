@@ -8,10 +8,10 @@
 
 namespace decs
 {
-	class StableContainerBase
+	class IStableComponentContainer
 	{
 	public:
-		virtual ~StableContainerBase()
+		virtual ~IStableComponentContainer()
 		{
 
 		}
@@ -25,24 +25,24 @@ namespace decs
 	};
 
 	template<typename TComponentType>
-	class StableContainer : public StableContainerBase
+	class StableComponentContainer : public IStableComponentContainer
 	{
 	private:
-		NON_COPYABLE(StableContainer);
-		NON_MOVEABLE(StableContainer);
+		NON_COPYABLE(StableComponentContainer);
+		NON_MOVEABLE(StableComponentContainer);
 
 	public:
-		StableContainer()
+		StableComponentContainer()
 		{
 
 		}
 
-		StableContainer(uint32_t chunkCapacity):
+		StableComponentContainer(uint32_t chunkCapacity):
 			m_Allocator(chunkCapacity)
 		{
 		}
 
-		~StableContainer()
+		~StableComponentContainer()
 		{
 		}
 

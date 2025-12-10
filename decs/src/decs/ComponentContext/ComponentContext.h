@@ -3,8 +3,8 @@
 #include "decs/Observers/Observers.h"
 
 #include "decs/Component/Component.h"
-#include "decs/ComponentContainers/StableContainer.h"
-#include "decs/ComponentContainers/PackedContainer.h"
+#include "decs/Component/StableComponentContainer.h"
+#include "decs/Component/PackedComponentContainer.h"
 
 namespace decs
 {
@@ -46,13 +46,13 @@ namespace decs
 
 		virtual ComponentContextBase* Clone(int observerOrder, uint32_t stableComponentChunkSize) = 0;
 
-		virtual StableContainerBase* GetStableContainer() = 0;
+		virtual IStableComponentContainer* GetStableContainer() = 0;
 
 		/// <summary>
 		/// Life time of container must be managed manualy.
 		/// </summary>
 		/// <returns></returns>
-		virtual PackedContainerBase* CreatePackedContainer() const = 0;
+		virtual IPackedComponentContainer* CreatePackedContainer() const = 0;
 
 		virtual void ClearStableContainer() = 0;
 
@@ -145,14 +145,14 @@ namespace decs
 			}
 		}
 
-		StableContainerBase* GetStableContainer() override
+		IStableComponentContainer* GetStableContainer() override
 		{
 			return &m_StableContainer;
 		}
 
-		PackedContainerBase* CreatePackedContainer() const override
+		IPackedComponentContainer* CreatePackedContainer() const override
 		{
-			return new StablePackedContainer<TComponent>();
+			return new PackedStableComponentContainer<TComponent>();
 		}
 
 		virtual void ClearStableContainer() override
@@ -161,6 +161,6 @@ namespace decs
 		}
 	private:
 		ComponentObserversGroup<TComponent> m_Observers = {};
-		StableContainer<TComponent> m_StableContainer;
+		StableComponentContainer<TComponent> m_StableContainer;
 	};
 }

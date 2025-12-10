@@ -1,8 +1,8 @@
 #pragma once
-#include "decs\Core.h"
-#include "decs\ComponentContainers\PackedContainer.h"
-#include "decs\Archetypes\Archetype.h"
-#include "decs\Archetypes\ArchetypesMap.h"
+#include "decs/Core.h"
+#include "decs/Component/PackedComponentContainer.h"
+#include "decs/Archetypes/Archetype.h"
+#include "decs/Archetypes/ArchetypesMap.h"
 
 namespace decs
 {
@@ -16,10 +16,10 @@ namespace decs
 		inline static void InvokeEntityIteration(
 			Callable&& func,
 			uint64_t entityIndexInArchetype,
-			const std::tuple<StablePackedContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
+			const std::tuple<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
 		)
 		{
-			func(std::get<StablePackedContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
+			func(std::get<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
 		}
 
 		template<typename Callable, typename... ComponentTypes>
@@ -28,13 +28,13 @@ namespace decs
 			Entity& entityBuffer,
 			EntityData& entityData,
 			uint64_t entityIndexInArchetype,
-			const std::tuple<StablePackedContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
+			const std::tuple<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
 		)
 		{
 			entityBuffer.SetWithoutLifeTimeDataInvalidation_Internal(entityData);
 			func(
 				entityBuffer,
-				std::get<StablePackedContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
+				std::get<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
 			);
 		}
 	};
@@ -149,7 +149,7 @@ namespace decs
 	{
 	public:
 		template<typename TComponent>
-		using TPackedContainer = StablePackedContainer<drop_const_t<TComponent>>;
+		using TPackedContainer = PackedStableComponentContainer<drop_const_t<TComponent>>;
 		using ContainersTuple = std::tuple<TPackedContainer<drop_const_t<ComponentsTypes>>*...>;
 
 	public:
