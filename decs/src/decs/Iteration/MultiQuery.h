@@ -37,7 +37,6 @@ namespace decs
 		template<typename TComponent>
 		using PackedContainerType = PackedStableComponentContainer<TComponent>*;
 
-
 	public:
 		MultiQuery()
 		{
