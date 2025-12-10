@@ -10,10 +10,10 @@
 
 namespace decs
 {
-	class MultiQueryBase
+	class IMultiQuery
 	{
 	public:
-		virtual ~MultiQueryBase()
+		virtual ~IMultiQuery()
 		{
 
 		}
@@ -24,7 +24,7 @@ namespace decs
 	};
 
 	template<TComponentConcept... ComponentsTypes>
-	class MultiQuery : public MultiQueryBase
+	class MultiQuery : public IMultiQuery
 	{
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "MultiQuery must not use tags in as ComponentTypes!");
 
@@ -492,7 +492,7 @@ namespace decs
 
 					for (; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
 					{
-						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+						const ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
 						uint64_t ctxEntityCount = ctx.GetEntityCount();
 						if (ctxEntityCount == 0) continue;
 
@@ -510,16 +510,13 @@ namespace decs
 							leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
 						}
 
-						const auto& containersTuple = ctx.GetContainersTuple();
-						const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
-
-						for (uint64_t idx = startEntitiyIndex; idx < entitiesCount; idx++)
+						if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 						{
-							const auto& entityData = entitiesData[idx];
-							if (entityData.IsActive())
-							{
-								InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-							}
+							ctx.ForEachFromTo_WithEntity(func, entityBuffer, startEntitiyIndex, entitiesCount);
+						}
+						else
+						{
+							ctx.ForEachFromTo(func, startEntitiyIndex, entitiesCount);
 						}
 
 						if (leftEntitiesToIterate == 0)
@@ -571,7 +568,7 @@ namespace decs
 
 					for (; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
 					{
-						ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
+						const ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
 						uint64_t ctxEntityCount = ctx.GetEntityCount();
 						if (ctxEntityCount == 0) continue;
 
@@ -589,16 +586,13 @@ namespace decs
 							leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
 						}
 
-						const auto& containersTuple = ctx.GetContainersTuple();
-						const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
-
-						for (uint64_t idx = startEntitiyIndex; idx < entitiesCount; idx++)
+						if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 						{
-							const auto& entityData = entitiesData[idx];
-							if (entityData.m_EntityData != nullptr)
-							{
-								InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-							}
+							ctx.ForEachFromTo_IgnoreActiveState_WithEntity(func, entityBuffer, startEntitiyIndex, entitiesCount);
+						}
+						else
+						{
+							ctx.ForEachFromTo_IgnoreActiveState(func, startEntitiyIndex, entitiesCount);
 						}
 
 						if (leftEntitiesToIterate == 0)
@@ -631,13 +625,15 @@ namespace decs
 			uint64_t realDesiredBatchSize = std::llround(std::ceil((float)entitiesCount / (float)desiredBatchesCount));
 			uint64_t finalBatchSize;
 			if (realDesiredBatchSize < minBatchSize)
+			{
 				finalBatchSize = minBatchSize;
+			}
 			else
+			{
 				finalBatchSize = realDesiredBatchSize;
-
+			}
 
 			BatchIterator* iterator = nullptr;
-
 
 			uint64_t contextSize = m_ContainerContexts.size();
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)

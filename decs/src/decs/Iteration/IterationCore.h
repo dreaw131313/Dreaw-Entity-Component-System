@@ -430,12 +430,6 @@ namespace decs
 		template<typename Callable>
 		void ForEachFromTo(Callable&& func, uint64_t fromIdx, uint64_t toIdx) const
 		{
-			uint64_t ctxEntityCount = this->GetEntityCount();
-			if (ctxEntityCount == 0)
-			{
-				return;
-			}
-
 			const auto& containersTuple = this->GetContainersTuple();
 			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
 
@@ -472,12 +466,6 @@ namespace decs
 		template<typename Callable>
 		void ForEachFromTo_IgnoreActiveState(Callable&& func, uint64_t fromIdx, uint64_t toIdx) const
 		{
-			uint64_t ctxEntityCount = this->GetEntityCount();
-			if (ctxEntityCount == 0)
-			{
-				return;
-			}
-
 			const auto& containersTuple = this->GetContainersTuple();
 			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
 

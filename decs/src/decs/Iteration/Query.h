@@ -421,37 +421,28 @@ namespace decs
 					uint64_t ctxEntityCount = ctx.GetEntityCount();
 					if (ctxEntityCount == 0) continue;
 
-					uint64_t iterationIndex;
+					const uint64_t startEntityIdx = contextIndex == m_FirstArchetypeIndex ? m_FirstIterationIndex : 0;
 					uint64_t iterationsCount;
 
-					if (contextIndex == m_FirstArchetypeIndex)
-					{
-						iterationIndex = m_FirstIterationIndex;
-					}
-					else
-					{
-						iterationIndex = 0;
-					}
-
-					uint64_t leftEntitiesInContext = ctxEntityCount - iterationIndex;
+					uint64_t leftEntitiesInContext = ctxEntityCount - startEntityIdx;
 					if (leftEntitiesToIterate <= leftEntitiesInContext)
 					{
-						iterationsCount = iterationIndex + leftEntitiesToIterate;
+						iterationsCount = startEntityIdx + leftEntitiesToIterate;
 						leftEntitiesToIterate = 0;
 					}
 					else
 					{
-						iterationsCount = iterationIndex + leftEntitiesInContext;
+						iterationsCount = startEntityIdx + leftEntitiesInContext;
 						leftEntitiesToIterate -= leftEntitiesInContext;
 					}
 
 					if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 					{
-						ctx.ForEachFromTo_WithEntity(func, entityBuffer, iterationIndex, iterationsCount);
+						ctx.ForEachFromTo_WithEntity(func, entityBuffer, startEntityIdx, iterationsCount);
 					}
 					else
 					{
-						ctx.ForEachFromTo(func, iterationIndex, iterationsCount);
+						ctx.ForEachFromTo(func, startEntityIdx, iterationsCount);
 					}
 
 					if (leftEntitiesToIterate == 0)
@@ -495,37 +486,28 @@ namespace decs
 					const auto& containersTuple = ctx.GetContainersTuple();
 					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
 
-					uint64_t iterationIndex;
+					const uint64_t startEntityIdx = contextIndex == m_FirstArchetypeIndex ? m_FirstIterationIndex : 0;
 					uint64_t iterationsCount;
 
-					if (contextIndex == m_FirstArchetypeIndex)
-					{
-						iterationIndex = m_FirstIterationIndex;
-					}
-					else
-					{
-						iterationIndex = 0;
-					}
-
-					uint64_t leftEntitiesInContext = ctxEntityCount - iterationIndex;
+					uint64_t leftEntitiesInContext = ctxEntityCount - startEntityIdx;
 					if (leftEntitiesToIterate <= leftEntitiesInContext)
 					{
-						iterationsCount = iterationIndex + leftEntitiesToIterate;
+						iterationsCount = startEntityIdx + leftEntitiesToIterate;
 						leftEntitiesToIterate = 0;
 					}
 					else
 					{
-						iterationsCount = iterationIndex + leftEntitiesInContext;
+						iterationsCount = startEntityIdx + leftEntitiesInContext;
 						leftEntitiesToIterate -= leftEntitiesInContext;
 					}
 
 					if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 					{
-						ctx.ForEachFromTo_IgnoreActiveState_WithEntity(func, entityBuffer, iterationIndex, iterationsCount);
+						ctx.ForEachFromTo_IgnoreActiveState_WithEntity(func, entityBuffer, startEntityIdx, iterationsCount);
 					}
 					else
 					{
-						ctx.ForEachFromTo_IgnoreActiveState(func, iterationIndex, iterationsCount);
+						ctx.ForEachFromTo_IgnoreActiveState(func, startEntityIdx, iterationsCount);
 					}
 
 					if (leftEntitiesToIterate == 0)
