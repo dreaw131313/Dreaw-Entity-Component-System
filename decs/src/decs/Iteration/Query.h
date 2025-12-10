@@ -421,9 +421,6 @@ namespace decs
 					uint64_t ctxEntityCount = ctx.GetEntityCount();
 					if (ctxEntityCount == 0) continue;
 
-					const auto& containersTuple = ctx.GetContainersTuple();
-					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
-
 					uint64_t iterationIndex;
 					uint64_t iterationsCount;
 
@@ -448,14 +445,13 @@ namespace decs
 						leftEntitiesToIterate -= leftEntitiesInContext;
 					}
 
-					uint64_t idx = iterationIndex;
-					for (; idx < iterationsCount; idx++)
+					if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 					{
-						const auto& entityData = entitiesData[idx];
-						if (entityData.IsActive())
-						{
-							InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-						}
+						ctx.ForEachFromTo_WithEntity(func, entityBuffer, iterationIndex, iterationsCount);
+					}
+					else
+					{
+						ctx.ForEachFromTo(func, iterationIndex, iterationsCount);
 					}
 
 					if (leftEntitiesToIterate == 0)
@@ -523,17 +519,13 @@ namespace decs
 						leftEntitiesToIterate -= leftEntitiesInContext;
 					}
 
-					uint64_t idx = iterationIndex;
-					for (; idx < iterationsCount; idx++)
+					if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 					{
-						const auto& entityData = entitiesData[idx];
-						// Add safety check since the entity can sometimes be null, meaning the record is invalid.
-						// When iterating with entity state checks, an explicit validity check is unnecessary—
-						// if the entity data is nullptr, the archetype's "is active" flag will already be false.
-						if (entityData.m_EntityData != nullptr)
-						{
-							InvokeEntityIteration(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-						}
+						ctx.ForEachFromTo_WithEntity(func, entityBuffer, iterationIndex, iterationsCount);
+					}
+					else
+					{
+						ctx.ForEachFromTo(func, iterationIndex, iterationsCount);
 					}
 
 					if (leftEntitiesToIterate == 0)
