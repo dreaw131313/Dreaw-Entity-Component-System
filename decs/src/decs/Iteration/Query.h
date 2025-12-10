@@ -521,11 +521,11 @@ namespace decs
 
 					if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 					{
-						ctx.ForEachFromTo_WithEntity(func, entityBuffer, iterationIndex, iterationsCount);
+						ctx.ForEachFromTo_IgnoreActiveState_WithEntity(func, entityBuffer, iterationIndex, iterationsCount);
 					}
 					else
 					{
-						ctx.ForEachFromTo(func, iterationIndex, iterationsCount);
+						ctx.ForEachFromTo_IgnoreActiveState(func, iterationIndex, iterationsCount);
 					}
 
 					if (leftEntitiesToIterate == 0)

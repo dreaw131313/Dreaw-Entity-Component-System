@@ -466,6 +466,49 @@ namespace decs
 		}
 
 	#pragma endregion
+
+	#pragma region FOREACH FROM TO
+
+		template<typename Callable>
+		void ForEachFromTo_IgnoreActiveState(Callable&& func, uint64_t fromIdx, uint64_t toIdx) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+
+			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
+			{
+				const auto& entityData = entitiesData[idx];
+				if (entityData.IsValid())
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
+				}
+			}
+		}
+
+		template<typename Callable>
+		void ForEachFromTo_IgnoreActiveState_WithEntity(Callable&& func, Entity& entityBuffer, uint64_t fromIdx, uint64_t toIdx) const
+		{
+			const auto& containersTuple = this->GetContainersTuple();
+			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+
+			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
+			{
+				const auto& entityData = entitiesData[idx];
+				if (entityData.IsValid())
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+				}
+			}
+		}
+
+	#pragma endregion
+
 	private:
 		const Archetype* m_Archetype = nullptr;
 		ContainersTuple m_ContainersTuple{};
