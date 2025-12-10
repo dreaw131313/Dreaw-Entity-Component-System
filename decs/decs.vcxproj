@@ -111,8 +111,8 @@
     <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h" />
     <ClInclude Include="src\decs\Component\PackedComponentContainer.h" />
     <ClInclude Include="src\decs\Component\StableComponentContainer.h" />
-    <ClInclude Include="src\decs\ComponentContext\ComponentContext.h" />
-    <ClInclude Include="src\decs\ComponentContext\ComponentContextsManager.h" />
+    <ClInclude Include="src\decs\Component\ComponentContext.h" />
+    <ClInclude Include="src\decs\Component\ComponentContextsManager.h" />
     <ClInclude Include="src\decs\EntityManager.h" />
     <ClInclude Include="src\decs\Archetypes\Archetype.h" />
     <ClInclude Include="src\decs\Container.h" />

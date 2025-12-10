@@ -3,16 +3,15 @@
 #include "Type.h"
 
 #include "Archetypes/ArchetypesMap.h"
-#include "EntityManager.h"
-#include "ComponentContext/ComponentContextsManager.h"
+#include "Component/ComponentContextsManager.h"
+#include "Component/PackedComponentContainer.h"
+#include "Component/StableComponentContainer.h"
+#include "Component/Component.h"
 
 #include "Observers/Observers.h"
 
-#include "Component/Component.h"
 
-#include "decs/Component/PackedComponentContainer.h"
-#include "decs/Component/StableComponentContainer.h"
-
+#include "EntityManager.h"
 #include "trait.h"
 
 namespace decs

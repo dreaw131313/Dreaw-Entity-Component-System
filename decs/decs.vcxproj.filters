@@ -54,10 +54,10 @@
     <ClInclude Include="src\decs\Component\StableComponentContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\ComponentContext\ComponentContext.h">
+    <ClInclude Include="src\decs\Component\ComponentContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\ComponentContext\ComponentContextsManager.h">
+    <ClInclude Include="src\decs\Component\ComponentContextsManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Observers\Observers.h">
