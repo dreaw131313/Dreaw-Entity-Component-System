@@ -160,7 +160,7 @@ namespace decs
 			if (IsValid())
 			{
 				GetContainer_Internal()->DestroyEntityInternal(*this, true);
-				Invalidate();
+				Invalidate_WithoutLifeTimeData();
 				return true;
 			}
 			return false;
@@ -328,7 +328,7 @@ namespace decs
 			if (IsValid())
 			{
 				GetContainer_Internal()->DestroyEntityInternal(*this, false);
-				Invalidate();
+				Invalidate_WithoutLifeTimeData();
 				return true;
 			}
 			return false;
@@ -445,8 +445,8 @@ namespace decs
 	#pragma endregion
 
 	private:
+		TRefCounterHandle<EnityLifeTimeData> m_LifeTimeData{};
 		mutable EntityData* m_EntityData = nullptr;
-		mutable TRefCounterHandle<EnityLifeTimeData> m_LifeTimeData{};
 		mutable EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
 
 	private:
@@ -457,10 +457,9 @@ namespace decs
 			m_LifeTimeData = m_EntityData->m_Container->m_EntitiesLifeTimeData;
 		}
 
-		inline void Invalidate() const
+		inline void Invalidate_WithoutLifeTimeData() const
 		{
 			m_EntityData = nullptr;
-			m_LifeTimeData.Reset();
 			m_Version = std::numeric_limits<EntityVersion>::max();
 		}
 
@@ -633,12 +632,6 @@ namespace decs
 		inline void Set(EntityData& data)
 		{
 			m_Entity.Set_Internal(data);
-		}
-
-
-		inline void Invalidate() const
-		{
-			m_Entity.Invalidate();
 		}
 
 	};
