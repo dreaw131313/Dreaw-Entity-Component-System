@@ -140,13 +140,11 @@ int main()
 		prefab.AddComponent<Position>(10.f, 10.f);
 		auto position = prefab.GetComponent<const Position>();
 
-		auto rendererRemoveCond = [](const Renderer& renderer)
+		//prefab.RemoveComponent<Renderer>();
+		prefab.RemoveComponent_If<Renderer>([](const Renderer& renderer)
 		{
 			return true;
-		};
-
-		//prefab.RemoveComponent<Renderer>();
-		prefab.RemoveComponent_If<Renderer>(rendererRemoveCond);
+		});
 		prefab.RemoveTag<IntTag>();
 
 		auto comp = prefab.GetComponent<TestComponent>();
@@ -164,29 +162,29 @@ int main()
 		};
 
 
-		/*{
+		{
 			using QueryType = decs::Query< const TestComponent>;
 			QueryType query(&container);
 
-			PrintLine("1");
+			PrintLine("ForEach");
 			query.ForEach(testFunc);
-			PrintLine("2");
+			PrintLine("ForEach With Entity");
 			query.ForEach(testFuncWithEntity);
-			PrintLine("3");
+			PrintLine("ForEach Safe");
 			query.ForEach_Safe(testFunc);
-			PrintLine("4");
+			PrintLine("ForEach With Entity Safe");
 			query.ForEach_Safe(testFuncWithEntity);
-			PrintLine("5");
+			PrintLine("ForEachBackward");
 			query.ForEachBackward(testFunc);
-			PrintLine("6");
+			PrintLine("ForEachBackward With Entity");
 			query.ForEachBackward(testFuncWithEntity);
-			PrintLine("7");
+			PrintLine("ForEachBackward Safe");
 			query.ForEachBackward_Safe(testFunc);
-			PrintLine("8");
+			PrintLine("ForEachBackward With Entity Safe");
 			query.ForEachBackward_Safe(testFuncWithEntity);
-			PrintLine("9");
+			PrintLine("ForEach_IngoreEntityActiveState");
 			query.ForEach_IngoreEntityActiveState(testFunc);
-			PrintLine("10");
+			PrintLine("ForEach_IngoreEntityActiveState With Entity");
 			query.ForEach_IngoreEntityActiveState(testFuncWithEntity);
 
 			uint64_t queryEntityCount = query.GetEntityCount();
@@ -194,6 +192,7 @@ int main()
 			std::vector<QueryType::BatchIterator> iterators{};
 			query.CreateBatchIterators(iterators, 10, 3);
 
+			/*
 			PrintLine();
 			for (auto& it : iterators)
 			{
@@ -204,7 +203,8 @@ int main()
 			{
 				it.ForEach_IngoreEntityActiveState(testFunc);
 			}
-		}*/
+			*/
+		}
 
 		{
 			using QueryType = decs::MultiQuery<const TestComponent>;
