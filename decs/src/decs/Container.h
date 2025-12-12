@@ -102,12 +102,12 @@ namespace decs
 		std::vector<EntityData*> m_EmptyEntities = {};
 		EntityManager m_EntityManager{};
 
-		TRefCounterHandle<EnityLifeTimeData> m_EntitiesLifeTimeData{};
+		TRefCounterHandle<EnityLifeTimeData> m_LifeTimeData{};
 
 	public:
 		[[nodiscard]] const TRefCounterHandle<EnityLifeTimeData>& GetLifeTimeData() const
 		{
-			return m_EntitiesLifeTimeData;
+			return m_LifeTimeData;
 		}
 
 		[[nodiscard]] Entity CreateEntity(bool bIsActive = true);

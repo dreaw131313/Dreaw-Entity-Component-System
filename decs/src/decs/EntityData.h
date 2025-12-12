@@ -30,7 +30,7 @@ namespace decs
 
 		~EnityLifeTimeData() = default;
 
-		inline bool IsAlive()const
+		inline bool IsAlive() const noexcept
 		{
 			return m_bIsContainerAlive.load();
 		}

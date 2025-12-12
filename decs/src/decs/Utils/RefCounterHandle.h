@@ -38,23 +38,6 @@ namespace decs
 
 	private:
 		std::atomic<uint64_t> m_RefCounter{ 0 };
-
-	private:
-		void IncrementRefCount()
-		{
-			m_RefCounter.fetch_add(1ull, std::memory_order_relaxed);
-		}
-
-		bool DecrementRefCount()
-		{
-			if (m_RefCounter.fetch_sub(1ull, std::memory_order_acq_rel) == 1)
-			{
-				delete this;
-				return true;
-			}
-
-			return false;
-		}
 	};
 
 	template<typename TObject>
@@ -154,18 +137,18 @@ namespace decs
 			RefCountedObject* refCountedObject = m_Object;
 			if (refCountedObject != nullptr)
 			{
-				refCountedObject->IncrementRefCount();
+				refCountedObject->m_RefCounter.fetch_add(1ull, std::memory_order_relaxed);
 			}
 		}
 
 		void DecrementRefCount()
 		{
 			RefCountedObject* refCountedObject = m_Object;
-			if (refCountedObject != nullptr)
+			if (refCountedObject != nullptr && refCountedObject->m_RefCounter.fetch_sub(1ull, std::memory_order_acq_rel) == 1)
 			{
-				refCountedObject->DecrementRefCount();
+				delete m_Object;
+				m_Object = nullptr;
 			}
-			m_Object = nullptr;
 		}
 
 		void OnMove(TRefCounterHandle&& other)
@@ -181,5 +164,6 @@ namespace decs
 			m_Object = other.m_Object;
 			IncrementRefCount();
 		}
+
 	};
 }

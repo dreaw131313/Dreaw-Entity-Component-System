@@ -34,7 +34,7 @@ namespace decs
 
 		Entity(EntityData& entityData):
 			m_EntityData(&entityData),
-			m_LifeTimeData(entityData.m_Container->m_EntitiesLifeTimeData),
+			m_LifeTimeData(entityData.m_Container->m_LifeTimeData),
 			m_Version(entityData.GetVersion())
 		{
 
@@ -454,7 +454,7 @@ namespace decs
 		{
 			m_EntityData = &data;
 			m_Version = m_EntityData->GetVersion();
-			m_LifeTimeData = m_EntityData->m_Container->m_EntitiesLifeTimeData;
+			m_LifeTimeData = m_EntityData->m_Container->m_LifeTimeData;
 		}
 
 		inline void Invalidate_WithoutLifeTimeData() const

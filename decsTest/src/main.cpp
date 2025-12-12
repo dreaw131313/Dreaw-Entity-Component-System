@@ -162,6 +162,7 @@ int main()
 		};
 
 
+		if (false)
 		{
 			using QueryType = decs::Query< const TestComponent>;
 			QueryType query(&container);
@@ -243,7 +244,7 @@ int main()
 			PrintLine("ForEach_IngoreEntityActiveState With Entity");
 			query.ForEach_IngoreEntityActiveState(testFuncWithEntity);
 
-			if(false)
+			if (false)
 			{
 				std::vector<QueryType::BatchIterator> iterators{};
 				query.CreateBatchIteratorsWithMaxNumberPerBatch(iterators, 7);

@@ -102,7 +102,7 @@ namespace decs
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
 				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
-				if (!containerContext.m_bIsEnabled)
+				if (!containerContext.IsValidAndEnabled())
 				{
 					continue; // Skip if container context is disabled
 				}
@@ -143,7 +143,7 @@ namespace decs
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
 				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
-				if (!containerContext.m_bIsEnabled)
+				if (!containerContext.IsValidAndEnabled())
 				{
 					continue; // Skip if container context is disabled
 				}
@@ -188,7 +188,7 @@ namespace decs
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
 				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
-				if (!containerContext.m_bIsEnabled)
+				if (!containerContext.IsValidAndEnabled())
 				{
 					continue; // Skip if container context is disabled
 				}
@@ -229,7 +229,7 @@ namespace decs
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
 				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
-				if (!containerContext.m_bIsEnabled)
+				if (!containerContext.IsValidAndEnabled())
 				{
 					continue; // Skip if container context is disabled
 				}
@@ -268,7 +268,7 @@ namespace decs
 			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
 			{
 				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
-				if (!containerContext.m_bIsEnabled)
+				if (!containerContext.IsValidAndEnabled())
 				{
 					continue; // Skip if container context is disabled
 				}

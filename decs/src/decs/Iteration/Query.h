@@ -53,12 +53,12 @@ namespace decs
 
 		[[nodiscard]] inline Container* GetContainer() const
 		{
-			return m_ContainerContext.m_Container;
+			return m_ContainerContext.GetContainer();
 		}
 
 		[[nodiscard]] inline bool IsValid()const
 		{
-			return GetContainer() != nullptr;
+			return m_ContainerContext.IsValid();
 		}
 
 		[[nodiscard]] inline uint64_t GetEntityCount()
@@ -379,11 +379,10 @@ namespace decs
 
 			BatchIterator(
 				QueryType* query,
-				const uint64_t& firstArchetypeIndex,
-				const uint64_t& firstIterationIndex,
-				const uint64_t& entitiesCount
+				uint64_t firstArchetypeIndex,
+				uint64_t firstIterationIndex,
+				uint64_t entitiesCount
 			):
-				m_IsValid(true),
 				m_Query(query),
 				m_FirstArchetypeIndex(firstArchetypeIndex),
 				m_FirstIterationIndex(firstIterationIndex),
@@ -393,13 +392,19 @@ namespace decs
 
 			~BatchIterator() {}
 
-			inline bool IsValid() { return m_IsValid; }
+			inline bool IsValid()const noexcept
+			{
+				return m_Query != nullptr && m_Query->IsValid();
+			}
 
 			template<typename Callable>
 				requires query_callable<Callable, ComponentsTypes...>
 			inline void ForEach(Callable&& func) const
 			{
-				if (!m_IsValid) return;
+				if (!IsValid())
+				{
+					return;
+				}
 
 				Container* container = m_Query->GetContainer();
 				auto& archetypeContexts = m_Query->m_ContainerContext.GetArchetypeContexts();
@@ -461,7 +466,10 @@ namespace decs
 				requires query_callable<Callable, ComponentsTypes...>
 			inline void ForEach_IngoreEntityActiveState(Callable&& func) const
 			{
-				if (!m_IsValid) return;
+				if (!IsValid())
+				{
+					return;
+				}
 
 				Container* container = m_Query->GetContainer();
 				auto& archetypeContexts = m_Query->m_ContainerContext.GetArchetypeContexts();
@@ -519,8 +527,6 @@ namespace decs
 
 		private:
 			QueryType* m_Query = nullptr;
-			bool m_IsValid = false;
-
 			uint64_t m_FirstArchetypeIndex = 0;
 			uint64_t m_FirstIterationIndex = 0;
 			uint64_t m_EntitiesCount = 0;

@@ -58,7 +58,7 @@ namespace decs
 
 	void Container::MarkEntitiesDead()
 	{
-		m_EntitiesLifeTimeData->m_bIsContainerAlive = false;
+		m_LifeTimeData->m_bIsContainerAlive = false;
 	}
 
 	void Container::ReturnOwnedEntitiesToEntityManager_Internal()
@@ -96,13 +96,13 @@ namespace decs
 
 	void Container::InitializeLifeTimeData()
 	{
-		m_EntitiesLifeTimeData = TRefCounterHandle<EnityLifeTimeData>::Make();
+		m_LifeTimeData = TRefCounterHandle<EnityLifeTimeData>::Make();
 	}
 
 	void Container::DestroyLifeTimeData()
 	{
-		m_EntitiesLifeTimeData->m_bIsContainerAlive = false;
-		m_EntitiesLifeTimeData.Reset();
+		m_LifeTimeData->m_bIsContainerAlive = false;
+		m_LifeTimeData.Reset();
 	}
 
 	bool Container::DestroyEntityInternal(const Entity& entity, bool bInvokeObservers)
