@@ -3,6 +3,7 @@
 #include "Container.h"
 #include "Type.h"
 #include "Archetypes/Archetype.h"
+#include "Hash.h"
 
 namespace decs
 {
@@ -645,7 +646,7 @@ struct std::hash<decs::Entity>
 		uint64_t entityDataHash = std::hash<decs::EntityData*>{}(entity.m_EntityData);
 		uint64_t entityVersionHash = std::hash<decs::EntityVersion>{}(entity.GetVersion());
 
-		return entityDataHash ^ (entityVersionHash + 0x9e3779b9 + (entityDataHash << 6) + (entityDataHash >> 2));
+		return decs::hash::Combine(entityDataHash, entityVersionHash);
 	}
 };
 

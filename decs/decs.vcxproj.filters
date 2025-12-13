@@ -96,6 +96,9 @@
     <ClInclude Include="src\decs\Memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\decs\Hash.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\decs\Container.cpp">

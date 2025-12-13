@@ -153,7 +153,8 @@ int main()
 		decs::Container container = { containerConfig };
 		observerManager.FillContainerObservers(container);
 
-		container.Spawn(prefab, 10, true);
+		container.Spawn(prefab, true);
+		container.Spawn(prefab, 9, true);
 
 		uint32_t counter = 0;
 		auto testFunc = [&](const TestComponent& test)

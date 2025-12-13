@@ -318,6 +318,7 @@ namespace decs
 
 		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount{};
 		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
+		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
 
 		// UTILITY
 	private:
@@ -362,14 +363,7 @@ namespace decs
 			return it->second;
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="archetypeToMatch"></param>
-		/// <returns>Archetype and bool that indicates if archetypes is finded with edges.</returns>
 		Archetype* FindMatchingArchetype(const Archetype& toArchetype);
-
-		Archetype* FindMatchingArchetype_2(const Archetype& toArchetype);
 
 		Archetype* GetOrCreateMatchedArchetype(
 			Archetype& fromArchetype,

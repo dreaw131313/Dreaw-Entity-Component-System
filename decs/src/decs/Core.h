@@ -62,6 +62,8 @@ namespace decs
 		inline constexpr uint64_t MinComponentsInArchetypeToPerformMapLookup = 20;
 		inline constexpr EntityVersion MaxVersion = std::numeric_limits<uint32_t>::max();
 	}
+
+
 }
 
 

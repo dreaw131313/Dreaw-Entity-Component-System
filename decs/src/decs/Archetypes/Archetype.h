@@ -5,8 +5,8 @@
 #include "decs/Component/PackedComponentContainer.h"
 #include "decs/Component/StableComponentContainer.h"
 #include "decs/EntityData.h"
-
 #include "decs/trait.h"
+#include "decs/Hash.h"
 
 namespace decs
 {
@@ -407,4 +407,64 @@ namespace decs
 	#pragma endregion
 
 	};
+
+	struct ArchetypeHasher final
+	{
+	public:
+		ArchetypeHasher() = default;
+
+		ArchetypeHasher(const Archetype* archetype):
+			m_ArchetypeConst(archetype)
+		{
+
+		}
+
+		bool operator==(const ArchetypeHasher& rhs)const
+		{
+			if (m_ArchetypeConst == rhs.m_ArchetypeConst)
+			{
+				return true;
+			}
+			if (m_ArchetypeConst == nullptr || rhs.m_ArchetypeConst == nullptr)
+			{
+				return false;
+			}
+
+			return m_ArchetypeConst->HasSameTypesAs(*rhs.m_ArchetypeConst);
+		}
+
+		inline const Archetype* GetConstArchetype() const
+		{
+			return m_ArchetypeConst;
+		}
+
+		std::size_t CalculateHash() const noexcept
+		{
+			if (m_ArchetypeConst == nullptr || m_ArchetypeConst->GetComponentAndTagCount() == 0)
+			{
+				return 0;
+			}
+
+			std::size_t finalHash = std::hash<TypeID>{}(m_ArchetypeConst->GetTypeID(0));
+			const uint32_t typeCount = m_ArchetypeConst->GetComponentAndTagCount();
+			for (uint32_t typeIdx = 1; typeIdx < typeCount; typeIdx++)
+			{
+				finalHash = hash::Combine(finalHash, std::hash<TypeID>{}(m_ArchetypeConst->GetTypeID(typeIdx)));
+			}
+
+			return finalHash;
+		}
+
+	private:
+		const Archetype* m_ArchetypeConst = nullptr;
+	};
 }
+
+template<>
+struct std::hash<decs::ArchetypeHasher>
+{
+	std::size_t operator()(const decs::ArchetypeHasher& archHasher)const
+	{
+		return archHasher.CalculateHash();
+	}
+};

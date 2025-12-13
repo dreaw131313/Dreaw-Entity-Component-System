@@ -199,6 +199,8 @@ namespace decs
 		m_ArchetypesGroupedByComponentsCount[archetype.GetComponentAndTagCount() - 1].push_back(&archetype);
 
 		AddArchetypeToGroups(&archetype);
+
+		m_HashedArchetypes[ArchetypeHasher(&archetype)] = &archetype;
 	}
 
 	Archetype* ArchetypesMap::FindMatchingArchetype(const Archetype& toArchetype)
@@ -209,116 +211,11 @@ namespace decs
 			return nullptr;
 		}
 
-		Archetype* finalArchetype = GetSingleComponentArchetype(toArchetype.GetTypeID(0));
-		uint64_t typeIndex = 1;
-
-		bool findedWithEdges = true;
-		if (finalArchetype != nullptr)
+		ArchetypeHasher hasherToMatch(&toArchetype);
+		auto hashedArchetypeIt = m_HashedArchetypes.find(hasherToMatch);
+		if (hashedArchetypeIt!= m_HashedArchetypes.end())
 		{
-			while (typeIndex < typesCount)
-			{
-				auto edge = finalArchetype->GetEdge(toArchetype.GetTypeID(typeIndex));
-
-				if (edge.IsValid() && edge.m_EdgeType == EComponentEdgeType::Add)
-				{
-					finalArchetype = edge.m_Archetype;
-					typeIndex += 1;
-				}
-				else
-				{
-					finalArchetype = nullptr;
-					findedWithEdges = false;
-					break;
-				}
-			}
-		}
-
-		if (finalArchetype == nullptr)
-		{
-			auto it = m_ArchetypesGroupedByOneType.find(toArchetype.GetTypeID(0));
-			if (it != m_ArchetypesGroupedByOneType.end())
-			{
-				ArchetypesGroupByOneType* group = it->second;
-
-				if (group->MaxComponentsCount() >= typesCount)
-				{
-					auto archetypesPtr = group->GetArchetypesWithTypeCount(typesCount);
-					if (archetypesPtr != nullptr)
-					{
-						auto& archetypes = *archetypesPtr;
-						uint64_t archetypesSize = archetypes.size();
-						auto& matchedArchData = toArchetype.m_TypeData;
-						for (uint64_t archIdx = 0; archIdx < archetypesSize; archIdx++)
-						{
-							finalArchetype = archetypes[archIdx];
-							auto& typeData = finalArchetype->m_TypeData;
-
-							for (uint64_t typeIdx = 0; typeIdx < typesCount; typeIdx++)
-							{
-								if (typeData[typeIdx].m_TypeID != matchedArchData[typeIdx].m_TypeID)
-								{
-									finalArchetype = nullptr;
-									break;
-								}
-							}
-
-							if (finalArchetype != nullptr)
-							{
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			int i = 0;
-		}
-
-		return finalArchetype;
-	}
-
-	Archetype* ArchetypesMap::FindMatchingArchetype_2(const Archetype& toArchetype)
-	{
-		const uint64_t typesCount = toArchetype.GetComponentAndTagCount();
-		if (typesCount == 0)
-		{
-			return nullptr;
-		}
-
-		const ArchetypeGroup* bestArchetypesGroup = nullptr;
-		uint32_t bestArchetypeCount = std::numeric_limits<uint32_t>::max();
-		for (uint32_t typeIdx = 0; typeIdx < typesCount; typeIdx++)
-		{
-			ArchetypesGroupByOneType* archetypeGroupByOneType = GetArchetypesGroupWithoutCreating(toArchetype.GetTypeID(typeIdx));
-			if (archetypeGroupByOneType == nullptr)
-			{
-				return nullptr;
-			}
-
-			const ArchetypeGroup* currentArchetypeGroup = archetypeGroupByOneType->GetGroupWithTypeCount(typesCount);
-			if (currentArchetypeGroup == nullptr)
-			{
-				return nullptr;
-			}
-
-			uint32_t currentGroupArchetypeCount = currentArchetypeGroup->GetArchetypeCount();
-			if (currentGroupArchetypeCount < bestArchetypeCount)
-			{
-				bestArchetypeCount = currentGroupArchetypeCount;
-				bestArchetypesGroup = currentArchetypeGroup;
-			}
-		}
-
-		DECS_ASSERT(bestArchetypesGroup != nullptr, "This should never happend cause we if one of type group do not exist we return earlier in loop!");
-
-		for (Archetype* archetype : bestArchetypesGroup->Archetypes)
-		{
-			if (archetype->HasSameTypesAs(toArchetype))
-			{
-				return archetype;
-			}
+			return hashedArchetypeIt->second;
 		}
 
 		return nullptr;
@@ -329,7 +226,7 @@ namespace decs
 		ComponentContextsManager* componentContextsManager
 	)
 	{
-		Archetype* archetype = FindMatchingArchetype_2(fromArchetype);
+		Archetype* archetype = FindMatchingArchetype(fromArchetype);
 
 		if (archetype == nullptr)
 		{
