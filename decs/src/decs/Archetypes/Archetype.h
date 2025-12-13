@@ -8,6 +8,8 @@
 #include "decs/trait.h"
 #include "decs/Hash.h"
 
+#include <optional>
+
 namespace decs
 {
 	class Entity;
@@ -272,6 +274,20 @@ namespace decs
 
 		bool HasSameTypesAs(const Archetype& archetype)  const;
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="neighbour">Archetype with smaller number of componetnts than this archetype</param>
+		/// <returns></returns>
+		std::optional<TypeID> IsRemoveComponentNeighbour(const Archetype& neighbour) const;
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="neighbour"></param>
+		/// <returns>Archetype with larger number of componetns than this archetype</returns>
+		std::optional<TypeID> IsAddComponentNeighbour(const Archetype& neighbour) const;
+
 	private:
 		template<typename TComponentType>
 		PackedStableComponentContainer<TComponentType>* GetTypePackedContainer() const
@@ -340,26 +356,7 @@ namespace decs
 
 	#pragma region EDGES
 	private:
-		template<TComponentConcept TComponent>
-		void AddEdge(Archetype* archetype, EComponentEdgeType edgeType)
-		{
-			auto& edge = m_Edges[Type<TComponent>::ID()];
-			if (!edge.IsValid())
-			{
-				edge.m_Archetype = archetype;
-				edge.m_EdgeType = edgeType;
-			}
-		}
-
-		void AddEdge(TypeID componentTypeID, Archetype* archetype, EComponentEdgeType edgeType)
-		{
-			auto& edge = m_Edges[componentTypeID];
-			if (!edge.IsValid())
-			{
-				edge.m_Archetype = archetype;
-				edge.m_EdgeType = edgeType;
-			}
-		}
+		void AddEdge(TypeID componentTypeID, Archetype* archetype, EComponentEdgeType edgeType);
 
 		template<TComponentConcept TComponent>
 		ArchetypeEdge GetEdge() const

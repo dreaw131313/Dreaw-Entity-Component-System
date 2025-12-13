@@ -56,6 +56,7 @@ namespace decs
 	using EntityID = uint32_t;
 	using EntityVersion = uint32_t;
 	using TypeID = uint64_t;
+	inline constexpr TypeID InvalidTypeID = std::numeric_limits<TypeID>::min();
 
 	namespace Limits
 	{

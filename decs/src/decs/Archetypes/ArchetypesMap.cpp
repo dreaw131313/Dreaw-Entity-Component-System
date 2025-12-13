@@ -91,99 +91,39 @@ namespace decs
 		});
 	}
 
-	void ArchetypesMap::MakeArchetypeEdges(Archetype& archetype)
+	void ArchetypesMap::MakeArchetypeEdges_2(Archetype& archetype)
 	{
 		// edges with archetypes with less components:
+		const uint64_t componentCountsMinusOne = archetype.GetComponentAndTagCount() - 1;
+		if (componentCountsMinusOne > 0)
 		{
-			const uint64_t componentCountsMinusOne = archetype.GetComponentAndTagCount() - 1;
+			const uint64_t archetypeListIndex = componentCountsMinusOne - 1;
+			auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
 
-			if (componentCountsMinusOne > 0)
+			for (Archetype* neighbour : archetypesListToCreateEdges)
 			{
-				const uint64_t archetypeListIndex = componentCountsMinusOne - 1;
-				auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
-
-				uint64_t archCount = archetypesListToCreateEdges.size();
-				for (uint64_t archIdx = 0; archIdx < archCount; archIdx++)
+				if (auto edgeTypeID = archetype.IsRemoveComponentNeighbour(*neighbour))
 				{
-					auto& testArchetype = *archetypesListToCreateEdges[archIdx];
-
-					uint64_t incorrectTests = 0;
-					TypeID notFindedType;
-					bool isArchetypeValid = true;
-
-					for (uint64_t typeIdx = 0; typeIdx < archetype.GetComponentAndTagCount(); typeIdx++)
-					{
-						TypeID typeID = archetype.GetTypeID(typeIdx);
-
-						auto it = testArchetype.m_TypeIDsIndexes.find(typeID);
-
-						if (it == testArchetype.m_TypeIDsIndexes.end())
-						{
-							incorrectTests += 1;
-							if (incorrectTests > 1)
-							{
-								isArchetypeValid = false;
-								break;
-							}
-							else
-							{
-								notFindedType = typeID;
-							}
-						}
-					}
-
-					if (isArchetypeValid)
-					{
-						testArchetype.AddEdge(notFindedType, &archetype, EComponentEdgeType::Add);
-						archetype.AddEdge(notFindedType, &testArchetype, EComponentEdgeType::Remove);
-					}
+					neighbour->AddEdge(edgeTypeID.value(), &archetype, EComponentEdgeType::Add);
+					archetype.AddEdge(edgeTypeID.value(), neighbour, EComponentEdgeType::Remove);
 				}
 			}
 		}
 
 		// edges with archetype with more components:
+		const uint64_t componentCountsPlusOne = (uint64_t)archetype.GetComponentAndTagCount() + 1;
+
+		if (componentCountsPlusOne <= m_ArchetypesGroupedByComponentsCount.size())
 		{
-			const uint64_t componentCountsPlusOne = (uint64_t)archetype.GetComponentAndTagCount() + 1;
+			const uint64_t archetypeListIndex = archetype.GetComponentAndTagCount();
+			auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
 
-			if (componentCountsPlusOne <= m_ArchetypesGroupedByComponentsCount.size())
+			for (Archetype* neighbour : archetypesListToCreateEdges)
 			{
-				const uint64_t archetypeListIndex = archetype.GetComponentAndTagCount();
-
-				auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
-				uint64_t archCount = archetypesListToCreateEdges.size();
-
-				for (uint64_t archIdx = 0; archIdx < archCount; archIdx++)
+				if (auto edgeTypeID = archetype.IsAddComponentNeighbour(*neighbour))
 				{
-					auto& testArchetype = *archetypesListToCreateEdges[archIdx];
-
-					uint64_t incorrectTests = 0;
-					TypeID lastIncorrectType = std::numeric_limits<TypeID>::max();
-					bool isArchetypeValid = true;
-
-					for (uint64_t typeIdx = 0; typeIdx < testArchetype.GetComponentAndTagCount(); typeIdx++)
-					{
-						TypeID typeID = testArchetype.GetTypeID(typeIdx);
-						auto it = archetype.m_TypeIDsIndexes.find(typeID);
-						if (it == archetype.m_TypeIDsIndexes.end())
-						{
-							incorrectTests += 1;
-							if (incorrectTests > 1)
-							{
-								isArchetypeValid = false;
-								break;
-							}
-							else
-							{
-								lastIncorrectType = typeID;
-							}
-						}
-					}
-
-					if (isArchetypeValid)
-					{
-						testArchetype.AddEdge(lastIncorrectType, &archetype, EComponentEdgeType::Remove);
-						archetype.AddEdge(lastIncorrectType, &testArchetype, EComponentEdgeType::Add);
-					}
+					neighbour->AddEdge(edgeTypeID.value(), &archetype, EComponentEdgeType::Remove);
+					archetype.AddEdge(edgeTypeID.value(), neighbour, EComponentEdgeType::Add);
 				}
 			}
 		}
@@ -206,6 +146,8 @@ namespace decs
 		{
 			m_MaxTypeCountInArchetypes = archetype.GetTypeCount();
 		}
+
+		MakeArchetypeEdges_2(archetype);
 	}
 
 	Archetype* ArchetypesMap::FindMatchingArchetype(const Archetype& toArchetype)
@@ -264,7 +206,6 @@ namespace decs
 		archetype = &m_Archetypes.EmplaceBack();
 		archetype->AddTypeData_WithoutCheck(componentTypeID, componentContext);
 		AddArchetypeToCorrectContainers(*archetype);
-		MakeArchetypeEdges(*archetype);
 		return archetype;
 	}
 
@@ -294,7 +235,6 @@ namespace decs
 		AddTypeDataAfterAddComponent(toArchetype, newArchetype, componentTypeID, componentContext);
 
 		AddArchetypeToCorrectContainers(newArchetype);
-		MakeArchetypeEdges(newArchetype);
 
 		return &newArchetype;
 	}
@@ -331,7 +271,6 @@ namespace decs
 		Archetype& newArchetype = m_Archetypes.EmplaceBack();
 		AddTypeDataAfterRemoveComponent(fromArchetype, newArchetype, removedComponentTypeID);
 		AddArchetypeToCorrectContainers(newArchetype);
-		MakeArchetypeEdges(newArchetype);
 
 		return &newArchetype;
 	}
@@ -356,7 +295,7 @@ namespace decs
 		archetype = &m_Archetypes.EmplaceBack();
 		archetype->AddTypeData_WithoutCheck(componentTypeID, nullptr);
 		AddArchetypeToCorrectContainers(*archetype);
-		MakeArchetypeEdges(*archetype);
+
 		return archetype;
 	}
 
