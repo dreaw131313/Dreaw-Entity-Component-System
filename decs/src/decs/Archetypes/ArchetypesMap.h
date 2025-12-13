@@ -70,6 +70,10 @@ namespace decs
 	public:
 		ArchetypeGroup() = default;
 
+		inline uint32_t GetArchetypeCount() const noexcept
+		{
+			return static_cast<uint32_t>(Archetypes.size());
+		}
 	};
 
 	class ArchetypesGroupByOneType
@@ -129,7 +133,7 @@ namespace decs
 			archetypeGroup->Archetypes.push_back(archetype);
 		}
 
-		const std::vector<Archetype*>* GetArchetypesWithComponentsCount(uint64_t componentsCount) const
+		const std::vector<Archetype*>* GetArchetypesWithTypeCount(uint64_t componentsCount) const
 		{
 			uint64_t groupIndex = componentsCount - 1;
 			if (groupIndex >= m_Groups.size())
@@ -142,6 +146,16 @@ namespace decs
 				return nullptr;
 			}
 			return &group->Archetypes;
+		}
+
+		const ArchetypeGroup* GetGroupWithTypeCount(uint64_t componentsCount) const
+		{
+			uint64_t groupIndex = componentsCount - 1;
+			if (groupIndex >= m_Groups.size())
+			{
+				return nullptr;
+			}
+			return m_Groups[groupIndex];
 		}
 
 		inline Archetype* GetSingleComponentArchetype() const
@@ -338,12 +352,24 @@ namespace decs
 			return group;
 		}
 
+		inline ArchetypesGroupByOneType* GetArchetypesGroupWithoutCreating(TypeID id) const 
+		{
+			auto it = m_ArchetypesGroupedByOneType.find(id);
+			if (it == m_ArchetypesGroupedByOneType.end())
+			{
+				return nullptr;
+			}
+			return it->second;
+		}
+
 		/// <summary>
 		/// 
 		/// </summary>
 		/// <param name="archetypeToMatch"></param>
 		/// <returns>Archetype and bool that indicates if archetypes is finded with edges.</returns>
-		std::pair<Archetype*, bool> FindMatchingArchetype(Archetype* archetypeToMatch);
+		Archetype* FindMatchingArchetype(const Archetype& toArchetype);
+
+		Archetype* FindMatchingArchetype_2(const Archetype& toArchetype);
 
 		Archetype* GetOrCreateMatchedArchetype(
 			Archetype& fromArchetype,

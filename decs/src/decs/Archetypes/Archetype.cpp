@@ -34,6 +34,26 @@ namespace decs
 		return it->second;
 	}
 
+	bool Archetype::HasSameTypesAs(const Archetype& archetype) const
+	{
+		const uint32_t componentAndTagCount = GetComponentAndTagCount();
+
+		if (archetype.GetComponentAndTagCount() != componentAndTagCount)
+		{
+			return false;
+		}
+
+		for (uint32_t i = 0; i < componentAndTagCount; i++)
+		{
+			if (GetTypeID(i) != archetype.GetTypeID(i))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	void Archetype::ClearEntityDataAndComponents()
 	{
 		m_EntitiesData.clear();
@@ -385,7 +405,7 @@ namespace decs
 		RemoveSwapBackEntityData(entityIndex);
 
 	}
-	
+
 	void Archetype::ShrinkToFit()
 	{
 		m_EntitiesData.shrink_to_fit();
@@ -399,7 +419,6 @@ namespace decs
 			typeData.m_PackedContainer->ShrinkToFit();
 		}
 	}
-
 
 	bool Archetype::MoveEntityComponentsAfterAddComponent(
 		Archetype& fromArchetype,

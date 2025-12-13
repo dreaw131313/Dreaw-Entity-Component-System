@@ -106,17 +106,16 @@ int main()
 		observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
 	}
 
+	const decs::ContainerConfig containerConfig{
+		.EntityChunkSize = 1000,
+		.DefaultComponentChunkSize = 200,
+		.ArchetypeChunkSize = 200,
+	};
+
+	decs::Container prefabContainer(containerConfig);
 	decs::Entity prefab{};
 	{
-		decs::ContainerConfig containerConfig{
-			.EntityChunkSize = 1000,
-			.DefaultComponentChunkSize = 200,
-			.ArchetypeChunkSize = 200,
-		};
-		decs::Container container = { containerConfig };
-		observerManager.FillContainerObservers(container);
-
-		prefab = container.CreateEntity();
+		prefab = prefabContainer.CreateEntity();
 
 		if (prefab)
 		{
@@ -148,6 +147,11 @@ int main()
 		prefab.RemoveTag<IntTag>();
 
 		auto comp = prefab.GetComponent<TestComponent>();
+	}
+
+	{
+		decs::Container container = { containerConfig };
+		observerManager.FillContainerObservers(container);
 
 		container.Spawn(prefab, 10, true);
 

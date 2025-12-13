@@ -265,6 +265,8 @@ namespace decs
 			return m_TypeData[typeIndex].IsTag();
 		}
 
+		bool HasSameTypesAs(const Archetype& archetype)  const;
+
 	private:
 		template<typename TComponentType>
 		PackedStableComponentContainer<TComponentType>* GetTypePackedContainer() const

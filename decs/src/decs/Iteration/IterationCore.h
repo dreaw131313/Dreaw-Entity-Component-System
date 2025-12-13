@@ -728,7 +728,7 @@ namespace decs
 
 			for (uint64_t i = filter.GetMinComponentsCount(); i <= maxComponentCountsInGroup; i++)
 			{
-				auto archetypesToCheckPtr = group->GetArchetypesWithComponentsCount(i);
+				auto archetypesToCheckPtr = group->GetArchetypesWithTypeCount(i);
 				if (archetypesToCheckPtr != nullptr)
 				{
 					for (auto archetype : *archetypesToCheckPtr)
