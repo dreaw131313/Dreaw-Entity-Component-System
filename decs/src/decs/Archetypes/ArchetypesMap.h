@@ -329,6 +329,8 @@ namespace decs
 	private:
 		void MakeArchetypeEdges_2(Archetype& archetype);
 
+		void MakeArchetypeEdges_3(Archetype& archetype);
+
 		void AddArchetypeToCorrectContainers(Archetype& archetype);
 
 		/// <summary>
