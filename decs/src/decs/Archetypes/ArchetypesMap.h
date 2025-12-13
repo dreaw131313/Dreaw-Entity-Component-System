@@ -244,7 +244,10 @@ namespace decs
 			return emptyArchetypesCount;
 		}
 
-		inline uint64_t MaxNumberOfTypesInArchetype() const { return m_ArchetypesGroupedByComponentsCount.size(); }
+		inline uint64_t MaxNumberOfTypesInArchetype() const
+		{
+			return m_MaxTypeCountInArchetypes;
+		}
 
 		void ShrinkArchetypesToFit();
 
@@ -320,6 +323,8 @@ namespace decs
 		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
 		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
 
+		uint32_t m_MaxTypeCountInArchetypes = 0;
+
 		// UTILITY
 	private:
 		void MakeArchetypeEdges(Archetype& archetype);
@@ -353,7 +358,7 @@ namespace decs
 			return group;
 		}
 
-		inline ArchetypesGroupByOneType* GetArchetypesGroupWithoutCreating(TypeID id) const 
+		inline ArchetypesGroupByOneType* GetArchetypesGroupWithoutCreating(TypeID id) const
 		{
 			auto it = m_ArchetypesGroupedByOneType.find(id);
 			if (it == m_ArchetypesGroupedByOneType.end())

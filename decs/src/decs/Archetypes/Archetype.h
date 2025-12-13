@@ -98,7 +98,7 @@ namespace decs
 	enum class EComponentEdgeType
 	{
 		Add,
-		Destroy
+		Remove
 	};
 
 	struct ArchetypeEdge
@@ -171,15 +171,20 @@ namespace decs
 
 		~Archetype();
 
-		/// <summary>
-		/// Returns number of components and tags
-		/// </summary>
-		/// <returns></returns>
-		inline uint32_t GetComponentAndTagCount() const
+		inline uint32_t GetTypeCount() const noexcept
 		{
 			return static_cast<uint32_t>(m_TypeData.size());
 		}
 
+		/// <summary>
+		/// Returns number of components and tags
+		/// </summary>
+		/// <returns></returns>
+		inline uint32_t GetComponentAndTagCount() const noexcept
+		{
+			return GetTypeCount();
+		}
+		
 		inline uint32_t GetComponentOnlyCount() const
 		{
 			return static_cast<uint32_t>(m_ComponentContextsInOrder.size());

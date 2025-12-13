@@ -135,7 +135,7 @@ namespace decs
 					if (isArchetypeValid)
 					{
 						testArchetype.AddEdge(notFindedType, &archetype, EComponentEdgeType::Add);
-						archetype.AddEdge(notFindedType, &testArchetype, EComponentEdgeType::Destroy);
+						archetype.AddEdge(notFindedType, &testArchetype, EComponentEdgeType::Remove);
 					}
 				}
 			}
@@ -181,7 +181,7 @@ namespace decs
 
 					if (isArchetypeValid)
 					{
-						testArchetype.AddEdge(lastIncorrectType, &archetype, EComponentEdgeType::Destroy);
+						testArchetype.AddEdge(lastIncorrectType, &archetype, EComponentEdgeType::Remove);
 						archetype.AddEdge(lastIncorrectType, &testArchetype, EComponentEdgeType::Add);
 					}
 				}
@@ -201,11 +201,16 @@ namespace decs
 		AddArchetypeToGroups(&archetype);
 
 		m_HashedArchetypes[ArchetypeHasher(&archetype)] = &archetype;
+
+		if (archetype.GetTypeCount() > m_MaxTypeCountInArchetypes)
+		{
+			m_MaxTypeCountInArchetypes = archetype.GetTypeCount();
+		}
 	}
 
 	Archetype* ArchetypesMap::FindMatchingArchetype(const Archetype& toArchetype)
 	{
-		const uint64_t typesCount = toArchetype.GetComponentAndTagCount();
+		const uint64_t typesCount = toArchetype.GetTypeCount();
 		if (typesCount == 0)
 		{
 			return nullptr;
@@ -213,7 +218,7 @@ namespace decs
 
 		ArchetypeHasher hasherToMatch(&toArchetype);
 		auto hashedArchetypeIt = m_HashedArchetypes.find(hasherToMatch);
-		if (hashedArchetypeIt!= m_HashedArchetypes.end())
+		if (hashedArchetypeIt != m_HashedArchetypes.end())
 		{
 			return hashedArchetypeIt->second;
 		}
@@ -305,7 +310,7 @@ namespace decs
 		auto edge = fromArchetype.GetEdge(removedComponentTypeID);
 		if (edge.IsValid())
 		{
-			if (edge.m_EdgeType == EComponentEdgeType::Destroy)
+			if (edge.m_EdgeType == EComponentEdgeType::Remove)
 			{
 				return edge.m_Archetype;
 			}
