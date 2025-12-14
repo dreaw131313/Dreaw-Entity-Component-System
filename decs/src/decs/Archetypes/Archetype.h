@@ -259,6 +259,40 @@ namespace decs
 		bool HasSameTypesAs(const Archetype& archetype)  const;
 
 		/// <summary>
+		/// if types.size() is different thant archetype type count returns false.
+		/// </summary>
+		/// <param name="types"></param>
+		/// <returns></returns>
+		bool HasTypes_Exacly(const std::vector<TypeID>& types) const;
+
+		/// <summary>
+		/// if group.Size() is different thant archetype type count returns false.
+		/// </summary>
+		/// <typeparam name="...Types"></typeparam>
+		/// <param name="types"></param>
+		/// <returns></returns>
+		template<typename... Types>
+		bool HasTypes_Exacly(const TypeGroup<Types...>& group) const
+		{
+			const uint32_t componentAndTagCount = GetComponentAndTagCount();
+
+			if (static_cast<uint32_t>(group.Size()) != componentAndTagCount)
+			{
+				return false;
+			}
+
+			for (uint32_t i = 0; i < componentAndTagCount; i++)
+			{
+				if (!ContainType(group[i]))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		/// <summary>
 		/// 
 		/// </summary>
 		/// <param name="neighbour">Archetype with smaller number of componetnts than this archetype</param>
@@ -273,6 +307,7 @@ namespace decs
 		std::optional<TypeID> IsAddComponentNeighbour(const Archetype& neighbour) const;
 
 	private:
+
 		template<typename TComponentType>
 		PackedStableComponentContainer<TComponentType>* GetTypePackedContainer() const
 		{
@@ -446,7 +481,6 @@ namespace decs
 	private:
 		const Archetype* m_ArchetypeConst = nullptr;
 	};
-
 }
 
 template<>

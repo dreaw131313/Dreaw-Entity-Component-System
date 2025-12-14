@@ -71,6 +71,26 @@ namespace decs
 		return true;
 	}
 
+	bool Archetype::HasTypes_Exacly(const std::vector<TypeID>& types) const
+	{
+		const uint32_t componentAndTagCount = GetComponentAndTagCount();
+
+		if (static_cast<uint32_t>(types.size()) != componentAndTagCount)
+		{
+			return false;
+		}
+
+		for (uint32_t i = 0; i < componentAndTagCount; i++)
+		{
+			if (!ContainType(types[i]))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	std::optional<TypeID> Archetype::IsRemoveComponentNeighbour(const Archetype& neighbour) const
 	{
 		const uint32_t typeCount = GetTypeCount();
