@@ -186,7 +186,7 @@ namespace decs
 		{
 			return GetTypeCount();
 		}
-		
+
 		inline uint32_t GetComponentOnlyCount() const
 		{
 			return static_cast<uint32_t>(m_ComponentContextsInOrder.size());
@@ -213,10 +213,7 @@ namespace decs
 			return (float)EntityCount() / (float)m_EntitiesData.capacity();
 		}
 
-		inline bool ContainType(TypeID typeID) const
-		{
-			return m_TypeIDsIndexes.find(typeID) != m_TypeIDsIndexes.end();
-		}
+		bool ContainType(TypeID typeID) const;
 
 		inline bool HasComponentType(TypeID typeID) const
 		{
@@ -234,20 +231,7 @@ namespace decs
 		template<typename T>
 		inline uint32_t FindTypeIndex() const
 		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
-			if (GetComponentAndTagCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
-			{
-				for (uint32_t i = 0; i < GetComponentAndTagCount(); i++)
-					if (m_TypeData[i].m_TypeID == typeID) return i;
-
-				return std::numeric_limits<uint32_t>::max();
-			}
-
-			auto it = m_TypeIDsIndexes.find(typeID);
-			if (it == m_TypeIDsIndexes.end())
-				return std::numeric_limits<uint32_t>::max();
-
-			return it->second;
+			return FindTypeIndex(Type<T>::ID());
 		}
 
 		inline bool HasTag(TypeID tagType) const

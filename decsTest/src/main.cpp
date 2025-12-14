@@ -303,7 +303,7 @@ void CreatingEntitiesTest()
 
 int main()
 {
-	CreatingEntitiesTest();
+	NormalTest();
 
 	return 0;
 }

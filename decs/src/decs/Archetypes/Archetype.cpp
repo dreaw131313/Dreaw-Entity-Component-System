@@ -17,6 +17,23 @@ namespace decs
 		}
 	}
 
+	bool Archetype::ContainType(TypeID typeID) const
+	{
+		if (GetTypeCount() <= Limits::MinComponentsInArchetypeToPerformMapLookup)
+		{
+			for (auto& typeData : m_TypeData)
+			{
+				if (typeData.m_TypeID == typeID)
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		return m_TypeIDsIndexes.contains(typeID);
+	}
+
 	uint32_t Archetype::FindTypeIndex(TypeID typeID) const
 	{
 		if (GetComponentAndTagCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
