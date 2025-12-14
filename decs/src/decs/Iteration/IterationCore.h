@@ -580,7 +580,7 @@ namespace decs
 		{
 			uint64_t minComponentsCount = filter.GetMinComponentsCount();
 
-			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.ArchetypesCount();
+			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.GetArchetypesCount();
 			if (m_ArchetypesCountDirty != containerArchetypesCount)
 			{
 				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
@@ -647,7 +647,7 @@ namespace decs
 				auto it = groupsMap.find(includes[i]);
 				if (it != groupsMap.end())
 				{
-					uint64_t bufforGroupArchetypesCount = it->second->ArchetypesCount();
+					uint64_t bufforGroupArchetypesCount = it->second->GetArchetypesCount();
 					if (bufforGroupArchetypesCount < bestArchetypesCount)
 					{
 						bestArchetypesCount = bufforGroupArchetypesCount;

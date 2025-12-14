@@ -82,7 +82,7 @@ namespace decs
 			}
 		}
 
-		return std::optional<TypeID>(foundedNeighbourTypeCount);
+		return std::optional<TypeID>(neighbourTypeID);
 	}
 
 	std::optional<TypeID> Archetype::IsAddComponentNeighbour(const Archetype& neighbour) const

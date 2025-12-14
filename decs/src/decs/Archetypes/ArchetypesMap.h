@@ -99,7 +99,7 @@ namespace decs
 			return m_MainTypeArchetype;
 		}
 
-		inline uint64_t ArchetypesCount() const
+		inline uint64_t GetArchetypesCount() const
 		{
 			return m_ArchetypesCount;
 		}
@@ -223,7 +223,7 @@ namespace decs
 
 		~ArchetypesMap();
 
-		inline uint64_t ArchetypesCount() const noexcept
+		inline uint64_t GetArchetypesCount() const noexcept
 		{
 			return m_Archetypes.Size();
 		}

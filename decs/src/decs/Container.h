@@ -793,6 +793,11 @@ namespace decs
 			return m_ArchetypesMap.GetArchetypesChunkedVector();
 		}
 
+		inline uint64_t GetArchetypeCount() const
+		{
+			return m_ArchetypesMap.GetArchetypesCount();
+		}
+
 	private:
 		ArchetypesMap m_ArchetypesMap{};
 

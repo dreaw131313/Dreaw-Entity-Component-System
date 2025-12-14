@@ -39,17 +39,17 @@ public:
 
 	TestComponent()
 	{
-		PrintLine("TestComponent::TestComponent");
+		//PrintLine("TestComponent::TestComponent");
 	}
 
 	TestComponent(const TestComponent& other)
 	{
-		PrintLine("TestComponent::TestComponent(const TestComponent&)");
+		//PrintLine("TestComponent::TestComponent(const TestComponent&)");
 	}
 
 	~TestComponent()
 	{
-		PrintLine("TestComponent::~TestComponent");
+		//PrintLine("TestComponent::~TestComponent");
 	}
 
 };
@@ -92,7 +92,7 @@ public:
 	}
 };
 
-int main()
+void NormalTest()
 {
 	using FloatTag = decs::tag<float>;
 	using IntTag = decs::tag<int>;
@@ -278,6 +278,32 @@ int main()
 		}
 
 	}
+}
+
+void CreatingEntitiesTest()
+{
+	const decs::ContainerConfig containerConfig{
+		.EntityChunkSize = 1000,
+		.DefaultComponentChunkSize = 200,
+		.ArchetypeChunkSize = 200,
+	};
+
+	decs::Container container{ containerConfig };
+
+	for (uint32_t i = 0; i < 10; i++)
+	{
+		decs::Entity e = container.CreateEntity();
+
+		e.AddComponent<TestComponent>();
+		e.AddComponent<Renderer>();
+	}
+
+	std::cout << "Archetypes count: " << container.GetArchetypeCount();
+}
+
+int main()
+{
+	CreatingEntitiesTest();
 
 	return 0;
 }

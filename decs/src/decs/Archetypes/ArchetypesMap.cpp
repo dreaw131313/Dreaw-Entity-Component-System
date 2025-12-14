@@ -18,7 +18,7 @@ namespace decs
 
 	void ArchetypesMap::ShrinkArchetypesToFit()
 	{
-		if (ArchetypesCount() == 0)
+		if (GetArchetypesCount() == 0)
 		{
 			return;
 		}
@@ -39,7 +39,7 @@ namespace decs
 
 	void ArchetypesMap::ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state)
 	{
-		if (ArchetypesCount() == 0)
+		if (GetArchetypesCount() == 0)
 		{
 			return;
 		}
@@ -173,7 +173,7 @@ namespace decs
 
 			for (uint32_t typeIdx = 0; typeIdx < typeCount; typeIdx++)
 			{
-				const ArchetypesGroupByOneType* typeGroup = GetArchetypesGroupWithoutCreating(typeIdx);
+				const ArchetypesGroupByOneType* typeGroup = GetArchetypesGroupWithoutCreating(archetype.GetTypeID(typeIdx));
 				if (typeGroup == nullptr)
 				{
 					// This should never happend because archetype is added to all its types groups:
@@ -190,7 +190,6 @@ namespace decs
 
 			if (bestGroup!= nullptr)
 			{
-
 				for (Archetype* neighbour : bestGroup->Archetypes)
 				{
 					if (auto edgeTypeID = archetype.IsAddComponentNeighbour(*neighbour))
