@@ -150,16 +150,17 @@ namespace decs
 	class TypeGroup
 	{
 	public:
-		TypeGroup() = default;
+		constexpr TypeGroup() = default;
 
-		TypeID operator[](const uint64_t index) const
-		{
-			return m_TypesIDs[index];
-		}
+		constexpr TypeGroup(const TypeGroup&) = default;
+		constexpr TypeGroup(TypeGroup&&)noexcept = default;
 
-		inline const TypeID* IDs() const
+		constexpr TypeGroup& operator=(const TypeGroup&) = default;
+		constexpr TypeGroup& operator=(TypeGroup&&) noexcept = default;
+
+		constexpr TypeID operator[](const uint64_t index) const
 		{
-			return m_TypesIDs;
+			return s_TypesIDs[index];
 		}
 
 		constexpr uint64_t Size() const
@@ -168,6 +169,6 @@ namespace decs
 		}
 
 	private:
-		const TypeID m_TypesIDs[sizeof...(Args)] = { Type<Args>::ID()... };
+		inline static constexpr const TypeID s_TypesIDs[sizeof...(Args)] = { Type<Args>::ID()... };
 	};
 }

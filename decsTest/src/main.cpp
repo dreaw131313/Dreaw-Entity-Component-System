@@ -223,6 +223,10 @@ void NormalTest()
 		}
 
 		{
+			decs::TypeGroup<int, float> t{};
+
+			auto st = t;
+
 			using QueryType = decs::MultiQuery<const TestComponent>;
 			QueryType query{};
 			query.WithAny<FloatTag, IntTag>();
