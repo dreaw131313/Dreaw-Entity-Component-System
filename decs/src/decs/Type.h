@@ -171,4 +171,19 @@ namespace decs
 	private:
 		inline static constexpr const TypeID s_TypesIDs[sizeof...(Args)] = { Type<Args>::ID()... };
 	};
+
+	template<>
+	class TypeGroup<>
+	{
+	public:
+		constexpr TypeID operator[](const uint64_t index) const
+		{
+			return InvalidTypeID;
+		}
+
+		constexpr uint64_t Size() const
+		{
+			return 0;
+		}
+	};
 }

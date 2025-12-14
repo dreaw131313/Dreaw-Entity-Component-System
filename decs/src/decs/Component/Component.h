@@ -3,6 +3,7 @@
 #include "decs/trait.h"
 
 #include "decs/Component/ChunkAllocator.h"
+#include "decs/Type.h"
 
 namespace decs
 {
@@ -214,4 +215,39 @@ namespace decs
 	template<typename T>
 	concept TComponentOrTagConcept = TComponentConcept<T> || TTagConcept<T>;
 
+	template<TComponentConcept... Types>
+	class ComponentTypeGroup
+	{
+	public:
+		constexpr TypeID operator[](const uint64_t index) const
+		{
+			return s_TypesIDs[index];
+		}
+
+		constexpr uint64_t Size() const
+		{
+			return sizeof...(Types);
+		}
+
+	private:
+		inline static constexpr const TypeID s_TypesIDs[sizeof...(Types)] = { Type<Types>::ID()... };
+	};
+
+	template<TTagConcept... Types>
+	class TagTypeGroup
+	{
+	public:
+		constexpr TypeID operator[](const uint64_t index) const
+		{
+			return s_TypesIDs[index];
+		}
+
+		constexpr uint64_t Size() const
+		{
+			return sizeof...(Types);
+		}
+
+	private:
+		inline static constexpr const TypeID s_TypesIDs[sizeof...(Types)] = { Type<Types>::ID()... };
+	};
 }

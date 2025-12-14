@@ -2,6 +2,8 @@
 #include "Core.h"
 #include "Type.h"
 
+#include <tuple>
+
 #include "Archetypes/ArchetypesMap.h"
 #include "Component/ComponentContextsManager.h"
 #include "Component/PackedComponentContainer.h"
@@ -54,6 +56,7 @@ namespace decs
 		Container(const ContainerConfig& config);
 
 		~Container();
+
 
 	#pragma region Extension data
 	public:
@@ -124,6 +127,31 @@ namespace decs
 			return m_EmptyEntities.size();
 		}
 
+
+		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		Entity CreateEntity(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			const TagTypeGroup<TagTypes...> tags,
+			bool bIsActive,
+			InitFunc&& initFunc
+		)
+		{
+			if (Entity entity = CreateEntity(bIsActive))
+			{
+				EntityData* entityData = GetEntityData(entity);
+
+				(AddTag<TagTypes>(*entityData), ...);
+
+				std::tuple<ComponentTypes*...> componentsTuple = { AddComponent<ComponentTypes>(entity, *entityData)... };
+
+				initFunc(*std::get<ComponentTypes*>(componentsTuple)...);
+
+				return entity;
+			}
+
+			return Entity();
+		}
+
 	private:
 		void InitializeLifeTimeData();
 
@@ -132,6 +160,8 @@ namespace decs
 		bool DestroyEntityInternal(const Entity& entity, bool bInvokeObservers);
 
 		void SetEntityActive(const Entity& entity, bool bIsActive);
+
+		EntityData* GetEntityData(const Entity& entity) const;
 
 	public:
 		/// <summary>
@@ -314,6 +344,7 @@ namespace decs
 			TypeID compTypeID
 		);
 
+
 		template<TComponentConcept TComponent, typename ...Args>
 		TComponent* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
@@ -454,7 +485,6 @@ namespace decs
 		}
 	private:
 		void InvokeComponentDestroyObservers(ComponentContextBase& compCtx, EntityComponent& comp, EntityData& entityData);
-
 
 	public:
 
@@ -777,6 +807,9 @@ namespace decs
 	#pragma endregion
 
 	#pragma region ARCHETYPES:
+	private:
+		ArchetypesMap m_ArchetypesMap{};
+
 	public:
 		inline void ShrinkArchetypesToFit()
 		{
@@ -799,14 +832,8 @@ namespace decs
 		}
 
 	private:
-		ArchetypesMap m_ArchetypesMap{};
-
-	private:
 		template<typename TComponent>
-		Archetype* GetArchetypeAfterAddComponent(
-			Archetype* toArchetype,
-			uint32_t& componentContainerIndex
-		)
+		Archetype* GetArchetypeAfterAddComponent(Archetype* toArchetype, uint32_t& componentContainerIndex)
 		{
 			TYPE_ID_CONSTEXPR const TypeID addedComponentTypeID = Type<TComponent>::ID();
 

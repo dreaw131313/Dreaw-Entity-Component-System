@@ -392,7 +392,6 @@ namespace decs
 
 		// CREATING ARCHETYPES
 	private:
-
 		Archetype* CreateSingleComponentArchetype(TypeID componentTypeID, ComponentContextBase* componentContext);
 
 		template<TComponentConcept T>
@@ -422,28 +421,5 @@ namespace decs
 
 		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, ComponentContextBase* addedComponentContext);
 
-		//template<TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
-		//Archetype* GetOrCreateArchetype(
-		//	ComponentContextsManager& componentContextsManager,
-		//	//out
-		//	std::tuple<ComponentContext<ComponentTypes>*...>& componentContexts,
-		//	std::tuple<StableComponentContainer<ComponentTypes>*...>& componentStableContainers,
-		//	std::tuple<PackedStableComponentContainer<ComponentTypes>*...>& componentPackedContainers,
-		//	std::tuple<TagTypes...>
-		//)
-		//{
-		//	constexpr uint32_t typeCount = sizeof...(ComponentTypes) + sizeof...(TagTypes);
-		//	static const TypeGroup<ComponentTypes..., TagTypes...> typesGroup{};
-
-		//	if (m_LastArchetypeFetched != nullptr && m_LastArchetypeFetched->HasTypes_Exacly(typesGroup))
-		//	{
-		//		componentStableContainers = {};
-
-		//		return m_LastArchetypeFetched;
-		//	}
-
-		//	componentContexts = { componentContextsManager.GetOrCreateComponentContext<ComponentTypes>()... };
-
-		//}
 	};
 }

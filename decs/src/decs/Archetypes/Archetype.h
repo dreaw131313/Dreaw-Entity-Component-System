@@ -263,7 +263,7 @@ namespace decs
 		/// </summary>
 		/// <param name="types"></param>
 		/// <returns></returns>
-		bool HasTypes_Exacly(const std::vector<TypeID>& types) const;
+		bool HasTypes_Exactly(const std::vector<TypeID>& types) const;
 
 		/// <summary>
 		/// if group.Size() is different thant archetype type count returns false.
@@ -272,7 +272,7 @@ namespace decs
 		/// <param name="types"></param>
 		/// <returns></returns>
 		template<typename... Types>
-		bool HasTypes_Exacly(const TypeGroup<Types...>& group) const
+		bool HasTypes_Exactly(const TypeGroup<Types...>& group) const
 		{
 			const uint32_t componentAndTagCount = GetComponentAndTagCount();
 
@@ -284,6 +284,36 @@ namespace decs
 			for (uint32_t i = 0; i < componentAndTagCount; i++)
 			{
 				if (!ContainType(group[i]))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		template<TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		bool IsArchetypeWithComponentsAndTags_Exactly(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			const TagTypeGroup<TagTypes...> tags
+		) const noexcept
+		{
+			if ((sizeof...(ComponentTypes) + sizeof...(TagTypes)) != GetTypeCount())
+			{
+				return false;
+			}
+
+			for (uint32_t i = 0; i < components.Size(); i++)
+			{
+				if (!ContainType(components[i]))
+				{
+					return false;
+				}
+			}
+
+			for (uint32_t i = 0; i < tags.Size(); i++)
+			{
+				if (!ContainType(tags[i]))
 				{
 					return false;
 				}

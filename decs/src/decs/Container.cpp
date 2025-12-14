@@ -185,6 +185,11 @@ namespace decs
 		}
 	}
 
+	EntityData* Container::GetEntityData(const Entity& entity) const
+	{
+		return entity.m_EntityData;
+	}
+
 	void Container::SetEntityActiveOverride(const Entity& entity, bool bIsActiveOverride)
 	{
 		if (entity.GetContainer() == this)

@@ -71,7 +71,7 @@ namespace decs
 		return true;
 	}
 
-	bool Archetype::HasTypes_Exacly(const std::vector<TypeID>& types) const
+	bool Archetype::HasTypes_Exactly(const std::vector<TypeID>& types) const
 	{
 		const uint32_t componentAndTagCount = GetComponentAndTagCount();
 

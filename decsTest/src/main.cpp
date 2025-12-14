@@ -117,36 +117,23 @@ void NormalTest()
 	{
 		prefab = prefabContainer.CreateEntity();
 
-		if (prefab)
-		{
-
-		}
-
-		decs::ConstEntity constPrefab = prefab;
-		if (constPrefab)
-		{
-
-		}
-
 		prefab.AddComponent<TestComponent>();
-
-
 		prefab.AddComponent<Renderer>();
 		prefab.AddTag<FloatTag>();
 		prefab.AddTag<IntTag>();
 		prefab.AddTag<BoolTag>();
-
 		prefab.AddComponent<Position>(10.f, 10.f);
-		auto position = prefab.GetComponent<const Position>();
 
-		//prefab.RemoveComponent<Renderer>();
-		prefab.RemoveComponent_If<Renderer>([](const Renderer& renderer)
+
+		decs::ComponentTypeGroup<TestComponent, Position> componetns{};
+		decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
+
+		auto initFunc = [](TestComponent& component, Position& position)
 		{
-			return true;
-		});
-		prefab.RemoveTag<IntTag>();
+			PrintLine("Init from helepr create entity func!");
+		};
 
-		auto comp = prefab.GetComponent<TestComponent>();
+		decs::Entity e = prefabContainer.CreateEntity(componetns, tags, true, initFunc);
 	}
 
 	{
