@@ -129,6 +129,7 @@ namespace decs
 
 
 		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+			requires query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
 			const ComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
@@ -144,7 +145,14 @@ namespace decs
 
 				std::tuple<ComponentTypes*...> componentsTuple = { AddComponent<ComponentTypes>(entity, *entityData)... };
 
-				initFunc(*std::get<ComponentTypes*>(componentsTuple)...);
+				if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
+				{
+					initFunc(entity, *std::get<ComponentTypes*>(componentsTuple)...);
+				}
+				else
+				{
+					initFunc(*std::get<ComponentTypes*>(componentsTuple)...);
+				}
 
 				return entity;
 			}

@@ -128,7 +128,7 @@ void NormalTest()
 		decs::ComponentTypeGroup<TestComponent, Position> componetns{};
 		decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
 
-		auto initFunc = [](TestComponent& component, Position& position)
+		auto initFunc = [](const decs::Entity& e, TestComponent& component, Position& position)
 		{
 			PrintLine("Init from helepr create entity func!");
 		};
