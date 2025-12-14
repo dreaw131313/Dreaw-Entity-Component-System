@@ -221,16 +221,16 @@ namespace decs
 	public:
 		constexpr TypeID operator[](const uint64_t index) const
 		{
-			return s_TypesIDs[index];
+			return m_Group[index];
 		}
 
 		constexpr uint64_t Size() const
 		{
-			return sizeof...(Types);
+			return m_Group.Size();
 		}
 
 	private:
-		inline static constexpr const TypeID s_TypesIDs[sizeof...(Types)] = { Type<Types>::ID()... };
+		TypeGroup<Types...> m_Group{};
 	};
 
 	template<TTagConcept... Types>
@@ -239,15 +239,15 @@ namespace decs
 	public:
 		constexpr TypeID operator[](const uint64_t index) const
 		{
-			return s_TypesIDs[index];
+			return m_Group[index];
 		}
 
 		constexpr uint64_t Size() const
 		{
-			return sizeof...(Types);
+			return m_Group.Size();
 		}
 
 	private:
-		inline static constexpr const TypeID s_TypesIDs[sizeof...(Types)] = { Type<Types>::ID()... };
+		TypeGroup<Types...> m_Group{};
 	};
 }

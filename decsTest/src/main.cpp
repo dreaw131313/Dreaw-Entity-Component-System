@@ -124,7 +124,6 @@ void NormalTest()
 		prefab.AddTag<BoolTag>();
 		prefab.AddComponent<Position>(10.f, 10.f);
 
-
 		decs::ComponentTypeGroup<TestComponent, Position> componetns{};
 		decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
 
