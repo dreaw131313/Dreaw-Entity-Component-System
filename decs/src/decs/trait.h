@@ -68,6 +68,8 @@ namespace decs
 	template<typename T>
 	using drop_const_t = drop_const<T>::Type;
 
+	class Entity;
+
 	template<typename TCallable, typename... TComponentTypes>
 	concept query_callable = std::is_invocable_v<TCallable, TComponentTypes...> 
 		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes...>

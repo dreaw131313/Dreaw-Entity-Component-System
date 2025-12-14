@@ -411,7 +411,9 @@ namespace decs
 			{
 				return true;
 			}
-			if (m_ArchetypeConst == nullptr || rhs.m_ArchetypeConst == nullptr)
+			if (m_ArchetypeConst == nullptr || rhs.m_ArchetypeConst == nullptr
+				|| m_ArchetypeConst->GetTypeCount() != rhs.m_ArchetypeConst->GetTypeCount()
+				)
 			{
 				return false;
 			}
@@ -444,6 +446,7 @@ namespace decs
 	private:
 		const Archetype* m_ArchetypeConst = nullptr;
 	};
+
 }
 
 template<>

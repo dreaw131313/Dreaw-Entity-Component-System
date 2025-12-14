@@ -65,12 +65,12 @@ namespace decs
 	{
 	public:
 
-#ifdef USE_CONSTEXPR_TYPE_ID
+	#ifdef USE_CONSTEXPR_TYPE_ID
 		inline static consteval TypeID ID()
 		{
 			return Type_Base<T, TypeID>::ID();
 		}
-#else
+	#else
 		static TypeID ID()
 		{
 			return reinterpret_cast<TypeID>(m_TypeInfo);
@@ -78,7 +78,7 @@ namespace decs
 
 	private:
 		static const std::type_info* m_TypeInfo;
-#endif
+	#endif
 
 		inline static constexpr std::string Name()
 		{
@@ -146,35 +146,11 @@ namespace decs
 #endif
 
 
-	template<typename T = void, typename... Args>
-	void find_type_ids_impl(TypeID* idArray, uint64_t idx)
-	{
-		idArray[idx] = decs::Type<T>::ID();
-
-		if (sizeof ... (Args) == 0)
-			return;
-
-		find_type_ids_impl<Args...>(idArray, idx + 1);
-	}
-
-	template<typename... Args>
-	void find_type_ids(TypeID* idArray)
-	{
-		if constexpr (sizeof...(Args) == 0)
-		{
-			return;
-		}
-		find_type_ids_impl<Args...>(idArray, 0);
-	}
-
 	template<typename... Args>
 	class TypeGroup
 	{
 	public:
-		TypeGroup()
-		{
-			find_type_ids<Args...>(m_TypesIDs);
-		}
+		TypeGroup() = default;
 
 		TypeID operator[](const uint64_t index) const
 		{
@@ -192,6 +168,6 @@ namespace decs
 		}
 
 	private:
-		TypeID m_TypesIDs[sizeof...(Args)];
+		const TypeID m_TypesIDs[sizeof...(Args)] = { Type<Args>::ID()... };
 	};
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "decs/Core.h"
+#include "decs/trait.h"
 
 #include "decs/Component/ChunkAllocator.h"
 
@@ -209,4 +210,8 @@ namespace decs
 
 	template<typename TComponentType>
 	concept TComponentConcept = std::derived_from<TComponentType, EntityComponent>;
+
+	template<typename T>
+	concept TComponentOrTagConcept = TComponentConcept<T> || TTagConcept<T>;
+
 }

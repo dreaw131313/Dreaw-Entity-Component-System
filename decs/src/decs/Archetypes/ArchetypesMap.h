@@ -419,5 +419,21 @@ namespace decs
 		void AddTypeDataAfterRemoveComponent(const Archetype& fromArchetype, Archetype& toArchetype, TypeID compType);
 
 		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, ComponentContextBase* addedComponentContext);
+
+		template<TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		Archetype* GetOrCreateArchetype(
+			ComponentContextsManager& componentContextsManager,
+			//out
+			std::tuple<ComponentContext<ComponentTypes>*...>& componentContexts,
+			std::tuple<StableComponentContainer<ComponentTypes>*...>& componentStableContainers,
+			std::tuple<PackedStableComponentContainer<ComponentTypes>*...>& componentPackedContainers,
+			std::tuple<TagTypes...>
+		)
+		{
+			constexpr uint32_t typeCount = sizeof...(ComponentTypes) + sizeof...(TagTypes);
+
+			componentContexts = { componentContextsManager.GetOrCreateComponentContext<ComponentTypes>()... };
+
+		}
 	};
 }

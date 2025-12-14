@@ -6,9 +6,6 @@
 
 namespace decs
 {
-	template<typename T>
-	concept TComponentOrTagConcept = TComponentConcept<T> || TTagConcept<T>;
-
 	class Iteration
 	{
 	public:
@@ -82,8 +79,8 @@ namespace decs
 			}
 			else
 			{
-				m_Without.resize(sizeof...(WithoutTypes));
-				find_type_ids<drop_const_t<WithoutTypes>...>(m_Without.data());
+				m_Without.reserve(sizeof...(WithoutTypes));
+				(m_Without.push_back(Type<drop_const_t<WithoutTypes>>::ID()), ...);
 			}
 		}
 
@@ -96,8 +93,8 @@ namespace decs
 			}
 			else
 			{
-				m_WithAnyOf.resize(sizeof...(WithAnyTypes));
-				find_type_ids<drop_const_t<WithAnyTypes>...>(m_WithAnyOf.data());
+				m_WithAnyOf.reserve(sizeof...(WithAnyTypes));
+				(m_WithAnyOf.push_back(Type<drop_const_t<WithAnyTypes>>::ID()), ...);
 			}
 		}
 
@@ -110,8 +107,8 @@ namespace decs
 			}
 			else
 			{
-				m_WithAll.resize(sizeof...(WithTypes));
-				find_type_ids<drop_const_t<WithTypes>...>(m_WithAll.data());
+				m_WithAll.reserve(sizeof...(WithTypes));
+				(m_WithAll.push_back(Type<drop_const_t<WithTypes>>::ID()), ...);
 			}
 		}
 
