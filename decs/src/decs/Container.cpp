@@ -365,7 +365,7 @@ namespace decs
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer, spawnArchetype);
 		DECS_ASSERT(spawnArchetype != nullptr, "Archetype must not be nullptr!");
 
-		CreateEntityFromSpawnData(spawnedEntity, spawnState, *spawnArchetype);
+		CreateEntityFromSpawnData(spawnState, spawnedEntity, *spawnArchetype);
 
 		InvokeEntityCreateObserver_Internal(spawnedEntity);
 		if (spawnedEntity.IsActive())
@@ -374,7 +374,7 @@ namespace decs
 		}
 		InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, *spawnArchetype, spawnState);
 
-		m_SpawnData.PopBackSpawnState(spawnState.m_CompRefsStart);
+		m_SpawnData.PopBackSpawnState(spawnState.m_ComponentDataStart);
 
 		return spawnedEntity;
 	}
@@ -416,7 +416,7 @@ namespace decs
 		{
 			Entity spawnedEntity(*m_EntityManager.CreateEntity(areActive, *this));
 
-			CreateEntityFromSpawnData(spawnedEntity, spawnState, *spawnArchetype);
+			CreateEntityFromSpawnData(spawnState, spawnedEntity, *spawnArchetype);
 
 			InvokeEntityCreateObserver_Internal(spawnedEntity);
 			if (spawnedEntity.IsActive())
@@ -426,7 +426,7 @@ namespace decs
 			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, *spawnArchetype, spawnState);
 		}
 
-		m_SpawnData.PopBackSpawnState(spawnState.m_CompRefsStart);
+		m_SpawnData.PopBackSpawnState(spawnState.m_ComponentDataStart);
 
 		return true;
 	}
@@ -469,7 +469,7 @@ namespace decs
 		{
 			Entity& spawnedEntity = spawnedEntities.emplace_back(*m_EntityManager.CreateEntity(areActive, *this));
 
-			CreateEntityFromSpawnData(spawnedEntity, spawnState, *spawnArchetype);
+			CreateEntityFromSpawnData(spawnState, spawnedEntity, *spawnArchetype);
 
 			InvokeEntityCreateObserver_Internal(spawnedEntity);
 			if (spawnedEntity.IsActive())
@@ -480,7 +480,7 @@ namespace decs
 			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, *spawnArchetype, spawnState);
 		}
 
-		m_SpawnData.PopBackSpawnState(spawnState.m_CompRefsStart);
+		m_SpawnData.PopBackSpawnState(spawnState.m_ComponentDataStart);
 
 		return true;
 	}
@@ -488,77 +488,74 @@ namespace decs
 	void Container::PrepareSpawnDataFromPrefab(
 		EntityData& prefabEntityData,
 		Container* prefabContainer,
-		Archetype*& outArchetype
+		Archetype*& spawnArchetype
 	)
 	{
 		const Archetype& prefabArchetype = *prefabEntityData.m_Archetype;
 		const uint32_t prefabIndexInArchetype = prefabEntityData.m_IndexInArchetype;
-		Archetype* spawnedEntityArchetype = nullptr;
-		uint64_t componentsCount = prefabArchetype.GetComponentAndTagCount();
+		const uint64_t typeCount = prefabArchetype.GetTypeCount();
 
 		if (prefabContainer == this)
 		{
-			spawnedEntityArchetype = prefabEntityData.m_Archetype;
+			spawnArchetype = prefabEntityData.m_Archetype;
 		}
 		else
 		{
-			spawnedEntityArchetype = m_ArchetypesMap.GetOrCreateMatchedArchetype(
+			spawnArchetype = m_ArchetypesMap.GetOrCreateMatchedArchetype(
 				*prefabEntityData.m_Archetype,
 				&m_ComponentContextManager
 			);
 		}
 
-		outArchetype = spawnedEntityArchetype;
-
-		for (uint32_t i = 0; i < componentsCount; i++)
+		for (uint32_t i = 0; i < typeCount; i++)
 		{
-			const ArchetypeTypeData& prefabArchetypeTypeData = prefabArchetype.m_TypeData[i];
+			const ArchetypeTypeData& prefabTypeData = prefabArchetype.m_TypeData[i];
+			ArchetypeTypeData& spawnTypeData = spawnArchetype->m_TypeData[i];
 
-			ArchetypeTypeData& spawnedEntityArchetypeTypeData = spawnedEntityArchetype->m_TypeData[i];
-
-			if (prefabArchetypeTypeData.IsTag())
+			if (prefabTypeData.IsTag())
 			{
-				m_SpawnData.m_PrefabComponentRefs.emplace_back();
+				m_SpawnData.m_ComponentData.emplace_back();
 			}
 			else
 			{
-				m_SpawnData.m_PrefabComponentRefs.emplace_back(
-					spawnedEntityArchetypeTypeData.m_StableContainer,
-					prefabArchetypeTypeData.m_PackedContainer->GetComponentBasePtr(prefabIndexInArchetype)
+				m_SpawnData.m_ComponentData.push_back(
+					SpawnComponentData(
+						prefabTypeData.m_PackedContainer->GetComponentBasePtr(prefabIndexInArchetype),
+						spawnTypeData.m_StableContainer,
+						spawnTypeData.m_ComponentContext
+					)
 				);
 			}
 		}
-
-		m_SpawnData.m_SpawnedEntityComponentPtrs.resize(m_SpawnData.m_SpawnedEntityComponentPtrs.size() + componentsCount);
 	}
 
 	void Container::CreateEntityFromSpawnData(
-		const Entity& entity,
 		const SpawnDataState& spawnState,
-		Archetype& archetype
+		const Entity& spawnedEntity,
+		Archetype& spawnArchetype
 	)
 	{
-		uint64_t componentsCount = archetype.GetComponentAndTagCount() + spawnState.m_CompRefsStart;
+		uint64_t typeCount = spawnArchetype.GetComponentAndTagCount() + spawnState.m_ComponentDataStart;
 
-		auto entityData = entity.GetEntityData();
-		archetype.AddEntityData(entityData);
+		auto entityData = spawnedEntity.GetEntityData();
+		spawnArchetype.AddEntityData(entityData);
 
-		auto& typeDataVector = archetype.m_TypeData;
-		for (uint32_t i = spawnState.m_CompRefsStart; i < componentsCount; i++)
+		auto& archetypeTypeData = spawnArchetype.m_TypeData;
+		for (uint32_t i = 0; i < typeCount; i++)
 		{
-			ArchetypeTypeData& currentTypeData = typeDataVector[i];
-			SpawnComponentRefData& spawnRefData = m_SpawnData.m_PrefabComponentRefs[i];
-			if (spawnRefData.IsTag())
+			ArchetypeTypeData& currentTypeData = archetypeTypeData[i];
+			SpawnComponentData& spawnComponentData = m_SpawnData.m_ComponentData[i + spawnState.m_ComponentDataStart];
+
+			if (spawnComponentData.IsTag())
 			{
 				continue;
 			}
 
-			EntityComponent* componentPtr = spawnRefData.m_StableContainer->CreateFromComponentBase(spawnRefData.m_ComponentPtr);
-			currentTypeData.m_PackedContainer->PushBack(componentPtr);
+			auto spawnedCompPtr = spawnComponentData.m_SpawnStableContainer->CreateFromComponentBase(spawnComponentData.m_PrefabComponent);
+			currentTypeData.m_PackedContainer->PushBack(spawnedCompPtr);
+			spawnedCompPtr->OnPreCreate(entityData);
 
-			m_SpawnData.m_SpawnedEntityComponentPtrs[i] = componentPtr;
-
-			componentPtr->OnPreCreate(entityData);
+			spawnComponentData.m_SpawnedComponent = spawnedCompPtr;
 		}
 	}
 
@@ -567,21 +564,19 @@ namespace decs
 		auto& orderContextVector = archetype.m_ComponentContextsInOrder;
 		const uint32_t observerInvokeCount = static_cast<uint32_t>(orderContextVector.size()); // must use this becouse orderContextVector does not contain observers for tags
 
-		uint64_t compRefIdx = spawnState.m_CompRefsStart;
-
 		for (uint64_t idx = 0; idx < observerInvokeCount; idx++)
 		{
 			auto& orderData = orderContextVector[idx];
 			const uint32_t componentIdx = orderData.m_ComponentIndex;
 
-			EntityComponent* componentPtr = m_SpawnData.m_SpawnedEntityComponentPtrs[compRefIdx + componentIdx];
-			if (componentPtr != nullptr)
+			EntityComponent* spawnedComponent = m_SpawnData.m_ComponentData[spawnState.m_ComponentDataStart + componentIdx].m_SpawnedComponent;
+			if (spawnedComponent != nullptr)
 			{
-				orderData.m_ComponentContext->InvokeOnCreateComponent(componentPtr, entity);
+				orderData.m_ComponentContext->InvokeOnCreateComponent(spawnedComponent, entity);
 
 				if (entity.IsActive())
 				{
-					orderData.m_ComponentContext->InvokeOnEnableComponent(componentPtr, entity);
+					orderData.m_ComponentContext->InvokeOnEnableComponent(spawnedComponent, entity);
 				}
 			}
 		}
@@ -589,7 +584,7 @@ namespace decs
 
 	void Container::OnAddComponentInvokeObservers(
 		const Entity& entity,
-		ComponentContextBase* componentContext,
+		IComponentContext* componentContext,
 		IPackedComponentContainer* packedContainer,
 		TypeID compTypeID
 	)
@@ -690,7 +685,7 @@ namespace decs
 		return true;
 	}
 
-	void Container::InvokeComponentDestroyObservers(ComponentContextBase& compCtx, EntityComponent& comp, EntityData& entityData)
+	void Container::InvokeComponentDestroyObservers(IComponentContext& compCtx, EntityComponent& comp, EntityData& entityData)
 	{
 		Entity e(entityData);
 
@@ -809,7 +804,7 @@ namespace decs
 
 		// invoking components creation observers
 		{
-			m_ComponentContextManager.IterateOverComponentContexts([&](ComponentContextBase* componentContext)
+			m_ComponentContextManager.IterateOverComponentContexts([&](IComponentContext* componentContext)
 			{
 				TypeID componentTypeID = componentContext->GetComponentTypeID();
 
@@ -870,7 +865,7 @@ namespace decs
 		// invoking components creation observers
 		{
 			Entity entity = {};
-			m_ComponentContextManager.IterateOverComponentContextsForDestryObservers([&](ComponentContextBase* componentContext)
+			m_ComponentContextManager.IterateOverComponentContextsForDestryObservers([&](IComponentContext* componentContext)
 			{
 				TypeID componentTypeID = componentContext->GetComponentTypeID();
 
@@ -1310,9 +1305,9 @@ namespace decs
 		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer, spawnArchetype);
 		DECS_ASSERT(spawnArchetype != nullptr, "Archetype must not be nullptr!");
 
-		CreateEntityFromSpawnData(spawnedEntity, spawnState, *spawnArchetype);
+		CreateEntityFromSpawnData(spawnState, spawnedEntity, *spawnArchetype);
 
-		m_SpawnData.PopBackSpawnState(spawnState.m_CompRefsStart);
+		m_SpawnData.PopBackSpawnState(spawnState.m_ComponentDataStart);
 
 		return spawnedEntity;
 	}
@@ -1346,10 +1341,10 @@ namespace decs
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
 			Entity spawnedEntity(*m_EntityManager.CreateEntity(bAreActive, *this));
-			CreateEntityFromSpawnData(spawnedEntity, spawnState, *spawnArchetype);
+			CreateEntityFromSpawnData(spawnState, spawnedEntity, *spawnArchetype);
 		}
 
-		m_SpawnData.PopBackSpawnState(spawnState.m_CompRefsStart);
+		m_SpawnData.PopBackSpawnState(spawnState.m_ComponentDataStart);
 
 		return true;
 	}
@@ -1385,10 +1380,10 @@ namespace decs
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
 			Entity& spawnedEntity = spawnedEntities.emplace_back(*m_EntityManager.CreateEntity(bAreActive, *this));
-			CreateEntityFromSpawnData(spawnedEntity, spawnState, *spawnArchetype);
+			CreateEntityFromSpawnData(spawnState, spawnedEntity, *spawnArchetype);
 		}
 
-		m_SpawnData.PopBackSpawnState(spawnState.m_CompRefsStart);
+		m_SpawnData.PopBackSpawnState(spawnState.m_ComponentDataStart);
 
 		return true;
 	}

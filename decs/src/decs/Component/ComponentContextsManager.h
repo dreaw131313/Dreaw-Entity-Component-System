@@ -7,7 +7,7 @@ namespace decs
 	struct ComponentContextRecord
 	{
 	public:
-		ComponentContextBase* m_Context = nullptr;
+		IComponentContext* m_Context = nullptr;
 		uint64_t m_OrderIndex = std::numeric_limits<uint64_t>::max();
 		uint32_t m_StableComponentChunkSize = 0;
 		int m_Order = 0;
@@ -62,12 +62,12 @@ namespace decs
 			}
 		}
 
-		ComponentContextBase* GetOrCreateComponentContextFromOtherContext(ComponentContextBase* other)
+		IComponentContext* GetOrCreateComponentContextFromOtherContext(IComponentContext* other)
 		{
 			auto& contextRecord = m_Contexts[other->GetComponentTypeID()];
 			if (contextRecord.m_Context == nullptr)
 			{
-				ComponentContextBase* newContext = other->Clone(
+				IComponentContext* newContext = other->Clone(
 					contextRecord.m_Order,
 					contextRecord.m_StableComponentChunkSize >= 0 ? contextRecord.m_StableComponentChunkSize : m_DefaultStableComponentChunkSize
 				);
@@ -82,7 +82,7 @@ namespace decs
 			}
 		}
 
-		ComponentContextBase* GetComponentContext(const TypeID& typeID)
+		IComponentContext* GetComponentContext(const TypeID& typeID)
 		{
 			auto it = m_Contexts.find(typeID);
 			return it != m_Contexts.end() ? it->second.m_Context : nullptr;
@@ -119,7 +119,7 @@ namespace decs
 			return counter;
 		}
 
-		const std::vector<ComponentContextBase*>& GetComponentContextsInOrder() const
+		const std::vector<IComponentContext*>& GetComponentContextsInOrder() const
 		{
 			return m_ComponentContextsInOrder;
 		}
@@ -221,7 +221,7 @@ namespace decs
 		}
 	private:
 		ecsMap<TypeID, ComponentContextRecord> m_Contexts = {};
-		std::vector<ComponentContextBase*> m_ComponentContextsInOrder = {};
+		std::vector<IComponentContext*> m_ComponentContextsInOrder = {};
 
 		int64_t m_IterationIndex = std::numeric_limits<int64_t>::max();
 		uint32_t m_DefaultStableComponentChunkSize = 1000;

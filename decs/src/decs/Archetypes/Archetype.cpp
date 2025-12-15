@@ -140,7 +140,7 @@ namespace decs
 		}
 	}
 
-	void Archetype::InsertComponentContextInCorrectPlace(ComponentContextBase* componentContext, uint32_t typeDataIndex)
+	void Archetype::InsertComponentContextInCorrectPlace(IComponentContext* componentContext, uint32_t typeDataIndex)
 	{
 		int32_t contextCount = static_cast<int32_t>(m_ComponentContextsInOrder.size());
 		int32_t contextCountMinusOne = contextCount - 1;
@@ -167,7 +167,7 @@ namespace decs
 		m_ComponentContextsInOrder.insert(m_ComponentContextsInOrder.begin(), { componentContext, typeDataIndex });
 	}
 
-	void Archetype::AddTypeData_WithoutCheck(TypeID typeID, ComponentContextBase* componentContext)
+	void Archetype::AddTypeData_WithoutCheck(TypeID typeID, IComponentContext* componentContext)
 	{
 		const uint32_t typeIndex = static_cast<uint32_t>(m_TypeData.size());
 		m_TypeIDsIndexes[typeID] = typeIndex;

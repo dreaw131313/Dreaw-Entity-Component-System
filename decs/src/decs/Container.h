@@ -197,72 +197,71 @@ namespace decs
 
 	#pragma region SPAWNING ENTITIES:
 	private:
-		struct SpawnComponentRefData
+		struct SpawnComponentData
 		{
 		public:
-			IStableComponentContainer* m_StableContainer = nullptr;
-			EntityComponent* m_ComponentPtr = nullptr;
+			const EntityComponent* m_PrefabComponent = nullptr;
+			IStableComponentContainer* m_SpawnStableContainer = nullptr;
+			IComponentContext* m_SpawnedComponentContext = nullptr;
+			EntityComponent* m_SpawnedComponent = nullptr;
 
 		public:
-			SpawnComponentRefData()
+			SpawnComponentData()
 			{
 
 			}
 
-			SpawnComponentRefData(
-				IStableComponentContainer* stableContainer,
-				EntityComponent* componentPtr
+			SpawnComponentData(
+				const EntityComponent* prefabComponent,
+				IStableComponentContainer* spawnStableContainer,
+				IComponentContext* spawnedComponentContext
 			):
-				m_StableContainer(stableContainer), m_ComponentPtr(componentPtr)
+				m_PrefabComponent(prefabComponent), 
+				m_SpawnStableContainer(spawnStableContainer),
+				m_SpawnedComponentContext(spawnedComponentContext)
 			{
 
 			}
 
 			inline bool IsTag() const
 			{
-				return m_StableContainer == nullptr;
+				return m_PrefabComponent == nullptr;
 			}
 		};
 
 		struct SpawnData
 		{
 		public:
-			std::vector<SpawnComponentRefData> m_PrefabComponentRefs;
-			std::vector<EntityComponent*> m_SpawnedEntityComponentPtrs;
+			std::vector<SpawnComponentData> m_ComponentData;
 
 		public:
 			void Reserve(uint64_t size)
 			{
-				m_PrefabComponentRefs.reserve(size);
-				m_SpawnedEntityComponentPtrs.reserve(size);
+				m_ComponentData.reserve(size);
 			}
 
 			void Clear()
 			{
-				m_PrefabComponentRefs.clear();
-				m_SpawnedEntityComponentPtrs.clear();
+				m_ComponentData.clear();
 			}
 
 			void PopBackSpawnState(uint64_t refsStartIdx)
 			{
-				auto pIt = m_PrefabComponentRefs.begin();
+				auto pIt = m_ComponentData.begin();
 				std::advance(pIt, refsStartIdx);
-				m_PrefabComponentRefs.erase(pIt, m_PrefabComponentRefs.end());
+				m_ComponentData.erase(pIt, m_ComponentData.end());
 
-				auto eIt = m_SpawnedEntityComponentPtrs.begin();
-				std::advance(eIt, refsStartIdx);
-				m_SpawnedEntityComponentPtrs.erase(eIt, m_SpawnedEntityComponentPtrs.end());
 			}
 		};
 
 		struct SpawnDataState
 		{
 		public:
-			uint32_t m_CompRefsStart;
+			uint32_t m_ComponentDataStart;
 
 		public:
 			SpawnDataState(SpawnData& spawnData):
-				m_CompRefsStart((uint32_t)spawnData.m_SpawnedEntityComponentPtrs.size())
+				m_ComponentDataStart((uint32_t)spawnData.m_ComponentData.size())
 			{
 
 			}
@@ -294,13 +293,13 @@ namespace decs
 		void PrepareSpawnDataFromPrefab(
 			EntityData& prefabEntityData,
 			Container* prefabContainer,
-			Archetype*& outArchetype
+			Archetype*& spawnArchetype
 		);
 
 		void CreateEntityFromSpawnData(
-			const Entity& entity,
 			const SpawnDataState& spawnState,
-			Archetype& archetype
+			const Entity& spawnedEntity,
+			Archetype& spawnArchetype
 		);
 
 		void InvokeComponentCreateAndEnableObserversOnSpawn(const Entity& entity, const Archetype& archetype, const SpawnDataState& spawnState);
@@ -314,7 +313,7 @@ namespace decs
 	private:
 		void OnAddComponentInvokeObservers(
 			const Entity& entity,
-			ComponentContextBase* componentContext,
+			IComponentContext* componentContext,
 			IPackedComponentContainer* packedContainer,
 			TypeID compTypeID
 		);
@@ -459,7 +458,7 @@ namespace decs
 			return true;
 		}
 	private:
-		void InvokeComponentDestroyObservers(ComponentContextBase& compCtx, EntityComponent& comp, EntityData& entityData);
+		void InvokeComponentDestroyObservers(IComponentContext& compCtx, EntityComponent& comp, EntityData& entityData);
 
 	public:
 

@@ -68,7 +68,7 @@ namespace decs
 	public:
 		TypeID m_TypeID = std::numeric_limits<TypeID>::max();
 		IPackedComponentContainer* m_PackedContainer = nullptr;
-		ComponentContextBase* m_ComponentContext = nullptr;
+		IComponentContext* m_ComponentContext = nullptr;
 		IStableComponentContainer* m_StableContainer = nullptr;
 
 	public:
@@ -80,7 +80,7 @@ namespace decs
 		ArchetypeTypeData(
 			TypeID typeID,
 			IPackedComponentContainer* packedContainer,
-			ComponentContextBase* componentContext,
+			IComponentContext* componentContext,
 			IStableComponentContainer* stableContainer
 		):
 			m_TypeID(typeID), m_PackedContainer(packedContainer), m_ComponentContext(componentContext), m_StableContainer(stableContainer)
@@ -161,7 +161,7 @@ namespace decs
 		struct OrderData
 		{
 		public:
-			ComponentContextBase* m_ComponentContext = nullptr;
+			IComponentContext* m_ComponentContext = nullptr;
 			uint32_t m_ComponentIndex = std::numeric_limits<uint32_t>::max();
 		};
 
@@ -355,11 +355,11 @@ namespace decs
 		void ClearEntityDataAndComponents();
 
 		// it must be called only from "AddTypeData_WithoutCheck" function
-		void InsertComponentContextInCorrectPlace(ComponentContextBase* componentContext, uint32_t typeDataIndex);
+		void InsertComponentContextInCorrectPlace(IComponentContext* componentContext, uint32_t typeDataIndex);
 
 		void AddTypeData_WithoutCheck(
 			TypeID typeID,
-			ComponentContextBase* componentContext
+			IComponentContext* componentContext
 		);
 
 		void UpdateOrderOfComponentContexts();
