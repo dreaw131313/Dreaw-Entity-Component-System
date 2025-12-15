@@ -127,7 +127,6 @@ namespace decs
 			return m_EmptyEntities.size();
 		}
 
-
 		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
@@ -229,7 +228,6 @@ namespace decs
 		{
 		public:
 			std::vector<SpawnComponentRefData> m_PrefabComponentRefs;
-			std::vector <Archetype*> m_SpawnArchetypes;
 			std::vector<EntityComponent*> m_SpawnedEntityComponentPtrs;
 
 		public:
@@ -243,27 +241,17 @@ namespace decs
 			{
 				m_PrefabComponentRefs.clear();
 				m_SpawnedEntityComponentPtrs.clear();
-				m_SpawnArchetypes.clear();
 			}
 
-			void PopBackSpawnState(uint64_t archetypeIdx, uint64_t refsStartIdx)
+			void PopBackSpawnState(uint64_t refsStartIdx)
 			{
-				if (archetypeIdx == 0)
-				{
-					Clear();
-				}
-				else
-				{
-					m_SpawnArchetypes.pop_back();
+				auto pIt = m_PrefabComponentRefs.begin();
+				std::advance(pIt, refsStartIdx);
+				m_PrefabComponentRefs.erase(pIt, m_PrefabComponentRefs.end());
 
-					auto pIt = m_PrefabComponentRefs.begin();
-					std::advance(pIt, refsStartIdx);
-					m_PrefabComponentRefs.erase(pIt, m_PrefabComponentRefs.end());
-
-					auto eIt = m_SpawnedEntityComponentPtrs.begin();
-					std::advance(eIt, refsStartIdx);
-					m_SpawnedEntityComponentPtrs.erase(eIt, m_SpawnedEntityComponentPtrs.end());
-				}
+				auto eIt = m_SpawnedEntityComponentPtrs.begin();
+				std::advance(eIt, refsStartIdx);
+				m_SpawnedEntityComponentPtrs.erase(eIt, m_SpawnedEntityComponentPtrs.end());
 			}
 		};
 
@@ -271,12 +259,10 @@ namespace decs
 		{
 		public:
 			uint32_t m_CompRefsStart;
-			uint32_t m_ArchetypeIndex;
 
 		public:
 			SpawnDataState(SpawnData& spawnData):
-				m_CompRefsStart((uint32_t)spawnData.m_SpawnedEntityComponentPtrs.size()),
-				m_ArchetypeIndex((uint32_t)spawnData.m_SpawnArchetypes.size())
+				m_CompRefsStart((uint32_t)spawnData.m_SpawnedEntityComponentPtrs.size())
 			{
 
 			}
@@ -304,36 +290,17 @@ namespace decs
 			bool areActive = true
 		);
 
-		Entity Spawn_WithCallback(
-			SpawnEntityCallback& callback,
-			const Entity& prefab,
-			bool bIsActive = true
-		);
-
-		bool Spawn_WithCallback(
-			SpawnEntityCallback& callback,
-			const Entity& prefab,
-			uint64_t spawnCount,
-			bool bAreActive = true
-		);
-
-		bool Spawn_WithCallback(
-			SpawnEntityCallback& callback,
-			const Entity& prefab,
-			std::vector<Entity>& spawnedEntities,
-			uint64_t spawnCount,
-			bool bAreActive = true
-		);
-
 	private:
 		void PrepareSpawnDataFromPrefab(
 			EntityData& prefabEntityData,
-			Container* prefabContainer
+			Container* prefabContainer,
+			Archetype*& outArchetype
 		);
 
 		void CreateEntityFromSpawnData(
 			const Entity& entity,
-			const SpawnDataState& spawnState
+			const SpawnDataState& spawnState,
+			Archetype& archetype
 		);
 
 		void InvokeComponentCreateAndEnableObserversOnSpawn(const Entity& entity, const Archetype& archetype, const SpawnDataState& spawnState);
