@@ -84,9 +84,6 @@
     <ClInclude Include="src\decs\Component\Component.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Utils\UtilityClasses.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decs\trait.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -392,7 +392,7 @@ namespace decs
 
 		// CREATING ARCHETYPES
 	private:
-		Archetype* CreateSingleComponentArchetype(TypeID componentTypeID, ComponentContextBase* componentContext);
+		Archetype* CreateSingleComponentArchetype(TypeID componentTypeID, IComponentContext* componentContext);
 
 		template<TComponentConcept T>
 		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype)
@@ -407,7 +407,7 @@ namespace decs
 			return nullptr;
 		}
 
-		Archetype* CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, ComponentContextBase* componentContext);
+		Archetype* CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext);
 
 		Archetype* GetArchetypeAfterRemoveComponent(const Archetype& fromArchetype, TypeID removedComponentTypeID);
 
@@ -419,7 +419,7 @@ namespace decs
 
 		void AddTypeDataAfterRemoveComponent(const Archetype& fromArchetype, Archetype& toArchetype, TypeID compType);
 
-		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, ComponentContextBase* addedComponentContext);
+		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, IComponentContext* addedComponentContext);
 
 	};
 }

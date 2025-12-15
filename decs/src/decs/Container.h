@@ -127,7 +127,6 @@ namespace decs
 			return m_EmptyEntities.size();
 		}
 
-
 		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
@@ -198,85 +197,71 @@ namespace decs
 
 	#pragma region SPAWNING ENTITIES:
 	private:
-		struct SpawnComponentRefData
+		struct SpawnComponentData
 		{
 		public:
-			IStableComponentContainer* m_StableContainer = nullptr;
-			EntityComponent* m_ComponentPtr = nullptr;
+			const EntityComponent* m_PrefabComponent = nullptr;
+			IStableComponentContainer* m_SpawnStableContainer = nullptr;
+			IComponentContext* m_SpawnedComponentContext = nullptr;
+			EntityComponent* m_SpawnedComponent = nullptr;
 
 		public:
-			SpawnComponentRefData()
+			SpawnComponentData()
 			{
 
 			}
 
-			SpawnComponentRefData(
-				IStableComponentContainer* stableContainer,
-				EntityComponent* componentPtr
+			SpawnComponentData(
+				const EntityComponent* prefabComponent,
+				IStableComponentContainer* spawnStableContainer,
+				IComponentContext* spawnedComponentContext
 			):
-				m_StableContainer(stableContainer), m_ComponentPtr(componentPtr)
+				m_PrefabComponent(prefabComponent),
+				m_SpawnStableContainer(spawnStableContainer),
+				m_SpawnedComponentContext(spawnedComponentContext)
 			{
 
 			}
 
 			inline bool IsTag() const
 			{
-				return m_StableContainer == nullptr;
+				return m_PrefabComponent == nullptr;
 			}
 		};
 
 		struct SpawnData
 		{
 		public:
-			std::vector<SpawnComponentRefData> m_PrefabComponentRefs;
-			std::vector <Archetype*> m_SpawnArchetypes;
-			std::vector<EntityComponent*> m_SpawnedEntityComponentPtrs;
+			std::vector<SpawnComponentData> m_ComponentData;
 
 		public:
 			void Reserve(uint64_t size)
 			{
-				m_PrefabComponentRefs.reserve(size);
-				m_SpawnedEntityComponentPtrs.reserve(size);
+				m_ComponentData.reserve(size);
 			}
 
 			void Clear()
 			{
-				m_PrefabComponentRefs.clear();
-				m_SpawnedEntityComponentPtrs.clear();
-				m_SpawnArchetypes.clear();
+				m_ComponentData.clear();
 			}
 
-			void PopBackSpawnState(uint64_t archetypeIdx, uint64_t refsStartIdx)
+			void PopBackSpawnState(uint64_t refsStartIdx)
 			{
-				if (archetypeIdx == 0)
-				{
-					Clear();
-				}
-				else
-				{
-					m_SpawnArchetypes.pop_back();
+				auto pIt = m_ComponentData.begin();
+				std::advance(pIt, refsStartIdx);
+				m_ComponentData.erase(pIt, m_ComponentData.end());
 
-					auto pIt = m_PrefabComponentRefs.begin();
-					std::advance(pIt, refsStartIdx);
-					m_PrefabComponentRefs.erase(pIt, m_PrefabComponentRefs.end());
-
-					auto eIt = m_SpawnedEntityComponentPtrs.begin();
-					std::advance(eIt, refsStartIdx);
-					m_SpawnedEntityComponentPtrs.erase(eIt, m_SpawnedEntityComponentPtrs.end());
-				}
 			}
 		};
 
 		struct SpawnDataState
 		{
 		public:
-			uint32_t m_CompRefsStart;
-			uint32_t m_ArchetypeIndex;
+			uint32_t m_ComponentDataStart;
 
 		public:
 			SpawnDataState(SpawnData& spawnData):
-				m_CompRefsStart((uint32_t)spawnData.m_SpawnedEntityComponentPtrs.size()),
-				m_ArchetypeIndex((uint32_t)spawnData.m_SpawnArchetypes.size())
+				m_ComponentDataStart((uint32_t)spawnData.m_ComponentData.size())
 			{
 
 			}
@@ -304,39 +289,63 @@ namespace decs
 			bool areActive = true
 		);
 
-		Entity Spawn_WithCallback(
-			SpawnEntityCallback& callback,
-			const Entity& prefab,
-			bool bIsActive = true
-		);
-
-		bool Spawn_WithCallback(
-			SpawnEntityCallback& callback,
-			const Entity& prefab,
-			uint64_t spawnCount,
-			bool bAreActive = true
-		);
-
-		bool Spawn_WithCallback(
-			SpawnEntityCallback& callback,
-			const Entity& prefab,
-			std::vector<Entity>& spawnedEntities,
-			uint64_t spawnCount,
-			bool bAreActive = true
-		);
-
 	private:
 		void PrepareSpawnDataFromPrefab(
-			EntityData& prefabEntityData,
-			Container* prefabContainer
+			const EntityData& prefabEntityData,
+			const Container& prefabContainer,
+			Archetype*& spawnArchetype
 		);
 
 		void CreateEntityFromSpawnData(
-			const Entity& entity,
-			const SpawnDataState& spawnState
+			const SpawnDataState& spawnState,
+			const Entity& spawnedEntity,
+			Archetype& spawnArchetype
 		);
 
 		void InvokeComponentCreateAndEnableObserversOnSpawn(const Entity& entity, const Archetype& archetype, const SpawnDataState& spawnState);
+
+		template<TComponentConcept T>
+		using ContainerType = PackedStableComponentContainer<drop_const_t<T>>;
+
+		template<TComponentConcept... ComponentTypes>
+		void CreateEntityFromSpawnData_Templated(
+			const SpawnDataState& spawnState,
+			const Entity& spawnedEntity,
+			Archetype& spawnArchetype
+		)
+		{
+			constexpr const TypeGroup<ComponentTypes...> componentsGroup{};
+
+			EntityData* entityData = GetEntityData(spawnedEntity);
+			spawnArchetype.AddEntityData(entityData);
+
+			auto& archetypeTypeData = spawnArchetype.m_TypeData;
+			const uint64_t typeCount = spawnArchetype.GetTypeCount();
+			for (uint32_t i = 0; i < typeCount; i++)
+			{
+				ArchetypeTypeData& currentTypeData = archetypeTypeData[i];
+				SpawnComponentData& spawnComponentData = m_SpawnData.m_ComponentData[i + spawnState.m_ComponentDataStart];
+
+				if (spawnComponentData.IsTag())
+				{
+					continue;
+				}
+
+				auto spawnedCompPtr = spawnComponentData.m_SpawnStableContainer->CreateFromComponentBase(spawnComponentData.m_PrefabComponent);
+				currentTypeData.m_PackedContainer->PushBack(spawnedCompPtr);
+				spawnedCompPtr->OnPreCreate(entityData);
+
+				spawnComponentData.m_SpawnedComponent = spawnedCompPtr;
+			}
+
+
+			uint32_t indexInArchetype = entityData->m_IndexInArchetype;
+
+
+			std::tuple<ContainerType<ComponentTypes>*...> containersTuple = { spawnArchetype.GetTypePackedContainer<ComponentTypes>()... };
+
+			std::tuple<drop_const_t<ComponentTypes>*> componentsTuple = { std::get<ContainerType<ComponentTypes>*>(containersTuple)->GetAsPtr(indexInArchetype)};
+		}
 
 	#pragma endregion
 
@@ -347,7 +356,7 @@ namespace decs
 	private:
 		void OnAddComponentInvokeObservers(
 			const Entity& entity,
-			ComponentContextBase* componentContext,
+			IComponentContext* componentContext,
 			IPackedComponentContainer* packedContainer,
 			TypeID compTypeID
 		);
@@ -492,7 +501,7 @@ namespace decs
 			return true;
 		}
 	private:
-		void InvokeComponentDestroyObservers(ComponentContextBase& compCtx, EntityComponent& comp, EntityData& entityData);
+		void InvokeComponentDestroyObservers(IComponentContext& compCtx, EntityComponent& comp, EntityData& entityData);
 
 	public:
 

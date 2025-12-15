@@ -11,17 +11,17 @@ namespace decs
 	class Entity;
 	class Container;
 
-	class ComponentContextBase
+	class IComponentContext
 	{
 		friend class Container;
 	public:
-		ComponentContextBase(int observerOrder = 0):
+		IComponentContext(int observerOrder = 0):
 			m_ObserverOrder(observerOrder)
 		{
 
 		}
 
-		virtual ~ComponentContextBase() = default;
+		virtual ~IComponentContext() = default;
 
 		inline virtual TypeID GetComponentTypeID() const = 0;
 
@@ -44,7 +44,7 @@ namespace decs
 
 		inline virtual bool HasDestroyObserver() const = 0;
 
-		virtual ComponentContextBase* Clone(int observerOrder, uint32_t stableComponentChunkSize) = 0;
+		virtual IComponentContext* Clone(int observerOrder, uint32_t stableComponentChunkSize) = 0;
 
 		virtual IStableComponentContainer* GetStableContainer() = 0;
 
@@ -61,13 +61,13 @@ namespace decs
 	};
 
 	template<typename TComponent>
-	class ComponentContext : public ComponentContextBase
+	class ComponentContext : public IComponentContext
 	{
 		friend class Container;
 
 	public:
 		ComponentContext(int order, uint32_t stableComponentChunkSize):
-			ComponentContextBase(order),
+			IComponentContext(order),
 			m_StableContainer(stableComponentChunkSize > 0 ? stableComponentChunkSize : 1000)
 		{
 
@@ -92,7 +92,7 @@ namespace decs
 			return m_Observers.m_DestroyObserver != nullptr;
 		}
 
-		ComponentContextBase* Clone(int observerOrder, uint32_t stableComponentChunkSize) override
+		IComponentContext* Clone(int observerOrder, uint32_t stableComponentChunkSize) override
 		{
 			return new ComponentContext<TComponent>(observerOrder, stableComponentChunkSize);
 		}

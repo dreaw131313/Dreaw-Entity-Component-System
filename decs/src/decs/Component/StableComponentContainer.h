@@ -19,7 +19,7 @@ namespace decs
 		inline virtual TypeID GetTypeID()const noexcept = 0;
 
 		virtual bool Destroy(EntityComponent* component) = 0;
-		virtual EntityComponent* CreateFromComponentBase(EntityComponent* ptr) = 0;
+		virtual EntityComponent* CreateFromComponentBase(const EntityComponent* ptr) = 0;
 		virtual uint32_t GetChunkSize() const noexcept = 0;
 		virtual void Clear() = 0;
 	};
@@ -72,9 +72,9 @@ namespace decs
 			return m_Allocator.Destroy(component);
 		}
 
-		inline EntityComponent* CreateFromComponentBase(EntityComponent* ptr)override
+		inline EntityComponent* CreateFromComponentBase(const EntityComponent* ptr)override
 		{
-			return m_Allocator.Create(*static_cast<TComponentType*>(ptr));
+			return m_Allocator.Create(*static_cast<const TComponentType*>(ptr));
 		}
 
 		inline void Clear() override

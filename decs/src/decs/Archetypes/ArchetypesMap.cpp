@@ -269,7 +269,7 @@ namespace decs
 		return archetype;
 	}
 
-	Archetype* ArchetypesMap::CreateSingleComponentArchetype(TypeID componentTypeID, ComponentContextBase* componentContext)
+	Archetype* ArchetypesMap::CreateSingleComponentArchetype(TypeID componentTypeID, IComponentContext* componentContext)
 	{
 		auto archetype = GetSingleComponentArchetype(componentTypeID);
 		if (archetype != nullptr)
@@ -282,7 +282,7 @@ namespace decs
 		return archetype;
 	}
 
-	Archetype* ArchetypesMap::CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, ComponentContextBase* componentContext)
+	Archetype* ArchetypesMap::CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext)
 	{
 		//auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
 		auto edge = toArchetype.GetEdge(componentTypeID);
@@ -394,7 +394,7 @@ namespace decs
 		}
 	}
 
-	void ArchetypesMap::AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, ComponentContextBase* addedComponentContext)
+	void ArchetypesMap::AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, IComponentContext* addedComponentContext)
 	{
 		bool isNewComponentTypeAdded = false;
 
