@@ -7,6 +7,7 @@
 #include "decs/EntityData.h"
 #include "decs/trait.h"
 #include "decs/Hash.h"
+#include "decs/check_cast.h"
 
 #include <optional>
 
@@ -94,6 +95,21 @@ namespace decs
 				|| m_ComponentContext == nullptr
 				|| m_StableContainer == nullptr
 				;
+		}
+	};
+
+	template<typename ComponentType>
+	struct TArchetypeTypeData
+	{
+	public:
+		PackedStableComponentContainer<ComponentType>* m_PackedContainer = nullptr;
+		StableComponentContainer<ComponentType>* m_StableContainer = nullptr;
+		ComponentContext<ComponentType>* m_ComponentContext = nullptr;
+
+	public:
+		inline bool IsTag() const
+		{
+			return m_PackedContainer != nullptr;
 		}
 	};
 
@@ -350,6 +366,24 @@ namespace decs
 			auto& typeData = m_TypeData[compIdx];
 
 			return static_cast<PackedStableComponentContainer<TComponentType>*>(typeData.m_PackedContainer);
+		}
+
+		template<typename TComponentType>
+		TArchetypeTypeData<TComponentType> GetTypeData() const
+		{
+			uint32_t compIdx = FindTypeIndex<TComponentType>();
+			if (compIdx == std::numeric_limits<uint32_t>::max())
+			{
+				return {};
+			}
+
+			auto& typeData = m_TypeData[compIdx];
+
+			return TArchetypeTypeData<TComponentType>{
+				.m_PackedContainer = decs::check_cast<PackedStableComponentContainer<TComponentType>*>(typeData.m_PackedContainer),
+					.m_StableContainer = decs::check_cast<StableComponentContainer<TComponentType>*>(typeData.m_StableContainer),
+					.m_ComponentContext = decs::check_cast<ComponentContext<TComponentType>*>(typeData.m_ComponentContext),
+			};
 		}
 
 		void ClearEntityDataAndComponents();

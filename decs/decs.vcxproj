@@ -101,6 +101,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\check_cast.h" />
     <ClInclude Include="src\decs\Component\Component.h" />
     <ClInclude Include="src\decs\Containers\TOrderedList.h" />
     <ClInclude Include="src\decs\Hash.h" />

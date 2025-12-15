@@ -77,7 +77,10 @@ namespace decs
 			Entity e(*entityData);
 			AddToEmptyEntitiesRightAfterNewEntityCreation(*e.GetEntityData());
 			InvokeEntityCreateObserver_Internal(e);
-			InvokeEntityEnableObserver_Internal(e);
+			if (bIsActive)
+			{
+				InvokeEntityEnableObserver_Internal(e);
+			}
 
 			return e;
 		}
@@ -188,6 +191,18 @@ namespace decs
 	{
 		return entity.m_EntityData;
 	}
+
+	bool Container::IsEntityActive(const Entity& entity) const
+	{
+		return entity.IsActive();
+	}
+
+
+	Entity Container::CreateEntityRaw(bool bIsActive)
+	{
+		return Entity(m_EntityManager.CreateEntity(bIsActive, *this));
+	}
+
 
 	void Container::SetEntityActiveOverride(const Entity& entity, bool bIsActiveOverride)
 	{

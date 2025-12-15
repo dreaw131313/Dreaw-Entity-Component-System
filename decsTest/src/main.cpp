@@ -115,7 +115,7 @@ void NormalTest()
 	decs::Container prefabContainer(containerConfig);
 	decs::Entity prefab{};
 	{
-		prefab = prefabContainer.CreateEntity();
+		prefab = prefabContainer.CreateEntity(false);
 
 		prefab.AddComponent<TestComponent>();
 		prefab.AddComponent<Renderer>();
@@ -133,6 +133,8 @@ void NormalTest()
 		};
 
 		decs::Entity e = prefabContainer.CreateEntity(componetns, tags, true, initFunc);
+
+		bool bResult = prefabContainer.CreateEntities(componetns, tags, 1, true, initFunc);
 	}
 
 	{

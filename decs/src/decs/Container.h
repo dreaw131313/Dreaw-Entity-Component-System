@@ -113,7 +113,7 @@ namespace decs
 			return m_LifeTimeData;
 		}
 
-		[[nodiscard]] Entity CreateEntity(bool bIsActive = true);
+		Entity CreateEntity(bool bIsActive = true);
 
 		[[nodiscard]] inline uint32_t GetEntityCount() const
 		{
@@ -159,6 +159,97 @@ namespace decs
 			return Entity();
 		}
 
+		/// <summary>
+		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes of ComponentTypeGroup parameter.
+		/// </summary>
+		/// <typeparam name="InitFunc"></typeparam>
+		/// <typeparam name="...ComponentTypes"></typeparam>
+		/// <typeparam name="...TagTypes"></typeparam>
+		/// <param name="components"></param>
+		/// <param name="tags"></param>
+		/// <param name="entityCount"></param>
+		/// <param name="bIsActive"></param>
+		/// <param name="initFunc"></param>
+		/// <returns></returns>
+		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+			requires query_callable<InitFunc, ComponentTypes...>
+		bool CreateEntities(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			const TagTypeGroup<TagTypes...> tags,
+			uint32_t entityCount,
+			bool bIsActive,
+			InitFunc&& initFunc
+		)
+		{
+			if (entityCount == 0)
+			{
+				return false;
+			}
+
+			uint32_t idxBuffer = 0;
+			Archetype* spawnArchetype = nullptr;
+
+			if constexpr (sizeof...(TagTypes) > 0)
+			{
+				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
+			}
+			if constexpr (sizeof...(ComponentTypes) > 0)
+			{
+				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype, idxBuffer)), ...);
+			}
+
+			if (spawnArchetype != nullptr)
+			{
+				std::tuple<TArchetypeTypeData<drop_const_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<drop_const_t<ComponentTypes>>()... };
+
+				auto invokeComponentObservers = [&]<typename T>(
+					const Entity & entity,
+					const TArchetypeTypeData<drop_const_t<T>>&typeData,
+					drop_const_t<T>*component
+					)
+				{
+					typeData.m_ComponentContext->InvokeOnCreateComponent(component, entity);
+					if (IsEntityActive(entity))
+					{
+						typeData.m_ComponentContext->InvokeOnEnableComponent(component, entity);
+					}
+				};
+
+				for (uint32_t i = 0; i < entityCount; i++)
+				{
+					if (Entity entity = CreateEntityRaw(bIsActive))
+					{
+						EntityData* entityData = GetEntityData(entity);
+						spawnArchetype->AddEntityData(entityData);
+
+						std::tuple<drop_const_t<ComponentTypes>*...> createdComponents = { std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple).m_StableContainer->Create()... };
+						(std::get<drop_const_t<ComponentTypes>*>(createdComponents)->OnPreCreate(entityData), ...);
+						(std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple).m_PackedContainer->PushBack(std::get<drop_const_t<ComponentTypes>*>(createdComponents)), ...);
+
+						InvokeEntityCreateObserver_Internal(entity);
+						if (bIsActive)
+						{
+							InvokeEntityEnableObserver_Internal(entity);
+						}
+
+						(invokeComponentObservers.operator () < drop_const_t<ComponentTypes> > (
+							entity,
+							std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple),
+							std::get<drop_const_t<ComponentTypes>*>(createdComponents)
+							), ...);
+					}
+				}
+			}
+			else
+			{
+				for (uint32_t i = 0; i < entityCount; i++)
+				{
+					CreateEntity(bIsActive);
+				}
+			}
+
+			return true;
+		}
 	private:
 		void InitializeLifeTimeData();
 
@@ -169,6 +260,10 @@ namespace decs
 		void SetEntityActive(const Entity& entity, bool bIsActive);
 
 		EntityData* GetEntityData(const Entity& entity) const;
+
+		bool IsEntityActive(const Entity& entity) const;
+
+		Entity CreateEntityRaw(bool bIsActive);
 
 	public:
 		/// <summary>
@@ -344,7 +439,7 @@ namespace decs
 
 			std::tuple<ContainerType<ComponentTypes>*...> containersTuple = { spawnArchetype.GetTypePackedContainer<ComponentTypes>()... };
 
-			std::tuple<drop_const_t<ComponentTypes>*> componentsTuple = { std::get<ContainerType<ComponentTypes>*>(containersTuple)->GetAsPtr(indexInArchetype)};
+			std::tuple<drop_const_t<ComponentTypes>*> componentsTuple = { std::get<ContainerType<ComponentTypes>*>(containersTuple)->GetAsPtr(indexInArchetype) };
 		}
 
 	#pragma endregion

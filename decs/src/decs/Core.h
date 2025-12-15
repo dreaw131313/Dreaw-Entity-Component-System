@@ -64,7 +64,6 @@ namespace decs
 		inline constexpr EntityVersion MaxVersion = std::numeric_limits<uint32_t>::max();
 	}
 
-
 }
 
 
