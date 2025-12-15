@@ -362,7 +362,7 @@ namespace decs
 		SpawnDataState spawnState(m_SpawnData);
 
 		Archetype* spawnArchetype = nullptr;
-		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer, spawnArchetype);
+		PrepareSpawnDataFromPrefab(prefabEntityData, *prefabContainer, spawnArchetype);
 		DECS_ASSERT(spawnArchetype != nullptr, "Archetype must not be nullptr!");
 
 		CreateEntityFromSpawnData(spawnState, spawnedEntity, *spawnArchetype);
@@ -407,7 +407,7 @@ namespace decs
 		SpawnDataState spawnState(m_SpawnData);
 
 		Archetype* spawnArchetype = nullptr;
-		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer, spawnArchetype);
+		PrepareSpawnDataFromPrefab(prefabEntityData, *prefabContainer, spawnArchetype);
 		DECS_ASSERT(spawnArchetype != nullptr, "Archetype must not be nullptr!");
 
 		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntityCount() + spawnCount);
@@ -460,7 +460,7 @@ namespace decs
 		SpawnDataState spawnState(m_SpawnData);
 
 		Archetype* spawnArchetype = nullptr;
-		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer, spawnArchetype);
+		PrepareSpawnDataFromPrefab(prefabEntityData, *prefabContainer, spawnArchetype);
 		DECS_ASSERT(spawnArchetype != nullptr, "Archetype must not be nullptr!");
 
 		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntityCount() + spawnCount);
@@ -486,8 +486,8 @@ namespace decs
 	}
 
 	void Container::PrepareSpawnDataFromPrefab(
-		EntityData& prefabEntityData,
-		Container* prefabContainer,
+		const EntityData& prefabEntityData,
+		const Container& prefabContainer,
 		Archetype*& spawnArchetype
 	)
 	{
@@ -495,16 +495,13 @@ namespace decs
 		const uint32_t prefabIndexInArchetype = prefabEntityData.m_IndexInArchetype;
 		const uint64_t typeCount = prefabArchetype.GetTypeCount();
 
-		if (prefabContainer == this)
+		if ((&prefabContainer) == this)
 		{
 			spawnArchetype = prefabEntityData.m_Archetype;
 		}
 		else
 		{
-			spawnArchetype = m_ArchetypesMap.GetOrCreateMatchedArchetype(
-				*prefabEntityData.m_Archetype,
-				&m_ComponentContextManager
-			);
+			spawnArchetype = m_ArchetypesMap.GetOrCreateMatchedArchetype(*prefabEntityData.m_Archetype, &m_ComponentContextManager);
 		}
 
 		for (uint32_t i = 0; i < typeCount; i++)
@@ -518,12 +515,10 @@ namespace decs
 			}
 			else
 			{
-				m_SpawnData.m_ComponentData.push_back(
-					SpawnComponentData(
-						prefabTypeData.m_PackedContainer->GetComponentBasePtr(prefabIndexInArchetype),
-						spawnTypeData.m_StableContainer,
-						spawnTypeData.m_ComponentContext
-					)
+				m_SpawnData.m_ComponentData.emplace_back(
+					prefabTypeData.m_PackedContainer->GetComponentBasePtr(prefabIndexInArchetype),
+					spawnTypeData.m_StableContainer,
+					spawnTypeData.m_ComponentContext
 				);
 			}
 		}
@@ -535,12 +530,11 @@ namespace decs
 		Archetype& spawnArchetype
 	)
 	{
-		uint64_t typeCount = spawnArchetype.GetComponentAndTagCount() + spawnState.m_ComponentDataStart;
-
 		auto entityData = spawnedEntity.GetEntityData();
 		spawnArchetype.AddEntityData(entityData);
 
 		auto& archetypeTypeData = spawnArchetype.m_TypeData;
+		uint64_t typeCount = spawnArchetype.GetComponentAndTagCount();
 		for (uint32_t i = 0; i < typeCount; i++)
 		{
 			ArchetypeTypeData& currentTypeData = archetypeTypeData[i];
@@ -1302,7 +1296,7 @@ namespace decs
 		SpawnDataState spawnState(m_SpawnData);
 
 		Archetype* spawnArchetype = nullptr;
-		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer, spawnArchetype);
+		PrepareSpawnDataFromPrefab(prefabEntityData, *prefabContainer, spawnArchetype);
 		DECS_ASSERT(spawnArchetype != nullptr, "Archetype must not be nullptr!");
 
 		CreateEntityFromSpawnData(spawnState, spawnedEntity, *spawnArchetype);
@@ -1333,7 +1327,7 @@ namespace decs
 		SpawnDataState spawnState(m_SpawnData);
 
 		Archetype* spawnArchetype = nullptr;
-		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer, spawnArchetype);
+		PrepareSpawnDataFromPrefab(prefabEntityData, *prefabContainer, spawnArchetype);
 		DECS_ASSERT(spawnArchetype != nullptr, "Archetype must not be nullptr!");
 
 		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntityCount() + spawnCount);
@@ -1372,7 +1366,7 @@ namespace decs
 		SpawnDataState spawnState(m_SpawnData);
 
 		Archetype* spawnArchetype = nullptr;
-		PrepareSpawnDataFromPrefab(prefabEntityData, prefabContainer, spawnArchetype);
+		PrepareSpawnDataFromPrefab(prefabEntityData, *prefabContainer, spawnArchetype);
 		DECS_ASSERT(spawnArchetype != nullptr, "Archetype must not be nullptr!");
 
 		spawnArchetype->ReserveSpaceInArchetype(spawnArchetype->EntityCount() + spawnCount);
