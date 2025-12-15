@@ -124,25 +124,25 @@ void NormalTest()
 		prefab.AddTag<BoolTag>();
 		prefab.AddComponent<Position>(10.f, 10.f);
 
-		decs::ComponentTypeGroup<TestComponent, Position> componetns{};
-		decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
-
-		auto initFunc = [](const decs::Entity& e, TestComponent& component, Position& position)
-		{
-			PrintLine("Init from helepr create entity func!");
-		};
-
-		decs::Entity e = prefabContainer.CreateEntity(componetns, tags, true, initFunc);
-
-		bool bResult = prefabContainer.CreateEntities(componetns, tags, 1, true, initFunc);
 	}
 
 	{
 		decs::Container container = { containerConfig };
 		observerManager.FillContainerObservers(container);
 
-		container.Spawn(prefab, true);
-		container.Spawn(prefab, 9, true);
+		/*container.Spawn(prefab, true);
+		container.Spawn(prefab, 9, true);*/
+
+
+		decs::ComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
+		decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
+
+		auto initFunc = [](const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
+		{
+			PrintLine("Init from helepr create entity func!");
+		};
+
+		bool bResult = container.CreateEntities(componetns, tags, 10, true, initFunc);
 
 		uint32_t counter = 0;
 		auto testFunc = [&](const TestComponent& test)
@@ -155,10 +155,11 @@ void NormalTest()
 		};
 
 
-		if (false)
+		if (true)
 		{
 			using QueryType = decs::Query< const TestComponent>;
 			QueryType query(&container);
+			query.With< Renderer, Position, FloatTag, IntTag, BoolTag>();
 
 			PrintLine("ForEach");
 			query.ForEach(testFunc);
@@ -210,6 +211,7 @@ void NormalTest()
 			}
 		}
 
+		if (true)
 		{
 			decs::TypeGroup<int, float> t{};
 
@@ -217,7 +219,7 @@ void NormalTest()
 
 			using QueryType = decs::MultiQuery<const TestComponent>;
 			QueryType query{};
-			query.WithAny<FloatTag, IntTag>();
+			query.With< Renderer, Position, FloatTag, IntTag, BoolTag>();
 			query.AddContainer(&container);
 
 			PrintLine("ForEach");

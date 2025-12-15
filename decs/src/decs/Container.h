@@ -161,6 +161,7 @@ namespace decs
 
 		/// <summary>
 		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes of ComponentTypeGroup parameter.
+		/// During observer callbacks invokaction removing components or tags are will cause undefined behavior.
 		/// </summary>
 		/// <typeparam name="InitFunc"></typeparam>
 		/// <typeparam name="...ComponentTypes"></typeparam>
@@ -181,7 +182,7 @@ namespace decs
 			InitFunc&& initFunc
 		)
 		{
-			if (entityCount == 0)
+			if (entityCount == 0 || !m_CanCreateEntities)
 			{
 				return false;
 			}
