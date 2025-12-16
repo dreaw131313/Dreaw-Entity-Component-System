@@ -127,38 +127,6 @@ namespace decs
 			return m_EmptyEntities.size();
 		}
 
-		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
-			requires query_callable<InitFunc, ComponentTypes...>
-		Entity CreateEntity(
-			const ComponentTypeGroup<ComponentTypes...> components,
-			const TagTypeGroup<TagTypes...> tags,
-			bool bIsActive,
-			InitFunc&& initFunc
-		)
-		{
-			if (Entity entity = CreateEntity(bIsActive))
-			{
-				EntityData* entityData = GetEntityData(entity);
-
-				(AddTag<TagTypes>(*entityData), ...);
-
-				std::tuple<ComponentTypes*...> componentsTuple = { AddComponent<ComponentTypes>(entity, *entityData)... };
-
-				if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
-				{
-					initFunc(entity, *std::get<ComponentTypes*>(componentsTuple)...);
-				}
-				else
-				{
-					initFunc(*std::get<ComponentTypes*>(componentsTuple)...);
-				}
-
-				return entity;
-			}
-
-			return Entity();
-		}
-
 		/// <summary>
 		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes of ComponentTypeGroup parameter.
 		/// During observer callbacks invokaction removing components or tags are will cause undefined behavior.
@@ -174,7 +142,7 @@ namespace decs
 		/// <returns></returns>
 		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
-		bool CreateEntities(
+		void CreateEntities(
 			const ComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
 			uint32_t entityCount,
@@ -184,40 +152,126 @@ namespace decs
 		{
 			if (entityCount == 0 || !m_CanCreateEntities)
 			{
-				return false;
+				return;
 			}
 
-			uint32_t idxBuffer = 0;
-			Archetype* spawnArchetype = nullptr;
-
-			if constexpr (sizeof...(TagTypes) > 0)
+			if constexpr (sizeof...(TagTypes) == 0 && sizeof...(ComponentTypes) == 0)
 			{
-				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
-			}
-			if constexpr (sizeof...(ComponentTypes) > 0)
-			{
-				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype, idxBuffer)), ...);
-			}
-
-			if (spawnArchetype != nullptr)
-			{
-				std::tuple<TArchetypeTypeData<drop_const_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<drop_const_t<ComponentTypes>>()... };
-
-				auto invokeComponentObservers = [&]<typename T>(
-					const Entity & entity,
-					const TArchetypeTypeData<drop_const_t<T>>&typeData,
-					drop_const_t<T>*component
-					)
-				{
-					typeData.m_ComponentContext->InvokeOnCreateComponent(component, entity);
-					if (IsEntityActive(entity))
-					{
-						typeData.m_ComponentContext->InvokeOnEnableComponent(component, entity);
-					}
-				};
-
 				for (uint32_t i = 0; i < entityCount; i++)
 				{
+					Entity e = CreateEntity(bIsActive);
+					initFunc(e);
+				}
+			}
+			else
+			{
+				uint32_t idxBuffer = 0;
+				Archetype* spawnArchetype = nullptr;
+
+				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
+				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype, idxBuffer)), ...);
+
+				if (spawnArchetype != nullptr)
+				{
+					std::tuple<TArchetypeTypeData<drop_const_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<drop_const_t<ComponentTypes>>()... };
+
+					auto invokeComponentObservers = [&]<typename T>(
+						const Entity & entity,
+						const TArchetypeTypeData<drop_const_t<T>>&typeData,
+						drop_const_t<T>*component
+						)
+					{
+						typeData.m_ComponentContext->InvokeOnCreateComponent(component, entity);
+						if (IsEntityActive(entity))
+						{
+							typeData.m_ComponentContext->InvokeOnEnableComponent(component, entity);
+						}
+					};
+
+					for (uint32_t i = 0; i < entityCount; i++)
+					{
+						if (Entity entity = CreateEntityRaw(bIsActive))
+						{
+							EntityData* entityData = GetEntityData(entity);
+							spawnArchetype->AddEntityData(entityData);
+
+							std::tuple<drop_const_t<ComponentTypes>*...> createdComponents = { std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple).m_StableContainer->Create()... };
+							(std::get<drop_const_t<ComponentTypes>*>(createdComponents)->OnPreCreate(entityData), ...);
+							(std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple).m_PackedContainer->PushBack(std::get<drop_const_t<ComponentTypes>*>(createdComponents)), ...);
+
+							InvokeEntityCreateObserver_Internal(entity);
+							if (bIsActive)
+							{
+								InvokeEntityEnableObserver_Internal(entity);
+							}
+
+							(invokeComponentObservers.operator () < drop_const_t<ComponentTypes> > (
+								entity,
+								std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple),
+								std::get<drop_const_t<ComponentTypes>*>(createdComponents)
+								), ...);
+
+							if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
+							{
+								initFunc(entity, *std::get<ComponentTypes*>(createdComponents)...);
+							}
+							else
+							{
+								initFunc(*std::get<ComponentTypes*>(createdComponents)...);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+			requires query_callable<InitFunc, ComponentTypes...>
+		Entity CreateEntity(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			const TagTypeGroup<TagTypes...> tags,
+			bool bIsActive,
+			InitFunc&& initFunc
+		)
+		{
+			if (!m_CanCreateEntities)
+			{
+				return Entity();
+			}
+
+			if constexpr (sizeof...(TagTypes) == 0 && sizeof...(ComponentTypes) == 0)
+			{
+				if (Entity e = CreateEntity())
+				{
+					initFunc(e);
+					return e;
+				}
+			}
+			else
+			{
+				uint32_t idxBuffer = 0;
+				Archetype* spawnArchetype = nullptr;
+
+				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
+				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype, idxBuffer)), ...);
+
+				if (spawnArchetype != nullptr)
+				{
+					std::tuple<TArchetypeTypeData<drop_const_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<drop_const_t<ComponentTypes>>()... };
+
+					auto invokeComponentObservers = [&]<typename T>(
+						const Entity & entity,
+						const TArchetypeTypeData<drop_const_t<T>>&typeData,
+						drop_const_t<T>*component
+						)
+					{
+						typeData.m_ComponentContext->InvokeOnCreateComponent(component, entity);
+						if (IsEntityActive(entity))
+						{
+							typeData.m_ComponentContext->InvokeOnEnableComponent(component, entity);
+						}
+					};
+
 					if (Entity entity = CreateEntityRaw(bIsActive))
 					{
 						EntityData* entityData = GetEntityData(entity);
@@ -238,19 +292,24 @@ namespace decs
 							std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple),
 							std::get<drop_const_t<ComponentTypes>*>(createdComponents)
 							), ...);
+
+						if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
+						{
+							initFunc(entity, *std::get<ComponentTypes*>(createdComponents)...);
+						}
+						else
+						{
+							initFunc(*std::get<ComponentTypes*>(createdComponents)...);
+						}
+
+						return entity;
 					}
 				}
 			}
-			else
-			{
-				for (uint32_t i = 0; i < entityCount; i++)
-				{
-					CreateEntity(bIsActive);
-				}
-			}
 
-			return true;
+			return Entity();
 		}
+
 	private:
 		void InitializeLifeTimeData();
 

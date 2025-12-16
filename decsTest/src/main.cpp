@@ -134,15 +134,30 @@ void NormalTest()
 		container.Spawn(prefab, 9, true);*/
 
 
-		decs::ComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
-		decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
-
-		auto initFunc = [](const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
 		{
-			PrintLine("Init from helepr create entity func!");
-		};
+			decs::ComponentTypeGroup</*TestComponent, Renderer, Position*/> componetns{};
+			decs::TagTypeGroup</*FloatTag, IntTag, BoolTag*/> tags{};
 
-		bool bResult = container.CreateEntities(componetns, tags, 10, true, initFunc);
+			auto initFunc = [](const decs::Entity& e/*, TestComponent& component, Renderer& renderer, Position& position*/)
+			{
+				PrintLine("Init from helepr create entity func!");
+			};
+
+			container.CreateEntities(componetns, tags, 10, true, initFunc);
+		}
+
+		{
+
+			decs::ComponentTypeGroup<TestComponent, Renderer, Position> comps{};
+			decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
+
+			auto entityInit = [](const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
+			{
+				PrintLine("Only entity created!");
+			};
+
+			decs::Entity newEntity = container.CreateEntity(comps, tags, true, entityInit);
+		}
 
 		uint32_t counter = 0;
 		auto testFunc = [&](const TestComponent& test)
