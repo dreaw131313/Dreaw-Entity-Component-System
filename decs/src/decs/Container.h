@@ -128,15 +128,14 @@ namespace decs
 		}
 
 		/// <summary>
-		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes of ComponentTypeGroup parameter.
-		/// During observer callbacks invokaction removing components or tags are will cause undefined behavior.
+		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in ComponentTypeGroup parameter.
+		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
 		/// </summary>
 		/// <typeparam name="InitFunc"></typeparam>
 		/// <typeparam name="...ComponentTypes"></typeparam>
 		/// <typeparam name="...TagTypes"></typeparam>
 		/// <param name="components"></param>
 		/// <param name="tags"></param>
-		/// <param name="entityCount"></param>
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
@@ -225,6 +224,19 @@ namespace decs
 			}
 		}
 
+		/// <summary>
+		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in ComponentTypeGroup parameter.
+		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
+		/// </summary>
+		/// <typeparam name="InitFunc"></typeparam>
+		/// <typeparam name="...ComponentTypes"></typeparam>
+		/// <typeparam name="...TagTypes"></typeparam>
+		/// <param name="components"></param>
+		/// <param name="tags"></param>
+		/// <param name="entityCount"></param>
+		/// <param name="bIsActive"></param>
+		/// <param name="initFunc"></param>
+		/// <returns></returns>
 		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
