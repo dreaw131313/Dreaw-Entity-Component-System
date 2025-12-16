@@ -258,41 +258,6 @@ namespace decs
 			}
 		}
 
-		/// <summary>
-		/// Same rules apply like in Foreach methods. But here iteration is for every entity even if entity is not active
-		/// </summary>
-		/// <typeparam name="Callable"></typeparam>
-		/// <param name="func"></param>
-		template<typename Callable>
-			requires query_callable<Callable, ComponentsTypes...>
-		void ForEach_IngoreEntityActiveState(Callable&& func)
-		{
-			if (!IsValid()) return;
-			FetchInternal();
-
-			Container* container = m_ContainerContext.GetContainer();
-			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
-			const uint64_t contextCount = archetypeContexts.size();
-
-			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
-			{
-				Entity entityBuffer = {};
-				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
-
-				for (const auto& ctx : archetypeContexts)
-				{
-					ctx.ForEach_IngoreEntityActiveState_WithEntity(func, entityBuffer);
-				}
-			}
-			else
-			{
-				for (const auto& ctx : archetypeContexts)
-				{
-					ctx.ForEach_IngoreEntityActiveState(func);
-				}
-			}
-		}
-
 		inline void Fetch()
 		{
 			if (!IsValid()) return;
@@ -448,74 +413,6 @@ namespace decs
 					else
 					{
 						ctx.ForEachFromTo(func, startEntityIdx, iterationsCount);
-					}
-
-					if (leftEntitiesToIterate == 0)
-					{
-						return;
-					}
-				}
-			}
-
-			/// <summary>
-			/// Same rules apply like in Foreach methods. But here iteration is for every entity even if entity is not active
-			/// </summary>
-			/// <typeparam name="Callable"></typeparam>
-			/// <param name="func"></param>
-			template<typename Callable>
-				requires query_callable<Callable, ComponentsTypes...>
-			inline void ForEach_IngoreEntityActiveState(Callable&& func) const
-			{
-				if (!IsValid())
-				{
-					return;
-				}
-
-				Container* container = m_Query->GetContainer();
-				auto& archetypeContexts = m_Query->m_ContainerContext.GetArchetypeContexts();
-
-				Entity entityBuffer = {};
-				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
-				{
-					entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
-				}
-
-				uint64_t contextIndex = m_FirstArchetypeIndex;
-				uint64_t contextCount = archetypeContexts.size();
-
-				uint64_t leftEntitiesToIterate = m_EntitiesCount;
-
-				for (; contextIndex < contextCount; contextIndex++)
-				{
-					const ArchetypeContextType& ctx = archetypeContexts[contextIndex];
-					uint64_t ctxEntityCount = ctx.GetEntityCount();
-					if (ctxEntityCount == 0) continue;
-
-					const auto& containersTuple = ctx.GetContainersTuple();
-					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
-
-					const uint64_t startEntityIdx = contextIndex == m_FirstArchetypeIndex ? m_FirstIterationIndex : 0;
-					uint64_t iterationsCount;
-
-					uint64_t leftEntitiesInContext = ctxEntityCount - startEntityIdx;
-					if (leftEntitiesToIterate <= leftEntitiesInContext)
-					{
-						iterationsCount = startEntityIdx + leftEntitiesToIterate;
-						leftEntitiesToIterate = 0;
-					}
-					else
-					{
-						iterationsCount = startEntityIdx + leftEntitiesInContext;
-						leftEntitiesToIterate -= leftEntitiesInContext;
-					}
-
-					if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
-					{
-						ctx.ForEachFromTo_IgnoreActiveState_WithEntity(func, entityBuffer, startEntityIdx, iterationsCount);
-					}
-					else
-					{
-						ctx.ForEachFromTo_IgnoreActiveState(func, startEntityIdx, iterationsCount);
 					}
 
 					if (leftEntitiesToIterate == 0)

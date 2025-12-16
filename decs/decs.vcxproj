@@ -102,19 +102,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\decs\check_cast.h" />
-    <ClInclude Include="src\decs\Component\Component.h" />
     <ClInclude Include="src\decs\Containers\TOrderedList.h" />
     <ClInclude Include="src\decs\Hash.h" />
     <ClInclude Include="src\decs\Memory.h" />
-    <ClInclude Include="src\decs\Observers\ObserversManager.h" />
     <ClInclude Include="src\decs\trait.h" />
     <ClInclude Include="src\decs\Utils\ContainerIterator.h" />
     <ClInclude Include="src\decs\Utils\ContainerSerializer.h" />
     <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h" />
     <ClInclude Include="src\decs\Component\PackedComponentContainer.h" />
-    <ClInclude Include="src\decs\Component\StableComponentContainer.h" />
-    <ClInclude Include="src\decs\Component\ComponentContext.h" />
-    <ClInclude Include="src\decs\Component\ComponentContextsManager.h" />
     <ClInclude Include="src\decs\EntityManager.h" />
     <ClInclude Include="src\decs\Archetypes\Archetype.h" />
     <ClInclude Include="src\decs\Container.h" />
@@ -124,7 +119,6 @@
     <ClInclude Include="src\decs\Entity.h" />
     <ClInclude Include="src\decs\EntityData.h" />
     <ClInclude Include="src\decs\Iteration\IterationCore.h" />
-    <ClInclude Include="src\decs\Observers\Observers.h" />
     <ClInclude Include="src\decs\Type.h" />
     <ClInclude Include="src\decs\Iteration\Query.h" />
     <ClInclude Include="src\decs\Utils\ContainerSerializerComplex.h" />
@@ -133,8 +127,6 @@
   <ItemGroup>
     <ClCompile Include="src\decs\Archetypes\Archetype.cpp" />
     <ClCompile Include="src\decs\Archetypes\ArchetypesMap.cpp" />
-    <ClCompile Include="src\decs\Component\ChunkAllocator.h" />
-    <ClCompile Include="src\decs\Component\Component.cpp" />
     <ClCompile Include="src\decs\Container.cpp" />
     <ClCompile Include="src\decs\decs.cpp" />
     <ClCompile Include="src\decs\EntityData.cpp" />

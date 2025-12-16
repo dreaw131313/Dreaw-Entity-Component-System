@@ -5,13 +5,7 @@
 #include <tuple>
 
 #include "Archetypes/ArchetypesMap.h"
-#include "Component/ComponentContextsManager.h"
 #include "Component/PackedComponentContainer.h"
-#include "Component/StableComponentContainer.h"
-#include "Component/Component.h"
-
-#include "Observers/Observers.h"
-
 
 #include "EntityManager.h"
 #include "trait.h"
@@ -105,14 +99,7 @@ namespace decs
 		std::vector<EntityData*> m_EmptyEntities = {};
 		EntityManager m_EntityManager{};
 
-		TRefCounterHandle<EnityLifeTimeData> m_LifeTimeData{};
-
 	public:
-		[[nodiscard]] const TRefCounterHandle<EnityLifeTimeData>& GetLifeTimeData() const
-		{
-			return m_LifeTimeData;
-		}
-
 		Entity CreateEntity(bool bIsActive = true);
 
 		[[nodiscard]] inline uint32_t GetEntityCount() const
@@ -517,17 +504,6 @@ namespace decs
 	#pragma endregion
 
 	#pragma region COMPONENTS:
-	private:
-		ComponentContextsManager m_ComponentContextManager = { 1000 };
-
-	private:
-		void OnAddComponentInvokeObservers(
-			const Entity& entity,
-			IComponentContext* componentContext,
-			IPackedComponentContainer* packedContainer,
-			TypeID compTypeID
-		);
-
 
 		template<TComponentConcept TComponent, typename ...Args>
 		TComponent* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
@@ -667,87 +643,8 @@ namespace decs
 
 			return true;
 		}
-	private:
-		void InvokeComponentDestroyObservers(IComponentContext& compCtx, EntityComponent& comp, EntityData& entityData);
 
 	public:
-
-/*template<typename... ComponentsTypes>
-	uint32_t RemoveMultipleComponnets(Entity entity, EntityData& entityData)
-	{
-		if constexpr (sizeof...(ComponentsTypes) == 0)
-		{
-			return 0;
-		}
-
-		if (!m_CanRemoveComponents || entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation())
-		{
-			return 0;
-		}
-
-		Archetype* currentArchetype = entityData.m_Archetype;
-		if (currentArchetype == nullptr)
-		{
-			return 0;
-		}
-
-		// invoke on destroy listeners:
-		{
-			TypeGroup<ComponentsTypes...> componentsTypes = {};
-
-			for (uint32_t i = 0; i < componentsTypes.Size(); i++)
-			{
-				auto type = componentsTypes[i];
-
-				if (currentArchetype != nullptr)
-				{
-					uint32_t typeIdx = currentArchetype->FindTypeIndex(type);
-					if (typeIdx != std::numeric_limits<uint32_t>::max())
-					{
-						auto& typeData = currentArchetype->m_TypeData[typeIdx];
-						typeData.m_ComponentContext->InvokeOnDestroyComponent(typeData.m_PackedContainer->GetComponentPtrAsVoi(entityData.m_IndexInArchetype), entity);
-					}
-
-					currentArchetype = entityData.m_Archetype;
-				}
-				else
-				{
-					break;
-				}
-			}
-		}
-
-		// archetype has changed during invoking of observers
-		if (currentArchetype == nullptr)
-		{
-			return 0;
-		}
-
-		Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponents<ComponentsTypes...>(currentArchetype);
-
-		if (newArchetype == currentArchetype)
-		{
-			// archetype not changed
-			return  0;
-		}
-
-		// archetype changed:
-		if (newArchetype != nullptr)
-		{
-			uint32_t removedComponents = currentArchetype->GetComponentAndTagCount() - newArchetype->GetComponentAndTagCount();
-			newArchetype->MoveEntityComponentsAfterRemoveComponent(currentArchetype, entityData.m_IndexInArchetype, &entityData);
-
-			return removedComponents;
-		}
-		else
-		{
-			// here new archetype is nullptr
-			entityData.m_Archetype->RemoveSwapBackEntity(entityData.m_IndexInArchetype);
-			AddToEmptyEntities(entityData);
-
-			return currentArchetype->GetComponentAndTagCount();
-		}
-	}*/
 
 		template<TComponentConcept TComponent>
 		TComponent* GetComponent(EntityData& entityData) const
@@ -758,95 +655,6 @@ namespace decs
 			}
 
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
-			{
-				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
-				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
-				{
-					PackedStableComponentContainer<TComponent>* container = static_cast<PackedStableComponentContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
-					return container->GetAsPtr(entityData.m_IndexInArchetype);
-				}
-			}
-			return nullptr;
-		}
-
-		EntityComponent* GetComponent(EntityData& entityData, TypeID componentType) const
-		{
-			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
-			{
-				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex(componentType);
-				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
-				{
-					const auto& typeData = entityData.m_Archetype->m_TypeData[findTypeIndex];
-					if (typeData.IsTag())
-					{
-						return nullptr;
-					}
-					return typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
-				}
-			}
-			return nullptr;
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="entityData"></param>
-		/// <param name="componentIndex"></param>
-		/// <returns>Component in order of observeres</returns>
-		EntityComponent* GetComponentAtIndex(EntityData& entityData, uint32_t componentIndex);
-
-		template<TComponentConcept TComponent>
-		TComponent* GetComponentDynamic(EntityData& entityData)
-		{
-			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
-			{
-				uint32_t archetypeComponentCount = entityData.m_Archetype->GetComponentAndTagCount();
-				const auto& typeDataVector = entityData.m_Archetype->m_TypeData;
-				for (uint32_t i = 0; i < archetypeComponentCount; i++)
-				{
-					auto& typeData = typeDataVector[i];
-					if (!typeData.IsTag())
-					{
-						auto componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
-						TComponent* casted = dynamic_cast<TComponent*>(componentPtr);
-						if (casted != nullptr)
-						{
-							return casted;
-						}
-					}
-				}
-			}
-
-			return nullptr;
-		}
-
-		template<TComponentConcept TComponent>
-		void GetComponentsDynamic(EntityData& entityData, std::vector<TComponent*>& outComponents)
-		{
-			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
-			{
-				uint32_t archetypeComponentCount = entityData.m_Archetype->GetComponentAndTagCount();
-				const auto& typeDataVector = entityData.m_Archetype->m_TypeData;
-				for (uint32_t i = 0; i < archetypeComponentCount; i++)
-				{
-					auto& typeData = typeDataVector[i];
-					if (!typeData.IsTag())
-					{
-						auto componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
-						TComponent* casted = dynamic_cast<TComponent*>(componentPtr);
-						if (casted != nullptr)
-						{
-							outComponents.push_back(casted);
-						}
-					}
-				}
-			}
-		}
-
-		template<TComponentConcept TComponent>
-		TComponent* GetComponentWithoutCheckingIsAlive(EntityData& entityData) const
-		{
-			if (entityData.m_Archetype != nullptr)
 			{
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
 				if (findTypeIndex != std::numeric_limits<uint32_t>::max())

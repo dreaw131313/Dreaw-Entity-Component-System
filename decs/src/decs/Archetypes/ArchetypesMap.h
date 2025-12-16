@@ -258,31 +258,6 @@ namespace decs
 			return m_Archetypes;
 		}
 
-		template<TComponentConcept TComponent>
-		void UpdateOrderInAllArchetypesWithComponentType()
-		{
-			auto it = m_ArchetypesGroupedByOneType.find(Type<TComponent>::ID());
-			if (it != m_ArchetypesGroupedByOneType.end())
-			{
-				it->second->IterateOverAllArchetypes([](Archetype* arch)
-				{
-					arch->UpdateOrderOfComponentContexts();
-				});
-			}
-		}
-
-		void UpdateOrderInAllArchetypesWithComponentType(TypeID typeID)
-		{
-			auto it = m_ArchetypesGroupedByOneType.find(typeID);
-			if (it != m_ArchetypesGroupedByOneType.end())
-			{
-				it->second->IterateOverAllArchetypes([](Archetype* arch)
-				{
-					arch->UpdateOrderOfComponentContexts();
-				});
-			}
-		}
-
 		template<typename Callable>
 		void IterateOverArchetypesWithType(TypeID componentType, Callable&& func)
 		{
@@ -374,10 +349,7 @@ namespace decs
 
 		Archetype* FindMatchingArchetype(const Archetype& toArchetype);
 
-		Archetype* GetOrCreateMatchedArchetype(
-			Archetype& fromArchetype,
-			ComponentContextsManager* componentContextsManager
-		);
+		Archetype* GetOrCreateMatchedArchetype(Archetype& fromArchetype);
 
 		void AddArchetypeToGroups(Archetype* arch)
 		{
@@ -392,7 +364,19 @@ namespace decs
 
 		// CREATING ARCHETYPES
 	private:
-		Archetype* CreateSingleComponentArchetype(TypeID componentTypeID, IComponentContext* componentContext);
+		template<TComponentConcept TComponent>
+		Archetype* CreateSingleComponentArchetype(TypeID componentTypeID)
+		{
+			auto archetype = GetSingleComponentArchetype(componentTypeID);
+			if (archetype != nullptr)
+			{
+				return archetype;
+			}
+			archetype = &m_Archetypes.EmplaceBack();
+			archetype->AddTypeData_WithoutCheck(componentTypeID, new PackedComponentContainer<TComponent>());
+			AddArchetypeToCorrectContainers(*archetype);
+			return archetype;
+		}
 
 		template<TComponentConcept T>
 		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype)
@@ -407,7 +391,7 @@ namespace decs
 			return nullptr;
 		}
 
-		Archetype* CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext);
+		Archetype* CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IPackedComponentContainer* packedContainer);
 
 		Archetype* GetArchetypeAfterRemoveComponent(const Archetype& fromArchetype, TypeID removedComponentTypeID);
 
@@ -419,7 +403,7 @@ namespace decs
 
 		void AddTypeDataAfterRemoveComponent(const Archetype& fromArchetype, Archetype& toArchetype, TypeID compType);
 
-		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, IComponentContext* addedComponentContext);
+		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, IPackedComponentContainer* packedContainer);
 
 	};
 }

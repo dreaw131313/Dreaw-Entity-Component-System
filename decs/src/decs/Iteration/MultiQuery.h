@@ -253,46 +253,7 @@ namespace decs
 				}
 			}
 		}
-		/// <summary>
-		/// Same rules apply like in Foreach methods. But here iteration is for every entity even if entity is not active
-		/// </summary>
-		/// <typeparam name="Callable"></typeparam>
-		/// <param name="func"></param>
-		template<typename Callable>
-			requires query_callable<Callable, ComponentsTypes...>
-		void ForEach_IngoreEntityActiveState(Callable&& func)
-		{
-			Fetch();
-
-			uint64_t contextSize = m_ContainerContexts.size();
-			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
-			{
-				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
-				if (!containerContext.IsValidAndEnabled())
-				{
-					continue; // Skip if container context is disabled
-				}
-
-				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
-				{
-					decs::Entity entityBuffer = {};
-					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
-
-					for (const auto& ctx : containerContext.m_ArchetypesContexts)
-					{
-						ctx.ForEach_IngoreEntityActiveState_WithEntity(func, entityBuffer);
-					}
-				}
-				else
-				{
-					for (const auto& ctx : containerContext.m_ArchetypesContexts)
-					{
-						ctx.ForEach_IngoreEntityActiveState(func);
-					}
-				}
-			}
-		}
-
+		
 		virtual bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{
 			auto& contextIndex = m_ContainerContextsIndexes[container];
@@ -410,7 +371,7 @@ namespace decs
 		{
 			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 			{
-				entityBuffer.SetWithoutLifeTimeDataInvalidation_Internal(entityData);
+				entityBuffer.Set_Internal(entityData);
 				func(
 					entityBuffer,
 					std::get<PackedContainerType<drop_const_t<ComponentsTypes>>>(containersTuple)->GetAsRef(entityIndexInArchetype)...
@@ -516,82 +477,6 @@ namespace decs
 						else
 						{
 							ctx.ForEachFromTo(func, startEntitiyIndex, entitiesCount);
-						}
-
-						if (leftEntitiesToIterate == 0)
-						{
-							return;
-						}
-					}
-				}
-			}
-
-			template<typename Callable>
-				requires query_callable<Callable, ComponentsTypes...>
-			void ForEach_IngoreEntityActiveState(Callable&& func)
-			{
-				auto& containerContexts = m_Query->m_ContainerContexts;
-				decs::Entity entityBuffer = {};
-
-				uint64_t leftEntitiesToIterate = m_EntitiesCount;
-
-				uint64_t contextSize = containerContexts.size();
-				for (uint64_t containerContextIndex = m_StartContainerContextIndex; containerContextIndex < contextSize; containerContextIndex++)
-				{
-					ContainerContextType& containerContext = containerContexts[containerContextIndex];
-					if (!containerContext.m_bIsEnabled)
-					{
-						continue; // Skip if container context is disabled
-					}
-
-					if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
-					{
-						entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
-					}
-
-					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();
-					const uint64_t archetypesContextsCount = containerContext.m_ArchetypesContexts.size();
-
-					uint64_t archetypeContextIdx;
-					uint64_t startEntitiyIndex;
-					if (containerContextIndex == m_StartContainerContextIndex)
-					{
-						archetypeContextIdx = m_StartArchetypeIndex;
-						startEntitiyIndex = m_StartEntityIndex;
-					}
-					else
-					{
-						archetypeContextIdx = 0;
-						startEntitiyIndex = 0;
-					}
-
-					for (; archetypeContextIdx < archetypesContextsCount; archetypeContextIdx++)
-					{
-						const ArchetypeContextType& ctx = archetypesContexts[archetypeContextIdx];
-						uint64_t ctxEntityCount = ctx.GetEntityCount();
-						if (ctxEntityCount == 0) continue;
-
-						uint64_t leftEntitiesInArchetypeToIterate = ctxEntityCount - startEntitiyIndex;
-						uint64_t entitiesCount;
-
-						if (leftEntitiesToIterate <= leftEntitiesInArchetypeToIterate)
-						{
-							entitiesCount = leftEntitiesToIterate + startEntitiyIndex;
-							leftEntitiesToIterate = 0;
-						}
-						else
-						{
-							entitiesCount = leftEntitiesInArchetypeToIterate + startEntitiyIndex;
-							leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
-						}
-
-						if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
-						{
-							ctx.ForEachFromTo_IgnoreActiveState_WithEntity(func, entityBuffer, startEntitiyIndex, entitiesCount);
-						}
-						else
-						{
-							ctx.ForEachFromTo_IgnoreActiveState(func, startEntitiyIndex, entitiesCount);
 						}
 
 						if (leftEntitiesToIterate == 0)

@@ -159,7 +159,7 @@ namespace decs
 		}
 
 		{
-			/* 
+			/*
 			* Add component neighbours
 			* We know that all add component neighbours will be placed in same one type groups as tested archetype, so we need to check neighbours only in one group.
 			* Not all archetypes with typeCount + 1 in any single component group are neighbours of tested archetype, but all typeCount + 1 neighbours of tested archetype are in all single component groups to which this archetype belongs
@@ -188,7 +188,7 @@ namespace decs
 				}
 			}
 
-			if (bestGroup!= nullptr)
+			if (bestGroup != nullptr)
 			{
 				for (Archetype* neighbour : bestGroup->Archetypes)
 				{
@@ -241,48 +241,21 @@ namespace decs
 		return nullptr;
 	}
 
-	Archetype* ArchetypesMap::GetOrCreateMatchedArchetype(
-		Archetype& fromArchetype,
-		ComponentContextsManager* componentContextsManager
-	)
+	Archetype* ArchetypesMap::GetOrCreateMatchedArchetype(Archetype& fromArchetype)
 	{
 		Archetype* archetype = FindMatchingArchetype(fromArchetype);
 
 		if (archetype == nullptr)
 		{
 			archetype = &m_Archetypes.EmplaceBack();
-
-			// take care that componentContextsManager have the same component contexts that component contextManager which have "fromArchetype" archetype and stableContainersManager have correct stable components containers
-			for (uint64_t i = 0; i < fromArchetype.GetComponentAndTagCount(); i++)
-			{
-				ArchetypeTypeData& fromArchetypeTypeData = fromArchetype.m_TypeData[i];
-				if (!fromArchetypeTypeData.IsTag())
-				{
-					componentContextsManager->GetOrCreateComponentContextFromOtherContext(fromArchetypeTypeData.m_ComponentContext);
-				}
-			}
-
-			archetype->InitEmptyFromOther(fromArchetype, componentContextsManager);
+			archetype->InitEmptyFromOther(fromArchetype);
 			AddArchetypeToCorrectContainers(*archetype);
 		}
 
 		return archetype;
 	}
 
-	Archetype* ArchetypesMap::CreateSingleComponentArchetype(TypeID componentTypeID, IComponentContext* componentContext)
-	{
-		auto archetype = GetSingleComponentArchetype(componentTypeID);
-		if (archetype != nullptr)
-		{
-			return archetype;
-		}
-		archetype = &m_Archetypes.EmplaceBack();
-		archetype->AddTypeData_WithoutCheck(componentTypeID, componentContext);
-		AddArchetypeToCorrectContainers(*archetype);
-		return archetype;
-	}
-
-	Archetype* ArchetypesMap::CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext)
+	Archetype* ArchetypesMap::CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IPackedComponentContainer* packedContainer)
 	{
 		//auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
 		auto edge = toArchetype.GetEdge(componentTypeID);
@@ -305,7 +278,7 @@ namespace decs
 		}
 
 		Archetype& newArchetype = m_Archetypes.EmplaceBack();
-		AddTypeDataAfterAddComponent(toArchetype, newArchetype, componentTypeID, componentContext);
+		AddTypeDataAfterAddComponent(toArchetype, newArchetype, componentTypeID, packedContainer);
 
 		AddArchetypeToCorrectContainers(newArchetype);
 
@@ -387,14 +360,14 @@ namespace decs
 				{
 					toArchetype.AddTypeData_WithoutCheck(
 						fromArchetypeData.m_TypeID,
-						fromArchetypeData.m_ComponentContext
+						fromArchetypeData.m_PackedContainer->CloneEmpty()
 					);
 				}
 			}
 		}
 	}
 
-	void ArchetypesMap::AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, IComponentContext* addedComponentContext)
+	void ArchetypesMap::AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, IPackedComponentContainer* packedContainer)
 	{
 		bool isNewComponentTypeAdded = false;
 
@@ -407,7 +380,7 @@ namespace decs
 				isNewComponentTypeAdded = true;
 				toArchetype.AddTypeData_WithoutCheck(
 					componentTypeID,
-					addedComponentContext
+					packedContainer
 				);
 			}
 
@@ -422,7 +395,7 @@ namespace decs
 			{
 				toArchetype.AddTypeData_WithoutCheck(
 					baseTypeData.m_TypeID,
-					baseTypeData.m_ComponentContext
+					baseTypeData.m_PackedContainer->CloneEmpty()
 				);
 			}
 		}
@@ -431,7 +404,7 @@ namespace decs
 		{
 			toArchetype.AddTypeData_WithoutCheck(
 				componentTypeID,
-				addedComponentContext
+				packedContainer
 			);
 		}
 	}

@@ -40,22 +40,24 @@ namespace decs
 		/// <returns>Component size in bytes.</returns>
 		inline virtual uint64_t GetComponentSize() const = 0;
 
-		inline virtual EntityComponent* GetComponentBasePtr(uint64_t index) = 0;
+		inline virtual void* GetComponentBasePtr(uint64_t index) = 0;
 
 		inline virtual void RemoveSwapBack(uint64_t index) = 0;
 
-		inline virtual void PushBack(EntityComponent* componentBase) = 0;
+		inline virtual void PushBack(void* componentBase) = 0;
+
+		inline virtual IPackedComponentContainer* CloneEmpty() const = 0;
 	};
 
 	template<typename TComponent>
-	class PackedStableComponentContainer final : public IPackedComponentContainer
+	class PackedComponentContainer final : public IPackedComponentContainer
 	{
 		static_assert(!is_const_v<TComponent> && "Component must not be const!");
 
 		friend class Container;
 		friend class Archetype;
 	private:
-		std::vector<TComponent*> m_Data;
+		std::vector<TComponent> m_Data{};
 
 	public:
 		PackedStableComponentContainer()
@@ -111,9 +113,9 @@ namespace decs
 			m_Data.reserve(newCapacity);
 		}
 
-		inline virtual EntityComponent* GetComponentBasePtr(uint64_t index)  override
+		inline virtual void* GetComponentBasePtr(uint64_t index)  override
 		{
-			return m_Data[index];
+			return &m_Data[index];
 		}
 
 		inline virtual void RemoveSwapBack(uint64_t index) override
@@ -129,19 +131,31 @@ namespace decs
 			}
 		}
 
-		inline void PushBack(EntityComponent* componentBase) override
+		inline void PushBack(void* componentBase) override
 		{
-			m_Data.push_back(static_cast<TComponent*>(componentBase));
+			m_Data.emplace_back(*::decs::check_cast<TComponent*>(componentBase));
 		}
 
 		inline TComponent& GetAsRef(uint64_t index)
 		{
-			return *m_Data[index];
+			return m_Data[index];
 		}
 
 		inline TComponent* GetAsPtr(uint64_t index)
 		{
-			return m_Data[index];
+			return &m_Data[index];
+		}
+
+		template<typename... Args>
+		inline TComponent& EmplaceBack(Args&&...args)
+		{
+			return m_Data.emplace_back(std::forward<Args>(args)...);
+		}
+
+		inline virtual IPackedComponentContainer* CloneEmpty() const override
+		{
+			return new PackedComponentContainer<TComponent>();
 		}
 	};
+
 }

@@ -13,10 +13,10 @@ namespace decs
 		inline static void InvokeEntityIteration(
 			Callable&& func,
 			uint64_t entityIndexInArchetype,
-			const std::tuple<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
+			const std::tuple<PackedComponentContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
 		)
 		{
-			func(std::get<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
+			func(std::get<PackedComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
 		}
 
 		template<typename Callable, typename... ComponentTypes>
@@ -25,13 +25,13 @@ namespace decs
 			Entity& entityBuffer,
 			EntityData& entityData,
 			uint64_t entityIndexInArchetype,
-			const std::tuple<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
+			const std::tuple<PackedComponentContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
 		)
 		{
-			entityBuffer.SetWithoutLifeTimeDataInvalidation_Internal(entityData);
+			entityBuffer.Set_Internal(entityData);
 			func(
 				entityBuffer,
-				std::get<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
+				std::get<PackedComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
 			);
 		}
 	};
@@ -135,10 +135,10 @@ namespace decs
 		}
 
 	private:
-		TypeGroupType m_Includes = {};
 		std::vector<TypeID> m_Without{};
 		std::vector<TypeID> m_WithAnyOf{};
 		std::vector<TypeID> m_WithAll{};
+		TypeGroupType m_Includes = {};
 	};
 
 	template<TComponentConcept... ComponentsTypes>
@@ -146,7 +146,7 @@ namespace decs
 	{
 	public:
 		template<typename TComponent>
-		using TPackedContainer = PackedStableComponentContainer<drop_const_t<TComponent>>;
+		using TPackedContainer = PackedComponentContainer<drop_const_t<TComponent>>;
 		using ContainersTuple = std::tuple<TPackedContainer<drop_const_t<ComponentsTypes>>*...>;
 
 	public:
@@ -195,10 +195,7 @@ namespace decs
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
 				const auto& entityData = entitiesData[idx];
-				if (entityData.IsActive())
-				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
-				}
+				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 			}
 		}
 
@@ -217,10 +214,7 @@ namespace decs
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
 				const auto& entityData = entitiesData[idx];
-				if (entityData.IsActive())
-				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-				}
+				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 			}
 		}
 
@@ -243,7 +237,7 @@ namespace decs
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
 				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValidAndActive())
+				if (entityData.IsValid())
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 				}
@@ -265,7 +259,7 @@ namespace decs
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
 				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValidAndActive())
+				if (entityData.IsValid())
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 				}
@@ -292,10 +286,7 @@ namespace decs
 			for (; idx > -1; idx--)
 			{
 				const auto& entityData = entitiesData[idx];
-				if (entityData.IsActive())
-				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
-				}
+				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 			}
 		}
 
@@ -315,10 +306,7 @@ namespace decs
 			for (; idx > -1; idx--)
 			{
 				const auto& entityData = entitiesData[idx];
-				if (entityData.IsActive())
-				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-				}
+				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 			}
 		}
 
@@ -342,7 +330,7 @@ namespace decs
 			for (; idx > -1; idx--)
 			{
 				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValidAndActive())
+				if (entityData.IsValid())
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 				}
@@ -365,54 +353,6 @@ namespace decs
 			for (; idx > -1; idx--)
 			{
 				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValidAndActive())
-				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-				}
-			}
-		}
-
-	#pragma endregion
-
-	#pragma region FOR EACH INGORE ENTITY ACTIVE STATE
-	public:
-		template<typename Callable>
-		void ForEach_IngoreEntityActiveState(Callable&& func) const
-		{
-			uint64_t ctxEntityCount = this->GetEntityCount();
-			if (ctxEntityCount == 0)
-			{
-				return;
-			}
-
-			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
-
-			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
-			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValid())
-				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
-				}
-			}
-		}
-
-		template<typename Callable>
-		void ForEach_IngoreEntityActiveState_WithEntity(Callable&& func, Entity& entityBuffer) const
-		{
-			uint64_t ctxEntityCount = this->GetEntityCount();
-			if (ctxEntityCount == 0)
-			{
-				return;
-			}
-
-			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
-
-			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
-			{
-				const auto& entityData = entitiesData[idx];
 				if (entityData.IsValid())
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
@@ -433,10 +373,7 @@ namespace decs
 			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
 			{
 				const auto& entityData = entitiesData[idx];
-				if (entityData.IsActive())
-				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
-				}
+				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 			}
 		}
 
@@ -449,46 +386,7 @@ namespace decs
 			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
 			{
 				const auto& entityData = entitiesData[idx];
-				if (entityData.IsActive())
-				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-				}
-			}
-		}
-
-	#pragma endregion
-
-	#pragma region FOREACH FROM TO
-
-		template<typename Callable>
-		void ForEachFromTo_IgnoreActiveState(Callable&& func, uint64_t fromIdx, uint64_t toIdx) const
-		{
-			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
-
-			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
-			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValid())
-				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
-				}
-			}
-		}
-
-		template<typename Callable>
-		void ForEachFromTo_IgnoreActiveState_WithEntity(Callable&& func, Entity& entityBuffer, uint64_t fromIdx, uint64_t toIdx) const
-		{
-			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
-
-			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
-			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValid())
-				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
-				}
+				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 			}
 		}
 

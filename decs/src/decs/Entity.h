@@ -35,7 +35,6 @@ namespace decs
 
 		Entity(EntityData& entityData):
 			m_EntityData(&entityData),
-			m_LifeTimeData(entityData.m_Container->m_LifeTimeData),
 			m_Version(entityData.GetVersion())
 		{
 
@@ -43,7 +42,6 @@ namespace decs
 
 		Entity(EntityData* entityData):
 			m_EntityData(entityData),
-			m_LifeTimeData(entityData != nullptr ? entityData->m_Container->GetLifeTimeData() : nullptr),
 			m_Version(entityData != nullptr ? entityData->GetVersion() : 0)
 		{
 
@@ -61,21 +59,12 @@ namespace decs
 
 		[[nodiscard]] inline bool IsValid() const
 		{
-			return m_LifeTimeData.IsValid() && m_LifeTimeData->IsAlive() && m_EntityData != nullptr && m_EntityData->IsAliveWithVersion(m_Version);
+			return m_EntityData != nullptr && m_EntityData->IsAliveWithVersion(m_Version);
 		}
 
 		[[nodiscard]] inline bool IsNull() const
 		{
 			return !IsValid();
-		}
-
-		[[nodiscard]] inline bool IsInDestruction() const
-		{
-			if (IsValid())
-			{
-				return m_EntityData->IsInDestructionOrDelayedToDestruction();
-			}
-			return false;
 		}
 
 		[[nodiscard]] inline EntityID GetID() const
@@ -94,24 +83,6 @@ namespace decs
 				return m_EntityData->m_Container;
 			}
 			return nullptr;
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <returns>Active state with disable overrides taken into account</returns>
-		[[nodiscard]] inline bool IsActive() const
-		{
-			return IsValid() && m_EntityData->IsActive();
-		}
-
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <returns>Active state without disable overrides taken into account</returns>
-		[[nodiscard]] inline bool IsActiveFlag() const
-		{
-			return IsValid() && m_EntityData->IsActiveFlag();
 		}
 
 		inline void SetActive(const bool& isActive) const
@@ -146,16 +117,6 @@ namespace decs
 			}
 		}
 
-		[[nodiscard]] uint32_t GetDisabledOverrideCount() const
-		{
-			if (IsValid())
-			{
-				return m_EntityData->GetDisabledOverrideCount();
-			}
-
-			return 0;
-		}
-
 		inline bool Destroy() const
 		{
 			if (IsValid())
@@ -185,20 +146,6 @@ namespace decs
 			return 0;
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="componentIndex"></param>
-		/// <returns>Components in observers order</returns>
-		[[nodiscard]] inline EntityComponent* GetComponentAtIndex(uint32_t componentIndex) const
-		{
-			if (IsValid())
-			{
-				return GetContainer_Internal()->GetComponentAtIndex(*m_EntityData, componentIndex);
-			}
-			return nullptr;
-		}
-
 		template<TComponentConcept TComponent>
 		[[nodiscard]] inline TComponent* GetComponent() const
 		{
@@ -208,44 +155,6 @@ namespace decs
 			}
 
 			return nullptr;
-		}
-
-		[[nodiscard]] inline EntityComponent* GetComponent(TypeID componentType) const
-		{
-			if (IsValid())
-			{
-				return GetContainer_Internal()->GetComponent(*m_EntityData, componentType);
-			}
-
-			return nullptr;
-		}
-
-		/// <summary>
-		/// Iterates over all components on entity and use dynamic cast. If casted component is not nullptr returns it. If none of componets can be casted to TComponent returns nullptr.
-		/// </summary>
-		/// <typeparam name="TComponent"></typeparam>
-		/// <returns></returns>
-		template<TComponentConcept TComponent>
-		[[nodiscard]] inline TComponent* GetComponentDynamic() const
-		{
-			if (IsValid())
-				return GetContainer_Internal()->GetComponentDynamic<drop_const_t<TComponent>>(*GetEntityData());
-
-			return nullptr;
-		}
-
-		/// <summary>
-		/// Entity can not have multiple components of same type, bu can have components which inherits from same type. This method retrive all components which are or inherits from TComponent. In is not efficient method, it uses dynamic cast to check if component is valid
-		/// </summary>
-		/// <typeparam name="TComponent"></typeparam>
-		/// <param name="components"></param>
-		template<TComponentConcept TComponent>
-		inline void GetComponentsDynamic(std::vector<TComponent*>& components) const
-		{
-			if (IsValid())
-			{
-				GetContainer_Internal()->GetComponentsDynamic<drop_const_t<TComponent>>(*GetEntityData(), components);
-			}
 		}
 
 		template<TComponentConcept TComponent>
@@ -285,12 +194,6 @@ namespace decs
 			return IsValid() && GetContainer_Internal()->RemoveComponent(*this, componentTypeID);
 		}
 
-		template<TComponentConcept TComponent, typename TCallable>
-		inline bool RemoveComponent_If(TCallable&& canRemoveFunc) const
-		{
-			return IsValid() && GetContainer_Internal()->RemoveComponent_If<drop_const_t<TComponent>>(*GetEntityData(), canRemoveFunc);
-		}
-
 		[[nodiscard]] inline EntityVersion GetVersion() const
 		{
 			return m_Version;
@@ -305,93 +208,6 @@ namespace decs
 
 			return nullptr;
 		}
-
-	#pragma region NO CALLBACK METHODS:
-	public:
-		/// <summary>
-		/// Enable and disable observers of entity and components are not invoked.
-		/// </summary>
-		/// <param name="isActive"></param>
-		inline void SetActive_NoCallback(const bool& isActive) const
-		{
-			if (IsValid())
-			{
-				GetContainer_Internal()->SetEntityActive_NoCallback(*this, isActive);
-			}
-		}
-
-		/// <summary>
-		/// Destroy observers of entity and components are not invoked.
-		/// </summary>
-		/// <returns></returns>
-		inline bool Destroy_NoCallback() const
-		{
-			if (IsValid())
-			{
-				GetContainer_Internal()->DestroyEntityInternal(*this, false);
-				Invalidate_WithoutLifeTimeData();
-				return true;
-			}
-			return false;
-		}
-
-		/// <summary>
-		/// Add component observers are not invoked.
-		/// </summary>
-		/// <returns></returns>
-		template<TComponentConcept TComponent, typename... Args>
-		inline typename TComponent* AddComponent_NoCallback(Args&&... args) const
-		{
-			if (IsValid())
-				return GetContainer_Internal()->AddComponent_NoCallback<drop_const_t<TComponent>>(*this, *GetEntityData(), std::forward<Args>(args)...);
-
-			return nullptr;
-		}
-
-		/// <summary>
-		/// Destroy component observers are not invoked.
-		/// </summary>
-		/// <returns></returns>
-		template<TComponentConcept TComponent>
-		inline bool RemoveComponent_NoCallback() const
-		{
-			return IsValid() && GetContainer_Internal()->RemoveComponent_NoCallback<drop_const_t<TComponent>>(*this);
-		}
-
-		/// <summary>
-		/// Destroy component observers are not invoked.
-		/// </summary>
-		/// <returns></returns>
-		inline bool RemoveComponent_NoCallback(TypeID componentTypeID) const
-		{
-			return IsValid() && GetContainer_Internal()->RemoveComponent_NoCallback(*this, componentTypeID);
-		}
-
-		void SetActiveOverride_NoCallback(bool bIsActiveOverride) const
-		{
-			if (IsValid())
-			{
-				GetContainer()->SetEntityActiveOverride_NoCallback(*this, bIsActiveOverride);
-			}
-		}
-
-		void SetDisabledOverrideCount_NoCallback(uint32_t disabledOverrideCount) const
-		{
-			if (IsValid())
-			{
-				GetContainer()->SetEntityDisabledOverrideCount_NoCallback(*this, disabledOverrideCount);
-			}
-		}
-
-		void ResetDisabledOverrideCount_NoCallback() const
-		{
-			if (IsValid())
-			{
-				GetContainer()->ResetDisabledOverrideCount_NoCallback(*this);
-			}
-		}
-
-	#pragma endregion
 
 	#pragma region TAGS:
 	public:
@@ -446,33 +262,20 @@ namespace decs
 	#pragma endregion
 
 	private:
-		TRefCounterHandle<EnityLifeTimeData> m_LifeTimeData{};
 		mutable EntityData* m_EntityData = nullptr;
 		mutable EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
 
 	private:
-		inline void Set_Internal(EntityData& data)
-		{
-			m_EntityData = &data;
-			m_Version = m_EntityData->GetVersion();
-			m_LifeTimeData = m_EntityData->m_Container->m_LifeTimeData;
-		}
-
 		inline void Invalidate_WithoutLifeTimeData() const
 		{
 			m_EntityData = nullptr;
 			m_Version = std::numeric_limits<EntityVersion>::max();
 		}
 
-		inline void SetWithoutLifeTimeDataInvalidation_Internal(EntityData& data)
+		inline void Set_Internal(EntityData& data)
 		{
 			m_EntityData = &data;
 			m_Version = m_EntityData->GetVersion();
-		}
-
-		inline void SetLifeTimeData_Internal(const TRefCounterHandle<EnityLifeTimeData>& lifeTimeData)
-		{
-			m_LifeTimeData = lifeTimeData;
 		}
 
 		Container* GetContainer_Internal() const
@@ -486,156 +289,6 @@ namespace decs
 		}
 	};
 
-	class ConstEntity final
-	{
-		template<TComponentConcept...>
-		friend class Query;
-		template<TComponentConcept...>
-		friend class MultiQuery;
-		friend class Container;
-		template<typename TComponent>
-		friend class ComponentRef;
-		friend class ComponentBaseRef;
-		template<typename>
-		friend class ContainerSerializer;
-		friend class ContainerSerializerComplex;
-		friend class ContainerIterator;
-
-		friend struct std::hash<decs::ConstEntity>;
-
-	public:
-		ConstEntity()
-		{
-
-		}
-
-		ConstEntity(const Entity& entity):
-			m_Entity(entity)
-		{
-
-		}
-
-		inline operator bool() const noexcept
-		{
-			return IsValid();
-		}
-
-		bool operator==(const ConstEntity& rhs)const
-		{
-			return rhs.m_Entity == m_Entity;
-		}
-
-		bool operator==(const Entity& rhs)const
-		{
-			return rhs == m_Entity;
-		}
-
-		[[nodiscard]] inline bool IsValid() const noexcept
-		{
-			return m_Entity.IsValid();
-		}
-
-		[[nodiscard]] inline bool IsNull() const noexcept
-		{
-			return m_Entity.IsNull();
-		}
-
-		[[nodiscard]] inline bool IsActive() const noexcept
-		{
-			return m_Entity.IsActive();
-		}
-
-		[[nodiscard]] inline bool IsActiveFlag() const noexcept
-		{
-			return m_Entity.IsActiveFlag();
-		}
-
-		[[nodiscard]] inline EntityID GetID() const
-		{
-			return m_Entity.GetID();
-		}
-
-		[[nodiscard]] inline Container* GetContainer() const
-		{
-			return m_Entity.GetContainer();
-		}
-
-		template<TComponentConcept TComponent>
-		[[nodiscard]] inline bool HasComponent() const
-		{
-			return m_Entity.HasComponent<TComponent>();
-		}
-
-		template<TComponentConcept TComponent>
-		[[nodiscard]] inline TComponent* GetComponent() const
-		{
-			return m_Entity.GetComponent<TComponent>();
-		}
-
-		template<TComponentConcept TComponent>
-		[[nodiscard]] inline TComponent* GetComponentDynamic() const
-		{
-			return m_Entity.GetComponentDynamic<TComponent>();
-		}
-
-		/// <summary>
-		/// Entity can not have multiple components of same type, bu can have components which inherits from same type. This method retrive all components which are or inherits from TComponent. In is not efficient method, it uses dynamic cast to check if component is valid
-		/// </summary>
-		/// <typeparam name="TComponent"></typeparam>
-		/// <param name="components"></param>
-		template<TComponentConcept TComponent>
-		inline void GetComponentsDynamic(std::vector<TComponent*>& components) const
-		{
-			m_Entity.GetComponentDynamic<TComponent>(components);
-		}
-
-		template<TComponentConcept TComponent>
-		inline bool TryGetComponent(typename TComponent*& component) const
-		{
-			return m_Entity.TryGetComponent(component);
-		}
-
-		[[nodiscard]] inline EntityVersion GetVersion() const
-		{
-			return m_Entity.GetVersion();
-		}
-
-		[[nodiscard]] inline uint32_t GetComponentCount() const
-		{
-			return m_Entity.GetComponentCount();
-		}
-
-		[[nodiscard]] inline const Archetype* GetArchetype() const
-		{
-			return m_Entity.GetArchetype();
-		}
-
-		inline bool Destroy() const
-		{
-			return m_Entity.Destroy();
-		}
-
-		[[nodiscard]] inline bool HasTag(TypeID tagType)const
-		{
-			return m_Entity.HasTag(tagType);
-		}
-
-		template<TTagConcept TTag>
-		[[nodiscard]] inline bool HasTag()const
-		{
-			return m_Entity.HasTag<TTag>();
-		}
-
-	private:
-		Entity m_Entity = {};
-
-	private:
-		inline void Set(EntityData& data)
-		{
-			m_Entity.Set_Internal(data);
-		}
-
-	};
 }
 
 template<>
@@ -647,14 +300,5 @@ struct std::hash<decs::Entity>
 		uint64_t entityVersionHash = std::hash<decs::EntityVersion>{}(entity.GetVersion());
 
 		return decs::hash::Combine(entityDataHash, entityVersionHash);
-	}
-};
-
-template<>
-struct std::hash<decs::ConstEntity>
-{
-	std::size_t operator()(const decs::ConstEntity& entity) const
-	{
-		return std::hash<decs::Entity>{}(entity.m_Entity);
 	}
 };

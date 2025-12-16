@@ -9,7 +9,7 @@ void PrintLine(std::string message = "")
 }
 
 
-struct Position : public decs::EntityComponent
+struct Position 
 {
 public:
 	float X = 0;
@@ -32,7 +32,7 @@ public:
 
 };
 
-struct TestComponent : public decs::EntityComponent
+struct TestComponent 
 {
 public:
 	int table[10];
@@ -54,42 +54,10 @@ public:
 
 };
 
-struct Renderer :public decs::EntityComponent
+struct Renderer 
 {
 public:
 	double mesh;
-};
-
-
-class TestComponetObserver :
-	public decs::CreateComponentObserver<TestComponent>,
-	public decs::DestroyComponentObserver<TestComponent>,
-	public decs::EnableComponentObserver<TestComponent>,
-	public decs::DisableComponentObserver<TestComponent>
-{
-public:
-
-	// Inherited via CreateComponentObserver
-	void OnCreateComponent(TestComponent& component, const decs::Entity& entity) override
-	{
-	}
-
-	// Inherited via DestroyComponentObserver
-	void OnDestroyComponent(TestComponent& component, const decs::Entity& entity) override
-	{
-	}
-
-
-	// Inherited via EnableComponentObserver
-	void OnEnableComponent(TestComponent& component, const decs::Entity& entity) override
-	{
-	}
-
-
-	// Inherited via DisableComponentObserver
-	void OnDisableComponent(TestComponent& component, const decs::Entity& entity) override
-	{
-	}
 };
 
 void NormalTest()
@@ -98,13 +66,6 @@ void NormalTest()
 	using IntTag = decs::tag<int>;
 	using DoubleTag = decs::tag<double>;
 	using BoolTag = decs::tag<bool>;
-
-	TestComponetObserver testComponentObserver = {};
-
-	decs::ObserversManager observerManager = {};
-	{
-		observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
-	}
 
 	const decs::ContainerConfig containerConfig{
 		.EntityChunkSize = 1000,

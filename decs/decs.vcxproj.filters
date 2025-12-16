@@ -51,18 +51,6 @@
     <ClInclude Include="src\decs\Component\PackedComponentContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Component\StableComponentContainer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\Component\ComponentContext.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\Component\ComponentContextsManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\Observers\Observers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decs\Iteration\IterationCore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -76,12 +64,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Containers\TOrderedList.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\Observers\ObserversManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\Component\Component.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\trait.h">
@@ -119,13 +101,7 @@
     <ClCompile Include="src\decs\Archetypes\Archetype.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decs\Component\Component.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\decs\decs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\decs\Component\ChunkAllocator.h">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

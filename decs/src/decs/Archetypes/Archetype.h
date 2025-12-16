@@ -1,13 +1,12 @@
 #pragma once
 #include "decs/Core.h"
-#include "decs/Component/ComponentContextsManager.h"
 #include "decs/Type.h"
 #include "decs/Component/PackedComponentContainer.h"
-#include "decs/Component/StableComponentContainer.h"
 #include "decs/EntityData.h"
 #include "decs/trait.h"
 #include "decs/Hash.h"
 #include "decs/check_cast.h"
+
 
 #include <optional>
 
@@ -20,7 +19,6 @@ namespace decs
 	{
 	public:
 		EntityData* m_EntityData = nullptr;
-		bool m_bIsActive = false;
 
 	public:
 		ArchetypeEntityData()
@@ -31,8 +29,7 @@ namespace decs
 		ArchetypeEntityData(
 			EntityData* entityData
 		):
-			m_EntityData(entityData),
-			m_bIsActive(entityData->IsActive())
+			m_EntityData(entityData)
 		{
 
 		}
@@ -42,14 +39,8 @@ namespace decs
 			return m_EntityData;
 		}
 
-		inline bool IsActive() const noexcept
-		{
-			return m_bIsActive;
-		}
-
 		inline void Invalidate()
 		{
-			m_bIsActive = false;
 			m_EntityData = nullptr;
 		}
 
@@ -58,10 +49,6 @@ namespace decs
 			return m_EntityData != nullptr;
 		}
 
-		inline bool IsValidAndActive() const noexcept
-		{
-			return m_EntityData != nullptr && m_bIsActive;
-		}
 	};
 
 	struct ArchetypeTypeData
@@ -69,8 +56,6 @@ namespace decs
 	public:
 		TypeID m_TypeID = std::numeric_limits<TypeID>::max();
 		IPackedComponentContainer* m_PackedContainer = nullptr;
-		IComponentContext* m_ComponentContext = nullptr;
-		IStableComponentContainer* m_StableContainer = nullptr;
 
 	public:
 		ArchetypeTypeData()
@@ -80,21 +65,16 @@ namespace decs
 
 		ArchetypeTypeData(
 			TypeID typeID,
-			IPackedComponentContainer* packedContainer,
-			IComponentContext* componentContext,
-			IStableComponentContainer* stableContainer
+			IPackedComponentContainer* packedContainer
 		):
-			m_TypeID(typeID), m_PackedContainer(packedContainer), m_ComponentContext(componentContext), m_StableContainer(stableContainer)
+			m_TypeID(typeID), m_PackedContainer(packedContainer)
 		{
 
 		}
 
 		inline bool IsTag() const
 		{
-			return m_PackedContainer == nullptr
-				|| m_ComponentContext == nullptr
-				|| m_StableContainer == nullptr
-				;
+			return m_PackedContainer == nullptr;
 		}
 	};
 
@@ -102,9 +82,7 @@ namespace decs
 	struct TArchetypeTypeData
 	{
 	public:
-		PackedStableComponentContainer<ComponentType>* m_PackedContainer = nullptr;
-		StableComponentContainer<ComponentType>* m_StableContainer = nullptr;
-		ComponentContext<ComponentType>* m_ComponentContext = nullptr;
+		PackedComponentContainer<ComponentType>* m_PackedContainer = nullptr;
 
 	public:
 		inline bool IsTag() const
@@ -174,16 +152,6 @@ namespace decs
 		std::vector<ArchetypeEntityData> m_EntitiesData;
 		std::vector<ArchetypeTypeData> m_TypeData;
 
-		struct OrderData
-		{
-		public:
-			IComponentContext* m_ComponentContext = nullptr;
-			uint32_t m_ComponentIndex = std::numeric_limits<uint32_t>::max();
-		};
-
-		std::vector<OrderData> m_ComponentContextsInOrder = {};
-
-
 	public:
 		Archetype();
 
@@ -203,19 +171,9 @@ namespace decs
 			return GetTypeCount();
 		}
 
-		inline uint32_t GetComponentOnlyCount() const
-		{
-			return static_cast<uint32_t>(m_ComponentContextsInOrder.size());
-		}
-
 		inline TypeID GetTypeID(uint64_t index) const
 		{
 			return m_TypeData[index].m_TypeID;
-		}
-
-		inline TypeID GetTypeIDFromOrderData(uint64_t index) const
-		{
-			return m_TypeData[m_ComponentContextsInOrder[index].m_ComponentIndex].m_TypeID;
 		}
 
 		inline uint64_t EntityCount() const noexcept
@@ -355,7 +313,7 @@ namespace decs
 	private:
 
 		template<typename TComponentType>
-		PackedStableComponentContainer<TComponentType>* GetTypePackedContainer() const
+		PackedComponentContainer<TComponentType>* GetTypePackedContainer() const
 		{
 			uint32_t compIdx = FindTypeIndex<TComponentType>();
 			if (compIdx == std::numeric_limits<uint32_t>::max())
@@ -365,7 +323,7 @@ namespace decs
 
 			auto& typeData = m_TypeData[compIdx];
 
-			return static_cast<PackedStableComponentContainer<TComponentType>*>(typeData.m_PackedContainer);
+			return ::decs::check_cast<PackedComponentContainer<TComponentType>*>(typeData.m_PackedContainer);
 		}
 
 		template<typename TComponentType>
@@ -380,31 +338,16 @@ namespace decs
 			auto& typeData = m_TypeData[compIdx];
 
 			return TArchetypeTypeData<TComponentType>{
-				.m_PackedContainer = decs::check_cast<PackedStableComponentContainer<TComponentType>*>(typeData.m_PackedContainer),
-					.m_StableContainer = decs::check_cast<StableComponentContainer<TComponentType>*>(typeData.m_StableContainer),
-					.m_ComponentContext = decs::check_cast<ComponentContext<TComponentType>*>(typeData.m_ComponentContext),
+				.m_PackedContainer = decs::check_cast<PackedStableComponentContainer<TComponentType>*>(typeData.m_PackedContainer)
 			};
 		}
 
 		void ClearEntityDataAndComponents();
 
-		// it must be called only from "AddTypeData_WithoutCheck" function
-		void InsertComponentContextInCorrectPlace(IComponentContext* componentContext, uint32_t typeDataIndex);
-
 		void AddTypeData_WithoutCheck(
 			TypeID typeID,
-			IComponentContext* componentContext
+			IPackedComponentContainer* packedContainer
 		);
-
-		void UpdateOrderOfComponentContexts();
-
-		inline void SetEntityActiveState(uint32_t index, bool isActive)
-		{
-			if (index < EntityCount())
-			{
-				m_EntitiesData[index].m_bIsActive = isActive;
-			}
-		}
 
 		void AddEntityData(EntityData* entityData);
 
@@ -431,9 +374,7 @@ namespace decs
 
 		void Reset();
 
-		void InitEmptyFromOther(const Archetype& other, ComponentContextsManager* componentContexts);
-
-		void RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(uint64_t entityIndex, TypeID removedComponentTypeID);
+		void InitEmptyFromOther(const Archetype& other);
 
 		void ShrinkToFit();
 

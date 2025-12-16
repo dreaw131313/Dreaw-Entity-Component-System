@@ -33,10 +33,6 @@ namespace decs
 			EntityData* entityData = std::move(m_FreeEntities.back());
 			m_FreeEntities.pop_back();
 
-			entityData->SetState(EEntityState::Alive);
-			entityData->SetActiveState(isActive);
-			entityData->m_bIsCreatedByContainer = false;
-			entityData->m_bIsEnabledByContainer = false;
 			entityData->m_Container = &container;
 
 			return entityData;
@@ -53,7 +49,7 @@ namespace decs
 
 	bool EntityManager::DestroyEntity(EntityData* entityData)
 	{
-		if (entityData!= nullptr && !entityData->IsDead())
+		if (entityData!= nullptr)
 		{
 			m_FreeEntities.push_back(entityData);
 			entityData->OnDestroyByEntityManager();
