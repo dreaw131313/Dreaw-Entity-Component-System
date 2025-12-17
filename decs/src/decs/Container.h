@@ -156,7 +156,7 @@ namespace decs
 							spawnArchetype->AddEntityData(entityData);
 
 							std::tuple<drop_const_t<ComponentTypes>*...> createdComponents = {
-								&std::get<PackedComponentContainer<drop_const_t<ComponentTypes>>*>(packedContainerTyple)->EmplaceBack()
+								&std::get<PackedComponentContainer<drop_const_t<ComponentTypes>>*>(packedContainerTyple)->EmplaceBack<>()
 								...
 							};
 
@@ -192,7 +192,6 @@ namespace decs
 		Entity CreateEntity(
 			const ComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
-			bool bIsActive,
 			InitFunc&& initFunc
 		)
 		{

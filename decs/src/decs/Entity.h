@@ -73,7 +73,7 @@ namespace decs
 			{
 				return m_EntityData->GetID();
 			}
-			return std::numeric_limits< EntityID>::max();
+			return std::numeric_limits<EntityID>::max();
 		}
 
 		[[nodiscard]] inline Container* GetContainer() const
@@ -94,15 +94,6 @@ namespace decs
 				return true;
 			}
 			return false;
-		}
-
-		[[nodiscard]] inline uint32_t GetComponentCount() const
-		{
-			if (IsValid())
-			{
-				return m_EntityData->GetComponentOnlyCount();
-			}
-			return 0;
 		}
 
 		[[nodiscard]] inline uint32_t GetComponentAndTagCount() const

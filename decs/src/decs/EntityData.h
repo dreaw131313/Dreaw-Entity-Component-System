@@ -61,8 +61,6 @@ namespace decs
 
 		uint32_t GetComponentAndTagCount() const;
 
-		uint32_t GetComponentOnlyCount() const;
-
 		inline bool IsInManager() const
 		{
 			return m_Container == nullptr;
