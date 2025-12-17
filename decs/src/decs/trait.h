@@ -2,6 +2,8 @@
 
 #include <type_traits>
 
+#include "Type.h"
+
 namespace decs
 {
 	template<typename T>
@@ -80,5 +82,47 @@ namespace decs
 	template<typename TCallable, typename... TComponentTypes>
 	constexpr bool is_invocable_with_entity_v = std::is_invocable_v<TCallable, const Entity&, TComponentTypes...> 
 		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
+
+	template<typename T>
+	concept TLightComponentConcept = !std::is_same_v<T, bool> && !is_tag_v<T>;
+
+	template<typename T>
+	concept TLightComponentOrTagConcept = TLightComponentConcept<T> || TTagConcept<T>;
+
+	template<TLightComponentConcept... Types>
+	class LightComponentTypeGroup
+	{
+	public:
+		constexpr TypeID operator[](const uint64_t index) const
+		{
+			return m_Group[index];
+		}
+
+		constexpr uint64_t Size() const
+		{
+			return m_Group.Size();
+		}
+
+	private:
+		TypeGroup<Types...> m_Group{};
+	};
+
+	template<TTagConcept... Types>
+	class TagTypeGroup
+	{
+	public:
+		constexpr TypeID operator[](const uint64_t index) const
+		{
+			return m_Group[index];
+		}
+
+		constexpr uint64_t Size() const
+		{
+			return m_Group.Size();
+		}
+
+	private:
+		TypeGroup<Types...> m_Group{};
+	};
 
 }

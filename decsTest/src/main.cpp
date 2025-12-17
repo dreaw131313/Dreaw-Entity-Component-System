@@ -106,27 +106,13 @@ void NormalTest()
 		observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
 	}
 
-	const decs::ContainerConfig containerConfig{
-		.EntityChunkSize = 1000,
-		.DefaultComponentChunkSize = 200,
-		.ArchetypeChunkSize = 200,
-	};
-
-	decs::Container prefabContainer(containerConfig);
-	decs::Entity prefab{};
 	{
-		prefab = prefabContainer.CreateEntity(false);
+		const decs::ContainerConfig containerConfig{
+			.EntityChunkSize = 1000,
+			.DefaultComponentChunkSize = 200,
+			.ArchetypeChunkSize = 200,
+		};
 
-		prefab.AddComponent<TestComponent>();
-		prefab.AddComponent<Renderer>();
-		prefab.AddTag<FloatTag>();
-		prefab.AddTag<IntTag>();
-		prefab.AddTag<BoolTag>();
-		prefab.AddComponent<Position>(10.f, 10.f);
-
-	}
-
-	{
 		decs::Container container = { containerConfig };
 		observerManager.FillContainerObservers(container);
 
@@ -135,10 +121,10 @@ void NormalTest()
 
 
 		{
-			decs::ComponentTypeGroup</*TestComponent, Renderer, Position*/> componetns{};
-			decs::TagTypeGroup</*FloatTag, IntTag, BoolTag*/> tags{};
+			decs::ComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
+			decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
 
-			auto initFunc = [](const decs::Entity& e/*, TestComponent& component, Renderer& renderer, Position& position*/)
+			auto initFunc = [](const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
 			{
 				PrintLine("Init from helepr create entity func!");
 			};
@@ -146,7 +132,7 @@ void NormalTest()
 			container.CreateEntities(componetns, tags, 10, true, initFunc);
 		}
 
-		{
+		/*{
 
 			decs::ComponentTypeGroup<TestComponent, Renderer, Position> comps{};
 			decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
@@ -157,7 +143,7 @@ void NormalTest()
 			};
 
 			decs::Entity newEntity = container.CreateEntity(comps, tags, true, entityInit);
-		}
+		}*/
 
 		uint32_t counter = 0;
 		auto testFunc = [&](const TestComponent& test)

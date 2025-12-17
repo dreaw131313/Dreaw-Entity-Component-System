@@ -232,22 +232,4 @@ namespace decs
 	private:
 		TypeGroup<Types...> m_Group{};
 	};
-
-	template<TTagConcept... Types>
-	class TagTypeGroup
-	{
-	public:
-		constexpr TypeID operator[](const uint64_t index) const
-		{
-			return m_Group[index];
-		}
-
-		constexpr uint64_t Size() const
-		{
-			return m_Group.Size();
-		}
-
-	private:
-		TypeGroup<Types...> m_Group{};
-	};
 }
