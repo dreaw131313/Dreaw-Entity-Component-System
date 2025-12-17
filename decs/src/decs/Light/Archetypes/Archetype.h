@@ -10,7 +10,7 @@
 
 #include <optional>
 
-namespace decs
+namespace decs::light
 {
 	class Entity;
 	class Archetype;
@@ -422,9 +422,9 @@ namespace decs
 }
 
 template<>
-struct std::hash<decs::ArchetypeHasher>
+struct std::hash<decs::light::ArchetypeHasher>
 {
-	std::size_t operator()(const decs::ArchetypeHasher& archHasher)const
+	std::size_t operator()(const decs::light::ArchetypeHasher& archHasher)const
 	{
 		return archHasher.CalculateHash();
 	}

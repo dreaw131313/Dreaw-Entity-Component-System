@@ -9,7 +9,7 @@
 #include "Archetypes/ArchetypesMap.h"
 #include "EntityManager.h"
 
-namespace decs
+namespace decs::light
 {
 	class Entity;
 
@@ -109,7 +109,7 @@ namespace decs
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
 		template<typename InitFunc, TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
-			requires query_callable<InitFunc, ComponentTypes...>
+			requires light_query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
@@ -153,7 +153,7 @@ namespace decs
 								...
 							};
 
-							if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
+							if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
 							{
 								initFunc(entity, *std::get<drop_const_t<ComponentTypes>*>(createdComponents)...);
 							}
@@ -181,7 +181,7 @@ namespace decs
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
 		template<typename InitFunc, TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
-			requires query_callable<InitFunc, ComponentTypes...>
+			requires light_query_callable<InitFunc, ComponentTypes...>
 		[[nodiscard]] Entity CreateEntity(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
@@ -218,7 +218,7 @@ namespace decs
 							...
 						};
 
-						if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
+						if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
 						{
 							initFunc(entity, *std::get<drop_const_t<ComponentTypes>*>(createdComponents)...);
 						}

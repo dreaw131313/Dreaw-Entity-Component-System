@@ -71,6 +71,10 @@ namespace decs
 	using drop_const_t = drop_const<T>::Type;
 
 	class Entity;
+	namespace light
+	{
+		class Entity;
+	}
 
 	template<typename TCallable, typename... TComponentTypes>
 	concept query_callable = std::is_invocable_v<TCallable, TComponentTypes...> 
@@ -78,10 +82,20 @@ namespace decs
 		|| std::is_invocable_v<TCallable, TComponentTypes&...>
 		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
 
+	template<typename TCallable, typename... TComponentTypes>
+	concept light_query_callable = std::is_invocable_v<TCallable, TComponentTypes...> 
+		|| std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes...>
+		|| std::is_invocable_v<TCallable, TComponentTypes&...>
+		|| std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes&...>;
+
 
 	template<typename TCallable, typename... TComponentTypes>
 	constexpr bool is_invocable_with_entity_v = std::is_invocable_v<TCallable, const Entity&, TComponentTypes...> 
 		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
+	
+	template<typename TCallable, typename... TComponentTypes>
+	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes...> 
+		|| std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes&...>;
 
 	template<typename T>
 	concept TLightComponentConcept = !std::is_same_v<T, bool> && !is_tag_v<T>;

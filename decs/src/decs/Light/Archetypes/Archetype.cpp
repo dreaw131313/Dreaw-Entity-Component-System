@@ -3,7 +3,7 @@
 
 #include <algorithm>
 
-namespace decs
+namespace decs::light
 {
 	Archetype::Archetype()
 	{

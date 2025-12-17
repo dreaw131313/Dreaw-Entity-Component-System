@@ -4,7 +4,7 @@
 #include "decs/Light/Container.h"
 #include "decs/Light/Entity.h"
 
-namespace decs
+namespace decs::light
 {
 	/// <summary>
 	/// Class for iterating over container in the same order like ContainerSerializer.
@@ -20,7 +20,7 @@ namespace decs
 
 			uint64_t archetypesChunks = archetypesVector.ChunkCount();
 
-			decs::Entity entityBuffer = {};
+			Entity entityBuffer = {};
 
 			for (uint32_t i = 0; i < container.m_EmptyEntities.size(); i++)
 			{

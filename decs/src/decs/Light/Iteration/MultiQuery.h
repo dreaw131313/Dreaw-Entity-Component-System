@@ -6,7 +6,7 @@
 
 #include "IterationCore.h"
 
-namespace decs
+namespace decs::light
 {
 	class IMultiQuery
 	{
@@ -24,7 +24,7 @@ namespace decs
 	template<TLightComponentConcept... ComponentsTypes>
 	class MultiQuery : public IMultiQuery
 	{
-		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "MultiQuery must not use tags in as ComponentTypes!");
+		static_assert(!::decs::contain_tags_v<ComponentsTypes...>, "MultiQuery must not use tags in as ComponentTypes!");
 
 	private:
 		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
@@ -91,7 +91,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
-			requires query_callable<Callable, ComponentsTypes...>
+			requires light_query_callable<Callable, ComponentsTypes...>
 		inline void ForEach(Callable&& func) noexcept
 		{
 			Fetch();
@@ -105,9 +105,9 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+				if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 				{
-					decs::Entity entityBuffer = {};
+					Entity entityBuffer = {};
 
 					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
@@ -131,7 +131,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
-			requires query_callable<Callable, ComponentsTypes...>
+			requires light_query_callable<Callable, ComponentsTypes...>
 		inline void ForEach_Safe(Callable&& func) noexcept
 		{
 			Fetch();
@@ -145,9 +145,9 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+				if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 				{
-					decs::Entity entityBuffer = {};
+					Entity entityBuffer = {};
 
 					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
@@ -175,7 +175,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
-			requires query_callable<Callable, ComponentsTypes...>
+			requires light_query_callable<Callable, ComponentsTypes...>
 		void ForEachBackward(Callable&& func) noexcept
 		{
 			Fetch();
@@ -189,9 +189,9 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+				if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 				{
-					decs::Entity entityBuffer = {};
+					Entity entityBuffer = {};
 
 					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
@@ -215,7 +215,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
-			requires query_callable<Callable, ComponentsTypes...>
+			requires light_query_callable<Callable, ComponentsTypes...>
 		void ForEachBackward_Safe(Callable&& func) noexcept
 		{
 			Fetch();
@@ -229,9 +229,9 @@ namespace decs
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+				if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 				{
-					decs::Entity entityBuffer = {};
+					Entity entityBuffer = {};
 
 					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
@@ -291,7 +291,7 @@ namespace decs
 			}
 		}
 
-		[[nodiscard]] bool Contain(const decs::Entity& entity)
+		[[nodiscard]] bool Contain(const Entity& entity)
 		{
 			if (entity.IsValid())
 			{
@@ -363,7 +363,7 @@ namespace decs
 			const ContainersTupleType& containersTuple
 		)
 		{
-			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+			if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 			{
 				entityBuffer.Set_Internal(entityData);
 				func(
@@ -406,11 +406,11 @@ namespace decs
 			}
 
 			template<typename Callable>
-				requires query_callable<Callable, ComponentsTypes...>
+				requires light_query_callable<Callable, ComponentsTypes...>
 			void ForEach(Callable&& func) noexcept
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
-				decs::Entity entityBuffer = {};
+				Entity entityBuffer = {};
 
 				uint64_t leftEntitiesToIterate = m_EntitiesCount;
 
@@ -459,7 +459,7 @@ namespace decs
 							leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
 						}
 
-						if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+						if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 						{
 							ctx.ForEachFromTo_WithEntity(func, entityBuffer, startEntitiyIndex, entitiesCount);
 						}

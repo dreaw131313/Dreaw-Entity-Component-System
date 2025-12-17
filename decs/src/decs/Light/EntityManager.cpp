@@ -3,7 +3,7 @@
 
 #include "Entity.h"
 
-namespace decs
+namespace decs::light
 {
 	EntityManager::EntityManager()
 	{

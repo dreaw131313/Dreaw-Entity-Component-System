@@ -2,7 +2,7 @@
 #include "EntityData.h"
 #include "Archetypes\Archetype.h"
 
-namespace decs
+namespace decs::light
 {
 	uint32_t EntityData::GetTypeCount() const
 	{

@@ -4,7 +4,7 @@
 
 #include "decs/Light/Iteration/ContainerIterator.h"
 
-namespace decs
+namespace decs::light
 {
 	Container::Container():
 		m_EntityManager(m_DefaultEntitiesChunkSize)
@@ -32,7 +32,7 @@ namespace decs
 	void Container::ReturnOwnedEntitiesToEntityManager_Internal()
 	{
 		ContainerIterator iterator = {};
-		iterator.Foreach(*this, [this](const decs::Entity& entity)
+		iterator.Foreach(*this, [this](const Entity& entity)
 		{
 			m_EntityManager.ForceDestroyEntity(entity.m_EntityData);
 		});

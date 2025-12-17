@@ -8,7 +8,7 @@
 
 #include <type_traits>
 
-namespace decs
+namespace decs::light
 {
 	template<TLightComponentConcept... ComponentsTypes>
 	class Query
@@ -116,7 +116,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
-			requires query_callable<Callable, ComponentsTypes...>
+			requires light_query_callable<Callable, ComponentsTypes...>
 		inline void ForEach(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
@@ -126,7 +126,7 @@ namespace decs
 			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
 			const uint64_t contextCount = archetypeContexts.size();
 
-			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+			if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 			{
 				Entity entityBuffer = {};
 				for (const auto& ctx : archetypeContexts)
@@ -150,7 +150,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
-			requires query_callable<Callable, ComponentsTypes...>
+			requires light_query_callable<Callable, ComponentsTypes...>
 		inline void ForEach_Safe(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
@@ -160,7 +160,7 @@ namespace decs
 			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
 			const uint64_t contextCount = archetypeContexts.size();
 
-			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+			if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 			{
 				Entity entityBuffer = {};
 
@@ -188,7 +188,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
-			requires query_callable<Callable, ComponentsTypes...>
+			requires light_query_callable<Callable, ComponentsTypes...>
 		void ForEachBackward(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
@@ -198,7 +198,7 @@ namespace decs
 			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
 			const uint64_t contextCount = archetypeContexts.size();
 
-			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+			if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 			{
 				Entity entityBuffer = {};
 
@@ -223,7 +223,7 @@ namespace decs
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
-			requires query_callable<Callable, ComponentsTypes...>
+			requires light_query_callable<Callable, ComponentsTypes...>
 		void ForEachBackward_Safe(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
@@ -233,7 +233,7 @@ namespace decs
 			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
 			const uint64_t contextCount = archetypeContexts.size();
 
-			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+			if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 			{
 				Entity entityBuffer = {};
 
@@ -262,7 +262,7 @@ namespace decs
 		/// </summary>
 		/// <param name="entity"></param>
 		/// <returns></returns>
-		[[nodiscard]] bool Contain(const decs::Entity& entity)
+		[[nodiscard]] bool Contain(const Entity& entity)
 		{
 			if (entity.IsValid())
 			{
@@ -299,7 +299,7 @@ namespace decs
 			const ContainersTupleType& containersTuple
 		)
 		{
-			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+			if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 			{
 				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(
 					func,
@@ -356,7 +356,7 @@ namespace decs
 			}
 
 			template<typename Callable>
-				requires query_callable<Callable, ComponentsTypes...>
+				requires light_query_callable<Callable, ComponentsTypes...>
 			inline void ForEach(Callable&& func) const
 			{
 				if (!IsValid())
@@ -395,7 +395,7 @@ namespace decs
 						leftEntitiesToIterate -= leftEntitiesInContext;
 					}
 
-					if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+					if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 					{
 						ctx.ForEachFromTo_WithEntity(func, entityBuffer, startEntityIdx, iterationsCount);
 					}

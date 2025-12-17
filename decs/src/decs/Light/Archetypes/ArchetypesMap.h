@@ -8,7 +8,7 @@
 
 #include "Archetype.h"
 
-namespace decs
+namespace decs::light
 {
 	class ArchetypesShrinkToFitState
 	{

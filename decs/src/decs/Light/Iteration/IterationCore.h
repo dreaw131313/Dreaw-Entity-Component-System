@@ -4,7 +4,7 @@
 #include "decs/Light/Archetypes/Archetype.h"
 #include "decs/Light/Archetypes/ArchetypesMap.h"
 
-namespace decs
+namespace decs::light
 {
 	class Iteration
 	{
@@ -497,7 +497,7 @@ namespace decs
 			}
 		}
 
-		bool Contain(const decs::Entity& entity)
+		bool Contain(const Entity& entity)
 		{
 			return m_ContainedArchetypes.find(entity.GetArchetype()) != m_ContainedArchetypes.end();
 		}

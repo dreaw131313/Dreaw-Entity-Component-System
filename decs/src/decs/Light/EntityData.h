@@ -1,9 +1,11 @@
 #pragma once
 #include "decs/Core.h"
 
-namespace decs
+namespace decs::light
 {
+	class Container;
 	class Archetype;
+	class Entity;
 
 	class EntityData final
 	{

@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-namespace decs
+namespace decs::light
 {
 	ArchetypesMap::ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize):
 		m_Archetypes(archetypesVectorChunkSize),
