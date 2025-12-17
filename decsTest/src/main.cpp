@@ -76,7 +76,7 @@ void NormalTest()
 	decs::Container prefabContainer(containerConfig);
 	decs::Entity prefab{};
 	{
-		prefab = prefabContainer.CreateEntity(false);
+		prefab = prefabContainer.CreateEntity();
 
 		prefab.AddComponent<TestComponent>();
 		prefab.AddComponent<Renderer>();
@@ -89,8 +89,6 @@ void NormalTest()
 
 	{
 		decs::Container container = { containerConfig };
-		observerManager.FillContainerObservers(container);
-
 		/*container.Spawn(prefab, true);
 		container.Spawn(prefab, 9, true);*/
 
@@ -104,7 +102,7 @@ void NormalTest()
 				PrintLine("Init from helepr create entity func!");
 			};
 
-			container.CreateEntities(componetns, tags, 10, true, initFunc);
+			container.CreateEntities(componetns, tags, 10, initFunc);
 		}
 
 		{
@@ -153,10 +151,6 @@ void NormalTest()
 			query.ForEachBackward_Safe(testFunc);
 			PrintLine("ForEachBackward With Entity Safe");
 			query.ForEachBackward_Safe(testFuncWithEntity);
-			PrintLine("ForEach_IngoreEntityActiveState");
-			query.ForEach_IngoreEntityActiveState(testFunc);
-			PrintLine("ForEach_IngoreEntityActiveState With Entity");
-			query.ForEach_IngoreEntityActiveState(testFuncWithEntity);
 
 			if (false)
 			{
@@ -173,16 +167,6 @@ void NormalTest()
 				for (auto& it : iterators)
 				{
 					it.ForEach(testFuncWithEntity);
-				}
-				PrintLine("BatchIterator::ForEach_IngoreEntityActiveState");
-				for (auto& it : iterators)
-				{
-					it.ForEach_IngoreEntityActiveState(testFunc);
-				}
-				PrintLine("BatchIterator::ForEach_IngoreEntityActiveState With Entity");
-				for (auto& it : iterators)
-				{
-					it.ForEach_IngoreEntityActiveState(testFuncWithEntity);
 				}
 			}
 		}
@@ -215,9 +199,6 @@ void NormalTest()
 			PrintLine("ForEachBackward With Entity Safe");
 			query.ForEachBackward_Safe(testFuncWithEntity);
 			PrintLine("ForEach_IngoreEntityActiveState");
-			query.ForEach_IngoreEntityActiveState(testFunc);
-			PrintLine("ForEach_IngoreEntityActiveState With Entity");
-			query.ForEach_IngoreEntityActiveState(testFuncWithEntity);
 
 			if (false)
 			{
@@ -233,16 +214,6 @@ void NormalTest()
 				for (auto& it : iterators)
 				{
 					it.ForEach(testFuncWithEntity);
-				}
-				PrintLine("BatchIterator::ForEach_IngoreEntityActiveState");
-				for (auto& it : iterators)
-				{
-					it.ForEach_IngoreEntityActiveState(testFunc);
-				}
-				PrintLine("BatchIterator::ForEach_IngoreEntityActiveState With Entity");
-				for (auto& it : iterators)
-				{
-					it.ForEach_IngoreEntityActiveState(testFuncWithEntity);
 				}
 			}
 		}

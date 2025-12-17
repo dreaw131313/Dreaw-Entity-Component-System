@@ -20,6 +20,7 @@ namespace decs
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 		EntityVersion m_Version = 1;
+		bool m_bIsAlive = true;
 
 	public:
 		EntityData() = delete;
@@ -48,9 +49,14 @@ namespace decs
 			return m_ID;
 		}
 
+		inline bool IsAlive() const noexcept
+		{
+			return m_bIsAlive;
+		}
+
 		inline bool IsAliveWithVersion(uint32_t desiredVersion) const noexcept
 		{
-			return desiredVersion == m_Version && IsAlive();
+			return desiredVersion == m_Version && m_bIsAlive;
 		}
 
 		uint32_t GetComponentAndTagCount() const;
@@ -68,6 +74,7 @@ namespace decs
 			m_Container = nullptr;
 			m_Archetype = nullptr;
 			m_Version += 1;
+			m_bIsAlive = false;
 		}
 	};
 

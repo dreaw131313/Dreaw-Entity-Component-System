@@ -6,8 +6,6 @@
 
 #include "IterationCore.h"
 
-#include "decs/Component/Component.h"
-
 namespace decs
 {
 	class IMultiQuery
@@ -35,7 +33,7 @@ namespace decs
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 
 		template<typename TComponent>
-		using PackedContainerType = PackedStableComponentContainer<TComponent>*;
+		using PackedContainerType = PackedComponentContainer<TComponent>*;
 
 	public:
 		MultiQuery()
@@ -110,7 +108,6 @@ namespace decs
 				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
 					decs::Entity entityBuffer = {};
-					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 
 					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
@@ -151,7 +148,6 @@ namespace decs
 				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
 					decs::Entity entityBuffer = {};
-					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 
 					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
@@ -196,7 +192,6 @@ namespace decs
 				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
 					decs::Entity entityBuffer = {};
-					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 
 					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
@@ -237,7 +232,6 @@ namespace decs
 				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 				{
 					decs::Entity entityBuffer = {};
-					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 
 					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
@@ -427,11 +421,6 @@ namespace decs
 					if (!containerContext.m_bIsEnabled)
 					{
 						continue; // Skip if container context is disabled
-					}
-
-					if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
-					{
-						entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
 					}
 
 					auto archetypesContexts = containerContext.m_ArchetypesContexts.data();

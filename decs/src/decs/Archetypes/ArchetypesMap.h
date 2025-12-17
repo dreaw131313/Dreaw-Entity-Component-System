@@ -4,7 +4,6 @@
 
 #include "decs/Core.h"
 #include "decs/Type.h"
-#include "decs/Component/ComponentContextsManager.h"
 #include "decs/Component/PackedComponentContainer.h"
 
 #include "Archetype.h"
@@ -365,8 +364,10 @@ namespace decs
 		// CREATING ARCHETYPES
 	private:
 		template<TComponentConcept TComponent>
-		Archetype* CreateSingleComponentArchetype(TypeID componentTypeID)
+		Archetype* CreateSingleComponentArchetype()
 		{
+			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<TComponent>::ID();
+
 			auto archetype = GetSingleComponentArchetype(componentTypeID);
 			if (archetype != nullptr)
 			{

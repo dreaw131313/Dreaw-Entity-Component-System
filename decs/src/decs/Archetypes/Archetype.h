@@ -326,22 +326,6 @@ namespace decs
 			return ::decs::check_cast<PackedComponentContainer<TComponentType>*>(typeData.m_PackedContainer);
 		}
 
-		template<typename TComponentType>
-		TArchetypeTypeData<TComponentType> GetTypeData() const
-		{
-			uint32_t compIdx = FindTypeIndex<TComponentType>();
-			if (compIdx == std::numeric_limits<uint32_t>::max())
-			{
-				return {};
-			}
-
-			auto& typeData = m_TypeData[compIdx];
-
-			return TArchetypeTypeData<TComponentType>{
-				.m_PackedContainer = decs::check_cast<PackedStableComponentContainer<TComponentType>*>(typeData.m_PackedContainer)
-			};
-		}
-
 		void ClearEntityDataAndComponents();
 
 		void AddTypeData_WithoutCheck(
@@ -354,8 +338,6 @@ namespace decs
 		void RemoveSwapBackEntityData(uint64_t index);
 
 		void RemoveSwapBackEntity(uint64_t index);
-
-		void RemoveSwapBackEntityAfterRemoveComponent(uint64_t index);
 
 		/// <summary>
 		/// Removes entity data and components on index. Do not destroy stable components and do not change in any way entity data.
@@ -415,14 +397,7 @@ namespace decs
 			TypeID addedComponentTypeID
 		);
 
-		static bool MoveEntityAfterAddComponentWithoutDestroyingFromSource(
-			Archetype& fromArchetype,
-			Archetype& toArchetype,
-			uint64_t entityIndex,
-			TypeID addedComponentTypeID
-		);
-
-		static bool MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
+		static bool MoveEntityAfterRemoveComponent(
 			Archetype& fromArchetype,
 			Archetype& toArchetype,
 			uint64_t entityIndex,

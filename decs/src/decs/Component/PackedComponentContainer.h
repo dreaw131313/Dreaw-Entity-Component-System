@@ -1,9 +1,7 @@
 #pragma once
 #include "decs/Core.h"
 #include "decs/Containers/TChunkedVector.h"
-#include "StableComponentContainer.h"
-
-#include "decs/Component/Component.h"
+#include"decs/check_cast.h"
 
 namespace decs
 {
@@ -44,7 +42,9 @@ namespace decs
 
 		inline virtual void RemoveSwapBack(uint64_t index) = 0;
 
-		inline virtual void PushBack(void* componentBase) = 0;
+		inline virtual void PushBack(void* componentPtr) = 0;
+
+		inline virtual void MoveBack(void* componentPtr) = 0;
 
 		inline virtual IPackedComponentContainer* CloneEmpty() const = 0;
 	};
@@ -60,27 +60,22 @@ namespace decs
 		std::vector<TComponent> m_Data{};
 
 	public:
-		PackedStableComponentContainer()
+		PackedComponentContainer()
 		{
 
 		}
 
-		~PackedStableComponentContainer()
+		~PackedComponentContainer()
 		{
 
 		}
 
-		inline virtual uint64_t GetComponentSize() const override
+		inline  uint64_t GetComponentSize() const override
 		{
 			return sizeof(TComponent);
 		}
 
-		/*virtual IPackedComponentContainer* Clone() const  override
-		{
-			return new PackedStableComponentContainer<TComponent>();
-		}*/
-
-		inline virtual void PopBack() override
+		inline  void PopBack() override
 		{
 			if (m_Data.size() > 0)
 			{
@@ -88,37 +83,37 @@ namespace decs
 			}
 		}
 
-		inline virtual void Clear() override
+		inline  void Clear() override
 		{
 			m_Data.clear();
 		}
 
-		inline virtual void ShrinkToFit() override
+		inline  void ShrinkToFit() override
 		{
 			m_Data.shrink_to_fit();
 		}
 
-		inline virtual uint64_t Capacity() override
+		inline  uint64_t Capacity() override
 		{
 			return m_Data.capacity();
 		}
 
-		inline virtual uint64_t Size() override
+		inline  uint64_t Size() override
 		{
 			return m_Data.size();
 		}
 
-		inline virtual void Reserve(uint64_t newCapacity) override
+		inline  void Reserve(uint64_t newCapacity) override
 		{
 			m_Data.reserve(newCapacity);
 		}
 
-		inline virtual void* GetComponentBasePtr(uint64_t index)  override
+		inline  void* GetComponentBasePtr(uint64_t index)  override
 		{
 			return &m_Data[index];
 		}
 
-		inline virtual void RemoveSwapBack(uint64_t index) override
+		inline  void RemoveSwapBack(uint64_t index) override
 		{
 			uint64_t dataSize = m_Data.size();
 			if (dataSize > 0)
@@ -131,9 +126,14 @@ namespace decs
 			}
 		}
 
-		inline void PushBack(void* componentBase) override
+		inline void PushBack(void* componentPtr) override
 		{
-			m_Data.emplace_back(*::decs::check_cast<TComponent*>(componentBase));
+			m_Data.emplace_back(*::decs::check_cast<TComponent*>(componentPtr));
+		}
+
+		inline void MoveBack(void* componentPtr) override
+		{
+			m_Data.emplace_back(std::move(*::decs::check_cast<TComponent*>(componentPtr)));
 		}
 
 		inline TComponent& GetAsRef(uint64_t index)

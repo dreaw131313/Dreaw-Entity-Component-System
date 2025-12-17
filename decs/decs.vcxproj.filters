@@ -54,22 +54,10 @@
     <ClInclude Include="src\decs\Iteration\IterationCore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Utils\ContainerSerializer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\Utils\ContainerIterator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\Utils\ContainerSerializerComplex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decs\Containers\TOrderedList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\trait.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\decs\Utils\RefCounterHandle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Memory.h">
@@ -79,6 +67,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\check_cast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\Iteration\ContainerIterator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

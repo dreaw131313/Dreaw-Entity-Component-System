@@ -85,38 +85,6 @@ namespace decs
 			return nullptr;
 		}
 
-		inline void SetActive(const bool& isActive) const
-		{
-			if (IsValid())
-			{
-				GetContainer_Internal()->SetEntityActive(*this, isActive);
-			}
-		}
-
-		void SetActiveOverride(bool bIsActiveOverride) const
-		{
-			if (IsValid())
-			{
-				GetContainer()->SetEntityActiveOverride(*this, bIsActiveOverride);
-			}
-		}
-
-		void SetDisabledOverrideCount(uint32_t disabledOverrideCount) const
-		{
-			if (IsValid())
-			{
-				GetContainer()->SetEntityDisabledOverrideCount(*this, disabledOverrideCount);
-			}
-		}
-
-		void ResetDisabledOverrideCount() const
-		{
-			if (IsValid())
-			{
-				GetContainer()->ResetDisabledOverrideCount(*this);
-			}
-		}
-
 		inline bool Destroy() const
 		{
 			if (IsValid())

@@ -409,7 +409,6 @@ namespace decs
 		std::vector<ArchetypeContextType> m_ArchetypesContexts{};
 		ecsSet<const Archetype*> m_ContainedArchetypes{};
 		Container* m_Container = nullptr;
-		TRefCounterHandle<EnityLifeTimeData> m_LifeTimeData{};
 		uint64_t m_ArchetypesCountDirty = 0;
 		bool m_bIsEnabled = true;
 
@@ -421,7 +420,6 @@ namespace decs
 
 		IterationContainerContext(Container* container, bool bIsEnabled = true):
 			m_Container(container),
-			m_LifeTimeData(m_Container != nullptr ? m_Container->GetLifeTimeData() : nullptr),
 			m_bIsEnabled(bIsEnabled)
 		{
 
@@ -429,7 +427,7 @@ namespace decs
 
 		inline bool IsValid() const noexcept
 		{
-			return m_LifeTimeData.IsValid() && m_LifeTimeData->IsAlive();;
+			return m_Container != nullptr;
 		}
 
 		inline bool IsEnabled() const noexcept
@@ -468,7 +466,6 @@ namespace decs
 		{
 			Clear();
 			m_Container = container;
-			m_LifeTimeData = m_Container != nullptr ? m_Container->GetLifeTimeData() : nullptr;
 		}
 
 		void Fetch(const QueryFilterConfigType& filter)

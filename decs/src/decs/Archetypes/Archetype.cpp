@@ -150,7 +150,7 @@ namespace decs
 		if (packedContainer == nullptr)
 		{
 			// tag data
-			m_TypeData.emplace_back(typeID, nullptr, nullptr, nullptr);
+			m_TypeData.emplace_back(typeID, nullptr);
 		}
 		else
 		{
@@ -224,40 +224,6 @@ namespace decs
 
 		RemoveSwapBackEntityData(index);
 
-	}
-
-	void Archetype::RemoveSwapBackEntityAfterRemoveComponent(uint64_t index)
-	{
-		if (index >= EntityCount())
-		{
-			return;
-		}
-
-		if (index == EntityCount() - 1)
-		{
-			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
-			{
-				auto& typeData = m_TypeData[i];
-				if (!typeData.IsTag())
-				{
-					typeData.m_PackedContainer->PopBack();
-				}
-			}
-
-		}
-		else
-		{
-			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
-			{
-				auto& typeData = m_TypeData[i];
-				if (!typeData.IsTag())
-				{
-					typeData.m_PackedContainer->RemoveSwapBack(index);
-				}
-			}
-		}
-
-		RemoveSwapBackEntityData(index);
 	}
 
 	void Archetype::RemoveSwapBackRecordRaw(uint64_t index)
@@ -414,8 +380,8 @@ namespace decs
 
 		for (; thisArchetypeIndex < toArchetype.GetComponentAndTagCount(); thisArchetypeIndex++)
 		{
-			ArchetypeTypeData& thisTypeData = toArchetype.m_TypeData[thisArchetypeIndex];
-			if (thisTypeData.m_TypeID == addedComponentTypeID)
+			ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[thisArchetypeIndex];
+			if (toTypeData.m_TypeID == addedComponentTypeID)
 			{
 				continue;
 			}
@@ -423,7 +389,7 @@ namespace decs
 			ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];
 			if (!fromArchetypeData.IsTag())
 			{
-				thisTypeData.m_PackedContainer->PushBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+				toTypeData.m_PackedContainer->MoveBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
 				fromArchetypeData.m_PackedContainer->RemoveSwapBack(entityIndex);
 			}
 
@@ -435,46 +401,7 @@ namespace decs
 		return true;
 	}
 
-	bool Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource(
-		Archetype& fromArchetype,
-		Archetype& toArchetype,
-		uint64_t entityIndex,
-		TypeID addedComponentTypeID
-	)
-	{
-		if (entityIndex >= fromArchetype.EntityCount())
-		{
-			return false;
-		}
-
-		ArchetypeEntityData& archetypeEntityData = fromArchetype.m_EntitiesData[entityIndex];
-		toArchetype.AddEntityData(archetypeEntityData.GetEntityData());
-		archetypeEntityData.Invalidate();
-
-		uint64_t thisArchetypeIndex = 0;
-		uint64_t fromArchetypeIndex = 0;
-
-		for (; thisArchetypeIndex < toArchetype.GetComponentAndTagCount(); thisArchetypeIndex++)
-		{
-			ArchetypeTypeData& thisTypeData = toArchetype.m_TypeData[thisArchetypeIndex];
-			if (thisTypeData.m_TypeID == addedComponentTypeID)
-			{
-				continue;
-			}
-
-			ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];
-			if (!fromArchetypeData.IsTag())
-			{
-				thisTypeData.m_PackedContainer->PushBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
-			}
-
-			fromArchetypeIndex++;
-		}
-
-		return true;
-	}
-
-	bool Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(
+	bool Archetype::MoveEntityAfterRemoveComponent(
 		Archetype& fromArchetype,
 		Archetype& toArchetype,
 		uint64_t entityIndex,
@@ -495,17 +422,18 @@ namespace decs
 
 		for (; thisArchetypeIndex < toArchetype.GetComponentAndTagCount(); thisArchetypeIndex++, fromArchetypeIndex++)
 		{
-			ArchetypeTypeData& thisTypeData = toArchetype.m_TypeData[thisArchetypeIndex];
+			ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[thisArchetypeIndex];
 			ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];
 			if (fromArchetypeData.m_TypeID == removedComponentTypeID)
 			{
 				fromArchetypeIndex += 1;
 			}
 
-			if (!thisTypeData.IsTag())
+			if (!toTypeData.IsTag())
 			{
 				ArchetypeTypeData& updatetFromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];
-				thisTypeData.m_PackedContainer->PushBack(updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+				toTypeData.m_PackedContainer->MoveBack(updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+				updatetFromArchetypeData.m_PackedContainer->RemoveSwapBack(entityIndex);
 			}
 		}
 

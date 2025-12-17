@@ -6,8 +6,6 @@
 
 #include "IterationCore.h"
 
-#include "decs/Component/Component.h"
-
 #include <type_traits>
 
 namespace decs
@@ -23,7 +21,7 @@ namespace decs
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 
 		template<typename TComponent>
-		using PackedContainerType = PackedStableComponentContainer<TComponent>*;
+		using PackedContainerType = PackedComponentContainer<TComponent>*;
 
 	public:
 		Query()
@@ -131,8 +129,6 @@ namespace decs
 			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 			{
 				Entity entityBuffer = {};
-				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
-
 				for (const auto& ctx : archetypeContexts)
 				{
 					ctx.ForEach_WithEntity(func, entityBuffer);
@@ -167,7 +163,6 @@ namespace decs
 			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 			{
 				Entity entityBuffer = {};
-				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 
 				for (const auto& ctx : archetypeContexts)
 				{
@@ -206,7 +201,6 @@ namespace decs
 			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 			{
 				Entity entityBuffer = {};
-				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 
 				for (const auto& ctx : archetypeContexts)
 				{
@@ -242,7 +236,6 @@ namespace decs
 			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
 			{
 				Entity entityBuffer = {};
-				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 
 				for (const auto& ctx : archetypeContexts)
 				{
@@ -375,10 +368,6 @@ namespace decs
 				auto& archetypeContexts = m_Query->m_ContainerContext.GetArchetypeContexts();
 
 				Entity entityBuffer = {};
-				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
-				{
-					entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
-				}
 
 				uint64_t contextIndex = m_FirstArchetypeIndex;
 				uint64_t contextCount = archetypeContexts.size();
