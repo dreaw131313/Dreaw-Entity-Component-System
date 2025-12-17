@@ -104,31 +104,31 @@
     <ClInclude Include="src\decs\check_cast.h" />
     <ClInclude Include="src\decs\Containers\TOrderedList.h" />
     <ClInclude Include="src\decs\Hash.h" />
-    <ClInclude Include="src\decs\Iteration\ContainerIterator.h" />
+    <ClInclude Include="src\decs\Light\Iteration\ContainerIterator.h" />
     <ClInclude Include="src\decs\Memory.h" />
     <ClInclude Include="src\decs\trait.h" />
-    <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h" />
+    <ClInclude Include="src\decs\Light\Archetypes\ArchetypesMap.h" />
     <ClInclude Include="src\decs\Component\PackedComponentContainer.h" />
-    <ClInclude Include="src\decs\EntityManager.h" />
-    <ClInclude Include="src\decs\Archetypes\Archetype.h" />
-    <ClInclude Include="src\decs\Container.h" />
+    <ClInclude Include="src\decs\Light\EntityManager.h" />
+    <ClInclude Include="src\decs\Light\Archetypes\Archetype.h" />
+    <ClInclude Include="src\decs\Light\Container.h" />
     <ClInclude Include="src\decs\Containers\TChunkedVector.h" />
     <ClInclude Include="src\decs\Core.h" />
     <ClInclude Include="src\decs\decs.h" />
-    <ClInclude Include="src\decs\Entity.h" />
-    <ClInclude Include="src\decs\EntityData.h" />
-    <ClInclude Include="src\decs\Iteration\IterationCore.h" />
+    <ClInclude Include="src\decs\Light\Entity.h" />
+    <ClInclude Include="src\decs\Light\EntityData.h" />
+    <ClInclude Include="src\decs\Light\Iteration\IterationCore.h" />
     <ClInclude Include="src\decs\Type.h" />
-    <ClInclude Include="src\decs\Iteration\Query.h" />
+    <ClInclude Include="src\decs\Light\Iteration\Query.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\decs\Archetypes\Archetype.cpp" />
-    <ClCompile Include="src\decs\Archetypes\ArchetypesMap.cpp" />
-    <ClCompile Include="src\decs\Container.cpp" />
+    <ClCompile Include="src\decs\Light\Archetypes\Archetype.cpp" />
+    <ClCompile Include="src\decs\Light\Archetypes\ArchetypesMap.cpp" />
+    <ClCompile Include="src\decs\Light\Container.cpp" />
     <ClCompile Include="src\decs\decs.cpp" />
-    <ClCompile Include="src\decs\EntityData.cpp" />
-    <ClCompile Include="src\decs\Iteration\MultiQuery.h" />
-    <ClCompile Include="src\decs\EntityManager.cpp" />
+    <ClCompile Include="src\decs\Light\EntityData.cpp" />
+    <ClCompile Include="src\decs\Light\Iteration\MultiQuery.h" />
+    <ClCompile Include="src\decs\Light\EntityManager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

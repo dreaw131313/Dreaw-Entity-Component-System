@@ -1,14 +1,13 @@
 #pragma once
-#include "Core.h"
-#include "Type.h"
-
 #include <tuple>
 
-#include "Archetypes/ArchetypesMap.h"
-#include "Component/PackedComponentContainer.h"
+#include "decs/Core.h"
+#include "decs/trait.h"
+#include "decs/Type.h"
+#include "decs/Component/PackedComponentContainer.h"
 
+#include "Archetypes/ArchetypesMap.h"
 #include "EntityManager.h"
-#include "trait.h"
 
 namespace decs
 {

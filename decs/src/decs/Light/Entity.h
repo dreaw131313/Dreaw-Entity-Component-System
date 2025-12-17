@@ -1,9 +1,8 @@
 #pragma once
-#include "Core.h"
+#include "decs/Core.h"
+#include "decs/Type.h"
+#include "decs/Hash.h"
 #include "Container.h"
-#include "Type.h"
-#include "Archetypes/Archetype.h"
-#include "Hash.h"
 
 namespace decs
 {

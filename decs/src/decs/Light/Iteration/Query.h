@@ -1,8 +1,8 @@
 #pragma once
-#include "decs\Core.h"
-#include "decs\Type.h"
-#include "decs\Entity.h"
-#include "decs\Container.h"
+#include "decs/Core.h"
+#include "decs/Type.h"
+#include "decs/Light/Entity.h"
+#include "decs/Light/Container.h"
 
 #include "IterationCore.h"
 
