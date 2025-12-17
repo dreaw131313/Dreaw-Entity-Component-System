@@ -36,7 +36,7 @@ namespace decs
 		}
 	};
 
-	template<TComponentConcept... ComponentsTypes>
+	template<TLightComponentConcept... ComponentsTypes>
 	struct QueryFiltersConfig
 	{
 	public:
@@ -70,7 +70,7 @@ namespace decs
 			return sizeof...(ComponentsTypes) + m_WithAll.size();
 		}
 
-		template<TComponentOrTagConcept... WithoutTypes>
+		template<TLightComponentOrTagConcept... WithoutTypes>
 		void Without()
 		{
 			if constexpr (sizeof...(WithoutTypes) == 0)
@@ -84,7 +84,7 @@ namespace decs
 			}
 		}
 
-		template<TComponentOrTagConcept... WithAnyTypes>
+		template<TLightComponentOrTagConcept... WithAnyTypes>
 		void WithAny()
 		{
 			if constexpr (sizeof...(WithAnyTypes) == 0)
@@ -98,7 +98,7 @@ namespace decs
 			}
 		}
 
-		template<TComponentOrTagConcept... WithTypes>
+		template<TLightComponentOrTagConcept... WithTypes>
 		void With()
 		{
 			if constexpr (sizeof...(WithTypes) == 0)
@@ -141,7 +141,7 @@ namespace decs
 		TypeGroupType m_Includes = {};
 	};
 
-	template<TComponentConcept... ComponentsTypes>
+	template<TLightComponentConcept... ComponentsTypes>
 	class IterationArchetypeContext
 	{
 	public:
@@ -398,7 +398,7 @@ namespace decs
 	};
 
 
-	template<TComponentConcept... ComponentsTypes>
+	template<TLightComponentConcept... ComponentsTypes>
 	class IterationContainerContext
 	{
 	public:

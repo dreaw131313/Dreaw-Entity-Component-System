@@ -82,13 +82,13 @@ namespace decs
 		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
 
 	template<typename T>
-	concept TComponentConcept = !std::is_same_v<T, bool> && !is_tag_v<T>;
+	concept TLightComponentConcept = !std::is_same_v<T, bool> && !is_tag_v<T>;
 
 	template<typename T>
-	concept TComponentOrTagConcept = TComponentConcept<T> || TTagConcept<T>;
+	concept TLightComponentOrTagConcept = TLightComponentConcept<T> || TTagConcept<T>;
 
-	template<TComponentConcept... Types>
-	class ComponentTypeGroup
+	template<TLightComponentConcept... Types>
+	class LightComponentTypeGroup
 	{
 	public:
 		constexpr TypeID operator[](const uint64_t index) const

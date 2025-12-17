@@ -345,12 +345,12 @@ namespace decs
 		return archetype;
 	}
 
-	void ArchetypesMap::AddTypeDataAfterRemoveComponent(const Archetype& fromArchetype, Archetype& toArchetype, TypeID compType)
+	void ArchetypesMap::AddTypeDataAfterRemoveComponent(const Archetype& fromArchetype, Archetype& toArchetype, TypeID removedComponentType)
 	{
 		for (uint32_t i = 0; i < fromArchetype.GetComponentAndTagCount(); i++)
 		{
 			const ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[i];
-			if (fromArchetypeData.m_TypeID != compType)
+			if (fromArchetypeData.m_TypeID != removedComponentType)
 			{
 				if (fromArchetypeData.IsTag())
 				{

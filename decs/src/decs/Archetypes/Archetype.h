@@ -132,16 +132,16 @@ namespace decs
 		friend class ContainerSerializer;
 		friend class ContainerSerializerComplex;
 
-		template<TComponentConcept...>
+		template<TLightComponentConcept...>
 		friend class Query;
-		template<TComponentConcept...>
+		template<TLightComponentConcept...>
 		friend class MultiQuery;
-		template<TComponentConcept... ComponentsTypes>
+		template<TLightComponentConcept... ComponentsTypes>
 		friend class IterationArchetypeContext;
-		template<TComponentConcept...>
+		template<TLightComponentConcept...>
 		friend class IterationContainerContext;
 
-		template<TComponentConcept...>
+		template<TLightComponentConcept...>
 		friend class BatchIterator;
 
 
@@ -266,9 +266,9 @@ namespace decs
 			return true;
 		}
 
-		template<TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
 		bool IsArchetypeWithComponentsAndTags_Exactly(
-			const ComponentTypeGroup<ComponentTypes...> components,
+			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags
 		) const noexcept
 		{
@@ -364,7 +364,7 @@ namespace decs
 	private:
 		void AddEdge(TypeID componentTypeID, Archetype* archetype, EComponentEdgeType edgeType);
 
-		template<TComponentConcept TComponent>
+		template<TLightComponentConcept TComponent>
 		ArchetypeEdge GetEdge() const
 		{
 			auto it = m_Edges.find(Type<TComponent>::ID());

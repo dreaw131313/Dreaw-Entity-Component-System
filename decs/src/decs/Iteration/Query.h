@@ -10,7 +10,7 @@
 
 namespace decs
 {
-	template<TComponentConcept... ComponentsTypes>
+	template<TLightComponentConcept... ComponentsTypes>
 	class Query
 	{
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "Query must not use tags in as ComponentTypes!");
@@ -76,7 +76,7 @@ namespace decs
 			return 0;
 		}
 
-		template<TComponentOrTagConcept... WithoutTypes>
+		template<TLightComponentOrTagConcept... WithoutTypes>
 		Query& Without()
 		{
 			m_IsDirty = true;
@@ -84,7 +84,7 @@ namespace decs
 			return *this;
 		}
 
-		template<TComponentOrTagConcept... WithAnyTypes>
+		template<TLightComponentOrTagConcept... WithAnyTypes>
 		Query& WithAny()
 		{
 			m_IsDirty = true;
@@ -92,7 +92,7 @@ namespace decs
 			return *this;
 		}
 
-		template<TComponentOrTagConcept... WithTypes>
+		template<TLightComponentOrTagConcept... WithTypes>
 		Query& With()
 		{
 			m_IsDirty = true;
@@ -330,7 +330,7 @@ namespace decs
 		{
 			using QueryType = Query<ComponentsTypes...>;
 
-			template<TComponentConcept... Types>
+			template<TLightComponentConcept... Types>
 			friend class Query;
 		public:
 			BatchIterator() {}

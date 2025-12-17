@@ -9,9 +9,9 @@ namespace decs
 {
 	class Entity final
 	{
-		template<TComponentConcept ...>
+		template<TLightComponentConcept ...>
 		friend class Query;
-		template<TComponentConcept ...>
+		template<TLightComponentConcept ...>
 		friend class MultiQuery;
 		friend class Container;
 		template<typename TComponent>
@@ -105,7 +105,7 @@ namespace decs
 			return 0;
 		}
 
-		template<TComponentConcept TComponent>
+		template<TLightComponentConcept TComponent>
 		[[nodiscard]] inline TComponent* GetComponent() const
 		{
 			if (IsValid())
@@ -116,13 +116,13 @@ namespace decs
 			return nullptr;
 		}
 
-		template<TComponentConcept TComponent>
+		template<TLightComponentConcept TComponent>
 		[[nodiscard]] inline bool HasComponent() const
 		{
 			return IsValid() && GetContainer_Internal()->HasComponent<drop_const_t<TComponent>>(*GetEntityData());
 		}
 
-		template<TComponentConcept TComponent>
+		template<TLightComponentConcept TComponent>
 		inline bool TryGetComponent(TComponent*& component) const
 		{
 			if (IsValid())
@@ -133,7 +133,7 @@ namespace decs
 			return component != nullptr;
 		}
 
-		template<TComponentConcept TComponent, typename... Args>
+		template<TLightComponentConcept TComponent, typename... Args>
 		inline typename TComponent* AddComponent(Args&&... args) const
 		{
 			if (IsValid())
@@ -142,7 +142,7 @@ namespace decs
 			return nullptr;
 		}
 
-		template<TComponentConcept TComponent>
+		template<TLightComponentConcept TComponent>
 		inline bool RemoveComponent() const
 		{
 			return IsValid() && GetContainer_Internal()->RemoveComponent<drop_const_t<TComponent>>(*this);

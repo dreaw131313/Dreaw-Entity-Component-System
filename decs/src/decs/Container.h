@@ -13,28 +13,23 @@
 namespace decs
 {
 	class Entity;
-	class SpawnEntityCallback;
 
 	struct ContainerConfig
 	{
 	public:
 		uint64_t EntityChunkSize = 1000;
-		uint64_t DefaultComponentChunkSize = 1000;
 		uint64_t ArchetypeChunkSize = 1000;
 	};
 
 	class Container
 	{
-		template<TComponentConcept ...Types>
+		template<TLightComponentConcept ...Types>
 		friend class Query;
-		template<TComponentConcept ...Types>
+		template<TLightComponentConcept ...Types>
 		friend class MultiQuery;
-		template<TComponentConcept...>
+		template<TLightComponentConcept...>
 		friend class IterationContainerContext;
 		friend class Entity;
-		template<typename>
-		friend class ContainerSerializer;
-		friend class ContainerSerializerComplex;
 		friend class ContainerIterator;
 
 		NON_COPYABLE(Container);
@@ -103,7 +98,7 @@ namespace decs
 		}
 
 		/// <summary>
-		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in ComponentTypeGroup parameter.
+		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in LightComponentTypeGroup parameter.
 		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
 		/// </summary>
 		/// <typeparam name="InitFunc"></typeparam>
@@ -114,10 +109,10 @@ namespace decs
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<typename InitFunc, TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
-			const ComponentTypeGroup<ComponentTypes...> components,
+			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
 			uint32_t entityCount,
 			InitFunc&& initFunc
@@ -175,7 +170,7 @@ namespace decs
 		}
 
 		/// <summary>
-		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in ComponentTypeGroup parameter.
+		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in LightComponentTypeGroup parameter.
 		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
 		/// </summary>
 		/// <typeparam name="InitFunc"></typeparam>
@@ -187,10 +182,10 @@ namespace decs
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<typename InitFunc, TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
-		Entity CreateEntity(
-			const ComponentTypeGroup<ComponentTypes...> components,
+		[[nodiscard]] Entity CreateEntity(
+			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
 			InitFunc&& initFunc
 		)
@@ -280,8 +275,8 @@ namespace decs
 	#pragma endregion
 
 	#pragma region COMPONENTS:
-
-		template<TComponentConcept TComponent, typename ...Args>
+	private:
+		template<TLightComponentConcept TComponent, typename ...Args>
 		TComponent* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<TComponent>::ID();
@@ -317,7 +312,7 @@ namespace decs
 			return componentPtr;
 		}
 
-		template<TComponentConcept TComponent>
+		template<TLightComponentConcept TComponent>
 		bool RemoveComponent(const Entity& entity)
 		{
 			return RemoveComponent(entity, Type<TComponent>::ID());
@@ -325,9 +320,7 @@ namespace decs
 
 		bool RemoveComponent(const Entity& entity, TypeID componentTypeID);
 
-	public:
-
-		template<TComponentConcept TComponent>
+		template<TLightComponentConcept TComponent>
 		TComponent* GetComponent(EntityData& entityData) const
 		{
 			if constexpr (is_tag_v<TComponent>)
@@ -356,7 +349,7 @@ namespace decs
 			return false;
 		}
 
-		template<TComponentConcept TComponent>
+		template<TLightComponentConcept TComponent>
 		bool HasComponent(EntityData& entityData) const
 		{
 			if constexpr (is_tag_v<TComponent>)
@@ -485,7 +478,7 @@ namespace decs
 						*toArchetype,
 						addedComponentTypeID,
 						new PackedComponentContainer<TComponent>()
-						);
+					);
 				}
 
 				componentContainerIndex = entityNewArchetype->FindTypeIndex<TComponent>();

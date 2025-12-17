@@ -204,12 +204,7 @@ namespace decs
 	{
 		friend class Container;
 		friend class ContainerIterator;
-		template<typename>
-		friend class ContainerSerializer;
-		friend class ContainerSerializerComplex;
-		template<TComponentConcept...>
-		friend class Query;
-		template<TComponentConcept...>
+		template<TLightComponentConcept...>
 		friend class IterationContainerContext;
 
 	public:
@@ -320,7 +315,7 @@ namespace decs
 			return it != m_ArchetypesGroupedByOneType.end() ? it->second->GetMainTypeArchetype() : nullptr;
 		}
 
-		template<TComponentConcept TComponent>
+		template<TLightComponentConcept TComponent>
 		Archetype* GetSingleComponentArchetype() const
 		{
 			return GetSingleComponentArchetype(Type<TComponent>::ID());
@@ -363,7 +358,7 @@ namespace decs
 
 		// CREATING ARCHETYPES
 	private:
-		template<TComponentConcept TComponent>
+		template<TLightComponentConcept TComponent>
 		Archetype* CreateSingleComponentArchetype()
 		{
 			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<TComponent>::ID();
@@ -379,7 +374,7 @@ namespace decs
 			return archetype;
 		}
 
-		template<TComponentConcept T>
+		template<TLightComponentConcept T>
 		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype)
 		{
 			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::ID();

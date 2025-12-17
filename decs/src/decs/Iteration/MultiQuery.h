@@ -21,7 +21,7 @@ namespace decs
 		virtual void SetContainerEnabled(Container* container, bool isEnabled) = 0;
 	};
 
-	template<TComponentConcept... ComponentsTypes>
+	template<TLightComponentConcept... ComponentsTypes>
 	class MultiQuery : public IMultiQuery
 	{
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "MultiQuery must not use tags in as ComponentTypes!");
@@ -51,7 +51,7 @@ namespace decs
 			return entityCount;
 		}
 
-		template<TComponentOrTagConcept... WithoutTypes>
+		template<TLightComponentOrTagConcept... WithoutTypes>
 		MultiQuery& Without()
 		{
 			m_IsDirty = true;
@@ -59,7 +59,7 @@ namespace decs
 			return *this;
 		}
 
-		template<TComponentOrTagConcept... WithAnyTypes>
+		template<TLightComponentOrTagConcept... WithAnyTypes>
 		MultiQuery& WithAny()
 		{
 			m_IsDirty = true;
@@ -67,7 +67,7 @@ namespace decs
 			return *this;
 		}
 
-		template<TComponentOrTagConcept... WithTypes>
+		template<TLightComponentOrTagConcept... WithTypes>
 		MultiQuery& With()
 		{
 			m_IsDirty = true;

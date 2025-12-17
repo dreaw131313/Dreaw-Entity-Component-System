@@ -69,7 +69,6 @@ void NormalTest()
 
 	const decs::ContainerConfig containerConfig{
 		.EntityChunkSize = 1000,
-		.DefaultComponentChunkSize = 200,
 		.ArchetypeChunkSize = 200,
 	};
 
@@ -85,16 +84,16 @@ void NormalTest()
 		prefab.AddTag<BoolTag>();
 		prefab.AddComponent<Position>(10.f, 10.f);
 
+		prefab.AddComponent<float>();
 	}
 
 	{
 		decs::Container container = { containerConfig };
-		container.Spawn(prefab);
+		auto e = container.Spawn(prefab);
 		container.Spawn(prefab, 9);
 
-
 		/*{
-			decs::ComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
+			decs::LightComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
 			decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
 
 			auto initFunc = [](const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
@@ -126,7 +125,7 @@ void NormalTest()
 		}*/
 
 		/*{
-			decs::ComponentTypeGroup<TestComponent, Renderer, Position> comps{};
+			decs::LightComponentTypeGroup<TestComponent, Renderer, Position> comps{};
 			decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
 
 			auto entityInit = [](const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
@@ -244,7 +243,6 @@ void CreatingEntitiesTest()
 {
 	const decs::ContainerConfig containerConfig{
 		.EntityChunkSize = 1000,
-		.DefaultComponentChunkSize = 200,
 		.ArchetypeChunkSize = 200,
 	};
 
