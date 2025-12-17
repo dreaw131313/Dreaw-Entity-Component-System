@@ -133,11 +133,10 @@ namespace decs
 			}
 			else
 			{
-				uint32_t idxBuffer = 0;
 				Archetype* spawnArchetype = nullptr;
 
 				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
-				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype, idxBuffer)), ...);
+				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
 
 				if (spawnArchetype != nullptr)
 				{
@@ -200,11 +199,10 @@ namespace decs
 			}
 			else
 			{
-				uint32_t idxBuffer = 0;
 				Archetype* spawnArchetype = nullptr;
 
 				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
-				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype, idxBuffer)), ...);
+				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
 
 				if (spawnArchetype != nullptr)
 				{
@@ -290,18 +288,14 @@ namespace decs
 			Archetype* oldArchetype = entityData.m_Archetype;
 			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
-			uint32_t componentContainerIndex = 0;
-			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype, componentContainerIndex);
-			ArchetypeTypeData& archetypeTypeData = newArchetype->m_TypeData[componentContainerIndex];
-
-			// Adding component to stable component container
-			PackedComponentContainer<TComponent>* packedContainer = decs::check_cast<PackedComponentContainer<TComponent>*>(archetypeTypeData.m_PackedContainer);
+			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype);
+			PackedComponentContainer<TComponent>* packedContainer = newArchetype->GetTypePackedContainer<drop_const_t<TComponent>>();
 			TComponent* componentPtr = &packedContainer->EmplaceBack(std::forward<Args>(args)...);
 
 			// Adding entity to archetype
 			if (oldArchetype != nullptr)
 			{
-				Archetype::MoveEntityComponentsAfterAddComponent(*oldArchetype, *newArchetype, indexInOldArchetype, componentTypeID);
+				Archetype::MoveEntityAfterAddType(*oldArchetype, *newArchetype, indexInOldArchetype, componentTypeID);
 			}
 			else
 			{
@@ -411,7 +405,7 @@ namespace decs
 
 			if (oldArchetype != nullptr)
 			{
-				Archetype::MoveEntityComponentsAfterAddComponent(*oldArchetype, *newArchetype, indexInOldArchetype, tagTypeID);
+				Archetype::MoveEntityAfterAddType(*oldArchetype, *newArchetype, indexInOldArchetype, tagTypeID);
 			}
 			else
 			{
@@ -460,7 +454,7 @@ namespace decs
 
 	private:
 		template<typename TComponent>
-		Archetype* GetArchetypeAfterAddComponent(Archetype* toArchetype, uint32_t& componentContainerIndex)
+		Archetype* GetArchetypeAfterAddComponent(Archetype* toArchetype)
 		{
 			TYPE_ID_CONSTEXPR const TypeID addedComponentTypeID = Type<TComponent>::ID();
 
@@ -472,16 +466,6 @@ namespace decs
 			else
 			{
 				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<TComponent>(*toArchetype);
-				if (entityNewArchetype == nullptr)
-				{
-					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent(
-						*toArchetype,
-						addedComponentTypeID,
-						new PackedComponentContainer<TComponent>()
-					);
-				}
-
-				componentContainerIndex = entityNewArchetype->FindTypeIndex<TComponent>();
 			}
 
 			return entityNewArchetype;

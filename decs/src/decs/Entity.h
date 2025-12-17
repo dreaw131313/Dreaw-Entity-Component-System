@@ -96,11 +96,11 @@ namespace decs
 			return false;
 		}
 
-		[[nodiscard]] inline uint32_t GetComponentAndTagCount() const
+		[[nodiscard]] inline uint32_t GetTypeCount() const
 		{
 			if (IsValid())
 			{
-				return m_EntityData->GetComponentAndTagCount();
+				return m_EntityData->GetTypeCount();
 			}
 			return 0;
 		}

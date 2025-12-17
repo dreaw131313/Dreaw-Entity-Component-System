@@ -111,7 +111,7 @@ namespace decs
 		void AddArchetype(Archetype* archetype)
 		{
 			m_ArchetypesCount += 1;
-			const uint64_t componentAndTagCount = archetype->GetComponentAndTagCount();
+			const uint64_t componentAndTagCount = archetype->GetTypeCount();
 
 			if (componentAndTagCount == 1)
 			{
@@ -347,7 +347,7 @@ namespace decs
 
 		void AddArchetypeToGroups(Archetype* arch)
 		{
-			uint64_t componentsCount = arch->GetComponentAndTagCount();
+			uint64_t componentsCount = arch->GetTypeCount();
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
 				const TypeID& id = arch->GetTypeID(i);
@@ -384,7 +384,18 @@ namespace decs
 			{
 				return edge.m_Archetype;
 			}
-			return nullptr;
+
+			if (toArchetype.ContainType(addedComponentTypeID))
+			{
+				DECS_ASSERT(false, "This path has no sense!");
+				return nullptr;
+			}
+
+			Archetype& newArchetype = m_Archetypes.EmplaceBack();
+			AddTypeDataAfterAddComponent(toArchetype, newArchetype, addedComponentTypeID, new PackedComponentContainer<T>());
+			AddArchetypeToCorrectContainers(newArchetype);
+
+			return &newArchetype;
 		}
 
 		Archetype* CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IPackedComponentContainer* packedContainer);

@@ -59,7 +59,7 @@ namespace decs
 			return desiredVersion == m_Version && m_bIsAlive;
 		}
 
-		uint32_t GetComponentAndTagCount() const;
+		uint32_t GetTypeCount() const;
 
 		inline bool IsInManager() const
 		{

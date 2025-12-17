@@ -553,7 +553,7 @@ namespace decs
 
 		void TryAddArchetypeFromGroup(Archetype& archetype, const QueryFilterConfigType& filter)
 		{
-			if (!ContainArchetype(&archetype) && archetype.GetComponentAndTagCount())
+			if (!ContainArchetype(&archetype) && archetype.GetTypeCount())
 			{
 				// without test
 				{
@@ -640,7 +640,7 @@ namespace decs
 			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
 			{
 				Archetype& arch = archetypes[i];
-				if (arch.GetComponentAndTagCount() >= minRequiredComponentsCount)
+				if (arch.GetTypeCount() >= minRequiredComponentsCount)
 				{
 					TryAddArchetypeFromGroup(arch, filter);
 				}

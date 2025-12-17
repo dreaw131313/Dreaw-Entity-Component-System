@@ -99,7 +99,7 @@ namespace decs
 	void ArchetypesMap::MakeArchetypeEdges_2(Archetype& archetype)
 	{
 		// edges with archetypes with less components:
-		const uint64_t componentCountsMinusOne = archetype.GetComponentAndTagCount() - 1;
+		const uint64_t componentCountsMinusOne = archetype.GetTypeCount() - 1;
 		if (componentCountsMinusOne > 0)
 		{
 			const uint64_t archetypeListIndex = componentCountsMinusOne - 1;
@@ -116,11 +116,11 @@ namespace decs
 		}
 
 		// edges with archetype with more components:
-		const uint64_t componentCountsPlusOne = (uint64_t)archetype.GetComponentAndTagCount() + 1;
+		const uint64_t componentCountsPlusOne = (uint64_t)archetype.GetTypeCount() + 1;
 
 		if (componentCountsPlusOne <= m_ArchetypesGroupedByComponentsCount.size())
 		{
-			const uint64_t archetypeListIndex = archetype.GetComponentAndTagCount();
+			const uint64_t archetypeListIndex = archetype.GetTypeCount();
 			auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
 
 			for (Archetype* neighbour : archetypesListToCreateEdges)
@@ -141,7 +141,7 @@ namespace decs
 
 		// edges with archetypes with less components:
 		{
-			const uint64_t componentCountsMinusOne = archetype.GetComponentAndTagCount() - 1;
+			const uint64_t componentCountsMinusOne = archetype.GetTypeCount() - 1;
 			if (componentCountsMinusOne > 0)
 			{
 				const uint64_t archetypeListIndex = componentCountsMinusOne - 1;
@@ -204,12 +204,12 @@ namespace decs
 
 	void ArchetypesMap::AddArchetypeToCorrectContainers(Archetype& archetype)
 	{
-		if (archetype.GetComponentAndTagCount() > m_ArchetypesGroupedByComponentsCount.size())
+		if (archetype.GetTypeCount() > m_ArchetypesGroupedByComponentsCount.size())
 		{
-			m_ArchetypesGroupedByComponentsCount.resize(archetype.GetComponentAndTagCount());
+			m_ArchetypesGroupedByComponentsCount.resize(archetype.GetTypeCount());
 		}
 
-		m_ArchetypesGroupedByComponentsCount[archetype.GetComponentAndTagCount() - 1].push_back(&archetype);
+		m_ArchetypesGroupedByComponentsCount[archetype.GetTypeCount() - 1].push_back(&archetype);
 
 		AddArchetypeToGroups(&archetype);
 
@@ -287,7 +287,7 @@ namespace decs
 
 	Archetype* ArchetypesMap::GetArchetypeAfterRemoveComponent(const Archetype& fromArchetype, TypeID removedComponentTypeID)
 	{
-		if (fromArchetype.GetComponentAndTagCount() == 1 && fromArchetype.GetTypeID(0) == removedComponentTypeID)
+		if (fromArchetype.GetTypeCount() == 1 && fromArchetype.GetTypeID(0) == removedComponentTypeID)
 		{
 			return nullptr;
 		}
@@ -347,7 +347,7 @@ namespace decs
 
 	void ArchetypesMap::AddTypeDataAfterRemoveComponent(const Archetype& fromArchetype, Archetype& toArchetype, TypeID removedComponentType)
 	{
-		for (uint32_t i = 0; i < fromArchetype.GetComponentAndTagCount(); i++)
+		for (uint32_t i = 0; i < fromArchetype.GetTypeCount(); i++)
 		{
 			const ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[i];
 			if (fromArchetypeData.m_TypeID != removedComponentType)
@@ -371,7 +371,7 @@ namespace decs
 	{
 		bool isNewComponentTypeAdded = false;
 
-		for (uint32_t i = 0; i < baseArchetype.GetComponentAndTagCount(); i++)
+		for (uint32_t i = 0; i < baseArchetype.GetTypeCount(); i++)
 		{
 			const ArchetypeTypeData& baseTypeData = baseArchetype.m_TypeData[i];
 

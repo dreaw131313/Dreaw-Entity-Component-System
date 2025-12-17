@@ -36,9 +36,9 @@ namespace decs
 
 	uint32_t Archetype::FindTypeIndex(TypeID typeID) const
 	{
-		if (GetComponentAndTagCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
+		if (GetTypeCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
 		{
-			for (uint32_t i = 0; i < GetComponentAndTagCount(); i++)
+			for (uint32_t i = 0; i < GetTypeCount(); i++)
 				if (m_TypeData[i].m_TypeID == typeID) return i;
 
 			return std::numeric_limits<uint32_t>::max();
@@ -53,9 +53,9 @@ namespace decs
 
 	bool Archetype::HasSameTypesAs(const Archetype& archetype) const
 	{
-		const uint32_t componentAndTagCount = GetComponentAndTagCount();
+		const uint32_t componentAndTagCount = GetTypeCount();
 
-		if (archetype.GetComponentAndTagCount() != componentAndTagCount)
+		if (archetype.GetTypeCount() != componentAndTagCount)
 		{
 			return false;
 		}
@@ -73,7 +73,7 @@ namespace decs
 
 	bool Archetype::HasTypes_Exactly(const std::vector<TypeID>& types) const
 	{
-		const uint32_t componentAndTagCount = GetComponentAndTagCount();
+		const uint32_t componentAndTagCount = GetTypeCount();
 
 		if (static_cast<uint32_t>(types.size()) != componentAndTagCount)
 		{
@@ -200,7 +200,7 @@ namespace decs
 
 		if (index == EntityCount() - 1)
 		{
-			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
+			for (uint64_t i = 0; i < GetTypeCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
 				if (!typeData.IsTag())
@@ -212,7 +212,7 @@ namespace decs
 		}
 		else
 		{
-			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
+			for (uint64_t i = 0; i < GetTypeCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
 				if (!typeData.IsTag())
@@ -226,64 +226,13 @@ namespace decs
 
 	}
 
-	void Archetype::RemoveSwapBackRecordRaw(uint64_t index)
-	{
-		if (index >= EntityCount())
-		{
-			return;
-		}
-
-		if (index == EntityCount() - 1)
-		{
-			m_EntitiesData.pop_back();
-			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
-			{
-				auto& typeData = m_TypeData[i];
-				if (!typeData.IsTag())
-				{
-					typeData.m_PackedContainer->PopBack();
-				}
-			}
-		}
-		else
-		{
-			auto& backEntityData = m_EntitiesData.back();
-			if (backEntityData.IsValid())
-			{
-				backEntityData.m_EntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
-			}
-
-			m_EntitiesData[index] = m_EntitiesData.back();
-			m_EntitiesData.pop_back();
-
-			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
-			{
-				auto& typeData = m_TypeData[i];
-				if (!typeData.IsTag())
-				{
-					typeData.m_PackedContainer->RemoveSwapBack(index);
-				}
-			}
-		}
-
-	}
-
-	void Archetype::SetRecordAsIntendedToDelayedDestroy(uint64_t index)
-	{
-		if (index >= EntityCount())
-		{
-			return;
-		}
-		m_EntitiesData[index].Invalidate();
-	}
-
 	void Archetype::ReserveSpaceInArchetype(uint64_t desiredCapacity)
 	{
 		if (m_EntitiesData.capacity() < desiredCapacity)
 		{
 			m_EntitiesData.reserve(desiredCapacity);
 
-			for (uint64_t idx = 0; idx < GetComponentAndTagCount(); idx++)
+			for (uint64_t idx = 0; idx < GetTypeCount(); idx++)
 			{
 				auto& typeData = m_TypeData[idx];
 				if (!typeData.IsTag())
@@ -297,7 +246,7 @@ namespace decs
 	void Archetype::Reset()
 	{
 		m_EntitiesData.clear();
-		for (uint64_t idx = 0; idx < GetComponentAndTagCount(); idx++)
+		for (uint64_t idx = 0; idx < GetTypeCount(); idx++)
 		{
 			auto& typeData = m_TypeData[idx];
 			if (!typeData.IsTag())
@@ -309,7 +258,7 @@ namespace decs
 
 	void Archetype::InitEmptyFromOther(const Archetype& other)
 	{
-		uint32_t componentsCount = other.GetComponentAndTagCount();
+		uint32_t componentsCount = other.GetTypeCount();
 		m_TypeData.reserve(componentsCount);
 
 		for (uint32_t i = 0; i < componentsCount; i++)
@@ -338,7 +287,7 @@ namespace decs
 	void Archetype::ShrinkToFit()
 	{
 		m_EntitiesData.shrink_to_fit();
-		for (uint64_t idx = 0; idx < GetComponentAndTagCount(); idx++)
+		for (uint64_t idx = 0; idx < GetTypeCount(); idx++)
 		{
 			auto& typeData = m_TypeData[idx];
 			if (typeData.IsTag())
@@ -359,7 +308,7 @@ namespace decs
 		}
 	}
 
-	bool Archetype::MoveEntityComponentsAfterAddComponent(
+	bool Archetype::MoveEntityAfterAddType(
 		Archetype& fromArchetype,
 		Archetype& toArchetype,
 		uint64_t entityIndex,
@@ -378,7 +327,7 @@ namespace decs
 		uint64_t thisArchetypeIndex = 0;
 		uint64_t fromArchetypeIndex = 0;
 
-		for (; thisArchetypeIndex < toArchetype.GetComponentAndTagCount(); thisArchetypeIndex++)
+		for (; thisArchetypeIndex < toArchetype.GetTypeCount(); thisArchetypeIndex++)
 		{
 			ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[thisArchetypeIndex];
 			if (toTypeData.m_TypeID == addedComponentTypeID)
@@ -401,7 +350,7 @@ namespace decs
 		return true;
 	}
 
-	bool Archetype::MoveEntityAfterRemoveComponent(
+	bool Archetype::MoveEntityAfterRemoveType(
 		Archetype& fromArchetype,
 		Archetype& toArchetype,
 		uint64_t entityIndex,
@@ -420,7 +369,7 @@ namespace decs
 		uint64_t thisArchetypeIndex = 0;
 		uint64_t fromArchetypeIndex = 0;
 
-		for (; thisArchetypeIndex < toArchetype.GetComponentAndTagCount(); thisArchetypeIndex++, fromArchetypeIndex++)
+		for (; thisArchetypeIndex < toArchetype.GetTypeCount(); thisArchetypeIndex++, fromArchetypeIndex++)
 		{
 			ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[thisArchetypeIndex];
 			ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];

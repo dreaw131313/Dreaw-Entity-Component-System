@@ -292,7 +292,7 @@ namespace decs
 
 		if (newArchetype != nullptr)
 		{
-			Archetype::MoveEntityAfterRemoveComponent(*oldArchetype, *newArchetype, indexInOldArchetype, componentTypeID);
+			Archetype::MoveEntityAfterRemoveType(*oldArchetype, *newArchetype, indexInOldArchetype, componentTypeID);
 		}
 		else
 		{
@@ -329,7 +329,7 @@ namespace decs
 
 		if (newArchetype != nullptr)
 		{
-			Archetype::MoveEntityAfterRemoveComponent(*oldArchetype, *newArchetype, entityIndexInOldArchetype, tagType);
+			Archetype::MoveEntityAfterRemoveType(*oldArchetype, *newArchetype, entityIndexInOldArchetype, tagType);
 		}
 		else
 		{

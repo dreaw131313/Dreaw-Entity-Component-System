@@ -78,19 +78,6 @@ namespace decs
 		}
 	};
 
-	template<typename ComponentType>
-	struct TArchetypeTypeData
-	{
-	public:
-		PackedComponentContainer<ComponentType>* m_PackedContainer = nullptr;
-
-	public:
-		inline bool IsTag() const
-		{
-			return m_PackedContainer != nullptr;
-		}
-	};
-
 	enum class EComponentEdgeType
 	{
 		Add = 0,
@@ -128,9 +115,6 @@ namespace decs
 		friend class EntityData;
 		friend class EntityManager;
 		friend class ArchetypesMap;
-		template<typename>
-		friend class ContainerSerializer;
-		friend class ContainerSerializerComplex;
 
 		template<TLightComponentConcept...>
 		friend class Query;
@@ -140,10 +124,6 @@ namespace decs
 		friend class IterationArchetypeContext;
 		template<TLightComponentConcept...>
 		friend class IterationContainerContext;
-
-		template<TLightComponentConcept...>
-		friend class BatchIterator;
-
 
 	private:
 		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
@@ -160,15 +140,6 @@ namespace decs
 		inline uint32_t GetTypeCount() const noexcept
 		{
 			return static_cast<uint32_t>(m_TypeData.size());
-		}
-
-		/// <summary>
-		/// Returns number of components and tags
-		/// </summary>
-		/// <returns></returns>
-		inline uint32_t GetComponentAndTagCount() const noexcept
-		{
-			return GetTypeCount();
 		}
 
 		inline TypeID GetTypeID(uint64_t index) const
@@ -248,7 +219,7 @@ namespace decs
 		template<typename... Types>
 		bool HasTypes_Exactly(const TypeGroup<Types...>& group) const
 		{
-			const uint32_t componentAndTagCount = GetComponentAndTagCount();
+			const uint32_t componentAndTagCount = GetTypeCount();
 
 			if (static_cast<uint32_t>(group.Size()) != componentAndTagCount)
 			{
@@ -339,19 +310,6 @@ namespace decs
 
 		void RemoveSwapBackEntity(uint64_t index);
 
-		/// <summary>
-		/// Removes entity data and components on index. Do not destroy stable components and do not change in any way entity data.
-		/// </summary>
-		/// <param name="index"></param>
-		void RemoveSwapBackRecordRaw(uint64_t index);
-
-		void SetRecordAsIntendedToDelayedDestroy(uint64_t index);
-
-		inline IPackedComponentContainer* GetPackedContainerAt(uint64_t index)
-		{
-			return m_TypeData[index].m_PackedContainer;
-		}
-
 		void ReserveSpaceInArchetype(uint64_t desiredCapacity);
 
 		void Reset();
@@ -390,14 +348,14 @@ namespace decs
 	#pragma region STATICS
 	private:
 
-		static bool MoveEntityComponentsAfterAddComponent(
+		static bool MoveEntityAfterAddType(
 			Archetype& fromArchetype,
 			Archetype& toArchetype,
 			uint64_t entityIndex,
 			TypeID addedComponentTypeID
 		);
 
-		static bool MoveEntityAfterRemoveComponent(
+		static bool MoveEntityAfterRemoveType(
 			Archetype& fromArchetype,
 			Archetype& toArchetype,
 			uint64_t entityIndex,
@@ -443,13 +401,13 @@ namespace decs
 
 		std::size_t CalculateHash() const noexcept
 		{
-			if (m_ArchetypeConst == nullptr || m_ArchetypeConst->GetComponentAndTagCount() == 0)
+			if (m_ArchetypeConst == nullptr || m_ArchetypeConst->GetTypeCount() == 0)
 			{
 				return 0;
 			}
 
 			std::size_t finalHash = std::hash<TypeID>{}(m_ArchetypeConst->GetTypeID(0));
-			const uint32_t typeCount = m_ArchetypeConst->GetComponentAndTagCount();
+			const uint32_t typeCount = m_ArchetypeConst->GetTypeCount();
 			for (uint32_t typeIdx = 1; typeIdx < typeCount; typeIdx++)
 			{
 				finalHash = hash::Combine(finalHash, std::hash<TypeID>{}(m_ArchetypeConst->GetTypeID(typeIdx)));

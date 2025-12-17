@@ -4,10 +4,10 @@
 
 namespace decs
 {
-	uint32_t EntityData::GetComponentAndTagCount() const
+	uint32_t EntityData::GetTypeCount() const
 	{
 		if (m_Archetype == nullptr) return 0;
-		return m_Archetype->GetComponentAndTagCount();
+		return m_Archetype->GetTypeCount();
 	}
 
 }
