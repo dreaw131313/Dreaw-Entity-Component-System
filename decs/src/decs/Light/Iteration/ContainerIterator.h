@@ -1,7 +1,8 @@
 #pragma once
-#include "Core.h"
-#include "Container.h"
-#include "Entity.h"
+#include "decs/Core.h"
+
+#include "decs/Light/Container.h"
+#include "decs/Light/Entity.h"
 
 namespace decs
 {

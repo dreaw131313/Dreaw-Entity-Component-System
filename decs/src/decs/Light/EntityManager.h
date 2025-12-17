@@ -1,8 +1,9 @@
 #pragma once
-#include "Core.h"
+#include "decs/Core.h"
+#include "decs/Containers/TChunkedVector.h"
+
 #include "EntityData.h"
 #include "Archetypes/Archetype.h"
-#include "Containers/TChunkedVector.h"
 
 namespace decs
 {

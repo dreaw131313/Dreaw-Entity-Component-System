@@ -2,6 +2,8 @@
 
 #include <type_traits>
 
+#include "Type.h"
+
 namespace decs
 {
 	template<typename T>
