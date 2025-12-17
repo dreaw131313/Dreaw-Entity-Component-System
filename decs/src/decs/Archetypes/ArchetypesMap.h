@@ -407,9 +407,11 @@ namespace decs
 			return nullptr;
 		}
 
+		Archetype* GetOrCreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext);
+
 		Archetype* CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext);
 
-		Archetype* GetArchetypeAfterRemoveComponent(const Archetype& fromArchetype, TypeID removedComponentTypeID);
+		Archetype* GetOrCreateArchetypeAfterRemoveComponent(const Archetype& fromArchetype, TypeID removedComponentTypeID);
 
 		Archetype* GetArchetypeAfterAddTag(const Archetype& toArchetype, TypeID tagType);
 

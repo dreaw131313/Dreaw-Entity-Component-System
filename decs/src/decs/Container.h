@@ -164,11 +164,10 @@ namespace decs
 			}
 			else
 			{
-				uint32_t idxBuffer = 0;
 				Archetype* spawnArchetype = nullptr;
 
 				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
-				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype, idxBuffer)), ...);
+				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
 
 				if (spawnArchetype != nullptr)
 				{
@@ -261,11 +260,10 @@ namespace decs
 			}
 			else
 			{
-				uint32_t idxBuffer = 0;
 				Archetype* spawnArchetype = nullptr;
 
 				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
-				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype, idxBuffer)), ...);
+				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
 
 				if (spawnArchetype != nullptr)
 				{
@@ -548,12 +546,12 @@ namespace decs
 			Archetype* oldArchetype = entityData.m_Archetype;
 			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
-			uint32_t componentContainerIndex = 0;
-			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype, componentContainerIndex);
-			ArchetypeTypeData& archetypeTypeData = newArchetype->m_TypeData[componentContainerIndex];
+			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype);
+			uint32_t componentTypeIndex = newArchetype->FindTypeIndex<TComponent>();
+			ArchetypeTypeData& archetypeTypeData = newArchetype->m_TypeData[componentTypeIndex];
 
 			// Adding component to stable component container
-			StableComponentContainer<TComponent>* stableContainer = static_cast<StableComponentContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
+			StableComponentContainer<TComponent>* stableContainer = ::decs::check_cast<StableComponentContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
 			TComponent* componentPtr = stableContainer->Create(std::forward<Args>(args)...);
 
 			//StableComponentRef componentNodeInfo = {};
@@ -636,7 +634,7 @@ namespace decs
 				return false;
 			}
 
-			Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
+			Archetype* newArchetype = m_ArchetypesMap.GetOrCreateArchetypeAfterRemoveComponent(
 				*oldArchetype,
 				componentTypeID
 			);
@@ -1017,7 +1015,7 @@ namespace decs
 
 	private:
 		template<typename TComponent>
-		Archetype* GetArchetypeAfterAddComponent(Archetype* toArchetype, uint32_t& componentContainerIndex)
+		Archetype* GetArchetypeAfterAddComponent(Archetype* toArchetype)
 		{
 			TYPE_ID_CONSTEXPR const TypeID addedComponentTypeID = Type<TComponent>::ID();
 
@@ -1046,8 +1044,6 @@ namespace decs
 						compCtx
 					);
 				}
-
-				componentContainerIndex = entityNewArchetype->FindTypeIndex<TComponent>();
 			}
 
 			return entityNewArchetype;
@@ -1385,12 +1381,12 @@ namespace decs
 			Archetype* oldArchetype = entityData.m_Archetype;
 			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
-			uint32_t componentContainerIndex = 0;
-			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype, componentContainerIndex);
-			ArchetypeTypeData& archetypeTypeData = newArchetype->m_TypeData[componentContainerIndex];
+			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype);
+			uint32_t componentTypeIndex = newArchetype->FindTypeIndex<TComponent>();
+			ArchetypeTypeData& archetypeTypeData = newArchetype->m_TypeData[componentTypeIndex];
 
 			// Adding component to stable component container
-			StableComponentContainer<TComponent>* stableContainer = static_cast<StableComponentContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
+			StableComponentContainer<TComponent>* stableContainer = ::decs::check_cast<StableComponentContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
 			TComponent* componentPtr = stableContainer->Create(std::forward<Args>(args)...);
 
 			//StableComponentRef componentNodeInfo = {};

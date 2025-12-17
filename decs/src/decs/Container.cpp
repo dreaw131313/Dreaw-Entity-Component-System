@@ -659,7 +659,7 @@ namespace decs
 			return false;
 		}
 
-		Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
+		Archetype* newArchetype = m_ArchetypesMap.GetOrCreateArchetypeAfterRemoveComponent(
 			*entityData.m_Archetype,
 			componentTypeID
 		);
@@ -1434,7 +1434,7 @@ namespace decs
 			return false;
 		}
 
-		Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
+		Archetype* newArchetype = m_ArchetypesMap.GetOrCreateArchetypeAfterRemoveComponent(
 			*entityData.m_Archetype,
 			componentTypeID
 		);

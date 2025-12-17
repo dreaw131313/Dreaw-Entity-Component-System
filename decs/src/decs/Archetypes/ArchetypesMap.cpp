@@ -282,7 +282,7 @@ namespace decs
 		return archetype;
 	}
 
-	Archetype* ArchetypesMap::CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext)
+	Archetype* ArchetypesMap::GetOrCreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext)
 	{
 		//auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
 		auto edge = toArchetype.GetEdge(componentTypeID);
@@ -312,7 +312,17 @@ namespace decs
 		return &newArchetype;
 	}
 
-	Archetype* ArchetypesMap::GetArchetypeAfterRemoveComponent(const Archetype& fromArchetype, TypeID removedComponentTypeID)
+	Archetype* ArchetypesMap::CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext)
+	{
+		Archetype& newArchetype = m_Archetypes.EmplaceBack();
+		AddTypeDataAfterAddComponent(toArchetype, newArchetype, componentTypeID, componentContext);
+
+		AddArchetypeToCorrectContainers(newArchetype);
+
+		return &newArchetype;
+	}
+
+	Archetype* ArchetypesMap::GetOrCreateArchetypeAfterRemoveComponent(const Archetype& fromArchetype, TypeID removedComponentTypeID)
 	{
 		if (fromArchetype.GetComponentAndTagCount() == 1 && fromArchetype.GetTypeID(0) == removedComponentTypeID)
 		{
@@ -350,12 +360,12 @@ namespace decs
 
 	Archetype* ArchetypesMap::GetArchetypeAfterAddTag(const Archetype& toArchetype, TypeID tagType)
 	{
-		return CreateArchetypeAfterAddComponent(toArchetype, tagType, nullptr);
+		return GetOrCreateArchetypeAfterAddComponent(toArchetype, tagType, nullptr);
 	}
 
 	Archetype* ArchetypesMap::GetArchetypeAfterRemoveTag(const Archetype& fromArchetype, TypeID tagType)
 	{
-		return GetArchetypeAfterRemoveComponent(fromArchetype, tagType);
+		return GetOrCreateArchetypeAfterRemoveComponent(fromArchetype, tagType);
 	}
 
 	Archetype* ArchetypesMap::CreateSingleTagArchetype(TypeID componentTypeID)
