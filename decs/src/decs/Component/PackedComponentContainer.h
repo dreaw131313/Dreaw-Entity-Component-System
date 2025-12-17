@@ -128,12 +128,12 @@ namespace decs
 
 		inline void PushBack(void* componentPtr) override
 		{
-			m_Data.emplace_back(*::decs::check_cast<TComponent*>(componentPtr));
+			m_Data.emplace_back(*static_cast<TComponent*>(componentPtr));
 		}
 
 		inline void MoveBack(void* componentPtr) override
 		{
-			m_Data.emplace_back(std::move(*::decs::check_cast<TComponent*>(componentPtr)));
+			m_Data.emplace_back(std::move(*static_cast<TComponent*>(componentPtr)));
 		}
 
 		inline TComponent& GetAsRef(uint64_t index)

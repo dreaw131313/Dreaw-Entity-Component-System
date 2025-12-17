@@ -162,7 +162,7 @@ namespace decs
 
 							if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
 							{
-								initFunc(entity, *std::get<ComponentTypes*>(createdComponents)...);
+								initFunc(entity, *std::get<drop_const_t<ComponentTypes>*>(createdComponents)...);
 							}
 							else
 							{
@@ -223,13 +223,13 @@ namespace decs
 						spawnArchetype->AddEntityData(entityData);
 
 						std::tuple<drop_const_t<ComponentTypes>*...> createdComponents = {
-							&std::get<PackedComponentContainer<drop_const_t<ComponentTypes>>*>(packedContainerTyple)->EmplaceBack()
+							&std::get<PackedComponentContainer<drop_const_t<ComponentTypes>>*>(packedContainerTyple)->EmplaceBack<>()
 							...
 						};
 
 						if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
 						{
-							initFunc(entity, *std::get<ComponentTypes*>(createdComponents)...);
+							initFunc(entity, *std::get<drop_const_t<ComponentTypes>*>(createdComponents)...);
 						}
 						else
 						{
