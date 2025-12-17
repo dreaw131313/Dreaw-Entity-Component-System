@@ -133,7 +133,6 @@ void NormalTest()
 		}
 
 		/*{
-
 			decs::ComponentTypeGroup<TestComponent, Renderer, Position> comps{};
 			decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
 
