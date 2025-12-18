@@ -158,7 +158,7 @@ void LightTest::Run()
 		PrintLine(std::format("{0} component count", components.size()));
 	};
 
-	if (false)
+	if (true)
 	{
 		using QueryType = Query<const TestComponent>;
 		QueryType query(&container);
