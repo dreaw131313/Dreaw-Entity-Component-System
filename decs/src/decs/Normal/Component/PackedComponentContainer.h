@@ -20,7 +20,7 @@ namespace decs
 
 		}
 
-		//inline virtual IPackedComponentContainer* Clone() const = 0;
+		//inline virtual IPackedLightComponentContainer* Clone() const = 0;
 
 		inline virtual void PopBack() = 0;
 
@@ -73,7 +73,7 @@ namespace decs
 			return sizeof(TComponent);
 		}
 
-		/*virtual IPackedComponentContainer* Clone() const  override
+		/*virtual IPackedLightComponentContainer* Clone() const  override
 		{
 			return new PackedStableComponentContainer<TComponent>();
 		}*/

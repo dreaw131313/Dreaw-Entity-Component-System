@@ -1,7 +1,6 @@
 #pragma once
 
-
-namespace Normal
+namespace Light
 {
 
 	class Test
