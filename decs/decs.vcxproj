@@ -123,6 +123,7 @@
     <ClInclude Include="src\decs\decs.h" />
     <ClInclude Include="src\decs\Core\Type.h" />
     <ClInclude Include="src\decs\Core\RefCounterHandle.h" />
+    <ClInclude Include="src\decs\Light\LightForward.h" />
     <ClInclude Include="src\decs\Normal\Archetypes\Archetype.h" />
     <ClInclude Include="src\decs\Normal\Archetypes\ArchetypesMap.h" />
     <ClInclude Include="src\decs\Normal\Component\Component.h" />

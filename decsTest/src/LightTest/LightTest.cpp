@@ -3,7 +3,7 @@
 #include <iostream>
 #include <format>
 
-#include "decs/Light/LightECS.h"
+#include "decs/decs.h"
 
 
 namespace Light

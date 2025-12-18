@@ -5,21 +5,9 @@ namespace decs::light
 {
 	class Entity final
 	{
-		template<TLightComponentConcept ...>
-		friend class Query;
-		template<TLightComponentConcept ...>
-		friend class MultiQuery;
-		friend class Container;
-		template<typename TComponent>
-		friend class ComponentRef;
-		friend class ComponentBaseRef;
-		template<typename>
-		friend class ContainerSerializer;
-		friend class ContainerSerializerComplex;
-		friend class ContainerIterator;
-		friend class Iteration;
-
-		friend class ConstEntity;
+		friend class light::Container;
+		friend class light::ContainerIterator;
+		friend class light::Iteration;
 
 		friend struct std::hash<decs::light::Entity>;
 

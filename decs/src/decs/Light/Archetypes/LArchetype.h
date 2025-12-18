@@ -7,6 +7,8 @@
 #include "decs/Light/Component/PackedLightComponentContainer.h"
 #include "decs/Light/LEntityData.h"
 
+#include "decs/Light/LightForward.h"
+
 #include <optional>
 
 namespace decs::light
@@ -109,20 +111,20 @@ namespace decs::light
 
 	class Archetype final
 	{
-		friend class Container;
-		friend class ContainerIterator;
-		friend class EntityData;
-		friend class EntityManager;
-		friend class ArchetypesMap;
+		friend class light::Container;
+		friend class light::ContainerIterator;
+		friend class light::EntityData;
+		friend class light::EntityManager;
+		friend class light::ArchetypesMap;
 
+		template<decs::TLightComponentConcept...>
+		friend class light::Query;
 		template<TLightComponentConcept...>
-		friend class Query;
-		template<TLightComponentConcept...>
-		friend class MultiQuery;
+		friend class light::MultiQuery;
 		template<TLightComponentConcept... ComponentsTypes>
-		friend class IterationArchetypeContext;
+		friend class light::IterationArchetypeContext;
 		template<TLightComponentConcept...>
-		friend class IterationContainerContext;
+		friend class light::IterationContainerContext;
 
 	private:
 		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;

@@ -1,4 +1,5 @@
 #pragma once
+#include "LightForward.h"
 #include "LContainer.h"
 #include "LEntity.h"
 #include "Iteration/LContainerIterator.h"

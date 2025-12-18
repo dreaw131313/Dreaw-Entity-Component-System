@@ -17,13 +17,13 @@ namespace decs::light
 	class Container
 	{
 		template<TLightComponentConcept ...Types>
-		friend class Query;
+		friend class light::Query;
 		template<TLightComponentConcept ...Types>
-		friend class MultiQuery;
+		friend class light::MultiQuery;
 		template<TLightComponentConcept...>
-		friend class IterationContainerContext;
-		friend class Entity;
-		friend class ContainerIterator;
+		friend class light::IterationContainerContext;
+		friend class light::Entity;
+		friend class light::ContainerIterator;
 
 		NON_COPYABLE(Container);
 		NON_MOVEABLE(Container);
