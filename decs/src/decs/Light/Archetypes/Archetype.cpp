@@ -386,6 +386,8 @@ namespace decs::light
 			}
 		}
 
+		fromArchetype.RemoveSwapBackEntityData(entityIndex);
+
 		return true;
 	}
 }

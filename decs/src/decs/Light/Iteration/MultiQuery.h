@@ -248,6 +248,24 @@ namespace decs::light
 			}
 		}
 		
+		template<typename TCallable>
+			requires light_query_iterate_container_callable<TCallable, ComponentsTypes...>
+		void ForEachArchetype(TCallable&& func)
+		{
+			Fetch();
+
+			const uint64_t containerContextCount = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < containerContextCount; containerContextIndex++)
+			{
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				if (!containerContext.IsValidAndEnabled())
+				{
+					continue; // Skip if container context is disabled
+				}
+				containerContext.ForEachContainer(func);
+			}
+		}
+
 		virtual bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{
 			auto& contextIndex = m_ContainerContextsIndexes[container];

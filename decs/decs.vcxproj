@@ -108,7 +108,7 @@
     <ClInclude Include="src\decs\Memory.h" />
     <ClInclude Include="src\decs\trait.h" />
     <ClInclude Include="src\decs\Light\Archetypes\ArchetypesMap.h" />
-    <ClInclude Include="src\decs\Component\PackedComponentContainer.h" />
+    <ClInclude Include="src\decs\Light\Component\PackedComponentContainer.h" />
     <ClInclude Include="src\decs\Light\EntityManager.h" />
     <ClInclude Include="src\decs\Light\Archetypes\Archetype.h" />
     <ClInclude Include="src\decs\Light\Container.h" />

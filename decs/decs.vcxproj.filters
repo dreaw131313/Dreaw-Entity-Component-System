@@ -48,7 +48,7 @@
     <ClInclude Include="src\decs\Light\Archetypes\ArchetypesMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Component\PackedComponentContainer.h">
+    <ClInclude Include="src\decs\Light\Component\PackedComponentContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Light\Iteration\IterationCore.h">

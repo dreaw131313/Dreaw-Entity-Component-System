@@ -251,6 +251,16 @@ namespace decs::light
 			}
 		}
 
+		template<typename TCallable>
+			requires light_query_iterate_container_callable<TCallable, ComponentsTypes...>
+		void ForEachArchetype(TCallable&& func)
+		{
+			if (!IsValid()) return;
+			FetchInternal();
+
+			m_ContainerContext.ForEachContainer(func);
+		}
+
 		inline void Fetch()
 		{
 			if (!IsValid()) return;

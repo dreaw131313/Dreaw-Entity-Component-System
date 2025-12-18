@@ -1,6 +1,5 @@
 #pragma once
 #include "decs/Core.h"
-#include "decs/Component/PackedComponentContainer.h"
 #include "decs/Light/Archetypes/Archetype.h"
 #include "decs/Light/Archetypes/ArchetypesMap.h"
 
@@ -392,6 +391,19 @@ namespace decs::light
 
 	#pragma endregion
 
+	#pragma region FOREACH CONTAINER
+	public:
+		template<typename TCallable>
+			requires light_query_iterate_container_callable<TCallable, ComponentsTypes...>
+		void InvokeForEachComponentContainer(TCallable&& func) const
+		{
+			if (GetEntityCount() > 0)
+			{
+				func(std::get<TPackedContainer<ComponentsTypes>*>(m_ContainersTuple)->GetAsSpan()...);
+			}
+		}
+
+	#pragma endregion
 	private:
 		const Archetype* m_Archetype = nullptr;
 		ContainersTuple m_ContainersTuple{};
@@ -521,6 +533,16 @@ namespace decs::light
 			}
 
 			return entityCount;
+		}
+
+		template<typename TCallable>
+			requires light_query_iterate_container_callable<TCallable, ComponentsTypes...>
+		void ForEachContainer(TCallable&& func) const
+		{
+			for (const auto& archetypeContext : m_ArchetypesContexts)
+			{
+				archetypeContext.InvokeForEachComponentContainer(func);
+			}
 		}
 
 	private:

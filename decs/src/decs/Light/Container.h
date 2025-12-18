@@ -4,7 +4,6 @@
 #include "decs/Core.h"
 #include "decs/trait.h"
 #include "decs/Type.h"
-#include "decs/Component/PackedComponentContainer.h"
 
 #include "Archetypes/ArchetypesMap.h"
 #include "EntityManager.h"

@@ -3,7 +3,7 @@
 #include "decs/Containers/TChunkedVector.h"
 #include"decs/check_cast.h"
 
-namespace decs
+namespace decs::light
 {
 	class IPackedComponentContainer
 	{
@@ -155,6 +155,11 @@ namespace decs
 		inline virtual IPackedComponentContainer* CloneEmpty() const override
 		{
 			return new PackedComponentContainer<TComponent>();
+		}
+
+		inline std::span<TComponent> GetAsSpan()
+		{
+			return { m_Data };
 		}
 	};
 

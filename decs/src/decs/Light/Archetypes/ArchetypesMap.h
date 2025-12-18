@@ -4,7 +4,7 @@
 
 #include "decs/Core.h"
 #include "decs/Type.h"
-#include "decs/Component/PackedComponentContainer.h"
+#include "decs/Light/Component/PackedComponentContainer.h"
 
 #include "Archetype.h"
 

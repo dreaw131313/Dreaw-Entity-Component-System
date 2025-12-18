@@ -88,6 +88,14 @@ namespace decs
 		|| std::is_invocable_v<TCallable, TComponentTypes&...>
 		|| std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes&...>;
 
+	template<typename TCallable, typename... TComponentTypes>
+	concept	light_query_iterate_container_callable = std::is_invocable_v<TCallable, std::span<TComponentTypes>...>
+		|| std::is_invocable_v<TCallable, std::span<const TComponentTypes>...>
+		|| std::is_invocable_v<TCallable, const std::span<TComponentTypes>...>
+		|| std::is_invocable_v<TCallable, const std::span<TComponentTypes>&...>
+		|| std::is_invocable_v<TCallable, const std::span<const TComponentTypes>...>
+		|| std::is_invocable_v<TCallable, const std::span<const TComponentTypes>&...>
+		;
 
 	template<typename TCallable, typename... TComponentTypes>
 	constexpr bool is_invocable_with_entity_v = std::is_invocable_v<TCallable, const Entity&, TComponentTypes...> 
