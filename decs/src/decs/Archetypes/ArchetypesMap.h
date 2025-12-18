@@ -325,9 +325,6 @@ namespace decs
 
 		uint32_t m_MaxTypeCountInArchetypes = 0;
 
-		Archetype* m_LastArchetypeFetched{};
-
-		// UTILITY
 	private:
 		void MakeArchetypeEdges_2(Archetype& archetype);
 
