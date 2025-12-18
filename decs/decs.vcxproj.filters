@@ -15,117 +15,120 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\decs\Containers\TChunkedVector.h">
+    <ClInclude Include="src\decs\Core\TChunkedVector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Iteration\Query.h">
+    <ClInclude Include="src\decs\Normal\Iteration\Query.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Archetypes\Archetype.h">
+    <ClInclude Include="src\decs\Normal\Archetypes\Archetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Container.h">
+    <ClInclude Include="src\decs\Normal\Container.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Core.h">
+    <ClInclude Include="src\decs\Core\Core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\decs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Entity.h">
+    <ClInclude Include="src\decs\Normal\Entity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\EntityData.h">
+    <ClInclude Include="src\decs\Normal\EntityData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Type.h">
+    <ClInclude Include="src\decs\Core\Type.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\EntityManager.h">
+    <ClInclude Include="src\decs\Normal\EntityManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Archetypes\ArchetypesMap.h">
+    <ClInclude Include="src\decs\Normal\Archetypes\ArchetypesMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Component\PackedComponentContainer.h">
+    <ClInclude Include="src\decs\Normal\Component\PackedComponentContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Component\StableComponentContainer.h">
+    <ClInclude Include="src\decs\Normal\Component\StableComponentContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Component\ComponentContext.h">
+    <ClInclude Include="src\decs\Normal\Component\ComponentContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Component\ComponentContextsManager.h">
+    <ClInclude Include="src\decs\Normal\Component\ComponentContextsManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Observers\Observers.h">
+    <ClInclude Include="src\decs\Normal\Observers\Observers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Iteration\IterationCore.h">
+    <ClInclude Include="src\decs\Normal\Iteration\IterationCore.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Utils\ContainerSerializer.h">
+    <ClInclude Include="src\decs\Normal\Utils\ContainerSerializer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Utils\ContainerIterator.h">
+    <ClInclude Include="src\decs\Normal\Utils\ContainerIterator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Utils\ContainerSerializerComplex.h">
+    <ClInclude Include="src\decs\Normal\Utils\ContainerSerializerComplex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Containers\TOrderedList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Observers\ObserversManager.h">
+    <ClInclude Include="src\decs\Normal\Observers\ObserversManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Component\Component.h">
+    <ClInclude Include="src\decs\Normal\Component\Component.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\trait.h">
+    <ClInclude Include="src\decs\Core\trait.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Utils\RefCounterHandle.h">
+    <ClInclude Include="src\decs\Core\RefCounterHandle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Memory.h">
+    <ClInclude Include="src\decs\Core\Memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Hash.h">
+    <ClInclude Include="src\decs\Core\Hash.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\check_cast.h">
+    <ClInclude Include="src\decs\Core\check_cast.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\Normal\NormalECS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\decs\Container.cpp">
+    <ClCompile Include="src\decs\Normal\Container.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decs\EntityManager.cpp">
+    <ClCompile Include="src\decs\Normal\EntityManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decs\Iteration\MultiQuery.h">
+    <ClCompile Include="src\decs\Normal\Iteration\MultiQuery.h">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decs\Archetypes\ArchetypesMap.cpp">
+    <ClCompile Include="src\decs\Normal\Archetypes\ArchetypesMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decs\EntityData.cpp">
+    <ClCompile Include="src\decs\Normal\EntityData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decs\Archetypes\Archetype.cpp">
+    <ClCompile Include="src\decs\Normal\Archetypes\Archetype.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decs\Component\Component.cpp">
+    <ClCompile Include="src\decs\Normal\Component\Component.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\decs\decs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\decs\Component\ChunkAllocator.h">
+    <ClCompile Include="src\decs\Core\ChunkAllocator.h">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
