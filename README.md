@@ -1,12 +1,13 @@
 # Dreaw-Entity-Component-Systems
 **Dreaw-Entity-Component-Systems** in short **decs** it is archetype based archetype based ECS library written in **C++ 20**.
 Libarry offers two versions of ecs solution:
-1.	Called "**Normal**", available in **decs** namespace:
+1.	Called "**Normal**", available in **decs** namespace, and is more heavier version which porvide much features and some drawbacks like:
 	*	components must inherits from base class **decs::EntityComponent**
   	*	each component type is allocated in chunks, where number of component in one chunk can be specifed in **decs::Container** object
 	*	all components have stable memory addreses
 	*	entities can be enabled and disabled
-	*	observers for entity and component **creation, destruction, enable and disable** callbacks can be specified 
+	*	observers for entity and component **creation, destruction, enable and disable** callbacks can be specified
+ 	*	**decs::Entity** which outlive parent **decs::Container** behaves empty or destroyed entity
 3.	Called "**Light**", available in **decs::light** namespace, where each archetype stores each component type in **std::vector**
    	*	components do not have stable memory addresses, and can be each type except **bool**
 	*	entities cannot be enabled and disabled
@@ -107,7 +108,7 @@ Query::ForEachSafe(Callable&& func);
 decs::Container container = {}; 
 
 // this query can iterate over all entities which contains components passed as template parameters
-decs::Query<Component1, decs::stable<Component2>> query = { container }; 
+decs::Query<Component1, Component2> query = { container }; 
 
 query.ForEach([](Component1& c1, Component2& c2)
 {
@@ -136,7 +137,7 @@ Query& With(); // Entities in query will have all components from ComponentTypes
 
 Creating Query with this methods can look like:
 ```cpp
-decs::Query<Component1, decs::stable<Component2>, Component3> query = { container };
+decs::Query<Component1, Component2, Component3> query = { container };
 query.Without<Component4, Component5>().WithAnyFrom<Component6, Component7>().With<Component8, Component9>();
 
 query.ForEach([](Component1& c1, Component2& c2, Component3& c3)
