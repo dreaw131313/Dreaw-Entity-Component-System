@@ -27,9 +27,9 @@ All entites, components and tags are stored in class **decs::Container** or **de
 Each type can be tag. To add/remove tag to/from entity, decs::Entity methods like:
 ```cpp
 template<TTagConcept TTag>
-bool AddTag();
+bool decs::Entity::AddTag();
 template<TTagConcept TTag>
-bool RemoveTag();
+bool decs::Entity::RemoveTag();
 ```
 can be used.
 
@@ -93,16 +93,16 @@ Like in most of ecs systems, in **decs** entity can have only one component of g
 ### Spawning Entities
 Entites can also be spawned which is a little faster than creating them by regular method. To spawn entity you need to use one of **Spawn()** methods from decs::Container class.
 ```cpp
-Entity Spawn(const Entity& prefab, bool isActive = true);
+Entity decs::Container::Spawn(const Entity& prefab, bool isActive = true);
 
-bool Spawn(
+bool decs::Container::Spawn(
 	const Entity& prefab, 
 	std::vector<Entity*>& spawnedEntities, 
 	uint64_t spawnCount, 
 	bool areActive = true
 	);
 	
-bool Spawn(const Entity& prefab, uint64_t spawnCount, bool areActive = true);
+bool decs::Container::Spawn(const Entity& prefab, uint64_t spawnCount, bool areActive = true);
 ```
 As prefab parameter can be used entity from any decs::Container.
 
@@ -119,15 +119,15 @@ bool isActive = entity.IsActive();
 ```cpp
 // Iterates over entities in archetypes from first to last
 template<typename Callable
-Query::ForEach(Callable&& func);
+decs::Query::ForEach(Callable&& func);
 
 // Iterates over entities in archetypes form last to first
 template<typename Callable
-Query::ForEachBackward(Callable&& func);
+decs::Query::ForEachBackward(Callable&& func);
 
 // Iterates over entities in archetypes form last to first
 template<typename Callable
-Query::ForEachSafe(Callable&& func);
+decs::Query::ForEachSafe(Callable&& func);
 
 ```
 
@@ -155,11 +155,11 @@ Query& Without(); // Entities in query will not have all components from Compone
 ```
 ```cpp
 template<typename... ComponentsTypes>
-Query& WithAnyFrom(); // Entities in query will have at least one of component from ComponentTypes parameters list
+decs::Query& WithAnyFrom(); // Entities in query will have at least one of component from ComponentTypes parameters list
 ```
 ```cpp
 template<typename... ComponentsTypes>
-Query& With(); // Entities in query will have all components from ComponentTypes parameters list
+decs::Query& With(); // Entities in query will have all components from ComponentTypes parameters list
 ```
 
 Creating Query with this methods can look like:
@@ -180,7 +180,7 @@ query.ForEach([](decs::Entity& e, Component1& c1, Component2& c2, Component3& c3
 
 **Query** can be used to iterate from multiple threads. To be able to iterate from multiple threads, first we need create batch iterators from **Query** with method:
 ```cpp
-void CreateBatchIterators(std::vector<BatchIterator>& iterators, uint64_t desiredBatchesCount, uint64_t minBatchSize);
+void decs::Query::CreateBatchIterators(std::vector<BatchIterator>& iterators, uint64_t desiredBatchesCount, uint64_t minBatchSize);
 ```
 * **desiredBatchesCount** - number of maximum batch iterators which can be created for this query
 * **minBatchSize** is minimal number of enttites in each iterator. 
@@ -198,5 +198,13 @@ for (auto& it : iterators)
 }
 ```
 During iteration over **Query::BatchIterator** with **ForEach** method, the same rules applay as when iterating with **ForEachForward** method of **Query** class.
+
+**MutliQuery** offers same functionality as **Query**, but it can iterate over multiple **decs::Containers**. Each **decs::Container** can be added, removed and enabled/disabled with methods:
+```cpp
+bool decs::MutliQuery::AddContainer(decs::Container* container, bool bIsEnabled);
+bool decs::MutliQuery::RemoveContainer(decs::Container* container);
+void decs::MutliQuery::SetContainerEnabled(decs::Container* container, bool bIsEnabled);
+```
+Disabled containers will not be itareated.
 
 
