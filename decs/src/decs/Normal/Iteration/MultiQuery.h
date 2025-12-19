@@ -319,13 +319,13 @@ namespace decs
 			return false;
 		}
 
-		virtual void SetContainerEnabled(Container* container, bool isEnabled) override
+		virtual void SetContainerEnabled(Container* container, bool bIsEnabled) override
 		{
 			auto it = m_ContainerContextsIndexes.find(container);
 			if (it != m_ContainerContextsIndexes.end())
 			{
 				ContainerContextType& context = m_ContainerContexts[it->second];
-				context.m_bIsEnabled = isEnabled;
+				context.m_bIsEnabled = bIsEnabled;
 			}
 		}
 
