@@ -1,17 +1,29 @@
 # Dreaw-Entity-Component-Systems
-**Dreaw-Entity-Component-Systems** in short **decs** it is archetype based ECS library written in **C++ 20**. 
+**Dreaw-Entity-Component-Systems** in short **decs** it is archetype based archetype based ECS library written in **C++ 20**.
+Libarry offers two versions of ecs solution:
+1.	Called "**Normal**", available in **decs** namespace:
+	*	components must inherits from base class **decs::EntityComponent**
+  	*	each component type is allocated in chunks, where number of component in one chunk can be specifed in **decs::Container** object
+	*	all components have stable memory addreses
+	*	entities can be enabled and disabled
+	*	observers for entity and component **creation, destruction, enable and disable** callbacks can be specified 
+3.	Called "**Light**", available in **decs::light** namespace, where each archetype stores each component type in **std::vector**
+   	*	components do not have stable memory addresses, and can be each type except **bool**
+	*	entities cannot be enabled and disabled
+ 	*	there is no way to specify entity or components observers
+  	*	offers better iteration performance than first version
+
+API for using both version are same, but **Light** version use **decs::light** namespace
 
 ## How to use **decs**
 To start using decs, copy the **decs** folder to your project and include the header file **decs.h**.
 
 ### Creating and storing entities and components
-All entites and components are stored in class **decs::Container**.<br/>
-Component classes do not need to inherit from any class. Base types like int, float etc. (except bool) can also be components.<br/>
+All entites and components are stored in class **decs::Container** or **decs::light::Container**.<br/>
 
-By default components stored in **decs::Container** do not have **stable memory addresses**, but it can be enforced by using template **decs::stable< ComponentType >** instead of only **ComponentType**.<br/>
 
 ```cpp
-class Component1
+class Component1 : public decs::EntityComponent
 {
 public:
 	float X = 0;
@@ -21,7 +33,7 @@ public:
 	Component1(const float& x, const float& y);
 };
 
-class Component2
+class Component2 : public decs::EntityComponent
 {
 public:
 	float X = 0;
@@ -39,7 +51,7 @@ int main()
 	Component1* c1 = entity1.AddComponent<Component1>(1.f,2.f);
 	Component2* c2 = entity1.AddComponent<decs::stable<Component2>>(3.f,4.f);
 	entity1.RemoveComponent<Component1>();
-	entity1.RemoveComponent<decs::stable<Component2>>();
+	entity1.RemoveComponent<Component2>();
 	entity1.Destroy()
 	
 	return 0;
