@@ -23,8 +23,8 @@ To start using decs, copy the **decs** folder to your project and include the he
 ### Creating and storing entities, components and tags
 All entites, components and tags are stored in class **decs::Container** or **decs::light::Container**.<br/>
 
-####Tags
-Each type can be tag. To add/remove tag to/from entity, decs::Entity methods like:
+#### Tags
+Each type can be tag. To add/remove tag to/from entity, **decs::Entity** methods like:
 ```cpp
 template<TTagConcept TTag>
 bool decs::Entity::AddTag();
