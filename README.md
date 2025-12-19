@@ -1,5 +1,5 @@
 # Dreaw-Entity-Component-Systems
-**Dreaw-Entity-Component-Systems** in short **decs** it is archetype based archetype based ECS library written in **C++ 20**.
+**Dreaw-Entity-Component-Systems** in short **decs** (dreaw is from my nickname) is archetype based ECS library written in **C++ 20**.
 Libarry offers two versions of ecs solution:
 1.	Called "**Normal**", available in **decs** namespace, and is more heavier version which porvide much features and some drawbacks like:
 	*	components must inherits from base class **decs::EntityComponent**
