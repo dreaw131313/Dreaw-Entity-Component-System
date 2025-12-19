@@ -286,7 +286,7 @@ namespace decs
 			}
 		}
 
-		virtual bool AddContainer(Container* container, bool bIsEnabled = true) override
+		bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{
 			auto& contextIndex = m_ContainerContextsIndexes[container];
 			if (contextIndex >= m_ContainerContexts.size() || m_ContainerContexts[contextIndex].m_Container != container)
@@ -298,7 +298,7 @@ namespace decs
 			return false;
 		}
 
-		virtual bool RemoveContainer(Container* container) override
+		bool RemoveContainer(Container* container) override
 		{
 			auto it = m_ContainerContextsIndexes.find(container);
 			if (it != m_ContainerContextsIndexes.end())
@@ -319,7 +319,7 @@ namespace decs
 			return false;
 		}
 
-		virtual void SetContainerEnabled(Container* container, bool bIsEnabled) override
+		void SetContainerEnabled(Container* container, bool bIsEnabled) override
 		{
 			auto it = m_ContainerContextsIndexes.find(container);
 			if (it != m_ContainerContextsIndexes.end())
