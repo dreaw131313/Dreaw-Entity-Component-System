@@ -19,10 +19,22 @@ API for using both version are same, but **Light** version use **decs::light** n
 ## How to use **decs**
 To start using decs, copy the **decs** folder to your project and include the header file **decs.h**.
 
-### Creating and storing entities and components
-All entites and components are stored in class **decs::Container** or **decs::light::Container**.<br/>
+### Creating and storing entities, components and tags
+All entites, components and tags are stored in class **decs::Container** or **decs::light::Container**.<br/>
 
+####Tags
+Each type can be tag. To add/remove tag to/from entity, decs::Entity methods like:
+```cpp
+template<TTagConcept TTag>
+bool AddTag();
+template<TTagConcept TTag>
+bool RemoveTag();
+```
+can be used.
 
+**TTagConcept** can be any class decorated with **decs::tag<>** template.
+
+#### Example
 ```cpp
 class Component1 : public decs::EntityComponent
 {
@@ -44,15 +56,31 @@ public:
 	Component2(const float& x, const float& y);
 };
 
+class Tag1
+{
+};
+
+class Tag2
+{
+};
+
 int main()
 {
 	decs::Container container = {};
 	decs::Entity entity1 = container.CreateEntity();
-	// using entity member function :
+
+	// Components:
 	Component1* c1 = entity1.AddComponent<Component1>(1.f,2.f);
-	Component2* c2 = entity1.AddComponent<decs::stable<Component2>>(3.f,4.f);
+	Component2* c2 = entity1.AddComponent<Component2>(3.f,4.f);
 	entity1.RemoveComponent<Component1>();
 	entity1.RemoveComponent<Component2>();
+
+	// Tags:
+	entity.AddTag<decs::Tag<Tag1>>();
+	entity.AddTag<decs::Tag<Tag2>>();
+	entity.RemoveTag<decs::Tag<Tag1>>();
+	entity.RemoveTag<decs::Tag<Tag2>>();
+
 	entity1.Destroy()
 	
 	return 0;
@@ -138,7 +166,7 @@ Query& With(); // Entities in query will have all components from ComponentTypes
 Creating Query with this methods can look like:
 ```cpp
 decs::Query<Component1, Component2, Component3> query = { container };
-query.Without<Component4, Component5>().WithAnyFrom<Component6, Component7>().With<Component8, Component9>();
+query.Without<decs::tag<Tag1>, Component5>().WithAnyFrom<decs::tag<Tag2>, Component7>().With<decs::tag<Tag3>, Component9>();
 
 query.ForEach([](Component1& c1, Component2& c2, Component3& c3)
 {
