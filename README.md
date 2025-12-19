@@ -3,7 +3,7 @@
 Libarry offers two versions of ecs solution:
 1.	Called "**Normal**", available in **decs** namespace, and is more heavier version which porvide much features and some drawbacks like:
 	*	components must inherits from base class **decs::EntityComponent**
-  	*	each component type is allocated in chunks, where number of component in one chunk can be specifed in **decs::Container** object
+  	*	each component type is allocated in chunks, where number of component in one chunk can be specified in **decs::Container** object, if one chunk is fully occupied, new component chunk is allocated
 	*	all components have stable memory addreses
 	*	entities can be enabled and disabled
 	*	observers for entity and component **creation, destruction, enable and disable** callbacks can be specified
