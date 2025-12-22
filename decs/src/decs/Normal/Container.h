@@ -503,7 +503,7 @@ namespace decs
 
 			std::tuple<ContainerType<ComponentTypes>*...> containersTuple = { spawnArchetype.GetTypePackedContainer<ComponentTypes>()... };
 
-			std::tuple<drop_const_t<ComponentTypes>*> componentsTuple = { std::get<ContainerType<ComponentTypes>*>(containersTuple)->GetAsPtr(indexInArchetype) };
+			std::tuple<drop_const_t<ComponentTypes>*...> componentsTuple = { std::get<ContainerType<ComponentTypes>*>(containersTuple)->GetAsPtr(indexInArchetype)... };
 		}
 
 	#pragma endregion

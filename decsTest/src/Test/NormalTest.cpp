@@ -163,6 +163,7 @@ namespace Normal
 			{
 				using QueryType = decs::Query< const TestComponent>;
 				QueryType query(&container);
+
 				query.With< Renderer, Position, FloatTag, IntTag, BoolTag>();
 
 				PrintLine("ForEach");
