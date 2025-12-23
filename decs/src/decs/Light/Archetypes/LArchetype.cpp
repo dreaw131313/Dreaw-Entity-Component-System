@@ -321,6 +321,7 @@ namespace decs::light
 		}
 
 		EntityData* entityData = fromArchetype.m_EntitiesData[entityIndex].GetEntityData();
+		DECS_ASSERT(entityData != nullptr, "cannot move record where entity data is nullptr!");
 
 		toArchetype.AddEntityData(entityData);
 
@@ -363,6 +364,8 @@ namespace decs::light
 		}
 
 		ArchetypeEntityData& archetypeEntityData = fromArchetype.m_EntitiesData[entityIndex];
+		DECS_ASSERT(archetypeEntityData.GetEntityData() != nullptr, "cannot move record where entity data is nullptr!");
+
 		toArchetype.AddEntityData(archetypeEntityData.GetEntityData());
 		archetypeEntityData.Invalidate();
 

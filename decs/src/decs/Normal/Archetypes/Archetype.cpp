@@ -498,6 +498,7 @@ namespace decs
 		}
 
 		EntityData* entityData = fromArchetype.m_EntitiesData[entityIndex].GetEntityData();
+		DECS_ASSERT(entityData != nullptr, "EntityData must be valid pointer!");
 
 		toArchetype.AddEntityData(entityData);
 
@@ -540,6 +541,9 @@ namespace decs
 		}
 
 		ArchetypeEntityData& archetypeEntityData = fromArchetype.m_EntitiesData[entityIndex];
+
+		DECS_ASSERT(archetypeEntityData.GetEntityData() != nullptr, "EntityData must be valid pointer!");
+
 		toArchetype.AddEntityData(archetypeEntityData.GetEntityData());
 		archetypeEntityData.Invalidate();
 
@@ -579,6 +583,9 @@ namespace decs
 		}
 
 		ArchetypeEntityData& archetypeEntityData = fromArchetype.m_EntitiesData[entityIndex];
+
+		DECS_ASSERT(archetypeEntityData.GetEntityData() != nullptr, "EntityData must be valid pointer!");
+
 		toArchetype.AddEntityData(archetypeEntityData.GetEntityData());
 		archetypeEntityData.Invalidate();
 

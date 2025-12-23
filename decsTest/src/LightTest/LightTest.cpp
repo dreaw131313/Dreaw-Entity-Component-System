@@ -45,19 +45,35 @@ namespace Light
 
 		TestComponent()
 		{
-			//PrintLine("TestComponent::TestComponent");
+			PrintLine("TestComponent constructor");
 		}
 
 		TestComponent(const TestComponent& other)
 		{
-			//PrintLine("TestComponent::TestComponent(const TestComponent&)");
+			PrintLine("TestComponent copy consructor");
+		}
+
+		TestComponent(TestComponent&& other) noexcept
+		{
+			PrintLine("TestComponent move constructor");
 		}
 
 		~TestComponent()
 		{
-			//PrintLine("TestComponent::~TestComponent");
+			PrintLine("TestComponent destructor");
 		}
 
+		TestComponent& operator=(const TestComponent& other)
+		{
+			PrintLine("TestComponent copy assignment");
+			return *this;
+		}
+
+		TestComponent& operator=(TestComponent&& other) noexcept
+		{
+			PrintLine("TestComponent move assignment");
+			return *this;
+		}
 	};
 
 	struct Renderer
@@ -75,6 +91,11 @@ namespace Light
 
 	void Test::Run()
 	{
+		ComponentCreationTest();
+	}
+
+	void Test::IterationTest()
+	{
 		using FloatTag = decs::tag<float>;
 		using IntTag = decs::tag<int>;
 		using DoubleTag = decs::tag<double>;
@@ -88,18 +109,18 @@ namespace Light
 		Container container = { containerConfig };
 
 		/*{
-			Entity prefab = container.CreateEntity();
+		Entity prefab = container.CreateEntity();
 
-			prefab.AddComponent<TestComponent>();
-			prefab.AddComponent<Renderer>();
-			prefab.AddTag<FloatTag>();
-			prefab.AddTag<IntTag>();
-			prefab.AddTag<BoolTag>();
-			prefab.AddComponent<Position>(10.f, 10.f);
+		prefab.AddComponent<TestComponent>();
+		prefab.AddComponent<Renderer>();
+		prefab.AddTag<FloatTag>();
+		prefab.AddTag<IntTag>();
+		prefab.AddTag<BoolTag>();
+		prefab.AddComponent<Position>(10.f, 10.f);
 
-			prefab.AddComponent<float>();
+		prefab.AddComponent<float>();
 
-			container.Spawn(prefab, 9);
+		container.Spawn(prefab, 9);
 		}*/
 
 		{
@@ -115,35 +136,35 @@ namespace Light
 		}
 
 		/*{
-			Entity e = container.CreateEntity();
-			e.AddTag<FloatTag>();
-			e.AddTag<IntTag>();
-			e.AddTag<BoolTag>();
+		Entity e = container.CreateEntity();
+		e.AddTag<FloatTag>();
+		e.AddTag<IntTag>();
+		e.AddTag<BoolTag>();
 
-			e.AddComponent<TestComponent>();
-			e.AddComponent<Renderer>();
-			e.AddComponent<Position>();
+		e.AddComponent<TestComponent>();
+		e.AddComponent<Renderer>();
+		e.AddComponent<Position>();
 
-			e.RemoveComponent<Renderer>();
-			e.RemoveTag<BoolTag>();
+		e.RemoveComponent<Renderer>();
+		e.RemoveTag<BoolTag>();
 
-			e.HasTag<FloatTag>();
-			e.HasComponent<Position>();
-			e.GetComponent<TestComponent>();
+		e.HasTag<FloatTag>();
+		e.HasComponent<Position>();
+		e.GetComponent<TestComponent>();
 
-			container.Spawn(e, 9);
+		container.Spawn(e, 9);
 		}*/
 
 		/*{
-			decs::LightComponentTypeGroup<TestComponent, Renderer, Position> comps{};
-			decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
+		decs::LightComponentTypeGroup<TestComponent, Renderer, Position> comps{};
+		decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
 
-			auto entityInit = [](const Entity& e, TestComponent& component, Renderer& renderer, Position& position)
-			{
-				PrintLine("Only entity created!");
-			};
+		auto entityInit = [](const Entity& e, TestComponent& component, Renderer& renderer, Position& position)
+		{
+		PrintLine("Only entity created!");
+		};
 
-			Entity newEntity = container.CreateEntity(comps, tags, entityInit);
+		Entity newEntity = container.CreateEntity(comps, tags, entityInit);
 		}*/
 
 		uint32_t counter = 0;
@@ -257,6 +278,23 @@ namespace Light
 			}
 
 		}
+	}
+
+	void Test::ComponentCreationTest()
+	{
+		const decs::light::ContainerConfig containerConfig{
+			.EntityChunkSize = 1000,
+			.ArchetypeChunkSize = 200,
+		};
+
+		Container container = { containerConfig };
+
+		Entity e = container.CreateEntity();
+		e.AddComponent<TestComponent>();
+		e.AddComponent<float>();
+		e.AddComponent<double>();
+
+		Entity e2 = container.Spawn(e);
 	}
 
 }
