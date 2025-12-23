@@ -557,8 +557,8 @@ namespace decs
 			{
 				if (m_PerformDelayedDestruction)
 				{
-					AddArchetypeRecordToDelayedRemove(oldArchetype, indexInOldArchetype, false, componentTypeID);
 					Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype, indexInOldArchetype, componentTypeID);
+					AddArchetypeRecordToDelayedRemove(oldArchetype, indexInOldArchetype, false, componentTypeID);
 				}
 				else
 				{
@@ -928,8 +928,8 @@ namespace decs
 			{
 				if (m_PerformDelayedDestruction)
 				{
-					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, tagTypeID);
 					Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype, indexInOldArchetype, tagTypeID);
+					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, tagTypeID);
 				}
 				else
 				{
@@ -1387,14 +1387,12 @@ namespace decs
 			// Adding component pointer to packed container in archetype
 			archetypeTypeData.m_PackedContainer->PushBack(componentPtr);
 
-			// Adding entity to archetype
-			uint32_t entityIndexBuffor = newArchetype->EntityCount();
 			if (oldArchetype != nullptr)
 			{
 				if (m_PerformDelayedDestruction)
 				{
-					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
 					Archetype::MoveEntityAfterAddComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype, indexInOldArchetype, copmonentTypeID);
+					AddArchetypeRecordToDelayedRemove(entityData.m_Archetype, entityData.m_IndexInArchetype, false, copmonentTypeID);
 
 				}
 				else

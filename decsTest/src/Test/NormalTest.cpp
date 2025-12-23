@@ -76,6 +76,8 @@ namespace Normal
 		// Inherited via CreateComponentObserver
 		void OnCreateComponent(TestComponent& component, const decs::Entity& entity) override
 		{
+			component.GetEntity().AddComponent<Position>();
+
 		}
 
 		// Inherited via DestroyComponentObserver
@@ -123,6 +125,12 @@ namespace Normal
 			/*container.Spawn(prefab, true);
 			container.Spawn(prefab, 9, true);*/
 
+			{
+				auto e = container.CreateEntity();
+				e.AddComponent_NoCallback<TestComponent>();
+
+				container.InvokeEntitesOnCreateListeners();
+			}
 
 			{
 				decs::ComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
