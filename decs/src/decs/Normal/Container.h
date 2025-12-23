@@ -547,8 +547,6 @@ namespace decs
 			// Adding component to stable component container
 			StableComponentContainer<TComponent>* stableContainer = ::decs::check_cast<StableComponentContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
 			TComponent* componentPtr = stableContainer->Create(std::forward<Args>(args)...);
-
-			//StableComponentRef componentNodeInfo = {};
 			// Adding component pointer to packed container in archetype
 			archetypeTypeData.m_PackedContainer->PushBack(componentPtr);
 
@@ -742,21 +740,25 @@ namespace decs
 	}*/
 
 		template<TComponentConcept TComponent>
+		TComponent* GetComponentWithoutCheckingIsAlive(EntityData& entityData) const
+		{
+			if (entityData.m_Archetype != nullptr)
+			{
+				PackedStableComponentContainer<TComponent>* packedContainer = entityData.m_Archetype->GetTypePackedContainer<TComponent>();
+				if (packedContainer != nullptr)
+				{
+					return packedContainer->GetAsPtr(entityData.m_IndexInArchetype);
+				}
+			}
+			return nullptr;
+		}
+
+		template<TComponentConcept TComponent>
 		TComponent* GetComponent(EntityData& entityData) const
 		{
-			if constexpr (is_tag_v<TComponent>)
+			if (entityData.IsAlive())
 			{
-				return nullptr;
-			}
-
-			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
-			{
-				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
-				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
-				{
-					PackedStableComponentContainer<TComponent>* container = static_cast<PackedStableComponentContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
-					return container->GetAsPtr(entityData.m_IndexInArchetype);
-				}
+				return GetComponentWithoutCheckingIsAlive<TComponent>(entityData);
 			}
 			return nullptr;
 		}
@@ -835,21 +837,6 @@ namespace decs
 			}
 		}
 
-		template<TComponentConcept TComponent>
-		TComponent* GetComponentWithoutCheckingIsAlive(EntityData& entityData) const
-		{
-			if (entityData.m_Archetype != nullptr)
-			{
-				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
-				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
-				{
-					PackedStableComponentContainer<TComponent>* container = static_cast<PackedStableComponentContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
-					return container->GetAsPtr(entityData.m_IndexInArchetype);
-				}
-			}
-			return nullptr;
-		}
-
 		bool HasComponentInternal(EntityData& entityData, TypeID typeID) const
 		{
 			if (entityData.m_Archetype != nullptr)
@@ -862,11 +849,6 @@ namespace decs
 		template<TComponentConcept TComponent>
 		bool HasComponent(EntityData& entityData) const
 		{
-			if constexpr (is_tag_v<TComponent>)
-			{
-				return false;
-			}
-
 			return HasComponentInternal(entityData, Type<TComponent>::ID());
 		}
 

@@ -363,10 +363,13 @@ namespace decs
 			{
 				return nullptr;
 			}
-
 			auto& typeData = m_TypeData[compIdx];
+			if (typeData.IsTag())
+			{
+				return nullptr;
+			}
 
-			return static_cast<PackedStableComponentContainer<TComponentType>*>(typeData.m_PackedContainer);
+			return ::decs::check_cast<PackedStableComponentContainer<TComponentType>*>(typeData.m_PackedContainer);
 		}
 
 		template<typename TComponentType>

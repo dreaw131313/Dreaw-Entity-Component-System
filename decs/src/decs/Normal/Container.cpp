@@ -599,31 +599,28 @@ namespace decs
 	)
 	{
 		auto entityData = entity.GetEntityData();
+		Archetype* currentArch = entityData->m_Archetype;
+
+		componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
+
+		// All this checks are here to check if this entity containe components after OnCreateMethod
+		Archetype* newArch = entityData->m_Archetype;
+		if (newArch != nullptr && entity.IsActive())
 		{
-			Archetype* currentArch = entityData->m_Archetype;
-
-			EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
-			componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
-
-			// All this checks are here to check if this entity containe components after OnCreateMethod
-			Archetype* newArch = entityData->m_Archetype;
-			if (newArch != nullptr && entity.IsActive())
+			if (currentArch != newArch)
 			{
-				if (currentArch != newArch)
+				uint32_t compIndex = newArch->FindTypeIndex(compTypeID);
+				if (compIndex < newArch->GetComponentAndTagCount())
 				{
-					uint32_t compIndex = newArch->FindTypeIndex(compTypeID);
-					if (compIndex < newArch->GetComponentAndTagCount())
-					{
-						componentContext->InvokeOnEnableComponent(
-							newArch->m_TypeData[compIndex].m_PackedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype),
-							entity
-						);
-					}
+					componentContext->InvokeOnEnableComponent(
+						newArch->m_TypeData[compIndex].m_PackedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype),
+						entity
+					);
 				}
-				else
-				{
-					componentContext->InvokeOnEnableComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
-				}
+			}
+			else
+			{
+				componentContext->InvokeOnEnableComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
 			}
 		}
 	}
