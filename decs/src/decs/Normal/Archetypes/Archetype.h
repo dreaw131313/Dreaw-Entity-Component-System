@@ -372,6 +372,22 @@ namespace decs
 			return ::decs::check_cast<PackedStableComponentContainer<TComponentType>*>(typeData.m_PackedContainer);
 		}
 
+		IPackedComponentContainer* GetTypePackedContainer(TypeID componentTypeID) const
+		{
+			uint32_t compIdx = FindTypeIndex(componentTypeID);
+			if (compIdx == std::numeric_limits<uint32_t>::max())
+			{
+				return nullptr;
+			}
+			auto& typeData = m_TypeData[compIdx];
+			if (typeData.IsTag())
+			{
+				return nullptr;
+			}
+
+			return typeData.m_PackedContainer;
+		}
+
 		template<typename TComponentType>
 		TArchetypeTypeData<TComponentType> GetTypeData() const
 		{

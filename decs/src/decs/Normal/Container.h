@@ -584,79 +584,6 @@ namespace decs
 
 		bool RemoveComponent(const Entity& entity, TypeID componentTypeID);
 
-		template<TComponentConcept TComponent, typename TCallable>
-		bool RemoveComponent_If(EntityData& entityData, TCallable&& canRemoveFunc)
-		{
-			if constexpr (is_tag_v<TComponent>)
-			{
-				return false;
-			}
-
-			if (!m_CanRemoveComponents)
-			{
-				return false;
-			}
-
-			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<TComponent>::ID();
-
-			if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
-
-			uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
-			if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
-
-			Archetype* oldArchetype = entityData.m_Archetype;
-			uint64_t indexInOldArchetype = entityData.m_IndexInArchetype;
-
-			ArchetypeTypeData& oldArchetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
-			if (oldArchetypeTypeData.IsTag())
-			{
-				return false;
-			}
-
-			auto packedContainer = oldArchetypeTypeData.m_PackedContainer;
-			EntityComponent* componentBasePtr = packedContainer->GetComponentBasePtr(indexInOldArchetype);
-			if (componentBasePtr->GetDependecyCount() > 0)
-			{
-				return false;
-			}
-
-			const TComponent& compConstPtr = *static_cast<TComponent*>(componentBasePtr);
-			if (!canRemoveFunc(compConstPtr))
-			{
-				return false;
-			}
-
-			Archetype* newArchetype = m_ArchetypesMap.GetOrCreateArchetypeAfterRemoveComponent(
-				*oldArchetype,
-				componentTypeID
-			);
-
-			if (newArchetype != nullptr)
-			{
-				Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype, indexInOldArchetype, componentTypeID);
-			}
-			else
-			{
-				AddToEmptyEntities(entityData);
-			}
-
-			if (m_PerformDelayedDestruction)
-			{
-				AddArchetypeRecordToDelayedRemove(oldArchetype, static_cast<uint32_t>(indexInOldArchetype), true, componentTypeID);
-			}
-			else
-			{
-				oldArchetype->RemoveSwapBackEntityAfterRemoveComponent(indexInOldArchetype);
-			}
-
-			// Invoking remove observers:
-			{
-				InvokeComponentDestroyObservers(*oldArchetypeTypeData.m_ComponentContext, *componentBasePtr, entityData);
-				oldArchetypeTypeData.m_StableContainer->Destroy(componentBasePtr);
-			}
-
-			return true;
-		}
 	private:
 		void InvokeComponentDestroyObservers(IComponentContext& compCtx, EntityComponent& comp, EntityData& entityData);
 
@@ -767,15 +694,10 @@ namespace decs
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
 			{
-				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex(componentType);
-				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
+				IPackedComponentContainer* packdContainer = entityData.m_Archetype->GetTypePackedContainer(componentType);
+				if (packdContainer != nullptr)
 				{
-					const auto& typeData = entityData.m_Archetype->m_TypeData[findTypeIndex];
-					if (typeData.IsTag())
-					{
-						return nullptr;
-					}
-					return typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
+					return packdContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
 				}
 			}
 			return nullptr;
