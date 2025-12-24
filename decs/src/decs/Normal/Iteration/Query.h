@@ -29,10 +29,7 @@ namespace decs
 
 		}
 
-		~Query()
-		{
-
-		}
+		~Query() = default;
 
 		inline void SetContainer(Container* container)
 		{

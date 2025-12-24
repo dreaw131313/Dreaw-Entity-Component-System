@@ -518,10 +518,7 @@ namespace decs
 		bool m_bIsEnabled = true;
 
 	public:
-		IterationContainerContext()
-		{
-
-		}
+		IterationContainerContext() = default;
 
 		IterationContainerContext(Container* container, bool bIsEnabled = true):
 			m_Container(container),
@@ -546,7 +543,7 @@ namespace decs
 			return IsValid() && IsEnabled();
 		}
 
-		inline Container* GetContainer() const
+		inline Container* GetContainer() const noexcept
 		{
 			return m_Container;
 		}
@@ -556,7 +553,7 @@ namespace decs
 			return m_ArchetypesContexts;
 		}
 
-		const ecsSet<const Archetype*>& GetArchetypes() const
+		const ecsSet<const Archetype*>& GetArchetypes() const noexcept
 		{
 			return m_ContainedArchetypes;
 		}
@@ -618,7 +615,7 @@ namespace decs
 			}
 		}
 
-		uint64_t GetEntityCount()
+		uint64_t GetEntityCount() const
 		{
 			uint64_t entityCount = 0;
 

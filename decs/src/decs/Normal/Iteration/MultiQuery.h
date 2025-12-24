@@ -31,10 +31,7 @@ namespace decs
 		using PackedContainerType = PackedStableComponentContainer<TComponent>*;
 
 	public:
-		MultiQuery()
-		{
-
-		}
+		MultiQuery() = default;
 
 		[[nodiscard]] uint64_t GetEntityCount()
 		{
