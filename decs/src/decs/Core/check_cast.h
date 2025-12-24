@@ -5,6 +5,7 @@ namespace decs
 {
 
 	template<typename To, typename From>
+		requires std::is_pointer_v<To> && std::is_pointer_v<From>
 	inline To check_cast(From v)
 	{
 		static_assert(!std::is_same<To, From>::value, "Redundant check_cast");
