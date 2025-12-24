@@ -2,6 +2,7 @@
 #include "decs/Core/Core.h"
 #include "decs/Core/TChunkedVector.h"
 #include "decs/Core/Type.h"
+#include "decs/Core/check_cast.h"
 
 #include "Component.h"
 
@@ -63,7 +64,7 @@ namespace decs
 
 		inline bool Destroy(EntityComponent* componentBase) override
 		{
-			return m_Allocator.Destroy(static_cast<TComponentType*>(componentBase));
+			return m_Allocator.Destroy(::decs::check_cast<TComponentType*>(componentBase));
 		}
 
 		inline bool Destroy(TComponentType* component)
@@ -73,7 +74,7 @@ namespace decs
 
 		inline EntityComponent* CreateFromComponentBase(const EntityComponent* ptr)override
 		{
-			return m_Allocator.Create(*static_cast<const TComponentType*>(ptr));
+			return m_Allocator.Create(*decs::check_cast<const TComponentType*>(ptr));
 		}
 
 		inline void Clear() override

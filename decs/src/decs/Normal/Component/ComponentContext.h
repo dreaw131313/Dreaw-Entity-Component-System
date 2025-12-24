@@ -1,5 +1,6 @@
 #pragma once
 #include "decs/Core/Type.h"
+#include "decs/Core/check_cast.h"
 
 #include "decs/Normal/Observers/Observers.h"
 #include "decs/Normal/Component/Component.h"
@@ -104,7 +105,7 @@ namespace decs
 				component->SetCreated(true);
 				if (m_Observers.m_CreateObserver != nullptr)
 				{
-					m_Observers.m_CreateObserver->OnCreateComponent(*static_cast<TComponent*>(component), entity);
+					m_Observers.m_CreateObserver->OnCreateComponent(*::decs::check_cast<TComponent*>(component), entity);
 				}
 			}
 		}
@@ -116,7 +117,7 @@ namespace decs
 				component->SetCreated(false);
 				if (m_Observers.m_DestroyObserver != nullptr)
 				{
-					m_Observers.m_DestroyObserver->OnDestroyComponent(*static_cast<TComponent*>(component), entity);
+					m_Observers.m_DestroyObserver->OnDestroyComponent(*::decs::check_cast<TComponent*>(component), entity);
 				}
 			}
 		}
@@ -128,7 +129,7 @@ namespace decs
 				component->SetEnabled(true);
 				if (m_Observers.m_EnableObserver != nullptr)
 				{
-					m_Observers.m_EnableObserver->OnEnableComponent(*static_cast<TComponent*>(component), entity);
+					m_Observers.m_EnableObserver->OnEnableComponent(*::decs::check_cast<TComponent*>(component), entity);
 				}
 			}
 		}
@@ -140,7 +141,7 @@ namespace decs
 				component->SetEnabled(false);
 				if (m_Observers.m_DisableObserver != nullptr)
 				{
-					m_Observers.m_DisableObserver->OnDisableComponent(*static_cast<TComponent*>(component), entity);
+					m_Observers.m_DisableObserver->OnDisableComponent(*::decs::check_cast<TComponent*>(component), entity);
 				}
 			}
 		}

@@ -1,5 +1,6 @@
 #pragma once
 #include "decs/Core/Core.h"
+#include "decs/Core/check_cast.h"
 #include "decs/Core/TChunkedVector.h"
 
 #include "Component.h"
@@ -44,7 +45,7 @@ namespace decs
 
 		inline virtual void RemoveSwapBack(uint64_t index) = 0;
 
-		inline virtual void PushBack(EntityComponent* componentBase) = 0;
+		inline virtual void PushBackFromBase(EntityComponent* componentBase) = 0;
 	};
 
 	template<typename TComponent>
@@ -129,9 +130,14 @@ namespace decs
 			}
 		}
 
-		inline void PushBack(EntityComponent* componentBase) override
+		inline void PushBackFromBase(EntityComponent* componentBase) override
 		{
-			m_Data.push_back(static_cast<TComponent*>(componentBase));
+			m_Data.push_back(::decs::check_cast<TComponent*>(componentBase));
+		}
+
+		inline void PushBack(TComponent* component)
+		{
+			m_Data.push_back(component);
 		}
 
 		inline TComponent& GetAsRef(uint64_t index)

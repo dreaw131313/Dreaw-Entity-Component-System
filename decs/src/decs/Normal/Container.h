@@ -463,49 +463,6 @@ namespace decs
 
 		void InvokeComponentCreateAndEnableObserversOnSpawn(const Entity& entity, const Archetype& archetype, const SpawnDataState& spawnState);
 
-		template<TComponentConcept T>
-		using ContainerType = PackedStableComponentContainer<drop_const_t<T>>;
-
-		template<TComponentConcept... ComponentTypes>
-		void CreateEntityFromSpawnData_Templated(
-			const SpawnDataState& spawnState,
-			const Entity& spawnedEntity,
-			Archetype& spawnArchetype
-		)
-		{
-			constexpr const TypeGroup<ComponentTypes...> componentsGroup{};
-
-			EntityData* entityData = GetEntityData(spawnedEntity);
-			spawnArchetype.AddEntityData(entityData);
-
-			auto& archetypeTypeData = spawnArchetype.m_TypeData;
-			const uint64_t typeCount = spawnArchetype.GetTypeCount();
-			for (uint32_t i = 0; i < typeCount; i++)
-			{
-				ArchetypeTypeData& currentTypeData = archetypeTypeData[i];
-				SpawnComponentData& spawnComponentData = m_SpawnData.m_ComponentData[i + spawnState.m_ComponentDataStart];
-
-				if (spawnComponentData.IsTag())
-				{
-					continue;
-				}
-
-				auto spawnedCompPtr = spawnComponentData.m_SpawnStableContainer->CreateFromComponentBase(spawnComponentData.m_PrefabComponent);
-				currentTypeData.m_PackedContainer->PushBack(spawnedCompPtr);
-				spawnedCompPtr->OnPreCreate(entityData);
-
-				spawnComponentData.m_SpawnedComponent = spawnedCompPtr;
-			}
-
-
-			uint32_t indexInArchetype = entityData->m_IndexInArchetype;
-
-
-			std::tuple<ContainerType<ComponentTypes>*...> containersTuple = { spawnArchetype.GetTypePackedContainer<ComponentTypes>()... };
-
-			std::tuple<drop_const_t<ComponentTypes>*...> componentsTuple = { std::get<ContainerType<ComponentTypes>*>(containersTuple)->GetAsPtr(indexInArchetype)... };
-		}
-
 	#pragma endregion
 
 	#pragma region COMPONENTS:
@@ -548,7 +505,7 @@ namespace decs
 			StableComponentContainer<TComponent>* stableContainer = ::decs::check_cast<StableComponentContainer<TComponent>*>(archetypeTypeData.m_StableContainer);
 			TComponent* componentPtr = stableContainer->Create(std::forward<Args>(args)...);
 			// Adding component pointer to packed container in archetype
-			archetypeTypeData.m_PackedContainer->PushBack(componentPtr);
+			archetypeTypeData.m_PackedContainer->PushBackFromBase(componentPtr);
 
 			// Adding entity to archetype
 			if (oldArchetype != nullptr)
@@ -1289,7 +1246,7 @@ namespace decs
 
 			//StableComponentRef componentNodeInfo = {};
 			// Adding component pointer to packed container in archetype
-			archetypeTypeData.m_PackedContainer->PushBack(componentPtr);
+			archetypeTypeData.m_PackedContainer->PushBackFromBase(componentPtr);
 
 			if (oldArchetype != nullptr)
 			{

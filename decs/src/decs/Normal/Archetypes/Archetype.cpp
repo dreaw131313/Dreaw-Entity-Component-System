@@ -516,7 +516,7 @@ namespace decs
 			ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];
 			if (!fromArchetypeData.IsTag())
 			{
-				thisTypeData.m_PackedContainer->PushBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+				thisTypeData.m_PackedContainer->PushBackFromBase(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
 				fromArchetypeData.m_PackedContainer->RemoveSwapBack(entityIndex);
 			}
 
@@ -561,7 +561,7 @@ namespace decs
 			ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];
 			if (!fromArchetypeData.IsTag())
 			{
-				thisTypeData.m_PackedContainer->PushBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+				thisTypeData.m_PackedContainer->PushBackFromBase(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
 			}
 
 			fromArchetypeIndex++;
@@ -604,7 +604,7 @@ namespace decs
 			if (!thisTypeData.IsTag())
 			{
 				ArchetypeTypeData& updatetFromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];
-				thisTypeData.m_PackedContainer->PushBack(updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+				thisTypeData.m_PackedContainer->PushBackFromBase(updatetFromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
 			}
 		}
 
