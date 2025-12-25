@@ -7,7 +7,7 @@ namespace decs::light
 {
 	ArchetypesMap::ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize):
 		m_Archetypes(archetypesVectorChunkSize),
-		m_ArchetrypesGroupsByOneTypeVector(archetypeGroupsVectorChunkSize)
+		m_ArchetrypesGroupsByOneTypeAllocator(archetypeGroupsVectorChunkSize)
 	{
 
 	}
@@ -79,7 +79,7 @@ namespace decs::light
 	{
 		m_Archetypes.Clear();
 		m_ArchetypesGroupedByComponentsCount.clear();
-		m_ArchetrypesGroupsByOneTypeVector.Clear();
+		m_ArchetrypesGroupsByOneTypeAllocator.Clear();
 		m_ArchetypesGroupedByOneType.clear();
 	}
 
