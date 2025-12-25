@@ -235,7 +235,7 @@ namespace decs::light
 			return emptyArchetypesCount;
 		}
 
-		inline uint64_t MaxNumberOfTypesInArchetype() const
+		inline uint64_t MaxTypeCountInArchetypes() const
 		{
 			return m_MaxTypeCountInArchetypes;
 		}
@@ -243,11 +243,6 @@ namespace decs::light
 		void ShrinkArchetypesToFit();
 
 		void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state);
-
-		inline const TChunkedVector<Archetype>& GetArchetypesChunkedVector() const
-		{
-			return m_Archetypes;
-		}
 
 		template<typename Callable>
 		void IterateOverArchetypesWithType(TypeID componentType, Callable&& func)

@@ -37,20 +37,6 @@ namespace decs
 	concept TTagConcept = is_tag_v<TTag>;
 
 	template<typename T>
-	struct drop_const
-	{
-	public:
-		using Type = T;
-	};
-
-	template<typename T>
-	struct drop_const<const T>
-	{
-	public:
-		using Type = T;
-	};
-
-	template<typename T>
 	struct is_const
 	{
 	public:
@@ -66,6 +52,20 @@ namespace decs
 
 	template<typename T>
 	constexpr bool is_const_v = is_const<T>::value;
+
+	template<typename T>
+	struct drop_const
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	struct drop_const<const T>
+	{
+	public:
+		using Type = T;
+	};
 
 	template<typename T>
 	using drop_const_t = drop_const<T>::Type;

@@ -204,7 +204,7 @@ namespace decs
 			return m_Archetypes.Size();
 		}
 
-		inline uint64_t EmptyArchetypesCount() const
+		[[nodiscard]] inline uint64_t EmptyArchetypesCount() const
 		{
 			uint64_t emptyArchetypesCount = 0;
 			uint64_t archetypesCount = m_Archetypes.Size();
@@ -220,7 +220,7 @@ namespace decs
 			return emptyArchetypesCount;
 		}
 
-		inline uint64_t MaxNumberOfTypesInArchetype() const
+		inline uint64_t MaxTypeCountInArchetypes() const
 		{
 			return m_MaxTypeCountInArchetypes;
 		}
@@ -228,11 +228,6 @@ namespace decs
 		void ShrinkArchetypesToFit();
 
 		void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state);
-
-		inline const TChunkedVector<Archetype>& GetArchetypesChunkedVector() const
-		{
-			return m_Archetypes;
-		}
 
 		template<TComponentConcept TComponent>
 		void UpdateOrderInAllArchetypesWithComponentType()

@@ -582,7 +582,7 @@ namespace decs
 				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
 
 				ArchetypesMap& map = m_Container->m_ArchetypesMap;
-				uint64_t maxComponentsInArchetype = map.MaxNumberOfTypesInArchetype();
+				uint64_t maxComponentsInArchetype = map.MaxTypeCountInArchetypes();
 				if (maxComponentsInArchetype < minComponentsCount) return;
 
 				if (newArchetypesCount > m_ArchetypesContexts.size())
