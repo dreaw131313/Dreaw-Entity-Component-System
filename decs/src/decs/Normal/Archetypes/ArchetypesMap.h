@@ -286,8 +286,6 @@ namespace decs
 			}
 		}
 
-		void FullClear();
-
 		void ClearEntityDataAndComponents();
 
 	private:

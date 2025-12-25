@@ -99,13 +99,6 @@ namespace decs
 		}
 	}
 
-	void ArchetypesMap::FullClear()
-	{
-		m_Archetypes.Clear();
-		m_ArchetrypesGroupsByOneTypeAllocator.Clear();
-		m_ArchetypesGroupedByOneType.clear();
-	}
-
 	void ArchetypesMap::ClearEntityDataAndComponents()
 	{
 		IterateOverArchetypes([](Archetype* arch)

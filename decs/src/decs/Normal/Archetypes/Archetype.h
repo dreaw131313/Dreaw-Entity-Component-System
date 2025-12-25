@@ -353,7 +353,6 @@ namespace decs
 		/// <returns>Archetype with larger number of componetns than this archetype</returns>
 		std::optional<TypeID> IsAddComponentNeighbour(const Archetype& neighbour) const;
 
-
 		inline bool HasAnyEdge(TypeID toTypeID) const noexcept
 		{
 			return m_Edges.contains(toTypeID);

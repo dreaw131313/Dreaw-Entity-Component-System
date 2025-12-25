@@ -276,8 +276,6 @@ namespace decs::light
 			}
 		}
 
-		void FullClear();
-
 		void ClearEntityDataAndComponents();
 
 	private:
@@ -285,7 +283,6 @@ namespace decs::light
 		TChunkedVector<ArchetypeGroup> m_ArchetrypesGroupsAllocator{ 100 };
 		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeAllocator{ 100 };
 
-		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount{};
 		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
 		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
 
@@ -295,9 +292,7 @@ namespace decs::light
 
 		// UTILITY
 	private:
-		void MakeArchetypeEdges_2(Archetype& archetype);
-
-		void MakeArchetypeEdges_3(Archetype& archetype);
+		void MakeArchetypeEdges_4(Archetype& archetype);
 
 		void AddArchetypeToCorrectContainers(Archetype& archetype);
 

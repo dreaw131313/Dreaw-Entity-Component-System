@@ -75,14 +75,6 @@ namespace decs::light
 		}
 	}
 
-	void ArchetypesMap::FullClear()
-	{
-		m_Archetypes.Clear();
-		m_ArchetypesGroupedByComponentsCount.clear();
-		m_ArchetrypesGroupsByOneTypeAllocator.Clear();
-		m_ArchetypesGroupedByOneType.clear();
-	}
-
 	void ArchetypesMap::ClearEntityDataAndComponents()
 	{
 		IterateOverArchetypes([](Archetype* arch)
@@ -91,39 +83,58 @@ namespace decs::light
 		});
 	}
 
-	/// <summary>
-	/// this function is 100% correct.
-	/// Now we keep it if MakeArchetypeEdges_3 will have bad results
-	/// </summary>
-	/// <param name="archetype"></param>
-	void ArchetypesMap::MakeArchetypeEdges_2(Archetype& archetype)
+	void ArchetypesMap::MakeArchetypeEdges_4(Archetype& archetype)
 	{
-		// edges with archetypes with less components:
-		const uint64_t componentCountsMinusOne = archetype.GetTypeCount() - 1;
-		if (componentCountsMinusOne > 0)
-		{
-			const uint64_t archetypeListIndex = componentCountsMinusOne - 1;
-			auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
+		const uint32_t typeCount = archetype.GetTypeCount();
+		const uint32_t addTypeNeighbourTypeCount = typeCount + 1;
+		const uint32_t removeTypeNeighbourTypeCount = typeCount - 1;
 
-			for (Archetype* neighbour : archetypesListToCreateEdges)
+		const ArchetypeGroup* bestAddTypeGroup = nullptr;
+		uint32_t bestAddTypeArchetypeCount = std::numeric_limits<uint32_t>::max();
+
+		for (uint32_t typeIdx = 0; typeIdx < typeCount; typeIdx++)
+		{
+			const ArchetypesGroupByOneType* typeGroup = GetArchetypesGroupWithoutCreating(archetype.GetTypeID(typeIdx));
+			DECS_ASSERT(typeGroup != nullptr, "This should never fail, because archetype is added to all its types groups:");
+
+			const ArchetypeGroup* currentAddTypeGroup = typeGroup->GetGroupWithTypeCount(static_cast<uint64_t>(addTypeNeighbourTypeCount));
+			if (currentAddTypeGroup != nullptr && currentAddTypeGroup->GetArchetypeCount() < bestAddTypeArchetypeCount)
 			{
-				if (auto edgeTypeID = archetype.IsRemoveComponentNeighbour(*neighbour))
+				bestAddTypeGroup = currentAddTypeGroup;
+				bestAddTypeArchetypeCount = currentAddTypeGroup->GetArchetypeCount();
+			}
+
+			if (typeCount > 1)
+			{
+				/*
+				* This potenitaly is faster than checking all existing archetypes with smaller number of components
+				*/
+				const ArchetypeGroup* removeComponentGroup = typeGroup->GetGroupWithTypeCount(static_cast<uint64_t>(removeTypeNeighbourTypeCount));
+				if (removeComponentGroup != nullptr)
 				{
-					neighbour->AddEdge(edgeTypeID.value(), &archetype, EComponentEdgeType::Add);
-					archetype.AddEdge(edgeTypeID.value(), neighbour, EComponentEdgeType::Remove);
+					for (Archetype* neighbour : removeComponentGroup->Archetypes)
+					{
+						auto edgeTypeID = archetype.IsRemoveComponentNeighbour(*neighbour);
+						if (edgeTypeID.has_value() && !archetype.HasAnyEdge(edgeTypeID.value()))
+						{
+							neighbour->AddEdge(edgeTypeID.value(), &archetype, EComponentEdgeType::Add);
+							archetype.AddEdge(edgeTypeID.value(), neighbour, EComponentEdgeType::Remove);
+						}
+					}
 				}
 			}
 		}
 
-		// edges with archetype with more components:
-		const uint64_t componentCountsPlusOne = (uint64_t)archetype.GetTypeCount() + 1;
+		/*
+		* Add component neighbours
+		* We know that all add component neighbours will be placed in same one type groups as tested archetype, so we need to check neighbours only in one group.
+		* Not all archetypes with typeCount + 1 in any single component group are neighbours of tested archetype, but all typeCount + 1 neighbours of tested archetype are in all singlecomponent groups to which this archetype belongs
+		* So we first select group with smallest number of archetypes with typeCount + 1 and then test archetypes from best group
+		*/
 
-		if (componentCountsPlusOne <= m_ArchetypesGroupedByComponentsCount.size())
+		if (bestAddTypeGroup != nullptr)
 		{
-			const uint64_t archetypeListIndex = archetype.GetTypeCount();
-			auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
-
-			for (Archetype* neighbour : archetypesListToCreateEdges)
+			for (Archetype* neighbour : bestAddTypeGroup->Archetypes)
 			{
 				if (auto edgeTypeID = archetype.IsAddComponentNeighbour(*neighbour))
 				{
@@ -134,83 +145,8 @@ namespace decs::light
 		}
 	}
 
-	void ArchetypesMap::MakeArchetypeEdges_3(Archetype& archetype)
-	{
-		const uint32_t typeCount = archetype.GetTypeCount();
-
-
-		// edges with archetypes with less components:
-		{
-			const uint64_t componentCountsMinusOne = archetype.GetTypeCount() - 1;
-			if (componentCountsMinusOne > 0)
-			{
-				const uint64_t archetypeListIndex = componentCountsMinusOne - 1;
-				auto& archetypesListToCreateEdges = m_ArchetypesGroupedByComponentsCount[archetypeListIndex];
-
-				for (Archetype* neighbour : archetypesListToCreateEdges)
-				{
-					if (auto edgeTypeID = archetype.IsRemoveComponentNeighbour(*neighbour))
-					{
-						neighbour->AddEdge(edgeTypeID.value(), &archetype, EComponentEdgeType::Add);
-						archetype.AddEdge(edgeTypeID.value(), neighbour, EComponentEdgeType::Remove);
-					}
-				}
-			}
-		}
-
-		{
-			/*
-			* Add component neighbours
-			* We know that all add component neighbours will be placed in same one type groups as tested archetype, so we need to check neighbours only in one group.
-			* Not all archetypes with typeCount + 1 in any single component group are neighbours of tested archetype, but all typeCount + 1 neighbours of tested archetype are in all single component groups to which this archetype belongs
-			* So we first select group with smallest number of archetypes with typeCount + 1 and then test archetypes from best group
-			*/
-
-			const ArchetypeGroup* bestGroup = nullptr;
-			uint32_t bestArchetypeCount = std::numeric_limits<uint32_t>::max();
-
-			const uint32_t addComponentNeighbourTypeCount = typeCount + 1;
-
-			for (uint32_t typeIdx = 0; typeIdx < typeCount; typeIdx++)
-			{
-				const ArchetypesGroupByOneType* typeGroup = GetArchetypesGroupWithoutCreating(archetype.GetTypeID(typeIdx));
-				if (typeGroup == nullptr)
-				{
-					// This should never happend because archetype is added to all its types groups:
-					continue;
-				}
-
-				const ArchetypeGroup* currentGroup = typeGroup->GetGroupWithTypeCount(static_cast<uint64_t>(addComponentNeighbourTypeCount));
-				if (currentGroup != nullptr && currentGroup->GetArchetypeCount() < bestArchetypeCount)
-				{
-					bestGroup = currentGroup;
-					bestArchetypeCount = currentGroup->GetArchetypeCount();
-				}
-			}
-
-			if (bestGroup != nullptr)
-			{
-				for (Archetype* neighbour : bestGroup->Archetypes)
-				{
-					if (auto edgeTypeID = archetype.IsAddComponentNeighbour(*neighbour))
-					{
-						neighbour->AddEdge(edgeTypeID.value(), &archetype, EComponentEdgeType::Remove);
-						archetype.AddEdge(edgeTypeID.value(), neighbour, EComponentEdgeType::Add);
-					}
-				}
-			}
-		}
-	}
-
 	void ArchetypesMap::AddArchetypeToCorrectContainers(Archetype& archetype)
 	{
-		if (archetype.GetTypeCount() > m_ArchetypesGroupedByComponentsCount.size())
-		{
-			m_ArchetypesGroupedByComponentsCount.resize(archetype.GetTypeCount());
-		}
-
-		m_ArchetypesGroupedByComponentsCount[archetype.GetTypeCount() - 1].push_back(&archetype);
-
 		AddArchetypeToGroups(&archetype);
 
 		m_HashedArchetypes[ArchetypeHasher(&archetype)] = &archetype;
@@ -220,7 +156,7 @@ namespace decs::light
 			m_MaxTypeCountInArchetypes = archetype.GetTypeCount();
 		}
 
-		MakeArchetypeEdges_3(archetype);
+		MakeArchetypeEdges_4(archetype);
 	}
 
 	Archetype* ArchetypesMap::FindMatchingArchetype(const Archetype& toArchetype)
