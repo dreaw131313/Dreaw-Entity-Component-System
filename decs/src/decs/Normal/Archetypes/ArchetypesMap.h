@@ -291,19 +291,16 @@ namespace decs
 		void ClearEntityDataAndComponents();
 
 	private:
+		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
+		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
+
 		TChunkedVector<Archetype> m_Archetypes{ 100 };
 		TChunkedVector<ArchetypeGroup> m_ArchetrypesGroupsAllocator{ 100 };
 		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeAllocator{ 100 };
 
-		std::vector<std::vector<Archetype*>> m_ArchetypesGroupedByComponentsCount{};
-		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
-		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
-
 		uint32_t m_MaxTypeCountInArchetypes = 0;
 
 	private:
-		void MakeArchetypeEdges_3(Archetype& archetype);
-
 		void MakeArchetypeEdges_4(Archetype& archetype);
 
 		void AddArchetypeToCorrectContainers(Archetype& archetype);
