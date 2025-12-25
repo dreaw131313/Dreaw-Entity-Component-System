@@ -28,7 +28,7 @@ namespace decs
 
 				chunk.m_Size = 0;
 
-				chunk.m_Data = (T*) ::operator new(chunk.m_Capacity * sizeof(T));
+				chunk.m_Data = (T*) ::operator new(chunk.m_Capacity * sizeof(T), static_cast<std::align_val_t>(alignof(T)));
 			}
 
 			static void Destroy(TChunk& chunk)
@@ -38,7 +38,7 @@ namespace decs
 					chunk.m_Data[idx].~T();
 				}
 
-				::operator delete(chunk.m_Data, chunk.m_Capacity * sizeof(T));
+				::operator delete(chunk.m_Data, chunk.m_Capacity * sizeof(T), static_cast<std::align_val_t>(alignof(T)));
 			}
 
 			static void Copy(const TChunk& from, TChunk& to)

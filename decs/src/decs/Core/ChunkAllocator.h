@@ -76,6 +76,14 @@ namespace decs
 			template<typename T>
 			friend class TAllocator;
 
+			struct Record
+			{
+				union
+				{
+					T Value;
+				};
+			};
+
 
 		private:
 			std::vector<uint32_t> m_FreeSpaces;
@@ -103,7 +111,7 @@ namespace decs
 				const uint64_t flagsSize = m_Capacity * sizeof(bool);
 				m_MemoryBlockSize = flagsOffset + flagsSize;
 
-				m_MemoryBlock = (uint8_t*)operator new(m_MemoryBlockSize, static_cast<std::align_val_t>(alignof(T)));
+				m_MemoryBlock = reinterpret_cast<uint8_t*>(operator new(m_MemoryBlockSize, static_cast<std::align_val_t>(alignof(T))));
 
 				m_Data = reinterpret_cast<T*>(m_MemoryBlock);
 				m_AllocationFlags = reinterpret_cast<bool*>(m_MemoryBlock + dataSize);
