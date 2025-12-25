@@ -107,29 +107,7 @@ namespace decs
 			return (uint32_t)m_Groups.size();
 		}
 
-		void AddArchetype(Archetype* archetype)
-		{
-			m_ArchetypesCount += 1;
-			const uint64_t componentAndTagCount = archetype->GetComponentAndTagCount();
-
-			if (componentAndTagCount == 1)
-			{
-				DECS_ASSERT(m_MainTypeID == archetype->GetTypeID(0), "Single component archetype must have component type same as m_MainTypeID!");
-				m_MainTypeArchetype = archetype;
-			}
-
-			if (componentAndTagCount > m_Groups.size())
-			{
-				m_Groups.resize(componentAndTagCount);
-			}
-
-			auto& archetypeGroup = m_Groups[componentAndTagCount - 1];
-			if (archetypeGroup == nullptr)
-			{
-				archetypeGroup = &m_ArchetypeGroupAllocator.EmplaceBack();
-			}
-			archetypeGroup->Archetypes.push_back(archetype);
-		}
+		void AddArchetype(Archetype* archetype);
 
 		const std::vector<Archetype*>* GetArchetypesWithTypeCount(uint64_t componentsCount) const
 		{
@@ -324,9 +302,9 @@ namespace decs
 		uint32_t m_MaxTypeCountInArchetypes = 0;
 
 	private:
-		void MakeArchetypeEdges_2(Archetype& archetype);
-
 		void MakeArchetypeEdges_3(Archetype& archetype);
+
+		void MakeArchetypeEdges_4(Archetype& archetype);
 
 		void AddArchetypeToCorrectContainers(Archetype& archetype);
 
