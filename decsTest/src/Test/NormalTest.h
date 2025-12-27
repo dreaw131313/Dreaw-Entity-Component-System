@@ -8,6 +8,8 @@ namespace Normal
 	{
 	public:
 		void Run();
+
+		void PerformanceTest();
 	};
 
 }

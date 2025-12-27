@@ -4,6 +4,8 @@
 
 #include "decs/decs.h"
 
+#include "MeasureTimer.h"
+
 namespace Normal
 {
 
@@ -284,5 +286,44 @@ namespace Normal
 				}
 			}
 		}
+	}
+
+	void Test::PerformanceTest()
+	{
+		const uint32_t testCount = 1000;
+		const uint32_t entityCount = 263000;
+
+		auto perfTest = [](
+			uint32_t entityChunkSize,
+			uint32_t componentChunkSize
+			)
+		{
+			double sum = 0;
+
+			for (uint32_t testIdx = 0; testIdx < testCount; testIdx++)
+			{
+				decs::ContainerConfig config{
+					.EntityChunkSize = entityChunkSize,
+					.DefaultComponentChunkSize = 1000,
+					.ArchetypeChunkSize = 1000,
+				};
+				decs::Container container{};
+
+				MeasureTimer timer(true);
+				{
+					decs::ComponentTypeGroup<Position, TestComponent> comps{};
+					decs::TagTypeGroup<> tags{};
+
+					container.CreateEntities(comps, tags, entityCount, true, [](auto, auto) {});
+				}
+				sum += timer.ElapsedAsMilisecond();
+			}
+
+			double avarage = sum / testCount;
+			std::cout << "Creating " << entityCount << " entities -> " << avarage << " ms\n";
+		};
+
+		perfTest(10000, 1000);
+
 	}
 }
