@@ -1266,7 +1266,7 @@ namespace decs
 		m_DelayedEntitiesToDestroy.push_back({ entity.GetEntityData(), bInvokeCallbacks });
 	}
 
-	Entity Container::CreateEntity_NoCallbacks(bool bIsActive)
+	Entity Container::CreateEntity_NoObserver(bool bIsActive)
 	{
 		if (m_CanCreateEntities)
 		{
@@ -1277,7 +1277,7 @@ namespace decs
 		return Entity();
 	}
 
-	bool Container::DestroyEntity_NoCallback(const Entity& entity)
+	bool Container::DestroyEntity_NoObserver(const Entity& entity)
 	{
 		if (entity.IsValid() && m_CanDestroyEntities && entity.GetContainer() == this)
 		{
@@ -1288,7 +1288,7 @@ namespace decs
 		return false;
 	}
 
-	Entity Container::Spawn_NoCallback(const Entity& prefab, bool bIsActive)
+	Entity Container::Spawn_NoObserver(const Entity& prefab, bool bIsActive)
 	{
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
@@ -1318,7 +1318,7 @@ namespace decs
 		return spawnedEntity;
 	}
 
-	bool Container::Spawn_NoCallback(const Entity& prefab, uint64_t spawnCount, bool bAreActive)
+	bool Container::Spawn_NoObserver(const Entity& prefab, uint64_t spawnCount, bool bAreActive)
 	{
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
@@ -1355,7 +1355,7 @@ namespace decs
 		return true;
 	}
 
-	bool Container::Spawn_NoCallback(const Entity& prefab, std::vector<Entity>& spawnedEntities, uint64_t spawnCount, bool bAreActive)
+	bool Container::Spawn_NoObserver(const Entity& prefab, std::vector<Entity>& spawnedEntities, uint64_t spawnCount, bool bAreActive)
 	{
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
@@ -1394,7 +1394,7 @@ namespace decs
 		return true;
 	}
 
-	void Container::SetEntityActive_NoCallback(const Entity& entity, bool bIsActive)
+	void Container::SetEntityActive_NoObserver(const Entity& entity, bool bIsActive)
 	{
 		if (entity.GetContainer() == this
 			&& entity.GetEntityData()->IsAlive()
@@ -1404,7 +1404,7 @@ namespace decs
 		}
 	}
 
-	bool Container::RemoveComponent_NoCallback(const Entity& entity, TypeID componentTypeID)
+	bool Container::RemoveComponent_NoObserver(const Entity& entity, TypeID componentTypeID)
 	{
 		if (entity.GetContainer() != this) return false;
 
@@ -1457,7 +1457,7 @@ namespace decs
 		return true;
 	}
 
-	void Container::SetEntityActiveOverride_NoCallback(const Entity& entity, bool bIsActiveOverride)
+	void Container::SetEntityActiveOverride_NoObserver(const Entity& entity, bool bIsActiveOverride)
 	{
 		if (entity.GetContainer() == this)
 		{
@@ -1471,7 +1471,7 @@ namespace decs
 		}
 	}
 
-	void Container::SetEntityDisabledOverrideCount_NoCallback(const Entity& entity, uint32_t disabledOverrideCount)
+	void Container::SetEntityDisabledOverrideCount_NoObserver(const Entity& entity, uint32_t disabledOverrideCount)
 	{
 		if (entity.GetContainer() == this)
 		{
@@ -1485,9 +1485,9 @@ namespace decs
 		}
 	}
 
-	void Container::ResetDisabledOverrideCount_NoCallback(const Entity& entity)
+	void Container::ResetDisabledOverrideCount_NoObserver(const Entity& entity)
 	{
-		SetEntityDisabledOverrideCount_NoCallback(entity, 0);
+		SetEntityDisabledOverrideCount_NoObserver(entity, 0);
 	}
 
 }

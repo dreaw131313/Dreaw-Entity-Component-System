@@ -129,7 +129,7 @@ namespace Normal
 
 			{
 				auto e = container.CreateEntity();
-				e.AddComponent_NoCallback<TestComponent>();
+				e.AddComponent_NoObserver<TestComponent>();
 
 				container.InvokeEntitesOnCreateListeners();
 			}
@@ -290,40 +290,63 @@ namespace Normal
 
 	void Test::PerformanceTest()
 	{
-		const uint32_t testCount = 1000;
-		const uint32_t entityCount = 263000;
+		const uint32_t testCount = 100;
+		const uint32_t entityCount = 4096;
 
-		auto perfTest = [](
+		decs::ContainerConfig config{
+			.EntityChunkSize = 10000,
+			.DefaultComponentChunkSize = 1000,
+			.ArchetypeChunkSize = 100,
+		};
+
+		double finalAvarage = 0;
+
+		auto perfTest = [&](
 			uint32_t entityChunkSize,
 			uint32_t componentChunkSize
 			)
 		{
+			decs::Container container{config};
 			double sum = 0;
 
 			for (uint32_t testIdx = 0; testIdx < testCount; testIdx++)
 			{
-				decs::ContainerConfig config{
-					.EntityChunkSize = entityChunkSize,
-					.DefaultComponentChunkSize = 1000,
-					.ArchetypeChunkSize = 1000,
-				};
-				decs::Container container{};
-
 				MeasureTimer timer(true);
 				{
 					decs::ComponentTypeGroup<Position, TestComponent> comps{};
-					decs::TagTypeGroup<> tags{};
 
-					container.CreateEntities(comps, tags, entityCount, true, [](auto, auto) {});
+
+					container.CreateEntities_NoObserver(comps, entityCount,true, [](auto, auto) {});
+
+					/*for (uint32_t i = 0; i < entityCount; i++)
+					{
+					}*/
 				}
 				sum += timer.ElapsedAsMilisecond();
 			}
 
 			double avarage = sum / testCount;
+
+			finalAvarage += avarage;
 			std::cout << "Creating " << entityCount << " entities -> " << avarage << " ms\n";
 		};
 
-		perfTest(10000, 1000);
+		uint32_t finalTestCount = 100;
+		for (uint32_t i = 0; i < finalTestCount ; i++)
+		{
+			perfTest(10000, 1000);
+		}
+
+		std::cout << "Final avarage time " << finalAvarage / finalTestCount << " ms\n";
+
+		finalAvarage = 0;
+		for (uint32_t i = 0; i < finalTestCount ; i++)
+		{
+			perfTest(10000, 1000);
+		}
+
+		std::cout << "Final avarage time " << finalAvarage / finalTestCount << " ms\n";
+
 
 	}
 }

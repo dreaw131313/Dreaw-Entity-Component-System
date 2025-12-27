@@ -51,7 +51,6 @@ namespace decs
 
 		~Container();
 
-
 	#pragma region Extension data
 	public:
 		template<typename T>
@@ -217,6 +216,19 @@ namespace decs
 			}
 		}
 
+		template<typename InitFunc, TComponentConcept... ComponentTypes>
+			requires query_callable<InitFunc, ComponentTypes...>
+		inline void CreateEntities(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			uint32_t entityCount,
+			bool bIsActive,
+			InitFunc&& initFunc
+		)
+		{
+			constexpr const TagTypeGroup<> emptyTagTypeGroup{};
+			CreateEntities(components, emptyTagTypeGroup, entityCount, bIsActive, initFunc);
+		}
+
 		/// <summary>
 		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in ComponentTypeGroup parameter.
 		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
@@ -313,6 +325,19 @@ namespace decs
 
 			return Entity();
 		}
+
+		template<typename InitFunc, TComponentConcept... ComponentTypes>
+			requires query_callable<InitFunc, ComponentTypes...>
+		inline Entity CreateEntity(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			bool bIsActive,
+			InitFunc&& initFunc
+		)
+		{
+			constexpr const TagTypeGroup<> emptyTagTypeGroup{};
+			return CreateEntity(components, emptyTagTypeGroup, bIsActive, initFunc);
+		}
+
 
 	private:
 		void InitializeLifeTimeData();
@@ -977,7 +1002,7 @@ namespace decs
 		}
 
 		/// <summary>
-		/// Invokes only entity Create and Enable (if entity is enabled). If callbacks was invoked earliers then callbacks will not be invoked. This function should be used with CreateEntity_NoCallbacks method.
+		/// Invokes only entity Create and Enable (if entity is enabled). If callbacks was invoked earliers then callbacks will not be invoked. This function should be used with CreateEntity_NoObserver method.
 		/// </summary>
 		/// <param name="entity"></param>
 		void InvokeEntityCreateEnableObservers(const decs::Entity& entity);
@@ -1102,22 +1127,192 @@ namespace decs
 
 	#pragma region NO CALLBACKS methods:
 	public:
-		Entity CreateEntity_NoCallbacks(bool bIsActive = true);
+		Entity CreateEntity_NoObserver(bool bIsActive = true);
 
-		bool DestroyEntity_NoCallback(const Entity& entity);
 
-		Entity Spawn_NoCallback(
+		/// <summary>
+		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in ComponentTypeGroup parameter.
+		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
+		/// </summary>
+		/// <typeparam name="InitFunc"></typeparam>
+		/// <typeparam name="...ComponentTypes"></typeparam>
+		/// <typeparam name="...TagTypes"></typeparam>
+		/// <param name="components"></param>
+		/// <param name="tags"></param>
+		/// <param name="entityCount"></param>
+		/// <param name="bIsActive"></param>
+		/// <param name="initFunc"></param>
+		/// <returns></returns>
+		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+			requires query_callable<InitFunc, ComponentTypes...>
+		Entity CreateEntity_NoObserver(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			const TagTypeGroup<TagTypes...> tags,
+			bool bIsActive,
+			InitFunc&& initFunc
+		)
+		{
+			if (!m_CanCreateEntities)
+			{
+				return Entity();
+			}
+
+			if constexpr (sizeof...(TagTypes) == 0 && sizeof...(ComponentTypes) == 0)
+			{
+				if (Entity e = CreateEntity_NoObserver())
+				{
+					initFunc(e);
+					return e;
+				}
+			}
+			else
+			{
+				Archetype* spawnArchetype = nullptr;
+
+				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
+				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
+
+				if (spawnArchetype != nullptr)
+				{
+					std::tuple<TArchetypeTypeData<drop_const_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<drop_const_t<ComponentTypes>>()... };
+
+					if (Entity entity = CreateEntityRaw(bIsActive))
+					{
+						EntityData* entityData = GetEntityData(entity);
+						spawnArchetype->AddEntityData(entityData);
+
+						std::tuple<drop_const_t<ComponentTypes>*...> createdComponents = { std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple).m_StableContainer->Create()... };
+						(std::get<drop_const_t<ComponentTypes>*>(createdComponents)->OnPreCreate(entityData), ...);
+						(std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple).m_PackedContainer->PushBack(std::get<drop_const_t<ComponentTypes>*>(createdComponents)), ...);
+
+						if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
+						{
+							initFunc(entity, *std::get<ComponentTypes*>(createdComponents)...);
+						}
+						else
+						{
+							initFunc(*std::get<ComponentTypes*>(createdComponents)...);
+						}
+
+						return entity;
+					}
+				}
+			}
+
+			return Entity();
+		}
+
+
+		template<typename InitFunc, TComponentConcept... ComponentTypes>
+			requires query_callable<InitFunc, ComponentTypes...>
+		Entity CreateEntity_NoObserver(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			bool bIsActive,
+			InitFunc&& initFunc
+		)
+		{
+			constexpr const TagTypeGroup<> emptyTagTypeGroup{};
+			return CreateEntity_NoObserver(components, emptyTagTypeGroup, bIsActive, initFunc);
+		}
+
+
+		/// <summary>
+		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in ComponentTypeGroup parameter.
+		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
+		/// </summary>
+		/// <typeparam name="InitFunc"></typeparam>
+		/// <typeparam name="...ComponentTypes"></typeparam>
+		/// <typeparam name="...TagTypes"></typeparam>
+		/// <param name="components"></param>
+		/// <param name="tags"></param>
+		/// <param name="bIsActive"></param>
+		/// <param name="initFunc"></param>
+		/// <returns></returns>
+		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+			requires query_callable<InitFunc, ComponentTypes...>
+		void CreateEntities_NoObserver(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			const TagTypeGroup<TagTypes...> tags,
+			uint32_t entityCount,
+			bool bIsActive,
+			InitFunc&& initFunc
+		)
+		{
+			if (entityCount == 0 || !m_CanCreateEntities)
+			{
+				return;
+			}
+
+			if constexpr (sizeof...(TagTypes) == 0 && sizeof...(ComponentTypes) == 0)
+			{
+				for (uint32_t i = 0; i < entityCount; i++)
+				{
+					Entity e = CreateEntity_NoObserver(bIsActive);
+					initFunc(e);
+				}
+			}
+			else
+			{
+				Archetype* spawnArchetype = nullptr;
+
+				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
+				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
+
+				if (spawnArchetype != nullptr)
+				{
+					std::tuple<TArchetypeTypeData<drop_const_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<drop_const_t<ComponentTypes>>()... };
+
+					for (uint32_t i = 0; i < entityCount; i++)
+					{
+						if (Entity entity = CreateEntityRaw(bIsActive))
+						{
+							EntityData* entityData = GetEntityData(entity);
+							spawnArchetype->AddEntityData(entityData);
+
+							std::tuple<drop_const_t<ComponentTypes>*...> createdComponents = { std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple).m_StableContainer->Create()... };
+							(std::get<drop_const_t<ComponentTypes>*>(createdComponents)->OnPreCreate(entityData), ...);
+							(std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple).m_PackedContainer->PushBack(std::get<drop_const_t<ComponentTypes>*>(createdComponents)), ...);
+
+							if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
+							{
+								initFunc(entity, *std::get<ComponentTypes*>(createdComponents)...);
+							}
+							else
+							{
+								initFunc(*std::get<ComponentTypes*>(createdComponents)...);
+							}
+						}
+					}
+				}
+			}
+		}
+		template<typename InitFunc, TComponentConcept... ComponentTypes>
+			requires query_callable<InitFunc, ComponentTypes...>
+		inline void CreateEntities_NoObserver(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			uint32_t entityCount,
+			bool bIsActive,
+			InitFunc&& initFunc
+		)
+		{
+			constexpr const TagTypeGroup<> tags{};
+			return CreateEntities_NoObserver(components, tags, entityCount, bIsActive, initFunc);
+		}
+
+		bool DestroyEntity_NoObserver(const Entity& entity);
+
+		Entity Spawn_NoObserver(
 			const Entity& prefab,
 			bool bIsActive = true
 		);
 
-		bool Spawn_NoCallback(
+		bool Spawn_NoObserver(
 			const Entity& prefab,
 			uint64_t spawnCount,
 			bool bAreActive = true
 		);
 
-		bool Spawn_NoCallback(
+		bool Spawn_NoObserver(
 			const Entity& prefab,
 			std::vector<Entity>& spawnedEntities,
 			uint64_t spawnCount,
@@ -1125,10 +1320,10 @@ namespace decs
 		);
 
 	private:
-		void SetEntityActive_NoCallback(const Entity& entity, bool bIsActive);
+		void SetEntityActive_NoObserver(const Entity& entity, bool bIsActive);
 
 		template<TComponentConcept TComponent, typename ...Args>
-		TComponent* AddComponent_NoCallback(const Entity& entity, EntityData& entityData, Args&&... args)
+		TComponent* AddComponent_NoObserver(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			if constexpr (is_tag_v<TComponent>)
 			{
@@ -1190,7 +1385,7 @@ namespace decs
 		}
 
 		template<TComponentConcept TComponent>
-		bool RemoveComponent_NoCallback(const Entity& entity)
+		bool RemoveComponent_NoObserver(const Entity& entity)
 		{
 			if constexpr (is_tag_v<TComponent>)
 			{
@@ -1201,17 +1396,17 @@ namespace decs
 				return false;
 			}
 
-			return RemoveComponent_NoCallback(entity, Type<TComponent>::ID());
+			return RemoveComponent_NoObserver(entity, Type<TComponent>::ID());
 		}
 
-		bool RemoveComponent_NoCallback(const Entity& entity, TypeID componentTypeID);
+		bool RemoveComponent_NoObserver(const Entity& entity, TypeID componentTypeID);
 
 	public:
-		void SetEntityActiveOverride_NoCallback(const Entity& entity, bool bIsActiveOverride);
+		void SetEntityActiveOverride_NoObserver(const Entity& entity, bool bIsActiveOverride);
 
-		void SetEntityDisabledOverrideCount_NoCallback(const Entity& entity, uint32_t disabledOverrideCount);
+		void SetEntityDisabledOverrideCount_NoObserver(const Entity& entity, uint32_t disabledOverrideCount);
 
-		void ResetDisabledOverrideCount_NoCallback(const Entity& entity);
+		void ResetDisabledOverrideCount_NoObserver(const Entity& entity);
 
 	#pragma endregion
 

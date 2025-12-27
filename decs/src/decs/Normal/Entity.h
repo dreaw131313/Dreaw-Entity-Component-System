@@ -315,11 +315,11 @@ namespace decs
 		/// Enable and disable observers of entity and components are not invoked.
 		/// </summary>
 		/// <param name="isActive"></param>
-		inline void SetActive_NoCallback(const bool& isActive) const
+		inline void SetActive_NoObserver(const bool& isActive) const
 		{
 			if (IsValid())
 			{
-				GetContainer_Internal()->SetEntityActive_NoCallback(*this, isActive);
+				GetContainer_Internal()->SetEntityActive_NoObserver(*this, isActive);
 			}
 		}
 
@@ -327,7 +327,7 @@ namespace decs
 		/// Destroy observers of entity and components are not invoked.
 		/// </summary>
 		/// <returns></returns>
-		inline bool Destroy_NoCallback() const
+		inline bool Destroy_NoObserver() const
 		{
 			if (IsValid())
 			{
@@ -343,11 +343,11 @@ namespace decs
 		/// </summary>
 		/// <returns></returns>
 		template<TComponentConcept TComponent, typename... Args>
-		inline typename TComponent* AddComponent_NoCallback(Args&&... args) const
+		inline typename TComponent* AddComponent_NoObserver(Args&&... args) const
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->AddComponent_NoCallback<drop_const_t<TComponent>>(*this, *GetEntityData(), std::forward<Args>(args)...);
+				return GetContainer_Internal()->AddComponent_NoObserver<drop_const_t<TComponent>>(*this, *GetEntityData(), std::forward<Args>(args)...);
 			}
 
 			return nullptr;
@@ -358,41 +358,41 @@ namespace decs
 		/// </summary>
 		/// <returns></returns>
 		template<TComponentConcept TComponent>
-		inline bool RemoveComponent_NoCallback() const
+		inline bool RemoveComponent_NoObserver() const
 		{
-			return IsValid() && GetContainer_Internal()->RemoveComponent_NoCallback<drop_const_t<TComponent>>(*this);
+			return IsValid() && GetContainer_Internal()->RemoveComponent_NoObserver<drop_const_t<TComponent>>(*this);
 		}
 
 		/// <summary>
 		/// Destroy component observers are not invoked.
 		/// </summary>
 		/// <returns></returns>
-		inline bool RemoveComponent_NoCallback(TypeID componentTypeID) const
+		inline bool RemoveComponent_NoObserver(TypeID componentTypeID) const
 		{
-			return IsValid() && GetContainer_Internal()->RemoveComponent_NoCallback(*this, componentTypeID);
+			return IsValid() && GetContainer_Internal()->RemoveComponent_NoObserver(*this, componentTypeID);
 		}
 
-		void SetActiveOverride_NoCallback(bool bIsActiveOverride) const
+		void SetActiveOverride_NoObserver(bool bIsActiveOverride) const
 		{
 			if (IsValid())
 			{
-				GetContainer()->SetEntityActiveOverride_NoCallback(*this, bIsActiveOverride);
+				GetContainer()->SetEntityActiveOverride_NoObserver(*this, bIsActiveOverride);
 			}
 		}
 
-		void SetDisabledOverrideCount_NoCallback(uint32_t disabledOverrideCount) const
+		void SetDisabledOverrideCount_NoObserver(uint32_t disabledOverrideCount) const
 		{
 			if (IsValid())
 			{
-				GetContainer()->SetEntityDisabledOverrideCount_NoCallback(*this, disabledOverrideCount);
+				GetContainer()->SetEntityDisabledOverrideCount_NoObserver(*this, disabledOverrideCount);
 			}
 		}
 
-		void ResetDisabledOverrideCount_NoCallback() const
+		void ResetDisabledOverrideCount_NoObserver() const
 		{
 			if (IsValid())
 			{
-				GetContainer()->ResetDisabledOverrideCount_NoCallback(*this);
+				GetContainer()->ResetDisabledOverrideCount_NoObserver(*this);
 			}
 		}
 
