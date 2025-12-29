@@ -7,7 +7,7 @@ Libarry offers two versions of ecs solution:
 	*	all components have stable memory addreses
 	*	entities can be enabled and disabled
 	*	observers for entity and component **creation, destruction, enable and disable** callbacks can be specified
- 	*	offers separate methods for creating/destroying entities, adding/removing components without callbacks
+ 	*	offers separate methods for creating/destroying entities, adding/removing components without observers
  	*	**decs::Entity** which outlive parent **decs::Container** behaves empty or destroyed entity
 3.	Called "**Light**", available in **decs::light** namespace, where each archetype stores each component type in **std::vector**
    	*	components do not have stable memory addresses, and can be each type except **bool**
