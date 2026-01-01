@@ -132,7 +132,8 @@ namespace Light
 				PrintLine("Init from helepr create entity func!");
 			};
 
-			container.CreateEntities(componetns, tags, 10, initFunc);
+			container.CreateEntities(componetns, 10, initFunc);
+			container.CreateEntity(componetns, initFunc);
 		}
 
 		/*{

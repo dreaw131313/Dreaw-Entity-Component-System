@@ -76,7 +76,7 @@ namespace decs::light
 		EntityManager m_EntityManager{};
 
 	public:
-		Entity CreateEntity();
+		[[nodiscard]] Entity CreateEntity();
 
 		[[nodiscard]] inline uint32_t GetEntityCount() const
 		{
@@ -161,6 +161,18 @@ namespace decs::light
 			}
 		}
 
+		template<typename InitFunc, TLightComponentConcept... ComponentTypes>
+			requires light_query_callable<InitFunc, ComponentTypes...>
+		void CreateEntities(
+			const LightComponentTypeGroup<ComponentTypes...> components,
+			uint32_t entityCount,
+			InitFunc&& initFunc
+		)
+		{
+			constexpr const TagTypeGroup<> tags{};
+			CreateEntities(components, tags, entityCount, initFunc);
+		}
+
 		/// <summary>
 		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in LightComponentTypeGroup parameter.
 		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
@@ -176,7 +188,7 @@ namespace decs::light
 		/// <returns></returns>
 		template<typename InitFunc, TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
-		[[nodiscard]] Entity CreateEntity(
+		Entity CreateEntity(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
 			InitFunc&& initFunc
@@ -229,6 +241,16 @@ namespace decs::light
 			return Entity();
 		}
 
+		template<typename InitFunc, TLightComponentConcept... ComponentTypes>
+			requires light_query_callable<InitFunc, ComponentTypes...>
+		Entity CreateEntity(
+			const LightComponentTypeGroup<ComponentTypes...> components,
+			InitFunc&& initFunc
+		)
+		{
+			constexpr const TagTypeGroup<> tags{};
+			return CreateEntity(components, tags, initFunc);
+		}
 	private:
 		bool DestroyEntityInternal(const Entity& entity, bool bInvokeObservers);
 
