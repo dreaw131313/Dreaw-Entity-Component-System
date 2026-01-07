@@ -6,7 +6,11 @@ namespace decs
 {
 	Entity EntityComponent::GetEntity() const noexcept
 	{
-		return Entity(m_EntityData);
+		if (m_InternalData != nullptr)
+		{
+			return Entity(m_InternalData->m_EntityData);
+		}
+		return {};
 	}
 
 }

@@ -1,0 +1,486 @@
+#pragma once
+
+#include <memory>
+
+#include "decs/Core/Memory.h"
+#include "Component.h"
+
+namespace decs
+{
+	template<typename T>
+	struct TComponentChunkAllocation
+	{
+	public:
+		T* m_Resource = nullptr;
+		uint32_t m_Index = std::numeric_limits<uint32_t>::max();
+
+	public:
+		TComponentChunkAllocation() = default;
+
+		TComponentChunkAllocation(T* resource, uint32_t index):
+			m_Resource(resource), m_Index(index)
+		{
+
+		}
+
+		inline bool IsValid() const
+		{
+			return m_Resource != nullptr;
+		}
+	};
+
+	template<typename T>
+	class TComponentChunk
+	{
+	public:
+		using AllocationResult = TComponentChunkAllocation<T>;
+
+		template<typename T>
+		friend class TComponentAllocator;
+
+	private:
+		std::vector<uint32_t> m_FreeSpaces;
+
+		std::byte* m_MemoryBlock = nullptr;
+		uint64_t m_MemoryBlockSize = 0;
+		T* m_Components = nullptr;
+		InternalComponentData* m_InternalData = nullptr;
+
+		uint32_t m_Capacity = 0;
+
+		uint32_t m_CurrentAllocationOffset = 0;
+		uint32_t m_Size = 0;
+
+		uint32_t m_Index = std::numeric_limits<uint32_t>::max();
+		uint32_t m_IndexInFreeSpaces = std::numeric_limits<uint32_t>::max();
+		bool m_IsInFreeSpaces = false;
+
+	private:
+		TComponentChunk(uint32_t capacity):
+			m_Capacity(capacity > 0 ? capacity : 100)
+		{
+			constexpr uint64_t alignment = alignof(T) > alignof(InternalComponentData) ? alignof(T) : alignof(InternalComponentData);
+
+			const uint64_t componentsSize = m_Capacity * sizeof(T);
+			const uint64_t internalDataOffset = Memory::Align(componentsSize, alignof(InternalComponentData));
+			const uint64_t internalDataSize = m_Capacity * sizeof(InternalComponentData);
+
+			m_MemoryBlockSize = componentsSize + internalDataSize;
+
+			m_MemoryBlock = static_cast<std::byte*>(operator new(m_MemoryBlockSize, static_cast<std::align_val_t>(alignment)));
+
+			m_Components = reinterpret_cast<T*>(m_MemoryBlock);
+			m_InternalData = reinterpret_cast<InternalComponentData*>(m_MemoryBlock + componentsSize);
+
+			std::uninitialized_default_construct_n(m_InternalData, m_Capacity);
+		}
+
+		~TComponentChunk()
+		{
+			for (uint32_t i = 0; i < m_CurrentAllocationOffset; i++)
+			{
+				auto& internalData = m_InternalData[i];
+				if (internalData.m_bIsAllocated)
+				{
+					m_Components[i].~T();
+				}
+			}
+
+			std::destroy_n(m_InternalData, m_Capacity);
+
+			operator delete(m_MemoryBlock, m_MemoryBlockSize, static_cast<std::align_val_t>(alignof(T)));
+		}
+
+		uint32_t GetChunkIndex() const
+		{
+			return m_Index;
+		}
+
+		bool IsEmpty() const
+		{
+			return m_Size == 0;
+		}
+
+		bool IsFull() const
+		{
+			return m_Capacity == m_Size;
+		}
+
+		template<typename... Args>
+		AllocationResult Create(Args&&... args)
+		{
+			if (IsFull())
+			{
+				return {};
+			}
+
+			m_Size += 1;
+
+			if (m_FreeSpaces.size() > 0)
+			{
+				uint32_t freeSpaceIndex = m_FreeSpaces.back();
+				m_FreeSpaces.pop_back();
+
+				InternalComponentData& internalData = m_InternalData[freeSpaceIndex];
+				internalData.m_bIsAllocated = true;
+
+				T& componentRaw = m_Components[freeSpaceIndex];
+				T* componentPtr = new(&componentRaw)T(std::forward<Args>(args)...);
+
+				EntityComponent* baseCompPtr = componentPtr;
+				baseCompPtr->m_InternalData = &internalData;
+
+				return AllocationResult(componentPtr, freeSpaceIndex);
+			}
+
+			{
+				uint32_t allocationIndex = m_CurrentAllocationOffset;
+				m_CurrentAllocationOffset += 1;
+
+				InternalComponentData& internalData = m_InternalData[allocationIndex];
+				internalData.m_bIsAllocated = true;
+
+				T& componentRaw = m_Components[allocationIndex];
+				T* componentPtr = new(&componentRaw)T(std::forward<Args>(args)...);
+
+				EntityComponent* baseCompPtr = componentPtr;
+				baseCompPtr->m_InternalData = &internalData;
+
+				return AllocationResult(componentPtr, allocationIndex);
+			}
+		}
+
+		bool RemoveAt(uint32_t index, const T* value)
+		{
+			if (index >= m_Capacity)
+			{
+				return false;
+			}
+
+			InternalComponentData& internalData = m_InternalData[index];
+			T& component = m_Components[index];
+
+			if (internalData.m_bIsAllocated && (&component) == value)
+			{
+				m_Size -= 1;
+
+				if (IsEmpty())
+				{
+					m_FreeSpaces.clear();
+					m_CurrentAllocationOffset = 0;
+				}
+				else
+				{
+					const uint32_t allocationOffsetMinusOne = m_CurrentAllocationOffset - 1;
+
+					if (index == allocationOffsetMinusOne)
+					{
+						m_CurrentAllocationOffset = allocationOffsetMinusOne;
+					}
+					else
+					{
+						m_FreeSpaces.push_back(index);
+					}
+				}
+
+				internalData.Reset();
+				component.~T();
+
+				return true;
+			}
+
+			return false;
+		}
+	};
+
+	template<typename T>
+	struct TComponentAllocatorResourceRecord
+	{
+	public:
+		T* m_ComponentPtr = nullptr;
+		TComponentChunk<T>* m_Chunk = nullptr;
+		uint32_t m_IndexInChunk = std::numeric_limits<uint32_t>::max();
+	};
+
+	template<typename T>
+	class TComponentAllocator
+	{
+		static_assert(std::is_base_of_v<EntityComponent, T>, "T must derive from ::Try::ChunkAllocatorResource");
+
+		using ChunkType = TComponentChunk<T>;
+
+		using ResourceRecord = TComponentAllocatorResourceRecord<T>;
+		using ChunkAllocation = ChunkType::AllocationResult;
+
+	public:
+		TComponentAllocator()
+		{
+			m_ResourceRecords.reserve(m_ChunkCapacity);
+		}
+
+		TComponentAllocator(uint32_t chunkCapacity):
+			m_ChunkCapacity(chunkCapacity == 0 ? 1 : chunkCapacity)
+		{
+			m_ResourceRecords.reserve(m_ChunkCapacity);
+		}
+
+		~TComponentAllocator()
+		{
+			for (auto& chunk : m_Chunks)
+			{
+				if (chunk != nullptr)
+				{
+					delete chunk;
+				}
+			}
+		}
+
+		TComponentAllocator(const TComponentAllocator& other) = delete;
+		/*TAllocator(const TAllocator& other):
+		m_ChunkCapacity(other.m_ChunkCapacity)
+		{
+		for (auto otherChunk : other.m_Chunks)
+		{
+		m_Chunks.push_back(otherChunk->CreateCopy());
+		}
+
+		for (auto& otherChunk : other.m_ChunksWithFreeSpace)
+		{
+		m_ChunksWithFreeSpace.push_back(m_Chunks[otherChunk->m_Index]);
+		}
+
+		m_CurrentChunk = m_Chunks[other.m_CurrentChunk->m_Index];
+		}*/
+
+		TComponentAllocator(TComponentAllocator&& other) noexcept:
+			m_ChunkCapacity(other.m_ChunkCapacity)
+		{
+			m_Chunks = std::move(other.m_Chunks);
+			m_ChunksWithFreeSpace = std::move(other.m_ChunksWithFreeSpace);
+			m_ResourceRecords = std::move(other.m_ResourceRecords);
+			m_CurrentChunk = other.m_CurrentChunk;
+
+			other.m_Chunks.clear();
+			other.m_ChunksWithFreeSpace.clear();
+			m_ResourceRecords.clear();
+			other.m_CurrentChunk = nullptr;
+		}
+
+		TComponentAllocator& operator=(const TComponentAllocator& other) = delete;
+
+		TComponentAllocator& operator=(TComponentAllocator&& other) noexcept
+		{
+			Clear();
+
+			m_ChunkCapacity = other.m_ChunkCapacity;
+
+			m_Chunks = std::move(other.m_Chunks);
+			m_ChunksWithFreeSpace = std::move(other.m_ChunksWithFreeSpace);
+			m_ResourceRecords = std::move(other.m_ResourceRecords);
+			m_CurrentChunk = other.m_CurrentChunk;
+
+			other.m_Chunks.clear();
+			other.m_ChunksWithFreeSpace.clear();
+			m_ResourceRecords.clear();
+			other.m_CurrentChunk = nullptr;
+
+			return *this;
+		}
+
+		uint32_t GetChunkSize() const noexcept
+		{
+			return m_ChunkCapacity;
+		}
+
+		bool Contain(const T* value) const
+		{
+			if (value != nullptr)
+			{
+				const EntityComponent* r = static_cast<const EntityComponent*>(value);
+				const uint64_t indexInAllocator = r->GetIndexInAllocator();
+
+				return  indexInAllocator < m_ResourceRecords.size() && m_ResourceRecords[indexInAllocator].m_ComponentPtr == value;
+			}
+
+			return false;
+		}
+
+		template<typename... Args>
+		T* Create(Args&&... args)
+		{
+			ChunkType* chunk = GetCurrentChunk();
+			TComponentChunkAllocation<T> result = chunk->Create(std::forward<Args>(args)...);
+
+			if (chunk->IsFull())
+			{
+				RemoveChunkFromFreeSpaces(chunk);
+			}
+
+			EntityComponent* baseComponentPtr = result.m_Resource;
+			baseComponentPtr->SetIndexInAllocator(m_ResourceRecords.size());
+
+			m_ResourceRecords.push_back({ result.m_Resource, chunk, result.m_Index });
+
+			return result.m_Resource;
+		}
+
+		bool Destroy(const T* value)
+		{
+			if (value == nullptr)
+			{
+				return false;
+			}
+
+			const EntityComponent* baseComponentPtr = static_cast<const EntityComponent*>(value);
+			if (baseComponentPtr->m_InternalData == nullptr)
+			{
+				return false;
+			}
+			const uint64_t resourceIndexInAllocator = baseComponentPtr->GetIndexInAllocator();
+			const uint64_t recordCount = m_ResourceRecords.size();
+
+			if (resourceIndexInAllocator >= recordCount)
+			{
+				return false;
+			}
+
+			ResourceRecord resourceRecord = m_ResourceRecords[resourceIndexInAllocator];
+			if (resourceRecord.m_ComponentPtr != baseComponentPtr)
+			{
+				return false;
+			}
+
+			if (resourceIndexInAllocator < (recordCount - 1))
+			{
+				ResourceRecord& lastRecord = m_ResourceRecords.back();
+				static_cast<EntityComponent*>(lastRecord.m_ComponentPtr)->SetIndexInAllocator(resourceIndexInAllocator);
+				m_ResourceRecords[resourceIndexInAllocator] = lastRecord;
+			}
+			m_ResourceRecords.pop_back();
+
+			ChunkType* chunk = resourceRecord.m_Chunk;
+			const uint32_t indexInChunk = resourceRecord.m_IndexInChunk;
+
+			bool wasChunkFull = chunk->IsFull();
+			if (chunk->RemoveAt(indexInChunk, value))
+			{
+				if (chunk->IsEmpty())
+				{
+					RemoveChunk(chunk);
+				}
+				else
+				{
+					AddChunkToFreeSpaces(chunk);
+				}
+				return true;
+			}
+
+			return false;
+		}
+
+		void Clear()
+		{
+			for (auto& chunk : m_Chunks)
+			{
+				delete chunk;
+			}
+			m_CurrentChunk = nullptr;
+			m_Chunks.clear();
+			m_ChunksWithFreeSpace.clear();
+			m_ResourceRecords.clear();
+		}
+
+		template<typename TCallable>
+		void IterateOverResources(TCallable&& callable)
+		{
+			for (ResourceRecord& resourceRecord : m_ResourceRecords)
+			{
+				callable(*resourceRecord.m_ComponentPtr);
+			}
+		}
+
+	private:
+		std::vector<ChunkType*> m_Chunks;
+		std::vector<ChunkType*> m_ChunksWithFreeSpace;
+		std::vector<ResourceRecord> m_ResourceRecords{};
+		ChunkType* m_CurrentChunk = nullptr;
+		uint32_t m_ChunkCapacity = 100;
+
+	private:
+		inline ChunkType* GetCurrentChunk()
+		{
+			if (m_CurrentChunk == nullptr || m_CurrentChunk->IsFull())
+			{
+				if (m_ChunksWithFreeSpace.size() != 0)
+				{
+					m_CurrentChunk = m_ChunksWithFreeSpace[0];
+				}
+				else
+				{
+					m_CurrentChunk = CreateNewChunk();
+				}
+			}
+
+			return m_CurrentChunk;
+		}
+
+		ChunkType* CreateNewChunk()
+		{
+			ChunkType* newChunk = new ChunkType(m_ChunkCapacity);
+			newChunk->m_IsInFreeSpaces = true;
+			newChunk->m_IndexInFreeSpaces = static_cast<uint32_t>(m_ChunksWithFreeSpace.size());
+			newChunk->m_Index = static_cast<uint32_t>(m_Chunks.size());
+
+			m_Chunks.push_back(newChunk);
+			m_ChunksWithFreeSpace.push_back(newChunk);
+			return newChunk;
+		}
+
+		void RemoveChunk(ChunkType* chunk)
+		{
+			RemoveChunkFromFreeSpaces(chunk);
+
+			if (chunk != m_Chunks.back())
+			{
+				auto lastChunk = m_Chunks.back();
+				m_Chunks[chunk->m_Index] = lastChunk;
+				lastChunk->m_Index = chunk->m_Index;
+			}
+			m_Chunks.pop_back();
+
+			if (chunk == m_CurrentChunk)
+			{
+				m_CurrentChunk = nullptr;
+			}
+
+			delete chunk;
+		}
+
+		bool RemoveChunkFromFreeSpaces(ChunkType* chunk)
+		{
+			if (!chunk->m_IsInFreeSpaces) return false;
+
+			if (m_ChunksWithFreeSpace.back() != chunk)
+			{
+				m_ChunksWithFreeSpace.back()->m_IndexInFreeSpaces = chunk->m_IndexInFreeSpaces;
+				m_ChunksWithFreeSpace[chunk->m_IndexInFreeSpaces] = m_ChunksWithFreeSpace.back();
+			}
+			m_ChunksWithFreeSpace.pop_back();
+			chunk->m_IsInFreeSpaces = false;
+
+			return true;
+		}
+
+		bool AddChunkToFreeSpaces(ChunkType* chunk)
+		{
+			if (chunk->m_IsInFreeSpaces || chunk->IsFull()) return false;
+
+			chunk->m_IsInFreeSpaces = true;
+			chunk->m_IndexInFreeSpaces = static_cast<uint32_t>(m_ChunksWithFreeSpace.size());
+			m_ChunksWithFreeSpace.push_back(chunk);
+
+			return true;
+		}
+	};
+}
+

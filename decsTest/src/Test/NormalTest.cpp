@@ -168,7 +168,6 @@ namespace Normal
 				PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
 			};
 
-
 			if (true)
 			{
 				using QueryType = decs::Query< const TestComponent>;
