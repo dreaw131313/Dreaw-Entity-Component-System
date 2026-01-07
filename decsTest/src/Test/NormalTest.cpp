@@ -80,23 +80,27 @@ namespace Normal
 		{
 			component.GetEntity().AddComponent<Position>();
 
+			PrintLine("Observer Create");
 		}
 
 		// Inherited via DestroyComponentObserver
 		void OnDestroyComponent(TestComponent& component, const decs::Entity& entity) override
 		{
+			PrintLine("Observer Destroy");
 		}
 
 
 		// Inherited via EnableComponentObserver
 		void OnEnableComponent(TestComponent& component, const decs::Entity& entity) override
 		{
+			PrintLine("Observer enable");
 		}
 
 
 		// Inherited via DisableComponentObserver
 		void OnDisableComponent(TestComponent& component, const decs::Entity& entity) override
 		{
+			PrintLine("Observer Disable");
 		}
 	};
 
@@ -284,7 +288,12 @@ namespace Normal
 					}
 				}
 			}
+
+
+			container.InvokeEntitesOnDestroyListeners();
+
 		}
+
 	}
 
 	void Test::PerformanceTest()
