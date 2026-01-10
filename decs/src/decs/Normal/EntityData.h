@@ -53,11 +53,11 @@ namespace decs
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 
-		EntityVersion m_Version = 1;
+		EntityVersion m_Version = 1; // allways startes with 1 that entity with id 0 and version 1 not make combined id zero
 		/// <summary>
 		/// how many times disabled override was performed. Every disable override increments disable counter, and enable decrements. If counter is equal 0 means there is no disable overrides, and enabling override do not change counter value.
 		/// </summary>
-		uint32_t m_DisabledOverrideCount = 0; 
+		uint32_t m_DisabledOverrideCount = 0;
 
 		EEntityState m_State = EEntityState::Alive;
 
@@ -88,7 +88,10 @@ namespace decs
 			return m_Version;
 		}
 
-		inline EntityID GetID() const noexcept { return m_ID; }
+		inline EntityID GetID() const noexcept
+		{
+			return m_ID;
+		}
 
 		inline bool IsActive() const noexcept
 		{
