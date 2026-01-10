@@ -60,6 +60,18 @@ namespace decs
 			return this->m_EntityData == rhs.m_EntityData && this->m_Version == rhs.m_Version;
 		}
 
+		[[nodiscard]] inline std::size_t CalculateHash() const noexcept
+		{
+			if (IsValid())
+			{
+				uint64_t entityDataHash = std::hash<decs::EntityData*>{}(m_EntityData);
+				uint64_t entityVersionHash = std::hash<decs::EntityVersion>{}(m_Version);
+
+				return decs::hash::Combine(entityDataHash, entityVersionHash);
+			}
+			return 0ull;
+		}
+
 		[[nodiscard]] inline bool IsValid() const
 		{
 			return m_LifeTimeData.IsValid() && m_LifeTimeData->IsAlive() && m_EntityData != nullptr && m_EntityData->IsAliveWithVersion(m_Version);
@@ -86,6 +98,19 @@ namespace decs
 				return m_EntityData->GetID();
 			}
 			return std::numeric_limits< EntityID>::max();
+		}
+
+		/// <summary>
+		/// If entity is valid it 32 lower bits stores entity id, and upper 32 bits stores version of this entity
+		/// </summary>
+		/// <returns></returns>
+		[[nodiscard]] inline CombinedEntityID GetCombinedID() const noexcept
+		{
+			if (IsValid())
+			{
+				return static_cast<CombinedEntityID>(m_EntityData->GetID() & 0xFFFFFFFFull) | (static_cast<CombinedEntityID>(m_Version) << (sizeof(EntityID) * 8));
+			}
+			return 0;
 		}
 
 		[[nodiscard]] inline Container* GetContainer() const
@@ -489,6 +514,7 @@ namespace decs
 		{
 			return m_EntityData;
 		}
+
 	};
 
 	class ConstEntity final
@@ -648,10 +674,7 @@ struct std::hash<decs::Entity>
 {
 	std::size_t operator()(const decs::Entity& entity) const
 	{
-		uint64_t entityDataHash = std::hash<decs::EntityData*>{}(entity.m_EntityData);
-		uint64_t entityVersionHash = std::hash<decs::EntityVersion>{}(entity.GetVersion());
-
-		return decs::hash::Combine(entityDataHash, entityVersionHash);
+		return entity.CalculateHash();
 	}
 };
 
