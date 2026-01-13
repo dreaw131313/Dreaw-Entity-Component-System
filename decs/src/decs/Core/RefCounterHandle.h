@@ -33,7 +33,7 @@ namespace decs
 		}
 
 	private:
-		std::atomic<uint64_t> m_RefCounter{ 0 };
+		mutable std::atomic<uint64_t> m_RefCounter{ 0 };
 	};
 
 	template<typename TObject>
@@ -180,7 +180,7 @@ namespace decs
 	private:
 		void IncrementRefCount()
 		{
-			RefCountedObject* refCountedObject = m_Object;
+			const RefCountedObject* refCountedObject = m_Object;
 			if (refCountedObject != nullptr)
 			{
 				refCountedObject->m_RefCounter.fetch_add(1ull, std::memory_order_relaxed);
@@ -189,7 +189,7 @@ namespace decs
 
 		void DecrementRefCount()
 		{
-			RefCountedObject* refCountedObject = m_Object;
+			const RefCountedObject* refCountedObject = m_Object;
 			if (refCountedObject != nullptr && refCountedObject->m_RefCounter.fetch_sub(1ull, std::memory_order_acq_rel) == 1)
 			{
 				delete m_Object;
