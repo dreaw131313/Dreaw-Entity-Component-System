@@ -3,6 +3,7 @@
 #include "Core.h"
 
 #include <atomic>
+#include "check_cast.h"
 
 namespace decs
 {
@@ -48,13 +49,21 @@ namespace decs
 	public:
 		TRefCountHandle() = default;
 
-		TRefCountHandle(TObject* entityData):
-			m_Object(entityData)
+		TRefCountHandle(TObject* object):
+			m_Object(object)
 		{
 			IncrementRefCount();
 		}
 
 		TRefCountHandle(const TRefCountHandle& other):
+			m_Object(other.m_Object)
+		{
+			IncrementRefCount();
+		}
+
+		template<typename T>
+			requires(std::is_base_of_v<TObject, T>|| std::is_same_v<TObject, T>)
+		TRefCountHandle(const TRefCountHandle<T>& other):
 			m_Object(other.m_Object)
 		{
 			IncrementRefCount();
@@ -69,6 +78,16 @@ namespace decs
 		~TRefCountHandle()
 		{
 			DecrementRefCount();
+		}
+		template<typename T>
+			requires(std::is_base_of_v<TObject, T> || std::is_same_v<TObject, T>)
+		TRefCountHandle& operator = (const TRefCountHandle<T>& other)
+		{
+			if (&other != this)
+			{
+				OnCopy(other);
+			}
+			return *this;
 		}
 
 		TRefCountHandle& operator = (const TRefCountHandle& other)
@@ -132,8 +151,25 @@ namespace decs
 			DecrementRefCount();
 		}
 
+		template<typename T>
+		inline TRefCountHandle<T> CastDynamic() const noexcept
+		{
+			return TRefCountHandle<T>(dynamic_cast<T*>(m_Object));
+		}
+
+		/// <summary>
+		/// This method use ::Try::check_cast to cast to desired type (this cast assert in editor and debug builds if cast failed, in game build it works like static_cast)
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
+		template<typename T>
+		inline TRefCountHandle<T> Cast() const noexcept
+		{
+			return TRefCountHandle<T>(::decs::check_cast<T*>(m_Object));
+		}
+
 		template<typename...TArgs>
-		inline static TRefCountHandle<TObject> Make(TArgs&&...args)
+		inline static TRefCountHandle<TObject> Create(TArgs&&...args)
 		{
 			return TRefCountHandle<TObject>(new TObject(std::forward<TArgs>(args)...));
 		}

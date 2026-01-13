@@ -98,7 +98,7 @@ namespace decs
 
 	void Container::InitializeLifeTimeData()
 	{
-		m_LifeTimeData = TRefCountHandle<EnityLifeTimeData>::Make();
+		m_LifeTimeData = TRefCountHandle<EnityLifeTimeData>::Create();
 	}
 
 	void Container::DestroyLifeTimeData()
