@@ -14,10 +14,7 @@ namespace decs
 	public:
 		RefCountedObject() = default;
 
-		RefCountedObject(const RefCountedObject& other)
-		{
-
-		}
+		RefCountedObject(const RefCountedObject&) = delete;
 
 		RefCountedObject(RefCountedObject&& other) noexcept
 		{
@@ -26,10 +23,7 @@ namespace decs
 
 		virtual ~RefCountedObject() = default;
 
-		RefCountedObject& operator =(const RefCountedObject& other)
-		{
-			return *this;
-		}
+		RefCountedObject& operator =(const RefCountedObject& other) = delete;
 
 		RefCountedObject& operator =(RefCountedObject&& other) noexcept
 		{
@@ -54,14 +48,16 @@ namespace decs
 			IncrementRefCount();
 		}
 
-		TRefCounterHandle(const TRefCounterHandle& other)
+		TRefCounterHandle(const TRefCounterHandle& other):
+			m_Object(other.m_Object)
 		{
-			OnCopy(other);
+			IncrementRefCount();
 		}
 
-		TRefCounterHandle(TRefCounterHandle&& other) noexcept
+		TRefCounterHandle(TRefCounterHandle&& other) noexcept:
+			m_Object(other.m_Object)
 		{
-			OnMove(std::move(other));
+			other.m_Object = nullptr;
 		}
 
 		~TRefCounterHandle()
@@ -82,7 +78,10 @@ namespace decs
 		{
 			if (&other != this)
 			{
-				OnMove(std::move(other));
+				DecrementRefCount();
+
+				m_Object = other.m_Object;
+				other.m_Object = nullptr;
 			}
 			return *this;
 		}
@@ -147,15 +146,8 @@ namespace decs
 			if (refCountedObject != nullptr && refCountedObject->m_RefCounter.fetch_sub(1ull, std::memory_order_acq_rel) == 1)
 			{
 				delete m_Object;
-				m_Object = nullptr;
 			}
-		}
-
-		void OnMove(TRefCounterHandle&& other)
-		{
-			DecrementRefCount();
-			m_Object = other.m_Object;
-			other.m_Object = nullptr;
+			m_Object = nullptr;
 		}
 
 		void OnCopy(const TRefCounterHandle& other)
