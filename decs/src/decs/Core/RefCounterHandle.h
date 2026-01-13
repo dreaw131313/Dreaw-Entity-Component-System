@@ -8,7 +8,8 @@ namespace decs
 {
 	class RefCountedObject
 	{
-		template<typename>
+		template<typename TObject>
+			requires std::derived_from<TObject, RefCountedObject>
 		friend struct TRefCountHandle;
 
 	public:
@@ -35,9 +36,14 @@ namespace decs
 	};
 
 	template<typename TObject>
+		requires std::derived_from<TObject, RefCountedObject>
 	struct TRefCountHandle
 	{
 		static_assert(std::derived_from<TObject, RefCountedObject>, "TObject must derive from RefCountedObject");
+
+		template<typename TObject>
+			requires std::derived_from<TObject, RefCountedObject>
+		friend struct TRefCountHandle;
 
 	public:
 		TRefCountHandle() = default;
@@ -106,7 +112,12 @@ namespace decs
 			return *m_Object;
 		}
 
-		inline TObject* Get() const
+		inline operator bool() const noexcept
+		{
+			return IsValid();
+		}
+
+		inline TObject* Get() const noexcept
 		{
 			return m_Object;
 		}
@@ -158,4 +169,19 @@ namespace decs
 		}
 
 	};
+
+	template<typename TObject, typename...TArgs>
+	inline TRefCountHandle<TObject> MakeRefCounted(TArgs&&...args)
+	{
+		return TRefCountHandle<TObject>(new TObject(std::forward<TArgs>(args)...));
+	}
 }
+
+template<typename T>
+struct std::hash<::decs::TRefCountHandle<T>>
+{
+	std::size_t operator()(const ::decs::TRefCountHandle<T>& ref) const
+	{
+		return std::hash<T*>{}(ref.Get());
+	}
+};
