@@ -513,7 +513,7 @@ namespace decs
 		std::vector<ArchetypeContextType> m_ArchetypesContexts{};
 		ecsSet<const Archetype*> m_ContainedArchetypes{};
 		Container* m_Container = nullptr;
-		TRefCounterHandle<EnityLifeTimeData> m_LifeTimeData{};
+		TRefCountHandle<EnityLifeTimeData> m_LifeTimeData{};
 		uint64_t m_ArchetypesCountDirty = 0;
 		bool m_bIsEnabled = true;
 
