@@ -8,16 +8,14 @@ namespace decs
 {
 	class RefCountedObject
 	{
-		template<typename>
-		friend struct TRefCounterHandle;
+		template<typename TObject>
+			requires std::derived_from<TObject, RefCountedObject>
+		friend struct TRefCountHandle;
 
 	public:
 		RefCountedObject() = default;
 
-		RefCountedObject(const RefCountedObject& other)
-		{
-
-		}
+		RefCountedObject(const RefCountedObject&) = delete;
 
 		RefCountedObject(RefCountedObject&& other) noexcept
 		{
@@ -26,10 +24,7 @@ namespace decs
 
 		virtual ~RefCountedObject() = default;
 
-		RefCountedObject& operator =(const RefCountedObject& other)
-		{
-			return *this;
-		}
+		RefCountedObject& operator =(const RefCountedObject& other) = delete;
 
 		RefCountedObject& operator =(RefCountedObject&& other) noexcept
 		{
@@ -41,35 +36,42 @@ namespace decs
 	};
 
 	template<typename TObject>
-	struct TRefCounterHandle
+		requires std::derived_from<TObject, RefCountedObject>
+	struct TRefCountHandle
 	{
 		static_assert(std::derived_from<TObject, RefCountedObject>, "TObject must derive from RefCountedObject");
 
-	public:
-		TRefCounterHandle() = default;
+		template<typename TObject>
+			requires std::derived_from<TObject, RefCountedObject>
+		friend struct TRefCountHandle;
 
-		TRefCounterHandle(TObject* entityData):
+	public:
+		TRefCountHandle() = default;
+
+		TRefCountHandle(TObject* entityData):
 			m_Object(entityData)
 		{
 			IncrementRefCount();
 		}
 
-		TRefCounterHandle(const TRefCounterHandle& other)
+		TRefCountHandle(const TRefCountHandle& other):
+			m_Object(other.m_Object)
 		{
-			OnCopy(other);
+			IncrementRefCount();
 		}
 
-		TRefCounterHandle(TRefCounterHandle&& other) noexcept
+		TRefCountHandle(TRefCountHandle&& other) noexcept:
+			m_Object(other.m_Object)
 		{
-			OnMove(std::move(other));
+			other.m_Object = nullptr;
 		}
 
-		~TRefCounterHandle()
+		~TRefCountHandle()
 		{
 			DecrementRefCount();
 		}
 
-		TRefCounterHandle& operator = (const TRefCounterHandle& other)
+		TRefCountHandle& operator = (const TRefCountHandle& other)
 		{
 			if (&other != this)
 			{
@@ -78,21 +80,24 @@ namespace decs
 			return *this;
 		}
 
-		TRefCounterHandle& operator=(TRefCounterHandle&& other) noexcept
+		TRefCountHandle& operator=(TRefCountHandle&& other) noexcept
 		{
 			if (&other != this)
 			{
-				OnMove(std::move(other));
+				DecrementRefCount();
+
+				m_Object = other.m_Object;
+				other.m_Object = nullptr;
 			}
 			return *this;
 		}
 
-		bool operator==(const TRefCounterHandle& rhs)const
+		bool operator==(const TRefCountHandle& rhs)const
 		{
 			return this->m_Object == rhs.m_Object;
 		}
 
-		bool operator!=(const TRefCounterHandle& rhs) const noexcept
+		bool operator!=(const TRefCountHandle& rhs) const noexcept
 		{
 			return m_Object != rhs.m_Object;
 		}
@@ -107,7 +112,12 @@ namespace decs
 			return *m_Object;
 		}
 
-		inline TObject* Get() const
+		inline operator bool() const noexcept
+		{
+			return IsValid();
+		}
+
+		inline TObject* Get() const noexcept
 		{
 			return m_Object;
 		}
@@ -123,9 +133,9 @@ namespace decs
 		}
 
 		template<typename...TArgs>
-		inline static TRefCounterHandle<TObject> Make(TArgs&&...args)
+		inline static TRefCountHandle<TObject> Make(TArgs&&...args)
 		{
-			return TRefCounterHandle<TObject>(new TObject(std::forward<TArgs>(args)...));
+			return TRefCountHandle<TObject>(new TObject(std::forward<TArgs>(args)...));
 		}
 
 	private:
@@ -147,18 +157,11 @@ namespace decs
 			if (refCountedObject != nullptr && refCountedObject->m_RefCounter.fetch_sub(1ull, std::memory_order_acq_rel) == 1)
 			{
 				delete m_Object;
-				m_Object = nullptr;
 			}
+			m_Object = nullptr;
 		}
 
-		void OnMove(TRefCounterHandle&& other)
-		{
-			DecrementRefCount();
-			m_Object = other.m_Object;
-			other.m_Object = nullptr;
-		}
-
-		void OnCopy(const TRefCounterHandle& other)
+		void OnCopy(const TRefCountHandle& other)
 		{
 			DecrementRefCount();
 			m_Object = other.m_Object;
@@ -166,4 +169,19 @@ namespace decs
 		}
 
 	};
+
+	template<typename TObject, typename...TArgs>
+	inline TRefCountHandle<TObject> MakeRefCounted(TArgs&&...args)
+	{
+		return TRefCountHandle<TObject>(new TObject(std::forward<TArgs>(args)...));
+	}
 }
+
+template<typename T>
+struct std::hash<::decs::TRefCountHandle<T>>
+{
+	std::size_t operator()(const ::decs::TRefCountHandle<T>& ref) const
+	{
+		return std::hash<T*>{}(ref.Get());
+	}
+};

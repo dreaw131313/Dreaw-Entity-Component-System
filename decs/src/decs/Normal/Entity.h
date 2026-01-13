@@ -476,7 +476,7 @@ namespace decs
 	#pragma endregion
 
 	private:
-		TRefCounterHandle<EnityLifeTimeData> m_LifeTimeData{};
+		TRefCountHandle<EnityLifeTimeData> m_LifeTimeData{};
 		mutable EntityData* m_EntityData = nullptr;
 		mutable EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
 
@@ -500,7 +500,7 @@ namespace decs
 			m_Version = m_EntityData->GetVersion();
 		}
 
-		inline void SetLifeTimeData_Internal(const TRefCounterHandle<EnityLifeTimeData>& lifeTimeData)
+		inline void SetLifeTimeData_Internal(const TRefCountHandle<EnityLifeTimeData>& lifeTimeData)
 		{
 			m_LifeTimeData = lifeTimeData;
 		}
