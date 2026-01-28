@@ -162,7 +162,13 @@ namespace decs
 
 		inline uint64_t GetEntityCount() const
 		{
-			return m_Archetype->EntityCount();
+			if constexpr (sizeof...(ComponentsTypes) == 0)
+			{
+				return 0;
+			}
+
+			return std::get<0>(m_ContainersTuple)->Size();
+			//return m_Archetype->EntityCount();
 		}
 
 		inline const ContainersTuple& GetContainersTuple() const noexcept

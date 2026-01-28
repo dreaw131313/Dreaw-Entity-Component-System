@@ -1,6 +1,8 @@
 #pragma once
 #include "Core.h"
 
+#include <source_location>
+
 namespace decs
 {
 	// FNV-1a 32bit hashing algorithm.
@@ -47,6 +49,12 @@ namespace decs
 				constexpr auto id = c_string_hash_32(FULL_FUNCTION_NAME);
 				return id;
 			}
+
+			static constexpr TypeID ID_2()
+			{
+				constexpr auto id = c_string_hash_32(std::source_location::function_name());
+				return id;
+			}
 		};
 
 		template<typename T>
@@ -58,8 +66,15 @@ namespace decs
 				constexpr auto id = c_string_hash_64(FULL_FUNCTION_NAME);
 				return id;
 			}
+
+			static constexpr TypeID ID_2()
+			{
+				constexpr auto id = c_string_hash_64(std::source_location::current().function_name());
+				return id;
+			}
 		};
 	}
+
 	template<typename T>
 	class Type
 	{
@@ -70,6 +85,11 @@ namespace decs
 		{
 			return Type_Base<T, TypeID>::ID();
 		}
+		inline static consteval TypeID ID_2()
+		{
+			return Type_Base<T, TypeID>::ID_2();
+		}
+
 	#else
 		static TypeID ID()
 		{
