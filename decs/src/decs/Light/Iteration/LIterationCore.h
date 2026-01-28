@@ -643,13 +643,10 @@ namespace decs::light
 
 			for (uint64_t i = filter.GetMinComponentsCount(); i <= maxComponentCountsInGroup; i++)
 			{
-				auto archetypesToCheckPtr = group->GetArchetypesWithTypeCount(i);
-				if (archetypesToCheckPtr != nullptr)
+				std::span<Archetype*> archetypes = group->GetArchetypesWithTypeCount(i);
+				for (auto archetype : archetypes)
 				{
-					for (auto archetype : *archetypesToCheckPtr)
-					{
-						TryAddArchetypeFromGroup(*archetype, filter);
-					}
+					TryAddArchetypeFromGroup(*archetype, filter);
 				}
 			}
 		}

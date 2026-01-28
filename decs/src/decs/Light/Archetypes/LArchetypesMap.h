@@ -129,19 +129,19 @@ namespace decs::light
 			archetypeGroup->Archetypes.push_back(archetype);
 		}
 
-		const std::vector<Archetype*>* GetArchetypesWithTypeCount(uint64_t componentsCount) const
+		std::span<Archetype*> GetArchetypesWithTypeCount(uint64_t componentsCount) const
 		{
 			uint64_t groupIndex = componentsCount - 1;
 			if (groupIndex >= m_Groups.size())
 			{
-				return nullptr;
+				return {};
 			}
 			auto group = m_Groups[groupIndex];
 			if (group == nullptr)
 			{
-				return nullptr;
+				return {};
 			}
-			return &group->Archetypes;
+			return group->Archetypes;
 		}
 
 		const ArchetypeGroup* GetGroupWithTypeCount(uint64_t componentsCount) const
