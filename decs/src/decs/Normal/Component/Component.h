@@ -1,7 +1,6 @@
 #pragma once
 #include "decs/Core/Core.h"
 #include "decs/Core/trait.h"
-#include "decs/Core/ChunkAllocator.h"
 #include "decs/Core/Type.h"
 
 
@@ -87,7 +86,32 @@ namespace decs
 	template<typename TComponentType>
 	class StableComponentContainer;
 
-	class EntityComponent : public ChunkAllocatorResource
+
+	class InternalComponentData
+	{
+		template<typename T>
+		friend class TComponentChunk;
+		friend class EntityComponent;
+
+	private:
+		uint64_t m_IndexInAllocator = std::numeric_limits<uint32_t>::max();
+		EntityData* m_EntityData = nullptr;
+		EntityComponentFlags m_Flags = {};
+		uint16_t m_DependencyCount = 0;
+		bool m_bIsAllocated = false;
+
+	private:
+		void Reset()
+		{
+			m_IndexInAllocator = std::numeric_limits<uint32_t>::max();
+			m_EntityData = nullptr;
+			m_Flags = {};
+			m_bIsAllocated = false;
+			m_DependencyCount = 0;
+		}
+	};
+
+	class EntityComponent
 	{
 		friend class Container;
 		template<typename>
@@ -101,34 +125,31 @@ namespace decs
 		template<typename TComponentType>
 		friend class StableComponentContainer;
 
+		template<typename T>
+		friend class TComponentChunk;
+		template<typename T>
+		friend class TComponentAllocator;
+
 	public:
 		EntityComponent() = default;
 
-		EntityComponent(const EntityComponent& other):
-			ChunkAllocatorResource(other)
+		EntityComponent(const EntityComponent& other)
 		{
 
 		}
 
-		EntityComponent(EntityComponent&& other) noexcept:
-			ChunkAllocatorResource(std::move(other))
+		EntityComponent(EntityComponent&& other) noexcept
 		{
 
 		}
 
 		EntityComponent& operator =(const EntityComponent& other)
 		{
-			ChunkAllocatorResource::operator=(other);
 			return *this;
 		}
 
 		EntityComponent& operator=(EntityComponent&& other) noexcept
 		{
-			if (this != &other)
-			{
-				ChunkAllocatorResource::operator=(std::move(other));
-			}
-
 			return *this;
 		}
 
@@ -138,74 +159,138 @@ namespace decs
 
 		inline bool IsCreatedByECS() const noexcept
 		{
-			return m_Flags.IsCreated();
+			if (m_InternalData == nullptr)
+			{
+				return false;
+			}
+			return m_InternalData->m_Flags.IsCreated();
 		}
 
 		inline bool IsEnabledByECS() const noexcept
 		{
-			return m_Flags.IsEnabled();
+			if (m_InternalData == nullptr)
+			{
+				return false;
+			}
+			return m_InternalData->m_Flags.IsEnabled();
 		}
 
 		inline uint16_t GetDependecyCount() const
 		{
-			return m_DependencyCount;
+			if (m_InternalData == nullptr)
+			{
+				return 0;
+			}
+			return m_InternalData->m_DependencyCount;
 		}
 
 		inline void AddDependency(uint16_t dependecyCount = 1)
 		{
-			m_DependencyCount += dependecyCount;
+			if (m_InternalData != nullptr)
+			{
+				m_InternalData->m_DependencyCount++;
+			}
 		}
 
 		inline void RemoveDependecy(uint16_t dependecyCount = 1)
 		{
-			if (dependecyCount > m_DependencyCount)
+			if (m_InternalData != nullptr)
 			{
-				m_DependencyCount = 0;
-			}
-			else
-			{
-				m_DependencyCount -= dependecyCount;
+				if (dependecyCount > m_InternalData->m_DependencyCount)
+				{
+					m_InternalData->m_DependencyCount = 0;
+				}
+				else
+				{
+					m_InternalData->m_DependencyCount -= dependecyCount;
+				}
 			}
 		}
 
 	protected:
 		inline void SetInternalFlag(uint8_t flagIndex, bool bValue)
 		{
-			m_Flags.SetBit(flagIndex, bValue);
+			if (m_InternalData == nullptr)
+			{
+				return;
+			}
+			m_InternalData->m_Flags.SetBit(flagIndex, bValue);
 		}
 
 		inline bool GetInternalFlag(uint8_t flagIndex) const noexcept
 		{
-			return m_Flags.GetBit(flagIndex);
+			if (m_InternalData == nullptr)
+			{
+				return false;
+			}
+			return m_InternalData->m_Flags.GetBit(flagIndex);
 		}
 
 	private:
-		EntityData* m_EntityData = nullptr;
-		EntityComponentFlags m_Flags{};
-		uint16_t m_DependencyCount = 0;
+		InternalComponentData* m_InternalData = nullptr;
 
 	private:
+		uint64_t GetIndexInAllocator() const
+		{
+			if (m_InternalData == nullptr)
+			{
+				return std::numeric_limits<uint64_t>::max();
+			}
+			return m_InternalData->m_IndexInAllocator;
+		}
+
+		bool SetIndexInAllocator(uint64_t index)
+		{
+			if (m_InternalData != nullptr)
+			{
+				m_InternalData->m_IndexInAllocator = index;
+				return true;
+			}
+			return false;
+		}
+
+		bool SetEntityData(EntityData* entityData)
+		{
+			if (m_InternalData != nullptr)
+			{
+				m_InternalData->m_EntityData = entityData;
+				return true;
+			}
+			return false;
+		}
+
 		inline void OnPreCreate(EntityData* entitydata)
 		{
-			m_EntityData = entitydata;
+			if (m_InternalData != nullptr)
+			{
+				m_InternalData->m_EntityData = entitydata;
+			}
 		}
 
 		inline void SetFlags(bool bIsCreated, bool bIsEnabled)
 		{
-			m_Flags.SetCreated(bIsCreated);
-			m_Flags.SetEnabled(bIsEnabled);
+			if (m_InternalData != nullptr)
+			{
+				m_InternalData->m_Flags.SetCreated(bIsCreated);
+				m_InternalData->m_Flags.SetEnabled(bIsEnabled);
+			}
 		}
 
 		inline void SetCreated(bool bIsCreated)
 		{
-			m_Flags.SetCreated(bIsCreated);
+			if (m_InternalData != nullptr)
+			{
+				m_InternalData->m_Flags.SetCreated(bIsCreated);
+			}
 		}
 
 		inline void SetEnabled(bool bIsEnabled)
 		{
-			m_Flags.SetEnabled(bIsEnabled);
+			if (m_InternalData != nullptr)
+			{
+				m_InternalData->m_Flags.SetEnabled(bIsEnabled);
+			}
 		}
-
 
 	};
 

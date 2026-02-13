@@ -1,10 +1,10 @@
 #pragma once
 #include "decs/Core/Core.h"
-#include "decs/Core/TChunkedVector.h"
 #include "decs/Core/Type.h"
 #include "decs/Core/check_cast.h"
 
 #include "Component.h"
+#include "ComponentAllocator.h"
 
 namespace decs
 {
@@ -83,6 +83,6 @@ namespace decs
 		}
 
 	private:
-		TChunkAllocator<TComponentType> m_Allocator{};
+		TComponentAllocator<TComponentType> m_Allocator{};
 	};
 }
