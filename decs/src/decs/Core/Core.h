@@ -23,7 +23,7 @@
 #endif
 
 #ifdef DECS_DEBUG
-#define DECS_ASSERT(condition, message) assert(condition && message)
+#define DECS_ASSERT(condition, message) assert((condition) && message)
 #else
 #define DECS_ASSERT(condition, message)
 #endif // DECS_DEBUG
@@ -73,21 +73,5 @@ namespace decs
 	{
 	public:
 		NonCopyableNonMoveable() = default;
-
 	};
-
 }
-
-
-/// About entity and component callbacks:
-/// Entity callbacks:
-///		Create:
-///		Destroy:
-///		Enable:
-///		Disable
-/// Component callbacks
-///	In component create, enable and disable callback the same component cant be removed!
-///		Create:
-///		Destroy:
-///		Enable:
-///		Disable
