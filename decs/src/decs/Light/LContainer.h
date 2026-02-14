@@ -14,8 +14,7 @@ namespace decs::light
 		uint64_t ArchetypeChunkSize = 1000;
 	};
 
-	class Container :
-		public NonCopyableNonMoveable
+	class Container final : private NonCopyableNonMoveable
 	{
 		template<TLightComponentConcept ...Types>
 		friend class light::Query;

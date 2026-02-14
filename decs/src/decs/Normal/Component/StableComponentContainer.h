@@ -26,8 +26,8 @@ namespace decs
 
 	template<typename TComponentType>
 	class StableComponentContainer : 
-		public NonCopyableNonMoveable,
-		public IStableComponentContainer
+		public IStableComponentContainer,
+		private NonCopyableNonMoveable
 	{
 	public:
 		StableComponentContainer()

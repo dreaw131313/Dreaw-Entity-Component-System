@@ -23,7 +23,7 @@ namespace decs
 		uint64_t ArchetypeChunkSize = 1000;
 	};
 
-	class Container final : public NonCopyableNonMoveable
+	class Container final : private NonCopyableNonMoveable
 	{
 		template<TComponentConcept ...Types>
 		friend class Query;

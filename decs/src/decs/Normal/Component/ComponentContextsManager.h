@@ -13,7 +13,7 @@ namespace decs
 		int m_Order = 0;
 	};
 
-	class ComponentContextsManager final : public NonCopyableNonMoveable
+	class ComponentContextsManager final : private NonCopyableNonMoveable
 	{
 		friend class Container;
 		friend class ArchetypesMap;

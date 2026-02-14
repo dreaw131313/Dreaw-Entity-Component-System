@@ -48,30 +48,35 @@ namespace decs
 		inline constexpr EntityVersion MaxVersion = std::numeric_limits<uint32_t>::max();
 	}
 
-
 	class NonCopyable
 	{
+	protected:
+		~NonCopyable() = default;
 	public:
 		NonCopyable() = default;
-
 		NonCopyable(const NonCopyable&) = delete;
 		NonCopyable& operator=(const NonCopyable&) = delete;
 	};
 
 	class NonMoveable
 	{
+	protected:
+		~NonMoveable() = default;
 	public:
 		NonMoveable() = default;
-
 		NonMoveable(NonMoveable&&) noexcept = delete;
 		NonMoveable& operator=(NonMoveable&&) noexcept = delete;
 	};
 
-	class NonCopyableNonMoveable :
-		public NonCopyable,
-		public NonMoveable
+	class NonCopyableNonMoveable
 	{
+	protected:
+		~NonCopyableNonMoveable() = default;
 	public:
 		NonCopyableNonMoveable() = default;
+		NonCopyableNonMoveable(const NonCopyableNonMoveable&) = delete;
+		NonCopyableNonMoveable& operator=(const NonCopyableNonMoveable&) = delete;
+		NonCopyableNonMoveable(NonCopyableNonMoveable&&) noexcept = delete;
+		NonCopyableNonMoveable& operator=(NonCopyableNonMoveable&&) noexcept = delete;
 	};
 }
