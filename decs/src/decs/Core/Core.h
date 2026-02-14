@@ -15,27 +15,12 @@
 #include <cassert>
 #endif
 
-#if defined _MSC_VER
-#   define FULL_FUNCTION_NAME __FUNCSIG__
-#elif defined __clang__ || (defined __GNUC__)
-#   define FULL_FUNCTION_NAME __PRETTY_FUNCTION__
-#endif
-
 #define USE_CONSTEXPR_TYPE_ID
 #ifdef USE_CONSTEXPR_TYPE_ID
 #define TYPE_ID_CONSTEXPR constexpr
 #else
 #define TYPE_ID_CONSTEXPR
 #endif
-
-
-#define NON_COPYABLE(className)						\
-className(const className&) = delete;				\
-className& operator=(const className&) = delete;	\
-
-#define NON_MOVEABLE(className)				\
-className(className&&) = delete;			\
-className& operator=(className&&) = delete;	\
 
 #ifdef DECS_DEBUG
 #define DECS_ASSERT(condition, message) assert(condition && message)
@@ -62,6 +47,34 @@ namespace decs
 		inline constexpr uint64_t MinComponentsInArchetypeToPerformMapLookup = 20;
 		inline constexpr EntityVersion MaxVersion = std::numeric_limits<uint32_t>::max();
 	}
+
+
+	class NonCopyable
+	{
+	public:
+		NonCopyable() = default;
+
+		NonCopyable(const NonCopyable&) = delete;
+		NonCopyable& operator=(const NonCopyable&) = delete;
+	};
+
+	class NonMoveable
+	{
+	public:
+		NonMoveable() = default;
+
+		NonMoveable(NonMoveable&&) noexcept = delete;
+		NonMoveable& operator=(NonMoveable&&) noexcept = delete;
+	};
+
+	class NonCopyableNonMoveable :
+		public NonCopyable,
+		public NonMoveable
+	{
+	public:
+		NonCopyableNonMoveable() = default;
+
+	};
 
 }
 

@@ -17,12 +17,11 @@ namespace decs
 	/// <summary>
 	/// Helper class which allows simple flag change to set all entities as dead
 	/// </summary>
-	struct EnityLifeTimeData : public RefCountedObject
+	struct EnityLifeTimeData : 
+		public RefCountedObject,
+		public NonCopyableNonMoveable
 	{
 		friend class Container;
-
-		NON_MOVEABLE(EnityLifeTimeData);
-		NON_COPYABLE(EnityLifeTimeData);
 
 	public:
 		EnityLifeTimeData() = default;

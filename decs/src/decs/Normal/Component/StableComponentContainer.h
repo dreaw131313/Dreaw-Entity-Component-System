@@ -25,12 +25,10 @@ namespace decs
 	};
 
 	template<typename TComponentType>
-	class StableComponentContainer : public IStableComponentContainer
+	class StableComponentContainer : 
+		public NonCopyableNonMoveable,
+		public IStableComponentContainer
 	{
-	private:
-		NON_COPYABLE(StableComponentContainer);
-		NON_MOVEABLE(StableComponentContainer);
-
 	public:
 		StableComponentContainer()
 		{

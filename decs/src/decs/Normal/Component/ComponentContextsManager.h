@@ -13,14 +13,11 @@ namespace decs
 		int m_Order = 0;
 	};
 
-	class ComponentContextsManager final
+	class ComponentContextsManager final : public NonCopyableNonMoveable
 	{
 		friend class Container;
 		friend class ArchetypesMap;
 	public:
-		NON_COPYABLE(ComponentContextsManager);
-		NON_MOVEABLE(ComponentContextsManager);
-
 		ComponentContextsManager(uint32_t defaultStableComponentChunkSize) :
 			m_DefaultStableComponentChunkSize(defaultStableComponentChunkSize)
 		{

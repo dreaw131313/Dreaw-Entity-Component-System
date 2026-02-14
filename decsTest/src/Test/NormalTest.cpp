@@ -112,9 +112,6 @@ namespace Normal
 		using BoolTag = decs::tag<bool>;
 
 
-		std::cout << decs::Type<DoubleTag>::ID() << " == " << decs::Type<DoubleTag>::ID_2() << "\n";
-		std::cout << decs::Type<IntTag>::ID() << " == " << decs::Type<IntTag>::ID_2() << "\n";
-
 		TestComponetObserver testComponentObserver = {};
 
 		decs::ObserversManager observerManager = {};

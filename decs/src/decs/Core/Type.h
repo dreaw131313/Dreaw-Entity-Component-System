@@ -46,12 +46,6 @@ namespace decs
 		public:
 			static constexpr TypeID ID()
 			{
-				constexpr auto id = c_string_hash_32(FULL_FUNCTION_NAME);
-				return id;
-			}
-
-			static constexpr TypeID ID_2()
-			{
 				constexpr auto id = c_string_hash_32(std::source_location::function_name());
 				return id;
 			}
@@ -63,15 +57,10 @@ namespace decs
 		public:
 			static constexpr TypeID ID()
 			{
-				constexpr auto id = c_string_hash_64(FULL_FUNCTION_NAME);
-				return id;
-			}
-
-			static constexpr TypeID ID_2()
-			{
 				constexpr auto id = c_string_hash_64(std::source_location::current().function_name());
 				return id;
 			}
+
 		};
 	}
 
@@ -84,10 +73,6 @@ namespace decs
 		inline static consteval TypeID ID()
 		{
 			return Type_Base<T, TypeID>::ID();
-		}
-		inline static consteval TypeID ID_2()
-		{
-			return Type_Base<T, TypeID>::ID_2();
 		}
 
 	#else

@@ -23,7 +23,7 @@ namespace decs
 		uint64_t ArchetypeChunkSize = 1000;
 	};
 
-	class Container
+	class Container final : public NonCopyableNonMoveable
 	{
 		template<TComponentConcept ...Types>
 		friend class Query;
@@ -36,9 +36,6 @@ namespace decs
 		friend class ContainerSerializer;
 		friend class ContainerSerializerComplex;
 		friend class ContainerIterator;
-
-		NON_COPYABLE(Container);
-		NON_MOVEABLE(Container);
 
 	private:
 		static constexpr uint64_t m_DefaultEntitiesChunkSize = 1000;

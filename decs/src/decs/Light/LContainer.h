@@ -14,7 +14,8 @@ namespace decs::light
 		uint64_t ArchetypeChunkSize = 1000;
 	};
 
-	class Container
+	class Container :
+		public NonCopyableNonMoveable
 	{
 		template<TLightComponentConcept ...Types>
 		friend class light::Query;
@@ -24,9 +25,6 @@ namespace decs::light
 		friend class light::IterationContainerContext;
 		friend class light::Entity;
 		friend class light::ContainerIterator;
-
-		NON_COPYABLE(Container);
-		NON_MOVEABLE(Container);
 
 	private:
 		static constexpr uint64_t m_DefaultEntitiesChunkSize = 1000;
