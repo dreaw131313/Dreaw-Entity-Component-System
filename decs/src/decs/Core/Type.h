@@ -29,7 +29,6 @@ namespace decs
 			constexpr auto id = hash::c_string_hash_64(std::source_location::current().function_name());
 			return id;
 		}
-
 	};
 
 	template<typename T>
