@@ -15,9 +15,6 @@ namespace decs
 		template<TComponentConcept ...>
 		friend class MultiQuery;
 		friend class Container;
-		template<typename TComponent>
-		friend class ComponentRef;
-		friend class ComponentBaseRef;
 		template<typename>
 		friend class ContainerSerializer;
 		friend class ContainerSerializerComplex;
@@ -524,9 +521,6 @@ namespace decs
 		template<TComponentConcept...>
 		friend class MultiQuery;
 		friend class Container;
-		template<typename TComponent>
-		friend class ComponentRef;
-		friend class ComponentBaseRef;
 		template<typename>
 		friend class ContainerSerializer;
 		friend class ContainerSerializerComplex;
