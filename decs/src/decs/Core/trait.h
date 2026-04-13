@@ -70,6 +70,7 @@ namespace decs
 	template<typename T>
 	using drop_const_t = drop_const<T>::Type;
 
+	class Archetype;
 	class Entity;
 	namespace light
 	{
@@ -104,6 +105,12 @@ namespace decs
 	template<typename TCallable, typename... TComponentTypes>
 	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes...> 
 		|| std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes&...>;
+
+	template<typename Func>
+	concept container_iterator_entity_func = std::is_invocable_v<Func, const Entity&>;
+
+	template<typename Func>
+	concept container_iterator_archetype_func = std::is_invocable_v<Func, const Archetype*>;
 
 	template<typename T>
 	concept TLightComponentConcept = !std::is_same_v<T, bool> && !is_tag_v<T>;
