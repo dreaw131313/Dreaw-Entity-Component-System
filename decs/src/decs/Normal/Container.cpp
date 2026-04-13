@@ -699,12 +699,26 @@ namespace decs
 		compCtx.InvokeOnDestroyComponent(&comp, e);
 	}
 
-	EntityComponent* Container::GetComponentAtIndex(EntityData& entityData, uint32_t componentIndex)
+	EntityComponent* Container::GetComponentAtIndex_ObserversOrder(EntityData& entityData, uint32_t componentIndex)
 	{
 		if (entityData.IsAlive() && entityData.m_Archetype != nullptr && componentIndex < entityData.m_Archetype->GetComponentOnlyCount())
 		{
 			auto& orderData = entityData.m_Archetype->m_ComponentContextsInOrder[componentIndex];
 			auto& typeData = entityData.m_Archetype->m_TypeData[orderData.m_ComponentIndex];
+			if (typeData.IsTag())
+			{
+				return nullptr;
+			}
+			return typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
+		}
+		return nullptr;
+	}
+
+	EntityComponent* Container::GetComponentAtIndex_TypeIDOrder(EntityData& entityData, uint32_t componentIndex)
+	{
+		if (entityData.IsAlive() && entityData.m_Archetype != nullptr && componentIndex < entityData.m_Archetype->GetComponentAndTagCount())
+		{
+			auto& typeData = entityData.m_Archetype->m_TypeData[componentIndex];
 			if (typeData.IsTag())
 			{
 				return nullptr;

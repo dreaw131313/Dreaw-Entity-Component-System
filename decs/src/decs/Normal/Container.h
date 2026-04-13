@@ -610,7 +610,15 @@ namespace decs
 		/// <param name="entityData"></param>
 		/// <param name="componentIndex"></param>
 		/// <returns>Component in order of observeres</returns>
-		EntityComponent* GetComponentAtIndex(EntityData& entityData, uint32_t componentIndex);
+		EntityComponent* GetComponentAtIndex_ObserversOrder(EntityData& entityData, uint32_t componentIndex);
+
+		/// <summary>
+		/// Gets component by index in order of typeID. Uses std::vector where component and tags records data are placed. It can return nullptr if componentIndex is greater than component and tag count in archetype or where index points to tag instead of component.
+		/// </summary>
+		/// <param name="entityData"></param>
+		/// <param name="componentIndex"></param>
+		/// <returns></returns>
+		EntityComponent* GetComponentAtIndex_TypeIDOrder(EntityData& entityData, uint32_t componentIndex);
 
 		template<TComponentConcept TComponent>
 		TComponent* GetComponentDynamic(EntityData& entityData)

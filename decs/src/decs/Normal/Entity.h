@@ -213,11 +213,25 @@ namespace decs
 		/// </summary>
 		/// <param name="componentIndex"></param>
 		/// <returns>Components in observers order</returns>
-		[[nodiscard]] inline EntityComponent* GetComponentAtIndex(uint32_t componentIndex) const
+		[[nodiscard]] inline EntityComponent* GetComponentAtIndex_ObserversOrder(uint32_t componentIndex) const
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->GetComponentAtIndex(*m_EntityData, componentIndex);
+				return GetContainer_Internal()->GetComponentAtIndex_ObserversOrder(*m_EntityData, componentIndex);
+			}
+			return nullptr;
+		}
+
+		/// <summary>
+		/// Gets component by index in order of typeID. Uses std::vector where component and tags records data are placed. It can return nullptr if componentIndex is greater than component and tag count in archetype or where index points to tag instead of component.
+		/// </summary>
+		/// <param name="componentIndex"></param>
+		/// <returns>Components in type id order</returns>
+		[[nodiscard]] inline EntityComponent* GetComponentAtIndex_TypeIDOrder(uint32_t componentIndex) const
+		{
+			if (IsValid())
+			{
+				return GetContainer_Internal()->GetComponentAtIndex_TypeIDOrder(*m_EntityData, componentIndex);
 			}
 			return nullptr;
 		}
