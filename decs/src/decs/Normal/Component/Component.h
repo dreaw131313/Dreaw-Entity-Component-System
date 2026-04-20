@@ -79,13 +79,11 @@ namespace decs
 		uint32_t m_Data = 0;
 	};
 
-
 	class EntityData;
 	class Entity;
 	class IStableComponentContainer;
 	template<typename TComponentType>
 	class StableComponentContainer;
-
 
 	class InternalComponentData
 	{

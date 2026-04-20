@@ -70,6 +70,37 @@ namespace decs
 	template<typename T>
 	using drop_const_t = drop_const<T>::Type;
 
+	template<typename T>
+	struct pure_type
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	struct pure_type<T&>
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	struct pure_type<const T&>
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	struct pure_type<const T>
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	using pure_type_t = pure_type<T>::Type;
+
 	class Archetype;
 	class Entity;
 	namespace light
@@ -78,13 +109,13 @@ namespace decs
 	}
 
 	template<typename TCallable, typename... TComponentTypes>
-	concept query_callable = std::is_invocable_v<TCallable, TComponentTypes...> 
+	concept query_callable = std::is_invocable_v<TCallable, TComponentTypes...>
 		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes...>
 		|| std::is_invocable_v<TCallable, TComponentTypes&...>
 		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
 
 	template<typename TCallable, typename... TComponentTypes>
-	concept light_query_callable = std::is_invocable_v<TCallable, TComponentTypes...> 
+	concept light_query_callable = std::is_invocable_v<TCallable, TComponentTypes...>
 		|| std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes...>
 		|| std::is_invocable_v<TCallable, TComponentTypes&...>
 		|| std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes&...>;
@@ -99,11 +130,11 @@ namespace decs
 		;
 
 	template<typename TCallable, typename... TComponentTypes>
-	constexpr bool is_invocable_with_entity_v = std::is_invocable_v<TCallable, const Entity&, TComponentTypes...> 
+	constexpr bool is_invocable_with_entity_v = std::is_invocable_v<TCallable, const Entity&, TComponentTypes...>
 		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
 
 	template<typename TCallable, typename... TComponentTypes>
-	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes...> 
+	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes...>
 		|| std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes&...>;
 
 	template<typename Func>

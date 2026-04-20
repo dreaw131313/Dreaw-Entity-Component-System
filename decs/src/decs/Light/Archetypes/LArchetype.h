@@ -55,8 +55,8 @@ namespace decs::light
 	struct ArchetypeTypeData
 	{
 	public:
-		TypeID m_TypeID = std::numeric_limits<TypeID>::max();
 		IPackedLightComponentContainer* m_PackedContainer = nullptr;
+		TypeID m_TypeID = std::numeric_limits<TypeID>::max();
 
 	public:
 		ArchetypeTypeData()
@@ -68,7 +68,7 @@ namespace decs::light
 			TypeID typeID,
 			IPackedLightComponentContainer* packedContainer
 		):
-			m_TypeID(typeID), m_PackedContainer(packedContainer)
+			m_PackedContainer(packedContainer), m_TypeID(typeID)
 		{
 
 		}

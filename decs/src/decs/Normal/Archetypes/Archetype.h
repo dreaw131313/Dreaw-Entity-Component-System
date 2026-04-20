@@ -65,6 +65,69 @@ namespace decs
 		}
 	};
 
+	struct ArchetypeEntityDataStorage
+	{
+	public:
+		inline size_t GetSize() const noexcept
+		{
+			return m_EntityData.size();
+		}
+
+		inline std::span<const uint8_t> GetFlags() const noexcept
+		{
+			return m_Flags;
+		}
+
+		inline std::span<EntityData* const> GetEntities() const noexcept
+		{
+			return m_EntityData;
+		}
+
+		inline std::pair<EntityData*, bool> GetEntityRecord(size_t index) const noexcept
+		{
+			return { m_EntityData[index], m_Flags[index] == 1 };
+		}
+
+		inline bool GetEnabled(size_t index) const noexcept
+		{
+			return m_Flags[index];
+		}
+
+		inline bool GetEntity(size_t index) const noexcept
+		{
+			return m_EntityData[index];
+		}
+
+		inline void SetEntityRecord(size_t index, EntityData* entity, bool bEnabled)
+		{
+
+		}
+
+		inline void SetEnabled(size_t index, bool bEnabled)
+		{
+
+		}
+
+		void PushBack(EntityData* entity, bool bEnabled)
+		{
+
+		}
+
+		void PopBack()
+		{
+
+		}
+
+		void RemoveSwapBack(size_t index)
+		{
+
+		}
+
+	private:
+		std::vector<EntityData*> m_EntityData{};
+		std::vector<uint8_t> m_Flags{};
+	};
+
 	struct ArchetypeTypeData
 	{
 	public:

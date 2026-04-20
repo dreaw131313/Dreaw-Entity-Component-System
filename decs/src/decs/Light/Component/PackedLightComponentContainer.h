@@ -8,45 +8,37 @@ namespace decs::light
 	class IPackedLightComponentContainer
 	{
 	public:
-		IPackedLightComponentContainer()
-		{
+		IPackedLightComponentContainer() = default;
 
-		}
+		virtual ~IPackedLightComponentContainer() = default;
 
-		virtual ~IPackedLightComponentContainer()
-		{
+		virtual void PopBack() = 0;
 
-		}
+		virtual void Clear() = 0;
 
-		//inline virtual IPackedLightComponentContainer* Clone() const = 0;
+		virtual void ShrinkToFit() = 0;
 
-		inline virtual void PopBack() = 0;
+		virtual uint64_t Capacity() = 0;
 
-		inline virtual void Clear() = 0;
+		virtual uint64_t Size() = 0;
 
-		inline virtual void ShrinkToFit() = 0;
-
-		inline virtual uint64_t Capacity() = 0;
-
-		inline virtual uint64_t Size() = 0;
-
-		inline virtual void Reserve(uint64_t newCapacity) = 0;
+		virtual void Reserve(uint64_t newCapacity) = 0;
 
 		/// <summary>
 		/// 
 		/// </summary>
 		/// <returns>Component size in bytes.</returns>
-		inline virtual uint64_t GetComponentSize() const = 0;
+		virtual uint64_t GetComponentSize() const = 0;
 
-		inline virtual void* GetComponentBasePtr(uint64_t index) = 0;
+		virtual void* GetComponentBasePtr(uint64_t index) = 0;
 
-		inline virtual void RemoveSwapBack(uint64_t index) = 0;
+		virtual void RemoveSwapBack(uint64_t index) = 0;
 
-		inline virtual void PushBack(void* componentPtr) = 0;
+		virtual void PushBack(void* componentPtr) = 0;
 
-		inline virtual void MoveBack(void* componentPtr) = 0;
+		virtual void MoveBack(void* componentPtr) = 0;
 
-		inline virtual IPackedLightComponentContainer* CloneEmpty() const = 0;
+		virtual IPackedLightComponentContainer* CloneEmpty() const = 0;
 	};
 
 	template<typename TComponent>
@@ -60,60 +52,54 @@ namespace decs::light
 		std::vector<TComponent> m_Data{};
 
 	public:
-		PackedLightComponentContainer()
-		{
+		PackedLightComponentContainer() = default;
 
-		}
+		~PackedLightComponentContainer() = default;
 
-		~PackedLightComponentContainer()
-		{
-
-		}
-
-		inline  uint64_t GetComponentSize() const override
+		inline uint64_t GetComponentSize() const override
 		{
 			return sizeof(TComponent);
 		}
 
-		inline  void PopBack() override
+		inline void PopBack() override
 		{
-			if (m_Data.size() > 0)
+			if (!m_Data.empty())
 			{
 				m_Data.pop_back();
 			}
 		}
 
-		inline  void Clear() override
+		inline void Clear() override
 		{
 			m_Data.clear();
 		}
 
-		inline  void ShrinkToFit() override
+		inline void ShrinkToFit() override
 		{
 			m_Data.shrink_to_fit();
 		}
 
-		inline  uint64_t Capacity() override
+		inline uint64_t Capacity() override
 		{
 			return m_Data.capacity();
 		}
 
-		inline  uint64_t Size() override
+		inline uint64_t Size() override
 		{
 			return m_Data.size();
 		}
 
-		inline  void Reserve(uint64_t newCapacity) override
+		inline void Reserve(uint64_t newCapacity) override
 		{
 			m_Data.reserve(newCapacity);
 		}
 
-		inline  void* GetComponentBasePtr(uint64_t index)  override
+		inline void* GetComponentBasePtr(uint64_t index)  override
 		{
 			return &m_Data[index];
 		}
 
-		inline  void RemoveSwapBack(uint64_t index) override
+		inline void RemoveSwapBack(uint64_t index) override
 		{
 			uint64_t dataSize = m_Data.size();
 			if (dataSize > 0)
@@ -152,7 +138,7 @@ namespace decs::light
 			return m_Data.emplace_back(std::forward<Args>(args)...);
 		}
 
-		inline virtual IPackedLightComponentContainer* CloneEmpty() const override
+		inline IPackedLightComponentContainer* CloneEmpty() const override
 		{
 			return new PackedLightComponentContainer<TComponent>();
 		}

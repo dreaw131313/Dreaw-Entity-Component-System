@@ -5,6 +5,7 @@
 
 #include "decs/decs.h"
 
+#include "MeasureTimer.h"
 
 namespace Light
 {
@@ -20,6 +21,8 @@ namespace Light
 	public:
 		float X = 0;
 		float Y = 0;
+
+		int table[50];
 
 	public:
 		Position()
@@ -41,39 +44,8 @@ namespace Light
 	struct TestComponent
 	{
 	public:
-		int table[10];
+		int table[100];
 
-		TestComponent()
-		{
-			PrintLine("TestComponent constructor");
-		}
-
-		TestComponent(const TestComponent& other)
-		{
-			PrintLine("TestComponent copy consructor");
-		}
-
-		TestComponent(TestComponent&& other) noexcept
-		{
-			PrintLine("TestComponent move constructor");
-		}
-
-		~TestComponent()
-		{
-			PrintLine("TestComponent destructor");
-		}
-
-		TestComponent& operator=(const TestComponent& other)
-		{
-			PrintLine("TestComponent copy assignment");
-			return *this;
-		}
-
-		TestComponent& operator=(TestComponent&& other) noexcept
-		{
-			PrintLine("TestComponent move assignment");
-			return *this;
-		}
 	};
 
 	struct Renderer
@@ -91,7 +63,7 @@ namespace Light
 
 	void Test::Run()
 	{
-		ComponentCreationTest();
+		PerformanceTest();
 	}
 
 	void Test::IterationTest()
@@ -296,6 +268,74 @@ namespace Light
 		e.AddComponent<double>();
 
 		Entity e2 = container.Spawn(e);
+	}
+
+
+	void Test::PerformanceTest()
+	{
+		const uint32_t testCount = 10;
+		const uint32_t entityCount = 66000;
+
+		decs::light::ContainerConfig config{
+			.EntityChunkSize = 10000,
+			.ArchetypeChunkSize = 100,
+		};
+
+		double finalAvarage = 0;
+
+		decs::light::Container container{ config };
+
+		auto perfTest = [&]()
+		{
+			double sum = 0;
+
+			for (uint32_t testIdx = 0; testIdx < testCount; testIdx++)
+			{
+					decs::LightComponentTypeGroup<Position, TestComponent> comps{};
+				MeasureTimer timer(true);
+				{
+
+
+					for (uint32_t i = 0; i < entityCount; i++)
+					{
+						auto entity = container.CreateEntity();
+						entity.AddComponent<Position>();
+						entity.AddComponent<TestComponent>();
+					}
+
+
+					/*for (uint32_t i = 0; i < entityCount; i++)
+					{
+					}*/
+				}
+				sum += timer.ElapsedAsMilisecond();
+
+				container.Clear();
+			}
+
+			double avarage = sum / testCount;
+
+			finalAvarage += avarage;
+			std::cout << "Creating " << entityCount << " entities -> " << avarage << " ms\n";
+		};
+
+		uint32_t finalTestCount = 100;
+		for (uint32_t i = 0; i < finalTestCount; i++)
+		{
+			perfTest();
+		}
+
+		std::cout << "Final avarage time " << finalAvarage / finalTestCount << " ms\n";
+
+		finalAvarage = 0;
+		for (uint32_t i = 0; i < finalTestCount; i++)
+		{
+			perfTest();
+		}
+
+		std::cout << "Final avarage time " << finalAvarage / finalTestCount << " ms\n";
+
+
 	}
 
 }

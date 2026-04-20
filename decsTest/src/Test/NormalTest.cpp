@@ -41,7 +41,7 @@ namespace Normal
 	struct TestComponent : public decs::EntityComponent
 	{
 	public:
-		int table[10];
+		char table[200];
 
 		TestComponent()
 		{
@@ -60,10 +60,18 @@ namespace Normal
 
 	};
 
+	struct HeavyDataComponent : public decs::EntityComponent
+	{
+	public:
+		char array[1024];
+
+	};
+
 	struct Renderer :public decs::EntityComponent
 	{
 	public:
 		double mesh;
+		char table[200];
 	};
 
 
@@ -300,8 +308,8 @@ namespace Normal
 
 	void Test::PerformanceTest()
 	{
-		const uint32_t testCount = 100;
-		const uint32_t entityCount = 4096;
+		const uint32_t testCount = 10;
+		const uint32_t entityCount = 40096;
 
 		decs::ContainerConfig config{
 			.EntityChunkSize = 10000,
@@ -311,28 +319,28 @@ namespace Normal
 
 		double finalAvarage = 0;
 
-		auto perfTest = [&](
-			uint32_t entityChunkSize,
-			uint32_t componentChunkSize
-			)
+		decs::Container container{ config };
+
+		auto perfTest = [&]()
 		{
-			decs::Container container{config};
 			double sum = 0;
 
 			for (uint32_t testIdx = 0; testIdx < testCount; testIdx++)
 			{
 				MeasureTimer timer(true);
 				{
-					decs::ComponentTypeGroup<Position, TestComponent> comps{};
+					decs::ComponentTypeGroup<Position, TestComponent, Renderer> comps{};
 
 
-					container.CreateEntities_NoObserver(comps, entityCount,true, [](auto, auto) {});
+					container.CreateEntities_NoObserver(comps, entityCount, true, [](auto, auto, auto) {});
 
 					/*for (uint32_t i = 0; i < entityCount; i++)
 					{
 					}*/
 				}
 				sum += timer.ElapsedAsMilisecond();
+
+				container.Clear();
 			}
 
 			double avarage = sum / testCount;
@@ -342,17 +350,17 @@ namespace Normal
 		};
 
 		uint32_t finalTestCount = 100;
-		for (uint32_t i = 0; i < finalTestCount ; i++)
+		for (uint32_t i = 0; i < finalTestCount; i++)
 		{
-			perfTest(10000, 1000);
+			perfTest();
 		}
 
 		std::cout << "Final avarage time " << finalAvarage / finalTestCount << " ms\n";
 
 		finalAvarage = 0;
-		for (uint32_t i = 0; i < finalTestCount ; i++)
+		for (uint32_t i = 0; i < finalTestCount; i++)
 		{
-			perfTest(10000, 1000);
+			perfTest();
 		}
 
 		std::cout << "Final avarage time " << finalAvarage / finalTestCount << " ms\n";

@@ -12,6 +12,8 @@ namespace Light
 		void IterationTest();
 
 		void ComponentCreationTest();
+
+		void PerformanceTest();
 	};
 
 }
