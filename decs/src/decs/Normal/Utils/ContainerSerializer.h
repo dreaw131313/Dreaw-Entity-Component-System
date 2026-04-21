@@ -151,12 +151,14 @@ namespace decs
 						uint64_t componentCount = componentSerializersData.size();
 						uint64_t tagCount = tagSerializersData.size();
 
+						const auto& entityStorage = archetype.GetEntityStorage();
+
 						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 						{
-							auto& archetypeEntityData = archetype.m_EntitiesData[entityIdx];
-							if (archetypeEntityData.IsValid())
+							auto entityData = entityStorage.GetEntity(entityIdx);
+							if (entityData != nullptr)
 							{
-								entityBuffer.Set_Internal(archetypeEntityData.m_EntityData);
+								entityBuffer.Set_Internal(entityData);
 								if (BeginEntitySerialize(entityBuffer, serializerData))
 								{
 									for (uint64_t tagIdx = 0; tagIdx < tagCount; tagIdx++)

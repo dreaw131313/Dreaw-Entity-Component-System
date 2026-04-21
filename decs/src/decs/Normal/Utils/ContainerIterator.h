@@ -35,15 +35,16 @@ namespace decs
 				for (uint64_t archetypeIdx = 0; archetypeIdx < elementsCount; archetypeIdx++)
 				{
 					Archetype& archetype = chunk[archetypeIdx];
+					const auto& entityStorage = archetype.GetEntityStorage();
 					uint64_t entitesCount = archetype.EntityCount();
 					if (entitesCount > 0)
 					{
 						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 						{
-							auto& archetypeEntityData = archetype.m_EntitiesData[entityIdx];
-							if (archetypeEntityData.IsValid())
+							auto entityData = entityStorage.GetEntity(entityIdx);
+							if (entityData != nullptr)
 							{
-								entityBuffer.Set_Internal(*archetypeEntityData.m_EntityData);
+								entityBuffer.Set_Internal(*entityData);
 								entityFunc(entityBuffer);
 							}
 						}
@@ -86,6 +87,7 @@ namespace decs
 				for (uint64_t archetypeIdx = 0; archetypeIdx < elementsCount; archetypeIdx++)
 				{
 					Archetype& archetype = chunk[archetypeIdx];
+					const auto& entityStorage = archetype.GetEntityStorage();
 					archetypeFunc(&archetype);
 
 					uint64_t entitesCount = archetype.EntityCount();
@@ -93,10 +95,10 @@ namespace decs
 					{
 						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 						{
-							auto& archetypeEntityData = archetype.m_EntitiesData[entityIdx];
-							if (archetypeEntityData.IsValid())
+							auto entityData = entityStorage.GetEntity(entityIdx);
+							if (entityData != nullptr)
 							{
-								entityBuffer.Set_Internal(*archetypeEntityData.m_EntityData);
+								entityBuffer.Set_Internal(*entityData);
 								entityFunc(entityBuffer);
 							}
 						}

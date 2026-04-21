@@ -198,12 +198,11 @@ namespace decs
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsActive())
+				if (archetypeEntityStorage.GetEnabled(static_cast<size_t>(idx)))
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 				}
@@ -220,12 +219,12 @@ namespace decs
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsActive())
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.m_bEnabled)
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 				}
@@ -246,12 +245,12 @@ namespace decs
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValidAndActive())
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.IsValidAndEnabled())
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 				}
@@ -268,12 +267,12 @@ namespace decs
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValidAndActive())
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.IsValidAndEnabled())
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 				}
@@ -294,13 +293,12 @@ namespace decs
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			int64_t idx = ctxEntityCount - 1;
 			for (; idx > -1; idx--)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsActive())
+				if (archetypeEntityStorage.GetEnabled(idx))
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 				}
@@ -317,13 +315,13 @@ namespace decs
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			int64_t idx = ctxEntityCount - 1;
 			for (; idx > -1; idx--)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsActive())
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.m_bEnabled)
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 				}
@@ -344,13 +342,13 @@ namespace decs
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			int64_t idx = ctxEntityCount - 1;
 			for (; idx > -1; idx--)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValidAndActive())
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.IsValidAndEnabled())
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 				}
@@ -367,13 +365,13 @@ namespace decs
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			int64_t idx = ctxEntityCount - 1;
 			for (; idx > -1; idx--)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValidAndActive())
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.IsValidAndEnabled())
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 				}
@@ -394,12 +392,12 @@ namespace decs
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValid())
+				auto entityData = archetypeEntityStorage.GetEntity(static_cast<size_t>(idx));
+				if (entityData != nullptr)
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 				}
@@ -416,14 +414,14 @@ namespace decs
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValid())
+				auto entityData = archetypeEntityStorage.GetEntity(static_cast<size_t>(idx));
+				if (entityData != nullptr)
 				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData, idx, containersTuple);
 				}
 			}
 		}
@@ -436,12 +434,11 @@ namespace decs
 		void ForEachFromTo(Callable&& func, uint64_t fromIdx, uint64_t toIdx) const
 		{
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsActive())
+				if (archetypeEntityStorage.GetEnabled(idx))
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 				}
@@ -452,12 +449,12 @@ namespace decs
 		void ForEachFromTo_WithEntity(Callable&& func, Entity& entityBuffer, uint64_t fromIdx, uint64_t toIdx) const
 		{
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsActive())
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.m_bEnabled)
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
 				}
@@ -472,12 +469,12 @@ namespace decs
 		void ForEachFromTo_IgnoreActiveState(Callable&& func, uint64_t fromIdx, uint64_t toIdx) const
 		{
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValid())
+				auto entityData = archetypeEntityStorage.GetEntity(static_cast<size_t>(idx));
+				if (entityData != nullptr)
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 				}
@@ -488,14 +485,14 @@ namespace decs
 		void ForEachFromTo_IgnoreActiveState_WithEntity(Callable&& func, Entity& entityBuffer, uint64_t fromIdx, uint64_t toIdx) const
 		{
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
 
 			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValid())
+				auto entityData = archetypeEntityStorage.GetEntity(static_cast<size_t>(idx));
+				if (entityData != nullptr)
 				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData, idx, containersTuple);
 				}
 			}
 		}

@@ -46,10 +46,12 @@ namespace decs
 						uint64_t entitesCount = archetype.EntityCount();
 						if (entitesCount > 0)
 						{
+							const auto& entityStorage = archetype.GetEntityStorage();
+
 							uint64_t componentCount = archetype.GetComponentAndTagCount();
 							for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 							{
-								entityBuffer.Set_Internal(*archetype.m_EntitiesData[entityIdx].m_EntityData);
+								entityBuffer.Set_Internal(*entityStorage.GetEntity(entityIdx));
 								if (BeginEntitySerialize(entityBuffer))
 								{
 									for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)

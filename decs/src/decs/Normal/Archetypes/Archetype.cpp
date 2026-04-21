@@ -129,7 +129,7 @@ namespace decs
 
 	void Archetype::ClearEntityDataAndComponents()
 	{
-		m_EntitiesData.clear();
+		m_EntityStorage.Clear();
 		for (uint32_t i = 0; i < m_TypeData.size(); i++)
 		{
 			auto& typeData = m_TypeData[i];
@@ -204,30 +204,13 @@ namespace decs
 			return;
 		}
 
+		m_EntityStorage.PushBack_UpdateEntityIndex(entityData, entityData->IsActive());
 		entityData->m_Archetype = this;
-		entityData->m_IndexInArchetype = static_cast<uint32_t>(EntityCount());
-
-		m_EntitiesData.emplace_back(entityData);
 	}
 
 	void Archetype::RemoveSwapBackEntityData(uint64_t index)
 	{
-		if (index >= EntityCount())
-		{
-			return;
-		}
-
-		if (index < (EntityCount() - 1))
-		{
-			auto& backEntityData = m_EntitiesData.back();
-			m_EntitiesData[index] = backEntityData;
-			if (backEntityData.IsValid())
-			{
-				m_EntitiesData[index].m_EntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
-			}
-
-		}
-		m_EntitiesData.pop_back();
+		m_EntityStorage.RemoveSwapBack(index, true);
 	}
 
 	void Archetype::RemoveSwapBackEntity(uint64_t index)
@@ -314,7 +297,7 @@ namespace decs
 
 		if (index == EntityCount() - 1)
 		{
-			m_EntitiesData.pop_back();
+			m_EntityStorage.PopBack();
 			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
@@ -326,14 +309,15 @@ namespace decs
 		}
 		else
 		{
-			auto& backEntityData = m_EntitiesData.back();
-			if (backEntityData.IsValid())
+			m_EntityStorage.RemoveSwapBack(static_cast<size_t>(index), true);
+			auto backEntityRecord = m_EntityStorage.GetBackRecord();
+			if (backEntityRecord.first != nullptr)
 			{
-				backEntityData.m_EntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
+				backEntityRecord.first->m_IndexInArchetype = static_cast<uint32_t>(index);
 			}
+			m_EntityStorage.SetEntityRecord(index, backEntityRecord.first, backEntityRecord.second);
+			m_EntityStorage.PopBack();
 
-			m_EntitiesData[index] = m_EntitiesData.back();
-			m_EntitiesData.pop_back();
 
 			for (uint64_t i = 0; i < GetComponentAndTagCount(); i++)
 			{
@@ -353,14 +337,14 @@ namespace decs
 		{
 			return;
 		}
-		m_EntitiesData[index].Invalidate();
+		m_EntityStorage.InvalidateRecord(static_cast<size_t>(index));
 	}
 
 	void Archetype::ReserveSpaceInArchetype(uint64_t desiredCapacity)
 	{
-		if (m_EntitiesData.capacity() < desiredCapacity)
+		if (m_EntityStorage.GetCapacity() < desiredCapacity)
 		{
-			m_EntitiesData.reserve(desiredCapacity);
+			m_EntityStorage.Reserve(desiredCapacity);
 
 			for (uint64_t idx = 0; idx < GetComponentAndTagCount(); idx++)
 			{
@@ -375,7 +359,7 @@ namespace decs
 
 	void Archetype::Reset()
 	{
-		m_EntitiesData.clear();
+		m_EntityStorage.Clear();
 		for (uint64_t idx = 0; idx < GetComponentAndTagCount(); idx++)
 		{
 			auto& typeData = m_TypeData[idx];
@@ -463,7 +447,7 @@ namespace decs
 
 	void Archetype::ShrinkToFit()
 	{
-		m_EntitiesData.shrink_to_fit();
+		m_EntityStorage.ShrinkToFit();
 		for (uint64_t idx = 0; idx < GetComponentAndTagCount(); idx++)
 		{
 			auto& typeData = m_TypeData[idx];
@@ -497,7 +481,7 @@ namespace decs
 			return false;
 		}
 
-		EntityData* entityData = fromArchetype.m_EntitiesData[entityIndex].GetEntityData();
+		EntityData* entityData = fromArchetype.m_EntityStorage.GetEntity(entityIndex);
 		DECS_ASSERT(entityData != nullptr, "EntityData must be valid pointer!");
 
 		toArchetype.AddEntityData(entityData);
@@ -540,12 +524,13 @@ namespace decs
 			return false;
 		}
 
-		ArchetypeEntityData& archetypeEntityData = fromArchetype.m_EntitiesData[entityIndex];
 
-		DECS_ASSERT(archetypeEntityData.GetEntityData() != nullptr, "EntityData must be valid pointer!");
+		auto archetypeEntityData = fromArchetype.m_EntityStorage.GetEntityRecord(entityIndex);
 
-		toArchetype.AddEntityData(archetypeEntityData.GetEntityData());
-		archetypeEntityData.Invalidate();
+		DECS_ASSERT(archetypeEntityData.m_EntityData != nullptr, "EntityData must be valid pointer!");
+
+		toArchetype.AddEntityData(archetypeEntityData.m_EntityData);
+		fromArchetype.m_EntityStorage.SetEntityRecord(entityIndex, nullptr, false);
 
 		uint64_t thisArchetypeIndex = 0;
 		uint64_t fromArchetypeIndex = 0;
@@ -582,12 +567,13 @@ namespace decs
 			return false;
 		}
 
-		ArchetypeEntityData& archetypeEntityData = fromArchetype.m_EntitiesData[entityIndex];
+		auto archetypeEntityData = fromArchetype.m_EntityStorage.GetEntityRecord(entityIndex);
 
-		DECS_ASSERT(archetypeEntityData.GetEntityData() != nullptr, "EntityData must be valid pointer!");
+		DECS_ASSERT(archetypeEntityData.m_EntityData != nullptr, "EntityData must be valid pointer!");
 
-		toArchetype.AddEntityData(archetypeEntityData.GetEntityData());
-		archetypeEntityData.Invalidate();
+
+		toArchetype.AddEntityData(archetypeEntityData.m_EntityData);
+		fromArchetype.m_EntityStorage.SetEntityRecord(entityIndex, nullptr, false);
 
 		uint64_t thisArchetypeIndex = 0;
 		uint64_t fromArchetypeIndex = 0;

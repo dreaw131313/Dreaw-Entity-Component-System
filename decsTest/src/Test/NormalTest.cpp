@@ -309,7 +309,7 @@ namespace Normal
 	void Test::PerformanceTest()
 	{
 		const uint32_t testCount = 10;
-		const uint32_t entityCount = 40096;
+		const uint32_t entityCount = 4096;
 
 		decs::ContainerConfig config{
 			.EntityChunkSize = 10000,

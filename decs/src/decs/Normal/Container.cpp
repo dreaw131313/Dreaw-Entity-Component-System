@@ -804,10 +804,12 @@ namespace decs
 				{
 					return;
 				}
-				const auto& entitiesData = archetype->m_EntitiesData;
+
+				const auto& entityStorage = archetype->GetEntityStorage();
+
 				for (int64_t idx = static_cast<int64_t>(archetype->EntityCount()) - 1; idx >= 0; idx--)
 				{
-					const auto& archetypeEntityData = entitiesData[idx];
+					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
 					if (archetypeEntityData.IsValid())
 					{
 						entity.Set_Internal(*archetypeEntityData.m_EntityData);
@@ -845,11 +847,11 @@ namespace decs
 					}
 
 					auto* packedContainer = typeData.m_PackedContainer;
-					const auto& entityDataArray = archetype->m_EntitiesData;
+					const auto& entityStorage = archetype->GetEntityStorage();
 
 					for (int64_t idx = static_cast<int64_t>(entitiesCountToInvokeCallbacks) - 1; idx >= 0; idx--)
 					{
-						const auto& archetypeEntityData = entityDataArray[idx];
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
 						if (archetypeEntityData.IsValid())
 						{
 							auto entityData = archetypeEntityData.m_EntityData;
@@ -905,11 +907,11 @@ namespace decs
 						return;
 					}
 					auto* packedContainer = typeData.m_PackedContainer;
-					const auto& entityData = archetype->m_EntitiesData;
+					const auto& entityStorage = archetype->GetEntityStorage();
 
 					for (int64_t idx = 0; idx < (int64_t)entityCount; idx++)
 					{
-						const auto& archetypeEntityData = entityData[idx];
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
 						if (archetypeEntityData.IsValid())
 						{
 							entity.Set_Internal(*archetypeEntityData.m_EntityData);

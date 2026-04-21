@@ -39,6 +39,7 @@ namespace decs
 
 	class EntityData final
 	{
+		friend class ArchetypeEntityDataStorage;
 		friend class Archetype;
 		friend class EntityManager;
 		friend class Container;

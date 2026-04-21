@@ -481,7 +481,6 @@ namespace decs
 					if (ctxEntityCount == 0) continue;
 
 					const auto& containersTuple = ctx.GetContainersTuple();
-					const std::vector<ArchetypeEntityData>& entitiesData = ctx.GetArchetype()->m_EntitiesData;
 
 					const uint64_t startEntityIdx = contextIndex == m_FirstArchetypeIndex ? m_FirstIterationIndex : 0;
 					uint64_t iterationsCount;

@@ -17,60 +17,53 @@ namespace decs
 	class Entity;
 	class Archetype;
 
-	struct ArchetypeEntityData
+	struct ArchetypeEntityRecord
 	{
 	public:
 		EntityData* m_EntityData = nullptr;
-		bool m_bIsActive = false;
+		bool m_bEnabled = false;
 
 	public:
-		ArchetypeEntityData()
-		{
-
-		}
-
-		ArchetypeEntityData(
-			EntityData* entityData
-		):
-			m_EntityData(entityData),
-			m_bIsActive(entityData->IsActive())
-		{
-
-		}
-
-		inline EntityData* GetEntityData()
-		{
-			return m_EntityData;
-		}
-
-		inline bool IsActive() const noexcept
-		{
-			return m_bIsActive;
-		}
-
-		inline void Invalidate()
-		{
-			m_bIsActive = false;
-			m_EntityData = nullptr;
-		}
-
-		inline bool IsValid() const
+		inline bool IsValid() const noexcept
 		{
 			return m_EntityData != nullptr;
 		}
 
-		inline bool IsValidAndActive() const noexcept
+		inline bool IsValidAndEnabled() const noexcept
 		{
-			return m_EntityData != nullptr && m_bIsActive;
+			return m_EntityData != nullptr && m_bEnabled;
 		}
 	};
 
-	struct ArchetypeEntityDataStorage
+	class ArchetypeEntityDataStorage
 	{
 	public:
 		inline size_t GetSize() const noexcept
 		{
 			return m_EntityData.size();
+		}
+
+		inline size_t GetCapacity() const noexcept
+		{
+			return m_EntityData.capacity();
+		}
+
+		void Reserve(size_t size)
+		{
+			m_EntityData.reserve(size);
+			m_Flags.reserve(size);
+		}
+
+		void ShrinkToFit()
+		{
+			m_EntityData.shrink_to_fit();
+			m_Flags.shrink_to_fit();
+		}
+
+		inline float GetLoadFactor() const noexcept
+		{
+			if (m_EntityData.capacity() == 0) return 1.f;
+			return (float)m_EntityData.size() / (float)m_EntityData.capacity();
 		}
 
 		inline std::span<const uint8_t> GetFlags() const noexcept
@@ -93,17 +86,26 @@ namespace decs
 			return m_EntityData;
 		}
 
-		inline std::pair<EntityData*, bool> GetEntityRecord(size_t index) const noexcept
+		inline ArchetypeEntityRecord GetEntityRecord(size_t index) const noexcept
 		{
-			return { m_EntityData[index], m_Flags[index] == 1 };
+			return { m_EntityData[index], m_Flags[index] != 0 };
+		}
+
+		inline std::pair<EntityData*, bool> GetBackRecord() const noexcept
+		{
+			if (m_EntityData.empty())
+			{
+				return {};
+			}
+			return { m_EntityData.back(), m_Flags.back() != 0 };
 		}
 
 		inline bool GetEnabled(size_t index) const noexcept
 		{
-			return m_Flags[index];
+			return m_Flags[index] != 0;
 		}
 
-		inline bool GetEntity(size_t index) const noexcept
+		inline EntityData* GetEntity(size_t index) const noexcept
 		{
 			return m_EntityData[index];
 		}
@@ -119,8 +121,33 @@ namespace decs
 			m_Flags[index] = bEnabled;
 		}
 
+		/// <summary>
+		/// Entity is not checked if its nullptr
+		/// </summary>
+		/// <param name="index"></param>
+		/// <param name="entity"></param>
+		/// <param name="bEnabled"></param>
+		inline void SetEntityRecord_UpdateEntityIndex(size_t index, EntityData* entity, bool bEnabled)
+		{
+			entity->m_IndexInArchetype = static_cast<uint32_t>(index);
+			m_EntityData[index] = entity;
+			m_Flags[index] = bEnabled;
+		}
+
 		inline void PushBack(EntityData* entity, bool bEnabled)
 		{
+			m_EntityData.push_back(entity);
+			m_Flags.push_back(bEnabled);
+		}
+
+		/// <summary>
+		/// Entity is not checked if its nullptr
+		/// </summary>
+		/// <param name="entity"></param>
+		/// <param name="bEnabled"></param>
+		inline void PushBack_UpdateEntityIndex(EntityData* entity, bool bEnabled)
+		{
+			entity->m_IndexInArchetype = static_cast<uint32_t>(m_EntityData.size());
 			m_EntityData.push_back(entity);
 			m_Flags.push_back(bEnabled);
 		}
@@ -131,7 +158,7 @@ namespace decs
 			m_Flags.pop_back();
 		}
 
-		void RemoveSwapBack(size_t index)
+		void RemoveSwapBack(size_t index, bool bUpdateEntityIndex)
 		{
 			if (m_EntityData.empty() || index >= m_EntityData.size())
 			{
@@ -140,11 +167,23 @@ namespace decs
 			size_t lastIndex = m_EntityData.size() - 1;
 			if (index < lastIndex)
 			{
-				m_EntityData[index] = m_EntityData.back();
+				EntityData* backEntityData = m_EntityData.back();
+				m_EntityData[index] = backEntityData;
 				m_Flags[index] = m_Flags.back();
+
+				if (bUpdateEntityIndex && backEntityData != nullptr)
+				{
+					backEntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
+				}
 			}
 			m_EntityData.pop_back();
 			m_Flags.pop_back();
+		}
+
+		void Clear()
+		{
+			m_EntityData.clear();
+			m_Flags.clear();
 		}
 
 		void InvalidateRecord(size_t index)
@@ -272,11 +311,11 @@ namespace decs
 
 
 	private:
-		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
-		ecsMap<TypeID, ArchetypeEdge> m_Edges;
+		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes{};
+		ecsMap<TypeID, ArchetypeEdge> m_Edges{};
 
-		std::vector<ArchetypeEntityData> m_EntitiesData;
-		std::vector<ArchetypeTypeData> m_TypeData;
+		ArchetypeEntityDataStorage m_EntityStorage{};
+		std::vector<ArchetypeTypeData> m_TypeData{};
 
 		struct OrderData
 		{
@@ -285,13 +324,17 @@ namespace decs
 			uint32_t m_ComponentIndex = std::numeric_limits<uint32_t>::max();
 		};
 
-		std::vector<OrderData> m_ComponentContextsInOrder = {};
-
+		std::vector<OrderData> m_ComponentContextsInOrder{};
 
 	public:
 		Archetype();
 
 		~Archetype();
+
+		inline const ArchetypeEntityDataStorage& GetEntityStorage() const noexcept
+		{
+			return m_EntityStorage;
+		}
 
 		inline uint32_t GetTypeCount() const noexcept
 		{
@@ -324,13 +367,12 @@ namespace decs
 
 		inline uint64_t EntityCount() const noexcept
 		{
-			return m_EntitiesData.size();
+			return m_EntityStorage.GetSize();
 		}
 
 		inline float GetLoadFactor()const
 		{
-			if (m_EntitiesData.capacity() == 0) return 1.f;
-			return (float)EntityCount() / (float)m_EntitiesData.capacity();
+			return m_EntityStorage.GetLoadFactor();
 		}
 
 		bool ContainType(TypeID typeID) const;
@@ -526,11 +568,11 @@ namespace decs
 
 		void UpdateOrderOfComponentContexts();
 
-		inline void SetEntityActiveState(uint32_t index, bool isActive)
+		inline void SetEntityActiveState(uint32_t index, bool bIsActive)
 		{
-			if (index < EntityCount())
+			if (index < m_EntityStorage.GetSize())
 			{
-				m_EntitiesData[index].m_bIsActive = isActive;
+				m_EntityStorage.SetEnabled(index, bIsActive);
 			}
 		}
 
