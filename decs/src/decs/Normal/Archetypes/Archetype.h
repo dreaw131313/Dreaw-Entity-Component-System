@@ -83,6 +83,16 @@ namespace decs
 			return m_EntityData;
 		}
 
+		inline const std::vector<uint8_t>& GetFlagsVector() const noexcept
+		{
+			return m_Flags;
+		}
+
+		inline const std::vector<EntityData*>& GetEntitiesVector() const noexcept
+		{
+			return m_EntityData;
+		}
+
 		inline std::pair<EntityData*, bool> GetEntityRecord(size_t index) const noexcept
 		{
 			return { m_EntityData[index], m_Flags[index] == 1 };
@@ -98,29 +108,59 @@ namespace decs
 			return m_EntityData[index];
 		}
 
-		inline void SetEntityRecord(size_t index, EntityData* entity, bool bEnabled)
-		{
-
-		}
-
 		inline void SetEnabled(size_t index, bool bEnabled)
 		{
-
+			m_Flags[index] = bEnabled;
 		}
 
-		void PushBack(EntityData* entity, bool bEnabled)
+		inline void SetEntityRecord(size_t index, EntityData* entity, bool bEnabled)
 		{
-
+			m_EntityData[index] = entity;
+			m_Flags[index] = bEnabled;
 		}
 
-		void PopBack()
+		inline void PushBack(EntityData* entity, bool bEnabled)
 		{
+			m_EntityData.push_back(entity);
+			m_Flags.push_back(bEnabled);
+		}
 
+		inline void PopBack()
+		{
+			m_EntityData.pop_back();
+			m_Flags.pop_back();
 		}
 
 		void RemoveSwapBack(size_t index)
 		{
+			if (m_EntityData.empty() || index >= m_EntityData.size())
+			{
+				return;
+			}
+			size_t lastIndex = m_EntityData.size() - 1;
+			if (index < lastIndex)
+			{
+				m_EntityData[index] = m_EntityData.back();
+				m_Flags[index] = m_Flags.back();
+			}
+			m_EntityData.pop_back();
+			m_Flags.pop_back();
+		}
 
+		void InvalidateRecord(size_t index)
+		{
+			m_EntityData[index] = nullptr;
+			m_Flags[index] = false;
+		}
+
+		inline bool IsActive(size_t index) const noexcept
+		{
+			return m_Flags[index];
+		}
+
+		inline bool IsValideAndActive(size_t index) const noexcept
+		{
+			return m_Flags[index] && m_EntityData[index] != nullptr;
 		}
 
 	private:
