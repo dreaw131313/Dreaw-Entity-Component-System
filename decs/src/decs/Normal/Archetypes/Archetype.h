@@ -112,13 +112,13 @@ namespace decs
 
 		inline void SetEnabled(size_t index, bool bEnabled)
 		{
-			m_Flags[index] = bEnabled;
+			m_Flags[index] = bEnabled && m_EntityData[index] != nullptr;
 		}
 
 		inline void SetEntityRecord(size_t index, EntityData* entity, bool bEnabled)
 		{
 			m_EntityData[index] = entity;
-			m_Flags[index] = bEnabled;
+			m_Flags[index] = bEnabled && entity != nullptr;
 		}
 
 		/// <summary>
@@ -137,7 +137,7 @@ namespace decs
 		inline void PushBack(EntityData* entity, bool bEnabled)
 		{
 			m_EntityData.push_back(entity);
-			m_Flags.push_back(bEnabled);
+			m_Flags.push_back(bEnabled && entity != nullptr);
 		}
 
 		/// <summary>

@@ -5,8 +5,6 @@
 
 int main()
 {
-
-	//Normal::Test{}.Run();
 	/*{
 		std::cout << "\n";
 		std::cout << "/////////////////////////////////////" << "\n";
@@ -19,7 +17,7 @@ int main()
 		std::cout << "///////////////////////////////////////////" << "\n";
 		std::cout << "///////// PERFORMANCE ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
-		Normal::Test{}.Run();
+		Normal::Test{}.PerformanceTest();
 	}
 
 	return 0;
