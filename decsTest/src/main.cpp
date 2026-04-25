@@ -10,14 +10,14 @@ int main()
 		std::cout << "/////////////////////////////////////" << "\n";
 		std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
 		std::cout << "/////////////////////////////////////" << "\n";
-		Light::Test{}.Run();
+		Light::Test{}.IterationTest();
 	}*/
 
 	{
 		std::cout << "///////////////////////////////////////////" << "\n";
 		std::cout << "///////// PERFORMANCE ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
-		Normal::Test{}.PerformanceTest();
+		Normal::Test{}.Run();
 	}
 
 	return 0;

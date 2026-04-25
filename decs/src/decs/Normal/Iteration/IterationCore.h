@@ -162,13 +162,11 @@ namespace decs
 
 		inline uint64_t GetEntityCount() const
 		{
-			if constexpr (sizeof...(ComponentsTypes) == 0)
+			if (m_Archetype != nullptr)
 			{
-				return 0;
+				return m_Archetype->EntityCount();
 			}
-
-			return std::get<0>(m_ContainersTuple)->Size();
-			//return m_Archetype->EntityCount();
+			return false;
 		}
 
 		inline const ContainersTuple& GetContainersTuple() const noexcept
@@ -577,27 +575,35 @@ namespace decs
 
 		void Fetch(const QueryFilterConfigType& filter)
 		{
-			uint64_t minComponentsCount = filter.GetMinComponentsCount();
-
 			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.GetArchetypesCount();
 			if (m_ArchetypesCountDirty != containerArchetypesCount)
 			{
+				uint64_t minComponentsCount = filter.GetMinComponentsCount();
 				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
 
 				ArchetypesMap& map = m_Container->m_ArchetypesMap;
 				uint64_t maxComponentsInArchetype = map.MaxTypeCountInArchetypes();
-				if (maxComponentsInArchetype < minComponentsCount) return;
-
-				if (newArchetypesCount > m_ArchetypesContexts.size())
+				if (maxComponentsInArchetype >= minComponentsCount)
 				{
-					// performing normal finding of archetypes
-					auto group = GetBestArchetypesGroup(filter.GetIncludes());
-					FetchArchetypesFromArchetypesGroup(group, filter);
-				}
-				else
-				{
-					// checking only new archetypes:
-					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, filter);
+					if (filter.GetIncludes().Size() > 0)
+					{
+						if (newArchetypesCount > m_ArchetypesContexts.size())
+						{
+							// performing normal finding of archetypes
+							auto group = GetBestArchetypesGroup(filter.GetIncludes());
+							FetchArchetypesFromArchetypesGroup(group, filter);
+						}
+						else
+						{
+							// checking only new archetypes:
+							AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, filter);
+						}
+					}
+					else
+					{
+						// checking only new archetypes:
+						AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, filter);
+					}
 				}
 
 				m_ArchetypesCountDirty = containerArchetypesCount;

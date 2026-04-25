@@ -492,18 +492,27 @@ namespace decs::light
 
 				ArchetypesMap& map = m_Container->m_ArchetypesMap;
 				uint64_t maxComponentsInArchetype = map.MaxTypeCountInArchetypes();
-				if (maxComponentsInArchetype < minComponentsCount) return;
+				if (maxComponentsInArchetype >= minComponentsCount)
+				{
+					if (filter.GetIncludes().Size() > 0 )
+					{
+						if (newArchetypesCount > m_ArchetypesContexts.size())
+						{
+							// performing normal finding of archetypes
+							auto group = GetBestArchetypesGroup(filter.GetIncludes());
+							FetchArchetypesFromArchetypesGroup(group, filter);
+						}
+						else
+						{
+							// checking only new archetypes:
+							AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, filter);
+						}
+					}
+					else
+					{
+						AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, filter);
+					}
 
-				if (newArchetypesCount > m_ArchetypesContexts.size())
-				{
-					// performing normal finding of archetypes
-					auto group = GetBestArchetypesGroup(filter.GetIncludes());
-					FetchArchetypesFromArchetypesGroup(group, filter);
-				}
-				else
-				{
-					// checking only new archetypes:
-					AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, filter);
 				}
 
 				m_ArchetypesCountDirty = containerArchetypesCount;

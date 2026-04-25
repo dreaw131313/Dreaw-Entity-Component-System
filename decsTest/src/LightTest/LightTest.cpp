@@ -61,11 +61,6 @@ namespace Light
 	template<decs::TLightComponentConcept... TComps>
 	using MultiQuery = decs::light::MultiQuery<TComps...>;
 
-	void Test::Run()
-	{
-		PerformanceTest();
-	}
-
 	void Test::IterationTest()
 	{
 		using FloatTag = decs::tag<float>;
@@ -249,7 +244,23 @@ namespace Light
 					it.ForEach(testFuncWithEntity);
 				}
 			}
+		}
 
+		{
+			using EntityQuery = Query<>;
+
+			EntityQuery query{ &container };
+			query.Without<Position>();
+
+			query.ForEach([]()
+			{
+				PrintLine("Empty query iteration");
+			});
+
+			query.ForEach([](const Entity& e)
+			{
+				PrintLine("Empty query iteration with entity");
+			});
 		}
 	}
 

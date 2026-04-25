@@ -299,11 +299,25 @@ namespace Normal
 				}
 			}
 
+			{
+				using EntityQuery = decs::MultiQuery<>;
+
+				EntityQuery query{};
+				query.AddContainer(&container, true);
+
+				query.ForEach([]()
+				{
+					PrintLine("Empty query iteration");
+				});
+
+				query.ForEach([](const decs::Entity& e)
+				{
+					PrintLine("Empty query iteration with entity");
+				});
+			}
 
 			container.InvokeEntitesOnDestroyListeners();
-
 		}
-
 	}
 
 	void Test::PerformanceTest()
