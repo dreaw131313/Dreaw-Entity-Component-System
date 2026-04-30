@@ -35,15 +35,16 @@ namespace decs::light
 				for (uint64_t archetypeIdx = 0; archetypeIdx < elementsCount; archetypeIdx++)
 				{
 					Archetype& archetype = chunk[archetypeIdx];
+					const auto& entities = archetype.GetEntities();
 					uint64_t entitesCount = archetype.EntityCount();
 					if (entitesCount > 0)
 					{
 						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 						{
-							auto& archetypeEntityData = archetype.m_EntitiesData[entityIdx];
-							if (archetypeEntityData.IsValid())
+							auto archetypeEntityData = entities.Get(entityIdx);
+							if (archetypeEntityData!= nullptr)
 							{
-								entityBuffer.Set_Internal(*archetypeEntityData.m_EntityData);
+								entityBuffer.Set_Internal(*archetypeEntityData);
 								callable(entityBuffer);
 							}
 						}

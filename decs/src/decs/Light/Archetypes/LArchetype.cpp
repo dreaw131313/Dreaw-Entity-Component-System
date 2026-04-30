@@ -129,7 +129,7 @@ namespace decs::light
 
 	void Archetype::ClearEntityDataAndComponents()
 	{
-		m_EntitiesData.clear();
+		m_Entities.Clear();
 		for (uint32_t i = 0; i < m_TypeData.size(); i++)
 		{
 			auto& typeData = m_TypeData[i];
@@ -166,32 +166,15 @@ namespace decs::light
 		}
 
 		entityData->m_Archetype = this;
-		entityData->m_IndexInArchetype = static_cast<uint32_t>(EntityCount());
-
-		m_EntitiesData.emplace_back(entityData);
+		m_Entities.PushBackUpdateIndex(entityData);
 	}
 
-	void Archetype::RemoveSwapBackEntityData(uint64_t index)
+	void Archetype::RemoveSwapBackEntityData(size_t index)
 	{
-		if (index >= EntityCount())
-		{
-			return;
-		}
-
-		if (index < (EntityCount() - 1))
-		{
-			auto& backEntityData = m_EntitiesData.back();
-			m_EntitiesData[index] = backEntityData;
-			if (backEntityData.IsValid())
-			{
-				m_EntitiesData[index].m_EntityData->m_IndexInArchetype = static_cast<uint32_t>(index);
-			}
-
-		}
-		m_EntitiesData.pop_back();
+		m_Entities.RemoveSwapBack_UpdateEntityIndex(index);
 	}
 
-	void Archetype::RemoveSwapBackEntity(uint64_t index)
+	void Archetype::RemoveSwapBackEntity(size_t index)
 	{
 		if (index >= EntityCount())
 		{
@@ -226,11 +209,11 @@ namespace decs::light
 
 	}
 
-	void Archetype::ReserveSpaceInArchetype(uint64_t desiredCapacity)
+	void Archetype::ReserveSpaceInArchetype(size_t desiredCapacity)
 	{
-		if (m_EntitiesData.capacity() < desiredCapacity)
+		if (m_Entities.Capacity() < desiredCapacity)
 		{
-			m_EntitiesData.reserve(desiredCapacity);
+			m_Entities.Reserve(desiredCapacity);
 
 			for (uint64_t idx = 0; idx < GetTypeCount(); idx++)
 			{
@@ -245,7 +228,7 @@ namespace decs::light
 
 	void Archetype::Reset()
 	{
-		m_EntitiesData.clear();
+		m_Entities.Clear();
 		for (uint64_t idx = 0; idx < GetTypeCount(); idx++)
 		{
 			auto& typeData = m_TypeData[idx];
@@ -286,7 +269,7 @@ namespace decs::light
 
 	void Archetype::ShrinkToFit()
 	{
-		m_EntitiesData.shrink_to_fit();
+		m_Entities.ShrinkToFit();
 		for (uint64_t idx = 0; idx < GetTypeCount(); idx++)
 		{
 			auto& typeData = m_TypeData[idx];
@@ -320,8 +303,8 @@ namespace decs::light
 			return false;
 		}
 
-		EntityData* entityData = fromArchetype.m_EntitiesData[entityIndex].GetEntityData();
-		DECS_ASSERT(entityData != nullptr, "cannot move record where entity data is nullptr!");
+		EntityData* entityData = fromArchetype.m_Entities.Get(entityIndex);
+		DECS_ASSERT(entityData != nullptr, "Entity data must be valid");
 
 		toArchetype.AddEntityData(entityData);
 
@@ -363,11 +346,10 @@ namespace decs::light
 			return false;
 		}
 
-		ArchetypeEntityData& archetypeEntityData = fromArchetype.m_EntitiesData[entityIndex];
-		DECS_ASSERT(archetypeEntityData.GetEntityData() != nullptr, "cannot move record where entity data is nullptr!");
+		EntityData* entityData = fromArchetype.m_Entities.Get(entityIndex);
+		DECS_ASSERT(entityData != nullptr, "cannot move record where entity data is nullptr!");
 
-		toArchetype.AddEntityData(archetypeEntityData.GetEntityData());
-		archetypeEntityData.Invalidate();
+		toArchetype.AddEntityData(entityData);
 
 		uint64_t thisArchetypeIndex = 0;
 		uint64_t fromArchetypeIndex = 0;

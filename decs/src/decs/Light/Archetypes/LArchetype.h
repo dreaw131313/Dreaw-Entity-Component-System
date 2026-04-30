@@ -16,123 +16,115 @@ namespace decs::light
 	class Entity;
 	class Archetype;
 
-	struct ArchetypeEntityData
+	struct ArchetypeEntityList
 	{
 	public:
-		EntityData* m_EntityData = nullptr;
+		ArchetypeEntityList() = default;
 
-	public:
-		ArchetypeEntityData()
-		{
-
-		}
-
-		ArchetypeEntityData(
-			EntityData* entityData
-		):
-			m_EntityData(entityData)
-		{
-
-		}
-
-		inline EntityData* GetEntityData()
-		{
-			return m_EntityData;
-		}
-
-		inline void Invalidate()
-		{
-			m_EntityData = nullptr;
-		}
-
-		inline bool IsValid() const
-		{
-			return m_EntityData != nullptr;
-		}
-
-	};
-
-	struct EntityArchetypeContainer
-	{
-	public:
-		EntityArchetypeContainer() = default;
-
-		~EntityArchetypeContainer() = default;
+		~ArchetypeEntityList() = default;
 
 		inline size_t Size() const noexcept
 		{
-			return m_EntityData.size();
+			return m_Entities.size();
+		}
+
+		inline size_t Capacity() const noexcept
+		{
+			return m_Entities.capacity();
+		}
+
+		inline void ShrinkToFit()
+		{
+			m_Entities.shrink_to_fit();
 		}
 
 		inline std::span<EntityData* const> Data() const noexcept
 		{
-			return m_EntityData;
+			return m_Entities;
 		}
 
 		inline bool Empty() const noexcept
 		{
-			return m_EntityData.empty();
+			return m_Entities.empty();
+		}
+
+		inline void Clear()
+		{
+			m_Entities.clear();
+		}
+
+		inline void Reserve(size_t capacity)
+		{
+			m_Entities.reserve(capacity);
 		}
 
 		inline void PushBack(EntityData* entityData)
 		{
-			m_EntityData.push_back(entityData);
+			DECS_ASSERT(entityData != nullptr, "entityData must not be nullptr!");
+			m_Entities.push_back(entityData);
+		}
+
+		inline void PushBackUpdateIndex(EntityData* entityData)
+		{
+			DECS_ASSERT(entityData != nullptr, "entityData must not be nullptr!");
+			entityData->m_IndexInArchetype = static_cast<uint32_t>(m_Entities.size());
+			m_Entities.push_back(entityData);
 		}
 
 		inline void PopBack()
 		{
-			if (!m_EntityData.empty())
+			if (!m_Entities.empty())
 			{
-				m_EntityData.pop_back();
+				m_Entities.pop_back();
 			}
 		}
 
 		inline EntityData* Back() const
 		{
-			return m_EntityData.back();
+			return m_Entities.back();
 		}
 
 		inline EntityData* Get(size_t index) const
 		{
-			return m_EntityData[index];
+			return m_Entities[index];
 		}
 
 		inline bool RemoveSwapBack(size_t index)
 		{
-			if (index >= m_EntityData.size())
+			if (index >= m_Entities.size())
 			{
 				return false;
 			}
 
-			if (index < (m_EntityData.size() - 1))
+			if (index < (m_Entities.size() - 1))
 			{
-				m_EntityData[index] = m_EntityData.back();
+				m_Entities[index] = m_Entities.back();
 			}
-			m_EntityData.pop_back();
+			m_Entities.pop_back();
 
 			return true;
 		}
 
 		inline bool RemoveSwapBack_UpdateEntityIndex(size_t index)
 		{
-			if (index >= m_EntityData.size())
+			if (index >= m_Entities.size())
 			{
 				return false;
 			}
 
-			if (index < (m_EntityData.size() - 1))
+			if (index < (m_Entities.size() - 1))
 			{
-				auto backEntity = m_EntityData.back();
-				backEntity->m_IndexInArchetype = static_cast<uint32_t>(m_EntityData.size());
-				m_EntityData[index] = m_EntityData.back();
+				auto backEntity = m_Entities.back();
+				backEntity->m_IndexInArchetype = static_cast<uint32_t>(m_Entities.size());
+				m_Entities[index] = m_Entities.back();
 			}
-			m_EntityData.pop_back();
+			m_Entities.pop_back();
 
 			return true;
 		}
 
 	private:
-		std::vector<EntityData*> m_EntityData{};
+		std::vector<EntityData*> m_Entities{};
 	};
 
 	struct ArchetypeTypeData
@@ -213,8 +205,8 @@ namespace decs::light
 		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
 		ecsMap<TypeID, ArchetypeEdge> m_Edges;
 
-		std::vector<ArchetypeEntityData> m_EntitiesData;
-		std::vector<ArchetypeTypeData> m_TypeData;
+		ArchetypeEntityList m_Entities{};
+		std::vector<ArchetypeTypeData> m_TypeData{};
 
 	public:
 		Archetype();
@@ -233,13 +225,18 @@ namespace decs::light
 
 		inline uint64_t EntityCount() const noexcept
 		{
-			return m_EntitiesData.size();
+			return m_Entities.Size();
+		}
+
+		inline const ArchetypeEntityList& GetEntities() const noexcept
+		{
+			return m_Entities;
 		}
 
 		inline float GetLoadFactor()const
 		{
-			if (m_EntitiesData.capacity() == 0) return 1.f;
-			return (float)EntityCount() / (float)m_EntitiesData.capacity();
+			if (m_Entities.Capacity() == 0) return 1.f;
+			return (float)m_Entities.Size() / (float)m_Entities.Capacity();
 		}
 
 		bool ContainType(TypeID typeID) const;
@@ -395,11 +392,11 @@ namespace decs::light
 
 		void AddEntityData(EntityData* entityData);
 
-		void RemoveSwapBackEntityData(uint64_t index);
+		void RemoveSwapBackEntityData(size_t index);
 
-		void RemoveSwapBackEntity(uint64_t index);
+		void RemoveSwapBackEntity(size_t index);
 
-		void ReserveSpaceInArchetype(uint64_t desiredCapacity);
+		void ReserveSpaceInArchetype(size_t desiredCapacity);
 
 		void Reset();
 

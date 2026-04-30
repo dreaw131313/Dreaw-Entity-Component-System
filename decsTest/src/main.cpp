@@ -5,20 +5,21 @@
 
 int main()
 {
-	/*{
+	{
 		std::cout << "\n";
 		std::cout << "/////////////////////////////////////" << "\n";
 		std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
 		std::cout << "/////////////////////////////////////" << "\n";
 		Light::Test{}.IterationTest();
-	}*/
+		//Light::Test{}.PerformanceTest();
+	}
 
-	{
+	/*{
 		std::cout << "///////////////////////////////////////////" << "\n";
 		std::cout << "///////// PERFORMANCE ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
 		Normal::Test{}.Run();
-	}
+	}*/
 
 	return 0;
 }

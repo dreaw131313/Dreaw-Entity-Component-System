@@ -190,11 +190,9 @@ namespace decs::light
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
 
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
 				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 			}
 		}
@@ -209,12 +207,11 @@ namespace decs::light
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			auto& entities = this->GetArchetype()->GetEntities();
 
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entities.Get(static_cast<size_t>(idx)), idx, containersTuple);
 			}
 		}
 
@@ -232,12 +229,12 @@ namespace decs::light
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			auto& entities = this->GetArchetype()->GetEntities();
 
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValid())
+				auto entityData = entities.Get(idx);
+				if (entityData != nullptr)
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 				}
@@ -254,14 +251,14 @@ namespace decs::light
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			auto& entities = this->GetArchetype()->GetEntities();
 
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValid())
+				auto entityData = entities.Get(idx);
+				if (entityData != nullptr)
 				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData, idx, containersTuple);
 				}
 			}
 		}
@@ -280,12 +277,10 @@ namespace decs::light
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
 
 			int64_t idx = ctxEntityCount - 1;
 			for (; idx > -1; idx--)
 			{
-				const auto& entityData = entitiesData[idx];
 				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 			}
 		}
@@ -300,13 +295,13 @@ namespace decs::light
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			auto& entities = this->GetArchetype()->GetEntities();
 
 			int64_t idx = ctxEntityCount - 1;
 			for (; idx > -1; idx--)
 			{
-				const auto& entityData = entitiesData[idx];
-				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+				auto entityData = entities.Get(idx);
+				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData, idx, containersTuple);
 			}
 		}
 
@@ -324,13 +319,13 @@ namespace decs::light
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			auto& entities = this->GetArchetype()->GetEntities();
 
 			int64_t idx = ctxEntityCount - 1;
 			for (; idx > -1; idx--)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValid())
+				auto entityData = entities.Get(idx);
+				if (entityData != nullptr)
 				{
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 				}
@@ -347,15 +342,15 @@ namespace decs::light
 			}
 
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			auto& entities = this->GetArchetype()->GetEntities();
 
 			int64_t idx = ctxEntityCount - 1;
 			for (; idx > -1; idx--)
 			{
-				const auto& entityData = entitiesData[idx];
-				if (entityData.IsValid())
+				auto entityData = entities.Get(idx);
+				if (entityData != nullptr)
 				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData, idx, containersTuple);
 				}
 			}
 		}
@@ -368,11 +363,9 @@ namespace decs::light
 		void ForEachFromTo(Callable&& func, uint64_t fromIdx, uint64_t toIdx) const
 		{
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
 
 			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
 				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
 			}
 		}
@@ -381,12 +374,11 @@ namespace decs::light
 		void ForEachFromTo_WithEntity(Callable&& func, Entity& entityBuffer, uint64_t fromIdx, uint64_t toIdx) const
 		{
 			const auto& containersTuple = this->GetContainersTuple();
-			const std::vector<ArchetypeEntityData>& entitiesData = this->GetArchetype()->m_EntitiesData;
+			auto& entities = this->GetArchetype()->GetEntities();
 
 			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
 			{
-				const auto& entityData = entitiesData[idx];
-				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple);
+				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entities.Get(idx), idx, containersTuple);
 			}
 		}
 
@@ -494,7 +486,7 @@ namespace decs::light
 				uint64_t maxComponentsInArchetype = map.MaxTypeCountInArchetypes();
 				if (maxComponentsInArchetype >= minComponentsCount)
 				{
-					if (filter.GetIncludes().Size() > 0 )
+					if (filter.GetIncludes().Size() > 0)
 					{
 						if (newArchetypesCount > m_ArchetypesContexts.size())
 						{
