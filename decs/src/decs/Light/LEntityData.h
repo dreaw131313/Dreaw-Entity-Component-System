@@ -14,6 +14,7 @@ namespace decs::light
 		friend class Container;
 		friend class Entity;
 		friend class EntityManager;
+		friend class EntityArchetypeContainer;
 
 	private:
 		Archetype* m_Archetype = nullptr;

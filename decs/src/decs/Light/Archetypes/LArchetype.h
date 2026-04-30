@@ -52,6 +52,89 @@ namespace decs::light
 
 	};
 
+	struct EntityArchetypeContainer
+	{
+	public:
+		EntityArchetypeContainer() = default;
+
+		~EntityArchetypeContainer() = default;
+
+		inline size_t Size() const noexcept
+		{
+			return m_EntityData.size();
+		}
+
+		inline std::span<EntityData* const> Data() const noexcept
+		{
+			return m_EntityData;
+		}
+
+		inline bool Empty() const noexcept
+		{
+			return m_EntityData.empty();
+		}
+
+		inline void PushBack(EntityData* entityData)
+		{
+			m_EntityData.push_back(entityData);
+		}
+
+		inline void PopBack()
+		{
+			if (!m_EntityData.empty())
+			{
+				m_EntityData.pop_back();
+			}
+		}
+
+		inline EntityData* Back() const
+		{
+			return m_EntityData.back();
+		}
+
+		inline EntityData* Get(size_t index) const
+		{
+			return m_EntityData[index];
+		}
+
+		inline bool RemoveSwapBack(size_t index)
+		{
+			if (index >= m_EntityData.size())
+			{
+				return false;
+			}
+
+			if (index < (m_EntityData.size() - 1))
+			{
+				m_EntityData[index] = m_EntityData.back();
+			}
+			m_EntityData.pop_back();
+
+			return true;
+		}
+
+		inline bool RemoveSwapBack_UpdateEntityIndex(size_t index)
+		{
+			if (index >= m_EntityData.size())
+			{
+				return false;
+			}
+
+			if (index < (m_EntityData.size() - 1))
+			{
+				auto backEntity = m_EntityData.back();
+				backEntity->m_IndexInArchetype = static_cast<uint32_t>(m_EntityData.size());
+				m_EntityData[index] = m_EntityData.back();
+			}
+			m_EntityData.pop_back();
+
+			return true;
+		}
+
+	private:
+		std::vector<EntityData*> m_EntityData{};
+	};
+
 	struct ArchetypeTypeData
 	{
 	public:

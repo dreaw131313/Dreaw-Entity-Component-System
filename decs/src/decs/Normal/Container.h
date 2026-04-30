@@ -519,7 +519,7 @@ namespace decs
 			Archetype* oldArchetype = entityData.m_Archetype;
 			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
-			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype);
+			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(oldArchetype);
 			uint32_t componentTypeIndex = newArchetype->FindTypeIndex<TComponent>();
 			ArchetypeTypeData& archetypeTypeData = newArchetype->m_TypeData[componentTypeIndex];
 

@@ -59,25 +59,14 @@ namespace decs
 		std::vector<TComponent*> m_Data;
 
 	public:
-		PackedStableComponentContainer()
-		{
+		PackedStableComponentContainer() = default;
 
-		}
-
-		~PackedStableComponentContainer()
-		{
-
-		}
+		~PackedStableComponentContainer() = default;
 
 		inline uint64_t GetComponentSize() const override
 		{
 			return sizeof(TComponent);
 		}
-
-		/*virtual IPackedLightComponentContainer* Clone() const  override
-		{
-			return new PackedStableComponentContainer<TComponent>();
-		}*/
 
 		inline void PopBack() override
 		{
