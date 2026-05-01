@@ -256,12 +256,6 @@ namespace decs
 		}
 	};
 
-	enum class EComponentEdgeType
-	{
-		Add = 0,
-		Remove = 1
-	};
-
 	struct ArchetypeEdge
 	{
 	public:
@@ -308,7 +302,6 @@ namespace decs
 
 		template<TComponentConcept...>
 		friend class BatchIterator;
-
 
 	private:
 		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes{};

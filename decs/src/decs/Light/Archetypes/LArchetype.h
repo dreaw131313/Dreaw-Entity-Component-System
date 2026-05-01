@@ -154,12 +154,6 @@ namespace decs::light
 		}
 	};
 
-	enum class EComponentEdgeType
-	{
-		Add = 0,
-		Remove = 1
-	};
-
 	struct ArchetypeEdge
 	{
 	public:

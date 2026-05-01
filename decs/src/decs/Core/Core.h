@@ -79,4 +79,11 @@ namespace decs
 		NonCopyableNonMoveable(NonCopyableNonMoveable&&) noexcept = delete;
 		NonCopyableNonMoveable& operator=(NonCopyableNonMoveable&&) noexcept = delete;
 	};
+
+	enum class EComponentEdgeType : uint8_t
+	{
+		Add = 0,
+		Remove = 1
+	};
+
 }
