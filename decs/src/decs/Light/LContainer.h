@@ -36,30 +36,10 @@ namespace decs::light
 
 		~Container();
 
-
-	#pragma region Extension data
-	public:
-		template<typename T>
-		void SetExtensionData(T* data)
-		{
-			m_ExtensionData = static_cast<T*>(data);
-		}
-
-		template<typename T>
-		[[nodiscard]] T* GetExtensionData()
-		{
-			return static_cast<T*>(m_ExtensionData);
-		}
-
-	private:
-		void* m_ExtensionData = nullptr;
-
-	#pragma endregion 
-
 	#pragma region UTILITY
 	public:
 		/// <summary>
-		/// Returns all owned entites to entity manager. Clears all created components. Does not destroy created archetypes and does not clears seted observer manager. This function does not invoke any methods from observers.
+		/// Returns all owned entites to entity manager. Clears all created components. Does not destroy created archetypes.
 		/// </summary>
 		void Clear();
 

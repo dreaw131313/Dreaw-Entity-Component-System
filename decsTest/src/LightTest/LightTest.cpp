@@ -285,7 +285,7 @@ namespace Light
 	void Test::PerformanceTest()
 	{
 		const uint32_t testCount = 10;
-		const uint32_t entityCount = 4096;
+		const uint32_t entityCount = 5000;
 
 		decs::light::ContainerConfig config{
 			.EntityChunkSize = 10000,
@@ -294,30 +294,23 @@ namespace Light
 
 		double finalAvarage = 0;
 
-		decs::light::Container container{ config };
 
 		auto perfTest = [&]()
 		{
+			decs::light::Container container{ config };
+			decs::LightComponentTypeGroup<Position, TestComponent> comps{};
 			double sum = 0;
-
 			for (uint32_t testIdx = 0; testIdx < testCount; testIdx++)
 			{
-					decs::LightComponentTypeGroup<Position, TestComponent> comps{};
 				MeasureTimer timer(true);
 				{
-
-
 					for (uint32_t i = 0; i < entityCount; i++)
 					{
-						auto entity = container.CreateEntity();
-						entity.AddComponent<Position>();
-						entity.AddComponent<TestComponent>();
+						container.CreateEntity(comps, [](Position& pos, TestComponent& test) 
+						{
+
+						});
 					}
-
-
-					/*for (uint32_t i = 0; i < entityCount; i++)
-					{
-					}*/
 				}
 				sum += timer.ElapsedAsMilisecond();
 

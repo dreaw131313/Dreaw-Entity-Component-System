@@ -10,7 +10,7 @@ int main()
 		std::cout << "/////////////////////////////////////" << "\n";
 		std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
 		std::cout << "/////////////////////////////////////" << "\n";
-		Light::Test{}.IterationTest();
+		Light::Test{}.PerformanceTest();
 		//Light::Test{}.PerformanceTest();
 	}
 
