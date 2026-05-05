@@ -91,16 +91,26 @@ namespace Light
 		}*/
 
 		{
-			decs::LightComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
-			decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
+			using ComponentTypeGroup = decs::LightComponentTypeGroup<TestComponent, Renderer, Position>;
+			using TagTypeGroup = decs::TagTypeGroup<FloatTag, IntTag, BoolTag>;
+
+			ComponentTypeGroup componetns{};
+			TagTypeGroup tags{};
 
 			auto initFunc = [](const Entity& e, TestComponent& component, Renderer& renderer, Position& position)
 			{
-				PrintLine("Init from helepr create entity func!");
+				PrintLine("Init from entity spawner!");
 			};
 
-			container.CreateEntities(componetns, 10, initFunc);
-			container.CreateEntity(componetns, initFunc);
+
+			decs::light::EntitySpawner<ComponentTypeGroup, TagTypeGroup> spawner{ &container };
+			spawner.Spawn(10, initFunc);
+
+			decs::light::EntitySpawner<ComponentTypeGroup> spawner2{ &container };
+			spawner.Spawn(initFunc);
+
+			// container.CreateEntities(componetns, 10, initFunc);
+			// container.CreateEntity(componetns, initFunc);
 		}
 
 		/*{
