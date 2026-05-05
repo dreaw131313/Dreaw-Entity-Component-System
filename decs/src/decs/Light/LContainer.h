@@ -6,6 +6,9 @@
 namespace decs::light
 {
 	class Entity;
+	template<typename Components, typename Tags>
+	struct EntitySpawner;
+
 
 	struct ContainerConfig
 	{
@@ -24,6 +27,9 @@ namespace decs::light
 		friend class light::IterationContainerContext;
 		friend class light::Entity;
 		friend class light::ContainerIterator;
+
+		template<typename Components, typename Tags>
+		friend struct light::EntitySpawner;
 
 	private:
 		static constexpr uint64_t m_DefaultEntitiesChunkSize = 1000;
@@ -228,7 +234,15 @@ namespace decs::light
 			constexpr const TagTypeGroup<> tags{};
 			return CreateEntity(components, tags, initFunc);
 		}
+
 	private:
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="archetype"></param>
+		/// <returns>New entity index in archetype</returns>
+		Entity CreateEntityInArchetype(Archetype& archetype);
+
 		bool DestroyEntityInternal(const Entity& entity, bool bInvokeObservers);
 
 		EntityData* GetEntityData(const Entity& entity) const;
@@ -456,6 +470,20 @@ namespace decs::light
 			}
 
 			return entityNewArchetype;
+		}
+
+		template<TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		Archetype* GetArchetypeWithComponentsAndTags(
+			const LightComponentTypeGroup<ComponentTypes...> components,
+			const TagTypeGroup<TagTypes...> tags
+		)
+		{
+			Archetype* spawnArchetype = nullptr;
+
+			((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
+			((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
+
+			return spawnArchetype;
 		}
 
 	#pragma endregion

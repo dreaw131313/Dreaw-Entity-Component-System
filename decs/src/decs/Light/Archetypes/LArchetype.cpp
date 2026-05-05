@@ -169,6 +169,27 @@ namespace decs::light
 		m_Entities.PushBackUpdateIndex(entityData);
 	}
 
+	bool Archetype::AddEntityDataAndDefaultComponents(EntityData* entityData)
+	{
+		if (entityData == nullptr)
+		{
+			return false;
+		}
+
+		entityData->m_Archetype = this;
+		m_Entities.PushBackUpdateIndex(entityData);
+
+		for (auto& typeData : m_TypeData)
+		{
+			if (!typeData.IsTag())
+			{
+				typeData.m_PackedContainer->PushBackDefault();
+			}
+		}
+
+		return true;
+	}
+
 	void Archetype::RemoveSwapBackEntityData(size_t index)
 	{
 		m_Entities.RemoveSwapBack_UpdateEntityIndex(index);
