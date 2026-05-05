@@ -137,6 +137,7 @@
     <ClInclude Include="src\decs\Normal\Entity.h" />
     <ClInclude Include="src\decs\Normal\EntityData.h" />
     <ClInclude Include="src\decs\Normal\EntityManager.h" />
+    <ClInclude Include="src\decs\Light\EntitySpawner.h" />
     <ClInclude Include="src\decs\Normal\Iteration\IterationCore.h" />
     <ClInclude Include="src\decs\Normal\Iteration\MultiQuery.h" />
     <ClInclude Include="src\decs\Normal\Iteration\Query.h" />

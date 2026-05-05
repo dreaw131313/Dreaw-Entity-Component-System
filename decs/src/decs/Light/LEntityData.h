@@ -69,6 +69,11 @@ namespace decs::light
 			return m_Container == nullptr;
 		}
 
+		inline size_t IndexInArchetype() const noexcept
+		{
+			return static_cast<size_t>(m_IndexInArchetype);
+		}
+
 	private:
 		inline void OnDestroyByEntityManager()
 		{

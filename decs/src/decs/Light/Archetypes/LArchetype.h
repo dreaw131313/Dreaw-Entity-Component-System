@@ -15,6 +15,8 @@ namespace decs::light
 {
 	class Entity;
 	class Archetype;
+	template<typename Components, typename Tags>
+	struct EntitySpawner;
 
 	struct ArchetypeEntityList
 	{
@@ -194,6 +196,8 @@ namespace decs::light
 		friend class light::IterationArchetypeContext;
 		template<TLightComponentConcept...>
 		friend class light::IterationContainerContext;
+		template<typename Components, typename Tags>
+		friend struct light::EntitySpawner;
 
 	private:
 		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
@@ -385,6 +389,8 @@ namespace decs::light
 		);
 
 		void AddEntityData(EntityData* entityData);
+
+		bool AddEntityDataAndDefaultComponents(EntityData* entityData);
 
 		void RemoveSwapBackEntityData(size_t index);
 

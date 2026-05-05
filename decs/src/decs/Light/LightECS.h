@@ -5,3 +5,4 @@
 #include "Iteration/LContainerIterator.h"
 #include "Iteration/LQuery.h"
 #include "Iteration/LMultiQuery.h"
+#include "EntitySpawner.h"

@@ -39,6 +39,11 @@ namespace decs::light
 		virtual void MoveBack(void* componentPtr) = 0;
 
 		virtual IPackedLightComponentContainer* CloneEmpty() const = 0;
+
+		/// <summary>
+		/// Adds default constructed new component on end of container
+		/// </summary>
+		virtual void PushBackDefault() = 0;
 	};
 
 	template<typename TComponent>
@@ -122,12 +127,12 @@ namespace decs::light
 			m_Data.emplace_back(std::move(*static_cast<TComponent*>(componentPtr)));
 		}
 
-		inline TComponent& GetAsRef(uint64_t index)
+		inline TComponent& GetAsRef(size_t index)
 		{
 			return m_Data[index];
 		}
 
-		inline TComponent* GetAsPtr(uint64_t index)
+		inline TComponent* GetAsPtr(size_t index)
 		{
 			return &m_Data[index];
 		}
@@ -141,6 +146,11 @@ namespace decs::light
 		inline IPackedLightComponentContainer* CloneEmpty() const override
 		{
 			return new PackedLightComponentContainer<TComponent>();
+		}
+
+		inline void PushBackDefault() override
+		{
+			m_Data.emplace_back();
 		}
 
 		inline std::span<TComponent> GetAsSpan()

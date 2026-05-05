@@ -22,7 +22,7 @@ namespace Light
 		float X = 0;
 		float Y = 0;
 
-		int table[50];
+		int table[4];
 
 	public:
 		Position()
@@ -44,7 +44,7 @@ namespace Light
 	struct TestComponent
 	{
 	public:
-		int table[100];
+		int table[20];
 
 	};
 
@@ -91,16 +91,26 @@ namespace Light
 		}*/
 
 		{
-			decs::LightComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
-			decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
+			using ComponentTypeGroup = decs::LightComponentTypeGroup<TestComponent, Renderer, Position>;
+			using TagTypeGroup = decs::TagTypeGroup<FloatTag, IntTag, BoolTag>;
+
+			ComponentTypeGroup componetns{};
+			TagTypeGroup tags{};
 
 			auto initFunc = [](const Entity& e, TestComponent& component, Renderer& renderer, Position& position)
 			{
-				PrintLine("Init from helepr create entity func!");
+				PrintLine("Init from entity spawner!");
 			};
 
-			container.CreateEntities(componetns, 10, initFunc);
-			container.CreateEntity(componetns, initFunc);
+
+			decs::light::EntitySpawner<ComponentTypeGroup, TagTypeGroup> spawner{ &container };
+			spawner.Spawn(10, initFunc);
+
+			decs::light::EntitySpawner<ComponentTypeGroup> spawner2{ &container };
+			spawner.Spawn(initFunc);
+
+			// container.CreateEntities(componetns, 10, initFunc);
+			// container.CreateEntity(componetns, initFunc);
 		}
 
 		/*{
@@ -284,8 +294,8 @@ namespace Light
 
 	void Test::PerformanceTest()
 	{
-		const uint32_t testCount = 10;
-		const uint32_t entityCount = 5000;
+		const uint32_t testCount = 1;
+		const uint32_t entityCount = 50000;
 
 		decs::light::ContainerConfig config{
 			.EntityChunkSize = 10000,
@@ -294,23 +304,33 @@ namespace Light
 
 		double finalAvarage = 0;
 
+		decs::light::Container container{ config };
+
+		using SpawnerComponentTypes = decs::LightComponentTypeGroup<Position, TestComponent>;
+		using SpawnerComponentTags = decs::TagTypeGroup<>;
+		decs::light::EntitySpawner<SpawnerComponentTypes> entitySpawner{ &container };
 
 		auto perfTest = [&]()
 		{
-			decs::light::Container container{ config };
 			decs::LightComponentTypeGroup<Position, TestComponent> comps{};
+
 			double sum = 0;
 			for (uint32_t testIdx = 0; testIdx < testCount; testIdx++)
 			{
 				MeasureTimer timer(true);
 				{
-					for (uint32_t i = 0; i < entityCount; i++)
+					entitySpawner.Spawn(entityCount, [](Position& pos, TestComponent& test)
 					{
-						container.CreateEntity(comps, [](Position& pos, TestComponent& test) 
+
+					});
+
+					/*for (uint32_t i = 0; i < entityCount; i++)
+					{
+						container.CreateEntity(comps, [](Position& pos, TestComponent& test)
 						{
 
 						});
-					}
+					}*/
 				}
 				sum += timer.ElapsedAsMilisecond();
 
