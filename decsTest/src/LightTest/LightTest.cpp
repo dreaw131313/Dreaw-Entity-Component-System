@@ -22,7 +22,7 @@ namespace Light
 		float X = 0;
 		float Y = 0;
 
-		int table[4];
+		int table[100];
 
 	public:
 		Position()
@@ -44,7 +44,7 @@ namespace Light
 	struct TestComponent
 	{
 	public:
-		int table[20];
+		int table[100];
 
 	};
 
@@ -309,6 +309,13 @@ namespace Light
 		using SpawnerComponentTypes = decs::LightComponentTypeGroup<Position, TestComponent>;
 		using SpawnerComponentTags = decs::TagTypeGroup<>;
 		decs::light::EntitySpawner<SpawnerComponentTypes> entitySpawner{ &container };
+
+		MeasureTimer reserveSpaceTimer(true);
+		{
+			entitySpawner.ReserveSpaceInArchetype(entityCount);
+		}
+		double reserveSpaceTime = reserveSpaceTimer.ElapsedAsMilisecond();
+		PrintLine(std::format("Rerve space time: {0} ms", reserveSpaceTime));
 
 		auto perfTest = [&]()
 		{

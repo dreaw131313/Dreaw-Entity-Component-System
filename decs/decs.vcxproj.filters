@@ -147,7 +147,7 @@
     <ClInclude Include="src\decs\Normal\Component\ComponentAllocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Light\EntitySpawner.h">
+    <ClInclude Include="src\decs\Light\LEntitySpawner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

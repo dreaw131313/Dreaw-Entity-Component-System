@@ -38,6 +38,34 @@ namespace decs::light
 			FetchArchetype();
 		}
 
+		/// <summary>
+		/// Reserves space in archetype, that entities conatiner and each component container has reserved at least desiredSpace
+		/// </summary>
+		/// <param name="desiredSpace"></param>
+		void ReserveSpaceInArchetype(size_t desiredSpace)
+		{
+			if (!IsValid())
+			{
+				return;
+			}
+
+			m_Archetype->ReserveSpaceInArchetype(desiredSpace);
+		}
+
+		/// <summary>
+		/// Reserves space in archetype, that entities conatiner and each component conta0iner has reserved at least archetype entity count + desiredSpace capacity
+		/// </summary>
+		/// <param name="desiredSpace"></param>
+		void ReserveAditionalSpaceInArchetype(size_t desiredSpace)
+		{
+			if (!IsValid())
+			{
+				return;
+			}
+
+			m_Archetype->ReserveSpaceInArchetype(desiredSpace + m_Archetype->GetEntities().Size());
+		}
+
 		template<typename InitFunc>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		Entity Spawn(InitFunc&& func)
