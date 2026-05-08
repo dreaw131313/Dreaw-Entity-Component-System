@@ -6,6 +6,9 @@
 
 namespace decs
 {
+
+#pragma region TAG
+
 	template<typename T>
 	struct tag final
 	{
@@ -34,7 +37,40 @@ namespace decs
 	inline constexpr bool contain_tags_v = (is_tag_v<Ts> || ...);
 
 	template<typename TTag>
-	concept TTagConcept = is_tag_v<TTag>;
+	concept tag_concept = is_tag_v<TTag>;
+
+#pragma endregion
+
+#pragma region FILTER
+
+	template<typename T>
+	struct filter
+	{
+	public:
+		using UnderlyingType = T;
+	};
+
+	template<typename T>
+	struct is_filter final
+	{
+	public:
+		inline static constexpr bool value = false;
+	};
+
+	template<typename T>
+	struct is_filter<filter<T>> final
+	{
+	public:
+		inline static constexpr bool value = true;
+	};
+
+	template<typename T>
+	inline constexpr bool is_filter_v = is_filter<T>::value;
+
+	template<typename T>
+	concept filter_concept = is_filter_v<T>;
+
+#pragma endregion
 
 	template<typename T>
 	struct is_const
@@ -147,7 +183,7 @@ namespace decs
 	concept TLightComponentConcept = !std::is_same_v<T, bool> && !is_tag_v<T>;
 
 	template<typename T>
-	concept TLightComponentOrTagConcept = TLightComponentConcept<T> || TTagConcept<T>;
+	concept TLightComponentOrTagConcept = TLightComponentConcept<T> || tag_concept<T>;
 
 	template<TLightComponentConcept... Types>
 	class LightComponentTypeGroup
@@ -167,7 +203,7 @@ namespace decs
 		TypeGroup<Types...> m_Group{};
 	};
 
-	template<TTagConcept... Types>
+	template<tag_concept... Types>
 	class TagTypeGroup
 	{
 	public:

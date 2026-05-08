@@ -80,10 +80,26 @@ namespace decs
 		NonCopyableNonMoveable& operator=(NonCopyableNonMoveable&&) noexcept = delete;
 	};
 
-	enum class EComponentEdgeType : uint8_t
+	enum class EArchetypeEdgeType : uint8_t
 	{
 		Add = 0,
 		Remove = 1
+	};
+
+	enum class EArchetypeTypeDataCategory
+	{
+		/// <summary>
+		/// Normal category
+		/// </summary>
+		Component,
+		/// <summary>
+		/// Normal tag
+		/// </summary>
+		Tag,
+		/// <summary>
+		/// Behaves like shared component - 
+		/// </summary>
+		Filter,
 	};
 
 }

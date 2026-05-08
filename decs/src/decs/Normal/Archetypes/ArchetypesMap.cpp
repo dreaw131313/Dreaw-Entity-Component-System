@@ -141,8 +141,8 @@ namespace decs
 						auto edgeTypeID = archetype.IsRemoveComponentNeighbour(*neighbour);
 						if (edgeTypeID.has_value() && !archetype.HasAnyEdge(edgeTypeID.value()))
 						{
-							neighbour->AddEdge(edgeTypeID.value(), &archetype, EComponentEdgeType::Add);
-							archetype.AddEdge(edgeTypeID.value(), neighbour, EComponentEdgeType::Remove);
+							neighbour->AddEdge(edgeTypeID.value(), &archetype, EArchetypeEdgeType::Add);
+							archetype.AddEdge(edgeTypeID.value(), neighbour, EArchetypeEdgeType::Remove);
 						}
 					}
 				}
@@ -162,8 +162,8 @@ namespace decs
 			{
 				if (auto edgeTypeID = archetype.IsAddComponentNeighbour(*neighbour))
 				{
-					neighbour->AddEdge(edgeTypeID.value(), &archetype, EComponentEdgeType::Remove);
-					archetype.AddEdge(edgeTypeID.value(), neighbour, EComponentEdgeType::Add);
+					neighbour->AddEdge(edgeTypeID.value(), &archetype, EArchetypeEdgeType::Remove);
+					archetype.AddEdge(edgeTypeID.value(), neighbour, EArchetypeEdgeType::Add);
 				}
 			}
 		}
@@ -248,7 +248,7 @@ namespace decs
 		auto edge = toArchetype.GetEdge(componentTypeID);
 		if (edge.IsValid())
 		{
-			if (edge.m_EdgeType == EComponentEdgeType::Add)
+			if (edge.m_EdgeType == EArchetypeEdgeType::Add)
 			{
 				return edge.m_Archetype;
 			}
@@ -293,7 +293,7 @@ namespace decs
 		auto edge = fromArchetype.GetEdge(removedComponentTypeID);
 		if (edge.IsValid())
 		{
-			if (edge.m_EdgeType == EComponentEdgeType::Remove)
+			if (edge.m_EdgeType == EArchetypeEdgeType::Remove)
 			{
 				return edge.m_Archetype;
 			}

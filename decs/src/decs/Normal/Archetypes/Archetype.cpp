@@ -459,7 +459,7 @@ namespace decs
 		}
 	}
 
-	void Archetype::AddEdge(TypeID componentTypeID, Archetype* archetype, EComponentEdgeType edgeType)
+	void Archetype::AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType)
 	{
 		auto& edge = m_Edges[componentTypeID];
 		if (!edge.IsValid())

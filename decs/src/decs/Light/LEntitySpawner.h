@@ -12,7 +12,7 @@ namespace decs::light
 	template<typename Components, typename Tags = TagTypeGroup<>>
 	struct EntitySpawner;
 
-	template<TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+	template<TLightComponentConcept... ComponentTypes, tag_concept... TagTypes>
 	struct EntitySpawner<LightComponentTypeGroup<ComponentTypes...>, TagTypeGroup<TagTypes...>>
 	{
 	public:

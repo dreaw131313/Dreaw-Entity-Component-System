@@ -63,6 +63,8 @@ namespace Light
 
 	void Test::IterationTest()
 	{
+		using FloatFilter = decs::filter<float>;
+
 		using FloatTag = decs::tag<float>;
 		using IntTag = decs::tag<int>;
 		using DoubleTag = decs::tag<double>;

@@ -166,7 +166,7 @@ namespace decs::light
 			return false;
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		[[nodiscard]] inline bool HasTag()const
 		{
 			if (IsValid())
@@ -176,7 +176,7 @@ namespace decs::light
 			return false;
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		bool AddTag()const
 		{
 			if (IsValid())
@@ -195,7 +195,7 @@ namespace decs::light
 			return false;
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		bool RemoveTag() const
 		{
 			if (IsValid())

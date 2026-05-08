@@ -85,7 +85,7 @@ namespace decs::light
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<typename InitFunc, TLightComponentConcept... ComponentTypes, tag_concept... TagTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
 			const LightComponentTypeGroup<ComponentTypes...> components,
@@ -169,7 +169,7 @@ namespace decs::light
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<typename InitFunc, TLightComponentConcept... ComponentTypes, tag_concept... TagTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
 			const LightComponentTypeGroup<ComponentTypes...> components,
@@ -362,6 +362,20 @@ namespace decs::light
 
 	#pragma endregion
 
+	#pragma region FILTERS
+	public:
+		template<typename Filter>
+		bool SetFilter(EntityData& entityData, const Filter& filter)
+		{
+
+
+			return true;
+		}
+
+	private:
+
+	#pragma endregion
+
 	#pragma region TAGS:
 	private:
 		Archetype* GetArchetypeAfterAddTag(Archetype* toArchetype, TypeID tagID)
@@ -389,13 +403,13 @@ namespace decs::light
 			return entityData.m_Archetype->HasTag(tagType);
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		inline bool HasTag(const EntityData& entityData)
 		{
 			return HasTag(entityData, Type<TTag>::ID());
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		bool AddTag(EntityData& entityData)
 		{
 			Archetype* oldArchetype = entityData.m_Archetype;
@@ -425,7 +439,7 @@ namespace decs::light
 
 		bool RemoveTag(EntityData& entityData, TypeID tagType);
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		bool RemoveTag(EntityData& entityData)
 		{
 			return RemoveTag(entityData, Type<TTag>::ID());
@@ -472,7 +486,7 @@ namespace decs::light
 			return entityNewArchetype;
 		}
 
-		template<TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<TLightComponentConcept... ComponentTypes, tag_concept... TagTypes>
 		Archetype* GetArchetypeWithComponentsAndTags(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags

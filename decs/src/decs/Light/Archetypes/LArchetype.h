@@ -5,6 +5,7 @@
 #include "decs/Core/Hash.h"
 #include "decs/Core/check_cast.h"
 #include "decs/Light/Component/PackedLightComponentContainer.h"
+#include "decs/Light/Filter/LFilter.h"
 #include "decs/Light/LEntityData.h"
 
 #include "decs/Light/LightForward.h"
@@ -160,7 +161,7 @@ namespace decs::light
 	{
 	public:
 		Archetype* m_Archetype = nullptr;
-		EComponentEdgeType m_EdgeType = EComponentEdgeType::Add;
+		EArchetypeEdgeType m_EdgeType = EArchetypeEdgeType::Add;
 
 	public:
 		ArchetypeEdge()
@@ -168,7 +169,7 @@ namespace decs::light
 
 		}
 
-		ArchetypeEdge(Archetype* archetype, EComponentEdgeType edgeType):
+		ArchetypeEdge(Archetype* archetype, EArchetypeEdgeType edgeType):
 			m_Archetype(archetype), m_EdgeType(edgeType)
 		{
 
@@ -180,8 +181,126 @@ namespace decs::light
 		}
 	};
 
+	struct ArchetypeFilterRecord
+	{
+	public:
+		IFilterContainerBase* m_FilterContainer = nullptr;
+		TypeID m_FilterTypeID = InvalidTypeID;
+
+	public:
+		ArchetypeFilterRecord() = default;
+
+		ArchetypeFilterRecord(IFilterContainerBase* filterContainer, TypeID filterTypeID):
+			m_FilterContainer(filterContainer),
+			m_FilterTypeID(filterTypeID)
+		{
+			filterContainer->IncrementUseCount();
+		}
+	};
+
+	struct ArchetypeFilterEdge
+	{
+	public:
+		Archetype* m_Archetype = nullptr;
+		TypeID m_FilterTypeID = InvalidTypeID;
+		IFilterContainerBase* m_FilterContainer = nullptr;
+	};
+
+	struct ArchetypeFilterEdges
+	{
+	public:
+		std::vector<ArchetypeFilterEdge> m_Edges{};
+
+	public:
+		template<typename T>
+		ArchetypeFilterEdge* GetAddEdge(const T& data)
+		{
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
+
+			const size_t dataHash = std::hash<T>{}(data);
+
+			for (auto& edge : m_Edges)
+			{
+				if (edge.m_FilterContainer != nullptr && typeID == edge.m_FilterTypeID && dataHash == edge.m_FilterContainer->GetDataHash())
+				{
+					const FilterContainer<T>* castedContainer = check_cast<const FilterContainer<T>>(edge.m_FilterContainer);
+					if (castedContainer->m_Data == data)
+					{
+						return &edge;
+					}
+				}
+			}
+
+			return nullptr;
+		}
+
+		template<typename T>
+		ArchetypeFilterEdge* GetAddEdge()
+		{
+			for (auto& edge : m_Edges)
+			{
+				if (edge.m_FilterContainer != nullptr && typeID == edge.m_FilterTypeID)
+				{
+					return &edge;
+				}
+			}
+
+			return nullptr;
+		}
+
+		template<typename T>
+		ArchetypeFilterEdge* GetRemoveEdge()
+		{
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
+
+			for (auto& edge : m_Edges)
+			{
+				if (edge.m_FilterContainer == nullptr && typeID == edge.m_FilterTypeID)
+				{
+					return &edge;
+				}
+			}
+
+			return nullptr;
+		}
+
+		template<typename T>
+		bool HasAddEdge(const T& data) const
+		{
+			return this->GetAddEdge(data) != nullptr;
+		}
+
+		template<typename T>
+		bool HasAddEdge() const
+		{
+			return this->GetAddEdge() != nullptr;
+		}
+
+		template<typename T>
+		bool HasRemoveEdge() const
+		{
+			return this->GetRemoveEdge() != nullptr;
+		}
+
+		void AddEdge(const ArchetypeFilterEdge& edge)
+		{
+			for (size_t idx = 0; idx < m_Edges.size(); idx++)
+			{
+				auto& currentEdge = m_Edges[idx];
+				if (edge.m_FilterTypeID < currentEdge.m_FilterTypeID)
+				{
+					m_Edges.insert(m_Edges.begin() + idx, edge);
+					return;
+				}
+			}
+
+			m_Edges.push_back(edge);
+		}
+	};
+
 	class Archetype final
 	{
+		friend class ArchetypeFilterEdge;
 		friend class light::Container;
 		friend class light::ContainerIterator;
 		friend class light::EntityData;
@@ -205,6 +324,9 @@ namespace decs::light
 
 		ArchetypeEntityList m_Entities{};
 		std::vector<ArchetypeTypeData> m_TypeData{};
+
+		ArchetypeFilterEdge m_FiltersEdges{};
+		std::vector<ArchetypeFilterRecord> m_Filters{};
 
 	public:
 		Archetype();
@@ -269,7 +391,7 @@ namespace decs::light
 			return m_TypeData[index].IsTag();
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		inline bool HasTag() const
 		{
 			return HasTag(Type<TTag>::ID());
@@ -316,7 +438,7 @@ namespace decs::light
 			return true;
 		}
 
-		template<TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<TLightComponentConcept... ComponentTypes, tag_concept... TagTypes>
 		bool IsArchetypeWithComponentsAndTags_Exactly(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags
@@ -406,7 +528,7 @@ namespace decs::light
 
 	#pragma region EDGES
 	private:
-		void AddEdge(TypeID componentTypeID, Archetype* archetype, EComponentEdgeType edgeType);
+		void AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType);
 
 		template<TLightComponentConcept TComponent>
 		ArchetypeEdge GetEdge() const

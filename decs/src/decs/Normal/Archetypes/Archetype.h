@@ -260,7 +260,7 @@ namespace decs
 	{
 	public:
 		Archetype* m_Archetype = nullptr;
-		EComponentEdgeType m_EdgeType = EComponentEdgeType::Add;
+		EArchetypeEdgeType m_EdgeType = EArchetypeEdgeType::Add;
 
 	public:
 		ArchetypeEdge()
@@ -268,7 +268,7 @@ namespace decs
 
 		}
 
-		ArchetypeEdge(Archetype* archetype, EComponentEdgeType edgeType):
+		ArchetypeEdge(Archetype* archetype, EArchetypeEdgeType edgeType):
 			m_Archetype(archetype), m_EdgeType(edgeType)
 		{
 
@@ -400,7 +400,7 @@ namespace decs
 			return m_TypeData[index].IsTag();
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		inline bool HasTag() const
 		{
 			return HasTag(Type<TTag>::ID());
@@ -447,7 +447,7 @@ namespace decs
 			return true;
 		}
 
-		template<TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<TComponentConcept... ComponentTypes, tag_concept... TagTypes>
 		bool IsArchetypeWithComponentsAndTags_Exactly(
 			const ComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags
@@ -602,7 +602,7 @@ namespace decs
 
 	#pragma region EDGES
 	private:
-		void AddEdge(TypeID componentTypeID, Archetype* archetype, EComponentEdgeType edgeType);
+		void AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType);
 
 		template<TComponentConcept TComponent>
 		ArchetypeEdge GetEdge() const

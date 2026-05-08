@@ -58,7 +58,7 @@ namespace decs
 		virtual void SerializeTag(SerializerData& serializerData) const = 0;
 	};
 
-	template<TTagConcept TTag, typename SerializerData>
+	template<tag_concept TTag, typename SerializerData>
 	class TagSerializer : ComponentSerializerBase<SerializerData>
 	{
 	public:

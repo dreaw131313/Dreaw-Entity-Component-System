@@ -102,6 +102,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\Light\Filter\LFilter.h" />
     <ClInclude Include="src\decs\Normal\Component\ComponentAllocator.h" />
     <ClInclude Include="src\decs\Core\check_cast.h" />
     <ClInclude Include="src\decs\Light\Archetypes\LArchetype.h" />

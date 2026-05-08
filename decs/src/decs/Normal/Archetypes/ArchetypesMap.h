@@ -363,7 +363,7 @@ namespace decs
 			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::ID();
 			auto edge = toArchetype.GetEdge(addedComponentTypeID);
 
-			if (edge.IsValid() && edge.m_EdgeType == EComponentEdgeType::Add)
+			if (edge.IsValid() && edge.m_EdgeType == EArchetypeEdgeType::Add)
 			{
 				return edge.m_Archetype;
 			}
