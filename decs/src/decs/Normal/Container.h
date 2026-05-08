@@ -1291,6 +1291,7 @@ namespace decs
 				}
 			}
 		}
+
 		template<typename InitFunc, TComponentConcept... ComponentTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		inline void CreateEntities_NoObserver(

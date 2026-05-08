@@ -21,6 +21,8 @@ namespace Normal
 		float X = 0;
 		float Y = 0;
 
+		int i[10];
+
 	public:
 		Position()
 		{
@@ -41,22 +43,8 @@ namespace Normal
 	struct TestComponent : public decs::EntityComponent
 	{
 	public:
-		char table[200];
+		int table[20];
 
-		TestComponent()
-		{
-			//PrintLine("TestComponent::TestComponent");
-		}
-
-		TestComponent(const TestComponent& other)
-		{
-			//PrintLine("TestComponent::TestComponent(const TestComponent&)");
-		}
-
-		~TestComponent()
-		{
-			//PrintLine("TestComponent::~TestComponent");
-		}
 
 	};
 
@@ -112,7 +100,7 @@ namespace Normal
 		}
 	};
 
-	void Test::Run()
+	void Test::QueryIterationTest()
 	{
 		using FloatTag = decs::tag<float>;
 		using IntTag = decs::tag<int>;
@@ -322,11 +310,11 @@ namespace Normal
 
 	void Test::PerformanceTest()
 	{
-		const uint32_t testCount = 10;
-		const uint32_t entityCount = 4096;
+		const uint32_t testCount = 1;
+		const uint32_t entityCount = 65356;
 
 		decs::ContainerConfig config{
-			.EntityChunkSize = 10000,
+			.EntityChunkSize = 100000,
 			.DefaultComponentChunkSize = 1000,
 			.ArchetypeChunkSize = 100,
 		};
@@ -334,6 +322,7 @@ namespace Normal
 		double finalAvarage = 0;
 
 		decs::Container container{ config };
+		decs::ComponentTypeGroup<Position, TestComponent> comps{};
 
 		auto perfTest = [&]()
 		{
@@ -343,14 +332,7 @@ namespace Normal
 			{
 				MeasureTimer timer(true);
 				{
-					decs::ComponentTypeGroup<Position, TestComponent, Renderer> comps{};
-
-
-					container.CreateEntities_NoObserver(comps, entityCount, true, [](auto, auto, auto) {});
-
-					/*for (uint32_t i = 0; i < entityCount; i++)
-					{
-					}*/
+					container.CreateEntities_NoObserver(comps, entityCount, true, [](Position&, TestComponent&) {});
 				}
 				sum += timer.ElapsedAsMilisecond();
 

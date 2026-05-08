@@ -7,7 +7,7 @@ namespace Normal
 	class Test
 	{
 	public:
-		void Run();
+		void QueryIterationTest();
 
 		void PerformanceTest();
 	};
