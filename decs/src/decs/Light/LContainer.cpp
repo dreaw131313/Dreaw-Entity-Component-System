@@ -263,7 +263,7 @@ namespace decs::light
 		auto& spawnArchetypeTypeData = spawnArchetype.m_TypeData;
 		auto& prefabArchetypeTypeData = prefabArchetype.m_TypeData;
 
-		const uint64_t typeCount = prefabArchetype.GetTypeCount();
+		const uint64_t typeCount = prefabArchetype.GetComponentTagCount();
 
 		for (uint32_t i = 0; i < typeCount; i++)
 		{
@@ -316,14 +316,56 @@ namespace decs::light
 		return true;
 	}
 
-	bool Container::RemoveFilter(TypeID filterTypeID)
-	{
-		return false;
-	}
-
 	Archetype* Container::GetArchetypeAfterRemoveFilter(Archetype* fromArchetype, TypeID filterID)
 	{
-		return fromArchetype;
+		if (fromArchetype == nullptr)
+		{
+			return nullptr;
+		}
+		else
+		{
+			return m_ArchetypesMap.GetOrCreateArchetypeAfterRemoveFilter(*fromArchetype, filterID);
+		}
+	}
+
+	bool Container::RemoveFilter(EntityData& entityData, TypeID filterTypeID)
+	{
+		Archetype* oldArchetype = entityData.m_Archetype;
+		if (oldArchetype == nullptr)
+		{
+			return false;
+		}
+		const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
+
+		Archetype* newArchetype = this->GetArchetypeAfterRemoveFilter(oldArchetype, filterTypeID);
+		if (newArchetype == oldArchetype)
+		{
+			return false;
+		}
+
+		if (newArchetype != nullptr)
+		{
+			Archetype::MoveEntiyAfterFilterChange(*oldArchetype, *newArchetype, indexInOldArchetype);
+		}
+		else
+		{
+			oldArchetype->RemoveSwapBackEntity(indexInOldArchetype);
+			AddToEmptyEntities(entityData);
+		}
+
+		return true;
+	}
+
+	bool Container::HasFilter(const EntityData& entityData, TypeID filterID)
+	{
+		if (entityData.m_Archetype == nullptr
+			|| entityData.m_Archetype->GetFilters().size() == 0
+			)
+		{
+			return false;
+		}
+
+		return entityData.m_Archetype->HasFilterWithType(filterID);
 	}
 
 	bool Container::RemoveTag(EntityData& entityData, TypeID tagType)

@@ -19,7 +19,7 @@ namespace decs::light
 
 	bool Archetype::ContainType(TypeID typeID) const
 	{
-		if (GetTypeCount() <= Limits::MinComponentsInArchetypeToPerformMapLookup)
+		if (GetComponentTagCount() <= Limits::MinComponentsInArchetypeToPerformMapLookup)
 		{
 			for (auto& typeData : m_TypeData)
 			{
@@ -36,9 +36,9 @@ namespace decs::light
 
 	uint32_t Archetype::FindTypeIndex(TypeID typeID) const
 	{
-		if (GetTypeCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
+		if (GetComponentTagCount() < Limits::MinComponentsInArchetypeToPerformMapLookup)
 		{
-			for (uint32_t i = 0; i < GetTypeCount(); i++)
+			for (uint32_t i = 0; i < GetComponentTagCount(); i++)
 				if (m_TypeData[i].m_TypeID == typeID) return i;
 
 			return std::numeric_limits<uint32_t>::max();
@@ -51,18 +51,54 @@ namespace decs::light
 		return it->second;
 	}
 
-	bool Archetype::HasSameTypesAs(const Archetype& archetype) const
+	bool Archetype::HasSameComponentsTagsAs(const Archetype& other) const
 	{
-		const uint32_t componentAndTagCount = GetTypeCount();
+		const uint32_t componentAndTagCount = GetComponentTagCount();
 
-		if (archetype.GetTypeCount() != componentAndTagCount)
+		if (other.GetComponentTagCount() != componentAndTagCount)
 		{
 			return false;
 		}
 
 		for (uint32_t i = 0; i < componentAndTagCount; i++)
 		{
-			if (GetTypeID(i) != archetype.GetTypeID(i))
+			if (GetTypeID(i) != other.GetTypeID(i))
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	bool Archetype::HasSameComponentsTagsFiltersAs(const Archetype& other) const
+	{
+		const size_t anyDataCount = GetComponentTagFilterCount();
+		if (anyDataCount != other.GetComponentTagFilterCount())
+		{
+			return false;
+		}
+
+		auto thisTypeData = GetComponentAndTagRecords();
+		auto otherTypeData = other.GetComponentAndTagRecords();
+		for (size_t i = 0; i < thisTypeData.size(); i++)
+		{
+			if (thisTypeData[i].m_TypeID != otherTypeData[i].m_TypeID)
+			{
+				return false;
+			}
+		}
+
+		auto thisFilters = GetFilters();
+		auto otherFilters = other.GetFilters();
+		for (size_t i = 0; i < thisFilters.size(); i++)
+		{
+			auto& filterRecord = thisFilters[i];
+			auto& otherFilterRecord = otherFilters[i];
+
+			if (filterRecord.m_FilterTypeID != otherFilterRecord.m_FilterTypeID
+				|| filterRecord.m_FilterContainer->StoresSameData(*otherFilterRecord.m_FilterContainer)
+				)
 			{
 				return false;
 			}
@@ -73,7 +109,7 @@ namespace decs::light
 
 	bool Archetype::HasTypes_Exactly(const std::vector<TypeID>& types) const
 	{
-		const uint32_t componentAndTagCount = GetTypeCount();
+		const uint32_t componentAndTagCount = GetComponentTagCount();
 
 		if (static_cast<uint32_t>(types.size()) != componentAndTagCount)
 		{
@@ -91,24 +127,24 @@ namespace decs::light
 		return true;
 	}
 
-	std::optional<TypeID> Archetype::IsRemoveComponentNeighbour(const Archetype& neighbour) const
+	std::optional<ArchetypeDataKey> Archetype::IsRemoveAnyDataNeighbour(const Archetype& neighbour) const
 	{
-		const uint32_t typeCount = GetTypeCount();
-		const uint32_t neighbourTypeCount = neighbour.GetTypeCount();
+		const size_t anyDataCount = GetComponentTagFilterCount();
+		const size_t neighbourAnyDataCount = neighbour.GetComponentTagFilterCount();
 
-		if (neighbourTypeCount >= typeCount || (typeCount - neighbourTypeCount) != 1)
+		if (neighbourAnyDataCount >= anyDataCount || (anyDataCount - neighbourAnyDataCount) != 1)
 		{
 			return {};
 		}
 
-		TypeID neighbourTypeID = decs::InvalidTypeID;
-		uint32_t foundedNeighbourTypeCount = 0;
+		ArchetypeDataKey dataKey{};
+		size_t foundedNeighbourTypeCount = 0;
 
 		for (auto& reocrd : m_TypeData)
 		{
 			if (!neighbour.ContainType(reocrd.m_TypeID))
 			{
-				neighbourTypeID = reocrd.m_TypeID;
+				dataKey = reocrd.m_TypeID;
 				foundedNeighbourTypeCount++;
 			}
 			if (foundedNeighbourTypeCount > 1)
@@ -117,12 +153,25 @@ namespace decs::light
 			}
 		}
 
-		return std::optional<TypeID>(neighbourTypeID);
+		for (auto& filterRecord : m_Filters)
+		{
+			if (!neighbour.ContainFilter(filterRecord.m_FilterContainer))
+			{
+				dataKey = filterRecord.m_FilterContainer;
+				foundedNeighbourTypeCount++;
+			}
+			if (foundedNeighbourTypeCount > 1)
+			{
+				return {};
+			}
+		}
+
+		return std::optional(dataKey);
 	}
 
-	std::optional<TypeID> Archetype::IsAddComponentNeighbour(const Archetype& neighbour) const
+	std::optional<ArchetypeDataKey> Archetype::IsAddAnyDataNeighbour(const Archetype& neighbour) const
 	{
-		return neighbour.IsRemoveComponentNeighbour(*this);
+		return neighbour.IsRemoveAnyDataNeighbour(*this);
 	}
 
 	bool Archetype::HasSameFiltersAs(const Archetype& other) const
@@ -146,48 +195,28 @@ namespace decs::light
 		return result;
 	}
 
-	std::optional<IFilterContainerBase*> Archetype::IsRemoveFilterNeighbour(const Archetype& neighbour) const
+	void Archetype::AddFilter_WithoutCheckout(IFilterContainerBase* filter)
 	{
-		const size_t filterCount = GetFilterCount();
-		const size_t neighbourFilterCount = neighbour.GetFilterCount();
-
-		if (neighbourFilterCount >= filterCount || (filterCount - neighbourFilterCount) != 1)
+		if (filter == nullptr)
 		{
-			return {};
+			return;
 		}
 
-		IFilterContainerBase* neighbourFilter = nullptr;
-		uint32_t foundedNeighbourTypeCount = 0;
+		m_Filters.emplace_back(filter);
+	}
 
-		for (auto& filterRecord : m_Filters)
+	void Archetype::AddFilterInCorrectPlace(IFilterContainerBase& filterContainer)
+	{
+		for (size_t idx = 0; idx < m_Filters.size(); idx++)
 		{
-			if (!neighbour.ContainFilter(filterRecord.m_FilterContainer))
+			auto& filterRecord = m_Filters[idx];
+			if (filterContainer.GetDataTypeID() < filterRecord.m_FilterTypeID)
 			{
-				neighbourFilter = filterRecord.m_FilterContainer;
-				foundedNeighbourTypeCount++;
-			}
-			if (foundedNeighbourTypeCount > 1)
-			{
-				return {};
+				m_Filters.insert(m_Filters.begin() + idx, ArchetypeFilterRecord(&filterContainer));
 			}
 		}
 
-		return std::optional<IFilterContainerBase*>(neighbourFilter);
-	}
-
-	std::optional<IFilterContainerBase*> Archetype::IsAddFilterNeighbour(const Archetype& neighbour) const
-	{
-		return neighbour.IsRemoveFilterNeighbour(*this);
-	}
-
-	void Archetype::AddFilterEdge(IFilterContainerBase* filter, Archetype* archetype, EArchetypeEdgeType edgeType)
-	{
-		auto& edge = m_FilterEdges[filter];
-		if (!edge.IsValid())
-		{
-			edge.m_Archetype = archetype;
-			edge.m_EdgeType = edgeType;
-		}
+		m_Filters.push_back(ArchetypeFilterRecord(&filterContainer));
 	}
 
 	void Archetype::ClearEntityDataAndComponents()
@@ -267,7 +296,7 @@ namespace decs::light
 
 		if (index == EntityCount() - 1)
 		{
-			for (uint64_t i = 0; i < GetTypeCount(); i++)
+			for (uint64_t i = 0; i < GetComponentTagCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
 				if (!typeData.IsTag())
@@ -279,7 +308,7 @@ namespace decs::light
 		}
 		else
 		{
-			for (uint64_t i = 0; i < GetTypeCount(); i++)
+			for (uint64_t i = 0; i < GetComponentTagCount(); i++)
 			{
 				auto& typeData = m_TypeData[i];
 				if (!typeData.IsTag())
@@ -299,7 +328,7 @@ namespace decs::light
 		{
 			m_Entities.Reserve(desiredCapacity);
 
-			for (uint64_t idx = 0; idx < GetTypeCount(); idx++)
+			for (uint64_t idx = 0; idx < GetComponentTagCount(); idx++)
 			{
 				auto& typeData = m_TypeData[idx];
 				if (!typeData.IsTag())
@@ -313,7 +342,7 @@ namespace decs::light
 	void Archetype::Reset()
 	{
 		m_Entities.Clear();
-		for (uint64_t idx = 0; idx < GetTypeCount(); idx++)
+		for (uint64_t idx = 0; idx < GetComponentTagCount(); idx++)
 		{
 			auto& typeData = m_TypeData[idx];
 			if (!typeData.IsTag())
@@ -323,9 +352,9 @@ namespace decs::light
 		}
 	}
 
-	void Archetype::InitEmptyFromOther(const Archetype& other)
+	void Archetype::InitEmptyFromOther(const Archetype& other, FilterManager& filterManager)
 	{
-		uint32_t componentsCount = other.GetTypeCount();
+		uint32_t componentsCount = other.GetComponentTagCount();
 		m_TypeData.reserve(componentsCount);
 
 		for (uint32_t i = 0; i < componentsCount; i++)
@@ -349,12 +378,21 @@ namespace decs::light
 				);
 			}
 		}
+
+		if (!other.m_Filters.empty())
+		{
+			m_Filters.reserve(other.m_Filters.size());
+			for (auto& otherFilter : other.m_Filters)
+			{
+				AddFilter_WithoutCheckout(filterManager.GetMatchingFilter(*otherFilter.m_FilterContainer));
+			}
+		}
 	}
 
 	void Archetype::ShrinkToFit()
 	{
 		m_Entities.ShrinkToFit();
-		for (uint64_t idx = 0; idx < GetTypeCount(); idx++)
+		for (uint64_t idx = 0; idx < GetComponentTagCount(); idx++)
 		{
 			auto& typeData = m_TypeData[idx];
 			if (typeData.IsTag())
@@ -365,9 +403,9 @@ namespace decs::light
 		}
 	}
 
-	void Archetype::AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType)
+	void Archetype::AddEdge(ArchetypeDataKey key, Archetype* archetype, EArchetypeEdgeType edgeType)
 	{
-		auto& edge = m_Edges[componentTypeID];
+		auto& edge = m_Edges[key];
 		if (!edge.IsValid())
 		{
 			edge.m_Archetype = archetype;
@@ -395,7 +433,7 @@ namespace decs::light
 		uint64_t thisArchetypeIndex = 0;
 		uint64_t fromArchetypeIndex = 0;
 
-		for (; thisArchetypeIndex < toArchetype.GetTypeCount(); thisArchetypeIndex++)
+		for (; thisArchetypeIndex < toArchetype.GetComponentTagCount(); thisArchetypeIndex++)
 		{
 			ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[thisArchetypeIndex];
 			if (toTypeData.m_TypeID == addedComponentTypeID)
@@ -438,7 +476,7 @@ namespace decs::light
 		uint64_t thisArchetypeIndex = 0;
 		uint64_t fromArchetypeIndex = 0;
 
-		for (; thisArchetypeIndex < toArchetype.GetTypeCount(); thisArchetypeIndex++, fromArchetypeIndex++)
+		for (; thisArchetypeIndex < toArchetype.GetComponentTagCount(); thisArchetypeIndex++, fromArchetypeIndex++)
 		{
 			ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[thisArchetypeIndex];
 			ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[fromArchetypeIndex];
@@ -460,21 +498,21 @@ namespace decs::light
 		return true;
 	}
 
-	bool Archetype::MoveEnttiyAfterFilterChange(Archetype& fromArchetype, Archetype& toArchetype, uint64_t entityIndex)
+	bool Archetype::MoveEntiyAfterFilterChange(Archetype& fromArchetype, Archetype& toArchetype, uint64_t entityIndex)
 	{
-		if (entityIndex >= fromArchetype.EntityCount() || fromArchetype.GetTypeCount() != toArchetype.GetTypeCount())
+		if (entityIndex >= fromArchetype.EntityCount() || fromArchetype.GetComponentTagCount() != toArchetype.GetComponentTagCount())
 		{
 			return false;
 		}
 
-		DECS_ASSERT(fromArchetype.HasSameTypesAs(toArchetype), "Moving entity can be performed only to archetypes with same types!");
+		DECS_ASSERT(fromArchetype.HasSameComponentsTagsAs(toArchetype), "Moving entity can be performed only to archetypes with same types!");
 
 		EntityData* entityData = fromArchetype.m_Entities.Get(entityIndex);
 		DECS_ASSERT(entityData != nullptr, "Entity data must be valid");
 
 		toArchetype.AddEntityData(entityData);
 
-		size_t typeCount = toArchetype.GetTypeCount();
+		size_t typeCount = toArchetype.GetComponentTagCount();
 		for (size_t typeIdx = 0; typeIdx < typeCount; typeIdx++)
 		{
 			ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[typeIdx];

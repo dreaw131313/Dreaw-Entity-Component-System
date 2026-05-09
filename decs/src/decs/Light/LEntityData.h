@@ -62,7 +62,7 @@ namespace decs::light
 			return desiredVersion == m_Version && m_bIsAlive;
 		}
 
-		uint32_t GetTypeCount() const;
+		uint32_t GetComponentTagCount() const;
 
 		inline bool IsInManager() const
 		{

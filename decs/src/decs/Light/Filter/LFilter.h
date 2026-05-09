@@ -7,6 +7,9 @@
 
 namespace decs::light
 {
+	class IFilterTypeManager;
+	class FilterManager;
+
 	class IFilterContainerBase
 	{
 	public:
@@ -35,6 +38,8 @@ namespace decs::light
 		virtual size_t GetDataHash() const noexcept = 0;
 
 		virtual bool StoresSameData(const IFilterContainerBase& other) const = 0;
+
+		virtual IFilterTypeManager* CreateFilterTypeManager() const = 0;
 
 	private:
 		uint32_t m_UseCount = 0;
@@ -76,7 +81,6 @@ namespace decs::light
 			return m_DataHash;
 		}
 
-
 		bool StoresSameData(const IFilterContainerBase& other) const override
 		{
 			if (GetDataTypeID() != other.GetDataTypeID() || GetDataHash() != other.GetDataHash())
@@ -88,6 +92,8 @@ namespace decs::light
 
 			return m_Data == otherFilterContainer->m_Data;
 		}
+
+		IFilterTypeManager* CreateFilterTypeManager() const override;
 	};
 
 	template<typename FilterType>
@@ -97,6 +103,12 @@ namespace decs::light
 		const FilterType* m_DataPtr = nullptr;
 
 	public:
+		FilterEntryKey(const FilterType& filterData):
+			m_DataPtr(&filterData)
+		{
+
+		}
+
 		bool operator ==(FilterEntryKey& other) const noexcept
 		{
 			if (m_DataPtr == nullptr || other.m_DataPtr == nullptr)
@@ -129,6 +141,7 @@ namespace decs::light
 	public:
 		virtual ~IFilterTypeManager() = default;
 
+		virtual IFilterContainerBase* CreateMatchingFilterContainer(const IFilterContainerBase& other) = 0;
 	};
 
 	template<typename FilterType>
@@ -189,9 +202,34 @@ namespace decs::light
 			return true;
 		}
 
+		IFilterContainerBase* CreateMatchingFilterContainer(const IFilterContainerBase& other) override
+		{
+			const FilterContainerType* otherCasted = check_cast<FilterContainerType>(&other);
+
+			FilterEntryKeyType key{};
+			key.m_DataPtr = &otherCasted->m_Data;
+
+			auto it = m_Filters.find(key);
+			if (it != m_Filters.end())
+			{
+				return it->second;
+			}
+
+			FilterContainerType* newFilterContainer = new FilterContainerType(otherCasted->m_Data);
+			m_Filters[FilterContainerType(newFilterContainer->m_Data)] = newFilterContainer;
+			return newFilterContainer;
+		}
+
+
 	private:
 		std::unordered_map<FilterEntryKeyType, FilterContainerType*> m_Filters{};
 	};
+
+	template<typename FilterType>
+	IFilterTypeManager* FilterContainer<FilterType>::CreateFilterTypeManager() const
+	{
+		return new FilterTypeManager<FilterType>();
+	}
 
 	class FilterManager
 	{
@@ -216,6 +254,19 @@ namespace decs::light
 
 			FilterTypeManager<FilterType>* filterTypeManager = check_cast<FilterTypeManager<FilterType>*>(filterTypeMangerBase);
 			return filterTypeManager->GetOrAddContainer(filter);
+		}
+
+		IFilterContainerBase* GetMatchingFilter(const IFilterContainerBase& other)
+		{
+			const TypeID filterTypeID = other.GetDataTypeID();
+
+			IFilterTypeManager*& filterTypeMangerBase = m_FilterTypes[filterTypeID];
+			if (filterTypeMangerBase == nullptr)
+			{
+				filterTypeMangerBase = other.CreateFilterTypeManager();
+			}
+
+			return filterTypeMangerBase->CreateMatchingFilterContainer(other);
 		}
 
 		template<typename FilterType>

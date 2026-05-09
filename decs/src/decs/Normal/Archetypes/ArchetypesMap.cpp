@@ -109,7 +109,7 @@ namespace decs
 
 	void ArchetypesMap::MakeArchetypeEdges_4(Archetype& archetype)
 	{
-		const uint32_t typeCount = archetype.GetTypeCount();
+		const uint32_t typeCount = archetype.GetComponentTagCount();
 		const uint32_t addTypeNeighbourTypeCount = typeCount + 1;
 		const uint32_t removeTypeNeighbourTypeCount = typeCount - 1;
 
@@ -138,7 +138,7 @@ namespace decs
 				{
 					for (Archetype* neighbour : removeComponentGroup->Archetypes)
 					{
-						auto edgeTypeID = archetype.IsRemoveComponentNeighbour(*neighbour);
+						auto edgeTypeID = archetype.IsRemoveAnyDataNeighbour(*neighbour);
 						if (edgeTypeID.has_value() && !archetype.HasAnyEdge(edgeTypeID.value()))
 						{
 							neighbour->AddEdge(edgeTypeID.value(), &archetype, EArchetypeEdgeType::Add);
@@ -160,7 +160,7 @@ namespace decs
 		{
 			for (Archetype* neighbour : bestAddTypeGroup->Archetypes)
 			{
-				if (auto edgeTypeID = archetype.IsAddComponentNeighbour(*neighbour))
+				if (auto edgeTypeID = archetype.IsAddAnyDataNeighbour(*neighbour))
 				{
 					neighbour->AddEdge(edgeTypeID.value(), &archetype, EArchetypeEdgeType::Remove);
 					archetype.AddEdge(edgeTypeID.value(), neighbour, EArchetypeEdgeType::Add);
@@ -175,9 +175,9 @@ namespace decs
 
 		m_HashedArchetypes[ArchetypeHasher(&archetype)] = &archetype;
 
-		if (archetype.GetTypeCount() > m_MaxTypeCountInArchetypes)
+		if (archetype.GetComponentTagCount() > m_MaxComponentTagFilterCount)
 		{
-			m_MaxTypeCountInArchetypes = archetype.GetTypeCount();
+			m_MaxComponentTagFilterCount = archetype.GetComponentTagCount();
 		}
 
 		MakeArchetypeEdges_4(archetype);
@@ -185,7 +185,7 @@ namespace decs
 
 	Archetype* ArchetypesMap::FindMatchingArchetype(const Archetype& toArchetype)
 	{
-		const uint64_t typesCount = toArchetype.GetTypeCount();
+		const uint64_t typesCount = toArchetype.GetComponentTagCount();
 		if (typesCount == 0)
 		{
 			return nullptr;

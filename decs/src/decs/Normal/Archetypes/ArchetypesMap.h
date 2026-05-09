@@ -220,9 +220,9 @@ namespace decs
 			return emptyArchetypesCount;
 		}
 
-		inline uint64_t MaxTypeCountInArchetypes() const
+		inline uint64_t GetMaxComponentTagFilterCount() const
 		{
-			return m_MaxTypeCountInArchetypes;
+			return m_MaxComponentTagFilterCount;
 		}
 
 		void ShrinkArchetypesToFit();
@@ -291,7 +291,7 @@ namespace decs
 		TChunkedVector<ArchetypeGroup> m_ArchetrypesGroupsAllocator{ 100 };
 		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeAllocator{ 100 };
 
-		uint32_t m_MaxTypeCountInArchetypes = 0;
+		uint32_t m_MaxComponentTagFilterCount = 0;
 
 	private:
 		void MakeArchetypeEdges_4(Archetype& archetype);

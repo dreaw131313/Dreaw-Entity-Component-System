@@ -483,7 +483,7 @@ namespace decs::light
 				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
 
 				ArchetypesMap& map = m_Container->m_ArchetypesMap;
-				uint64_t maxComponentsInArchetype = map.MaxTypeCountInArchetypes();
+				uint64_t maxComponentsInArchetype = map.GetMaxComponentTagFilterCount();
 				if (maxComponentsInArchetype >= minComponentsCount)
 				{
 					if (filter.GetIncludes().Size() > 0)
@@ -577,7 +577,7 @@ namespace decs::light
 
 		void TryAddArchetypeFromGroup(Archetype& archetype, const QueryFilterConfigType& filter)
 		{
-			if (!ContainArchetype(&archetype) && archetype.GetTypeCount())
+			if (!ContainArchetype(&archetype) && archetype.GetComponentTagCount())
 			{
 				// without test
 				{
@@ -661,7 +661,7 @@ namespace decs::light
 			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
 			{
 				Archetype& arch = archetypes[i];
-				if (arch.GetTypeCount() >= minRequiredComponentsCount)
+				if (arch.GetComponentTagCount() >= minRequiredComponentsCount)
 				{
 					TryAddArchetypeFromGroup(arch, filter);
 				}

@@ -191,13 +191,75 @@ namespace decs::light
 	public:
 		ArchetypeFilterRecord() = default;
 
-		ArchetypeFilterRecord(IFilterContainerBase* filterContainer, TypeID filterTypeID):
+		ArchetypeFilterRecord(IFilterContainerBase* filterContainer):
 			m_FilterContainer(filterContainer),
-			m_FilterTypeID(filterTypeID)
+			m_FilterTypeID(filterContainer != nullptr ? filterContainer->GetDataTypeID() : InvalidTypeID)
 		{
-			filterContainer->IncrementUseCount();
+
 		}
 	};
+
+	/// <summary>
+	/// Represents class which can be used to as key in map for component type/tag or filter data
+	/// </summary>
+	class ArchetypeDataKey
+	{
+	public:
+		TypeID m_TypeID = InvalidTypeID;
+		IFilterContainerBase* m_FilterContainer = nullptr;
+
+	public:
+		ArchetypeDataKey() = default;
+
+		inline bool IsFilterEdge() const noexcept
+		{
+			return m_FilterContainer != nullptr;
+		}
+
+		ArchetypeDataKey(TypeID typeID):
+			m_TypeID(typeID)
+		{
+
+		}
+
+		ArchetypeDataKey(IFilterContainerBase* container):
+			m_TypeID(container != nullptr ? container->GetDataTypeID() : 0),
+			m_FilterContainer(container)
+		{
+
+		}
+
+		inline bool operator==(const ArchetypeDataKey& other) const noexcept
+		{
+			return m_TypeID == other.m_TypeID && m_FilterContainer == other.m_FilterContainer;
+		}
+
+		inline bool operator!=(const ArchetypeDataKey& other) const noexcept
+		{
+			return m_TypeID != other.m_TypeID || m_FilterContainer != other.m_FilterContainer;
+		}
+	};
+}
+
+template<>
+struct std::hash<decs::light::ArchetypeDataKey>
+{
+public:
+	std::size_t operator()(const decs::light::ArchetypeDataKey& v) const noexcept
+	{
+		if (v.m_FilterContainer != nullptr)
+		{
+			return std::hash<decs::light::IFilterContainerBase*>{}(v.m_FilterContainer);
+		}
+		else
+		{
+			return std::hash<decs::TypeID>{}(v.m_TypeID);
+		}
+	}
+};
+
+namespace decs::light
+{
 
 	class Archetype final
 	{
@@ -219,32 +281,32 @@ namespace decs::light
 		friend struct light::EntitySpawner;
 
 	private:
-		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes;
-		ecsMap<TypeID, ArchetypeEdge> m_Edges;
+		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes{};
+		ecsMap<ArchetypeDataKey, ArchetypeEdge> m_Edges{};
 
 		ArchetypeEntityList m_Entities{};
 		std::vector<ArchetypeTypeData> m_TypeData{};
-
 		std::vector<ArchetypeFilterRecord> m_Filters{};
-		std::unordered_map<IFilterContainerBase*, ArchetypeEdge> m_FilterEdges{};
 
 	public:
 		Archetype();
 
 		~Archetype();
 
-		inline uint32_t GetTypeCount() const noexcept
+		/// <summary>
+		/// </summary>
+		/// <returns>number of components + tags</returns>
+		inline uint32_t GetComponentTagCount() const noexcept
 		{
 			return static_cast<uint32_t>(m_TypeData.size());
 		}
 
 		/// <summary>
-		/// Return number of components + tags + filters
 		/// </summary>
-		/// <returns></returns>
-		inline uint32_t GetComponentTagFilterCount() const noexcept
+		/// <returns>number of components + tags + filters</returns>
+		inline size_t GetComponentTagFilterCount() const noexcept
 		{
-			return static_cast<uint32_t>(m_TypeData.size() + m_Filters.size());
+			return m_TypeData.size() + m_Filters.size();
 		}
 
 		inline TypeID GetTypeID(uint64_t index) const
@@ -316,7 +378,9 @@ namespace decs::light
 			return m_TypeData[typeIndex].IsTag();
 		}
 
-		bool HasSameTypesAs(const Archetype& archetype)  const;
+		bool HasSameComponentsTagsAs(const Archetype& other) const;
+
+		bool HasSameComponentsTagsFiltersAs(const Archetype& other) const;
 
 		/// <summary>
 		/// if types.size() is different thant archetype type count returns false.
@@ -334,7 +398,7 @@ namespace decs::light
 		template<typename... Types>
 		bool HasTypes_Exactly(const TypeGroup<Types...>& group) const
 		{
-			const uint32_t componentAndTagCount = GetTypeCount();
+			const uint32_t componentAndTagCount = GetComponentTagCount();
 
 			if (static_cast<uint32_t>(group.Size()) != componentAndTagCount)
 			{
@@ -358,7 +422,7 @@ namespace decs::light
 			const TagTypeGroup<TagTypes...> tags
 		) const noexcept
 		{
-			if ((sizeof...(ComponentTypes) + sizeof...(TagTypes)) != GetTypeCount())
+			if ((sizeof...(ComponentTypes) + sizeof...(TagTypes)) != GetComponentTagCount())
 			{
 				return false;
 			}
@@ -387,18 +451,18 @@ namespace decs::light
 		/// </summary>
 		/// <param name="neighbour">Archetype with smaller number of componetnts than this archetype</param>
 		/// <returns></returns>
-		std::optional<TypeID> IsRemoveComponentNeighbour(const Archetype& neighbour) const;
+		std::optional<ArchetypeDataKey> IsRemoveAnyDataNeighbour(const Archetype& neighbour) const;
 
 		/// <summary>
 		/// 
 		/// </summary>
 		/// <param name="neighbour"></param>
 		/// <returns>Archetype with larger number of componetns than this archetype</returns>
-		std::optional<TypeID> IsAddComponentNeighbour(const Archetype& neighbour) const;
+		std::optional<ArchetypeDataKey> IsAddAnyDataNeighbour(const Archetype& neighbour) const;
 
-		inline bool HasAnyEdge(TypeID toTypeID) const noexcept
+		inline bool HasAnyEdge(ArchetypeDataKey edgeKey) const noexcept
 		{
-			return m_Edges.contains(toTypeID);
+			return m_Edges.contains(edgeKey);
 		}
 
 	#pragma region FILTERS
@@ -427,27 +491,59 @@ namespace decs::light
 			) != m_Filters.end();
 		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="neighbour">Archetype with smaller number of filters than this archetype</param>
-		/// <returns></returns>
-		std::optional<IFilterContainerBase*> IsRemoveFilterNeighbour(const Archetype& neighbour) const;
+		inline bool HasFilterWithType (TypeID filterTypeID) const
+		{
+			return  std::find_if(
+				m_Filters.begin(),
+				m_Filters.end(),
+				[&](const ArchetypeFilterRecord& record)
+			{
+				return filterTypeID == record.m_FilterTypeID;
+			}
+			) != m_Filters.end();
+		}
 
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <param name="neighbour">Archetype with larger number of filters than this archetype</param>
-		/// <returns></returns>
-		std::optional<IFilterContainerBase*> IsAddFilterNeighbour(const Archetype& neighbour) const;
+		template<typename FilterType>
+		size_t GetFilterIndex()
+		{
+			TYPE_ID_CONSTEXPR TypeID id = Type<FilterType>::ID();
+
+			for (size_t idx = 0; idx < m_Filters.size(); id++)
+			{
+				if (m_Filters[idx].m_FilterTypeID == id)
+				{
+					return idx;
+				}
+			}
+			return std::numeric_limits<size_t>::max();
+		}
+
+		IFilterContainerBase* GetFilterContainer(TypeID filterID) const
+		{
+			for (auto& filterRecord : m_Filters)
+			{
+				if (filterRecord.m_FilterTypeID == filterID)
+				{
+					return filterRecord.m_FilterContainer;
+				}
+			}
+			return nullptr;
+		}
+
+		template<typename FilterType>
+		FilterContainer<FilterType>* GetFilterContainer() const
+		{
+			return check_cast<FilterContainer<FilterType>*>(GetFilterContainer(Type<FilterType>::ID()));
+		}
 
 	private:
-		void AddFilterEdge(IFilterContainerBase* filter, Archetype* archetype, EArchetypeEdgeType edgeType);
+		void AddFilter_WithoutCheckout(IFilterContainerBase* filter);
+
+		void AddFilterInCorrectPlace(IFilterContainerBase& filter);
 
 	#pragma endregion
 
 	private:
-
 		template<typename TComponentType>
 		PackedLightComponentContainer<TComponentType>* GetTypePackedContainer() const
 		{
@@ -481,13 +577,13 @@ namespace decs::light
 
 		void Reset();
 
-		void InitEmptyFromOther(const Archetype& other);
+		void InitEmptyFromOther(const Archetype& other, FilterManager& filterManager);
 
 		void ShrinkToFit();
 
 	#pragma region EDGES
 	private:
-		void AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType);
+		void AddEdge(ArchetypeDataKey key, Archetype* archetype, EArchetypeEdgeType edgeType);
 
 		template<TLightComponentConcept TComponent>
 		ArchetypeEdge GetEdge() const
@@ -500,7 +596,7 @@ namespace decs::light
 			return {};
 		}
 
-		ArchetypeEdge GetEdge(TypeID componentTypeID) const
+		ArchetypeEdge GetEdge(ArchetypeDataKey componentTypeID) const
 		{
 			auto it = m_Edges.find(componentTypeID);
 			if (it != m_Edges.end())
@@ -529,7 +625,7 @@ namespace decs::light
 			TypeID removedComponentTypeID
 		);
 
-		static bool MoveEnttiyAfterFilterChange(
+		static bool MoveEntiyAfterFilterChange(
 			Archetype& fromArchetype,
 			Archetype& toArchetype,
 			uint64_t entityIndex
@@ -558,13 +654,13 @@ namespace decs::light
 				return true;
 			}
 			if (m_ArchetypeConst == nullptr || rhs.m_ArchetypeConst == nullptr
-				|| m_ArchetypeConst->GetTypeCount() != rhs.m_ArchetypeConst->GetTypeCount()
+				|| m_ArchetypeConst->GetComponentTagCount() != rhs.m_ArchetypeConst->GetComponentTagCount()
 				)
 			{
 				return false;
 			}
 
-			return m_ArchetypeConst->HasSameTypesAs(*rhs.m_ArchetypeConst)
+			return m_ArchetypeConst->HasSameComponentsTagsAs(*rhs.m_ArchetypeConst)
 				&& m_ArchetypeConst->HasSameFiltersAs(*rhs.m_ArchetypeConst)
 				;
 		}
@@ -576,7 +672,7 @@ namespace decs::light
 
 		std::size_t CalculateHash() const noexcept
 		{
-			if (m_ArchetypeConst == nullptr || m_ArchetypeConst->GetTypeCount() == 0)
+			if (m_ArchetypeConst == nullptr || m_ArchetypeConst->GetComponentTagCount() == 0)
 			{
 				return 0;
 			}

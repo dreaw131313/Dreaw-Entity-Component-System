@@ -364,7 +364,22 @@ namespace decs::light
 	#pragma endregion
 
 	#pragma region FILTERS
-	public:
+	private:
+		template<typename FilterType>
+		Archetype* GetArchetypeAfterSetFilter(Archetype* toArchetype, const FilterType& filter)
+		{
+			if (toArchetype == nullptr)
+			{
+				return m_ArchetypesMap.GetOrCreateSingleFilterArchetype<FilterType>(filter);
+			}
+			else
+			{
+				return m_ArchetypesMap.GetOrCreateArchetypeAfterSetFilter<FilterType>(*toArchetype, filter);
+			}
+		}
+
+		Archetype* GetArchetypeAfterRemoveFilter(Archetype* fromArchetype, TypeID filterID);
+
 		template<typename Filter>
 		bool SetFilter(EntityData& entityData, const Filter& filter)
 		{
@@ -379,22 +394,78 @@ namespace decs::light
 				return true;
 			}
 
+			if (oldArchetype != nullptr)
+			{
+				Archetype::MoveEntiyAfterFilterChange(*oldArchetype, *newArchetype, indexInOldArchetype);
+			}
+			else
+			{
+				RemoveFromEmptyEntities(entityData);
+				newArchetype->AddEntityData(&entityData);
+			}
+
 			return true;
 		}
 
-		bool RemoveFilter(TypeID filterTypeID);
+		bool RemoveFilter(EntityData& entityData, TypeID filterTypeID);
+
+		template<typename FilterType>
+		bool RemoveFilter(EntityData& entityData)
+		{
+			return RemoveFilter(entityData, Type<FilterType>::ID());
+		}
+
+		template<typename FilterType>
+		const FilterType* GetFilter(EntityData& entityData)
+		{
+			if (entityData.m_Archetype == nullptr
+				|| entityData.m_Archetype->GetFilters().size() == 0
+				)
+			{
+				return nullptr;
+			}
+
+			FilterContainer<FilterType>* filterContainer = entityData.m_Archetype->GetFilterContainer<FilterType>();
+			if (filterContainer == nullptr)
+			{
+				return nullptr;
+			}
+
+			return &filterContainer->m_Data;
+		}
+
+		bool HasFilter(const EntityData& entityData, TypeID filterID);
+
+		template<typename FilterType>
+		bool HasFilter(const EntityData& entityData)
+		{
+			return HasFilter(entityData, Type<FilterType>::ID());
+		}
+
+		template<typename FilterType>
+		bool HasFilter(const EntityData& entityData, const FilterType& filterData)
+		{
+			if (entityData.m_Archetype == nullptr
+				|| entityData.m_Archetype->GetFilters().size() == 0
+				)
+			{
+				return false;
+			}
+
+			FilterContainer<FilterType>* filterContainer = entityData.m_Archetype->GetFilterContainer<FilterType>();
+			if (filterContainer == nullptr)
+			{
+				return false;
+			}
+
+			return filterContainer->m_Data == filterData;
+		}
+
+
+
 
 	private:
 		FilterManager m_FilterManager{};
-
-	private:
-		template<typename Filter>
-		Archetype* GetArchetypeAfterSetFilter(Archetype* toArchetype, const Filter& filter)
-		{
-			return toArchetype;
-		}
-
-		Archetype* GetArchetypeAfterRemoveFilter(Archetype* fromArchetype, TypeID filterID);
 
 	#pragma endregion
 

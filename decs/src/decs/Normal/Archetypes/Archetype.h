@@ -329,7 +329,7 @@ namespace decs
 			return m_EntityStorage;
 		}
 
-		inline uint32_t GetTypeCount() const noexcept
+		inline uint32_t GetComponentTagCount() const noexcept
 		{
 			return static_cast<uint32_t>(m_TypeData.size());
 		}
@@ -340,7 +340,7 @@ namespace decs
 		/// <returns></returns>
 		inline uint32_t GetComponentAndTagCount() const noexcept
 		{
-			return GetTypeCount();
+			return GetComponentTagCount();
 		}
 
 		inline uint32_t GetComponentOnlyCount() const
@@ -411,7 +411,7 @@ namespace decs
 			return m_TypeData[typeIndex].IsTag();
 		}
 
-		bool HasSameTypesAs(const Archetype& archetype)  const;
+		bool HasSameComponentsTagsAs(const Archetype& archetype)  const;
 
 		/// <summary>
 		/// if types.size() is different thant archetype type count returns false.
@@ -453,7 +453,7 @@ namespace decs
 			const TagTypeGroup<TagTypes...> tags
 		) const noexcept
 		{
-			if ((sizeof...(ComponentTypes) + sizeof...(TagTypes)) != GetTypeCount())
+			if ((sizeof...(ComponentTypes) + sizeof...(TagTypes)) != GetComponentTagCount())
 			{
 				return false;
 			}
@@ -482,14 +482,14 @@ namespace decs
 		/// </summary>
 		/// <param name="neighbour">Archetype with smaller number of componetnts than this archetype</param>
 		/// <returns></returns>
-		std::optional<TypeID> IsRemoveComponentNeighbour(const Archetype& neighbour) const;
+		std::optional<TypeID> IsRemoveAnyDataNeighbour(const Archetype& neighbour) const;
 
 		/// <summary>
 		/// 
 		/// </summary>
 		/// <param name="neighbour"></param>
 		/// <returns>Archetype with larger number of componetns than this archetype</returns>
-		std::optional<TypeID> IsAddComponentNeighbour(const Archetype& neighbour) const;
+		std::optional<TypeID> IsAddAnyDataNeighbour(const Archetype& neighbour) const;
 
 		inline bool HasAnyEdge(TypeID toTypeID) const noexcept
 		{
@@ -674,13 +674,13 @@ namespace decs
 				return true;
 			}
 			if (m_ArchetypeConst == nullptr || rhs.m_ArchetypeConst == nullptr
-				|| m_ArchetypeConst->GetTypeCount() != rhs.m_ArchetypeConst->GetTypeCount()
+				|| m_ArchetypeConst->GetComponentTagCount() != rhs.m_ArchetypeConst->GetComponentTagCount()
 				)
 			{
 				return false;
 			}
 
-			return m_ArchetypeConst->HasSameTypesAs(*rhs.m_ArchetypeConst);
+			return m_ArchetypeConst->HasSameComponentsTagsAs(*rhs.m_ArchetypeConst);
 		}
 
 		inline const Archetype* GetConstArchetype() const

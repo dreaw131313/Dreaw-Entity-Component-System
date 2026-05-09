@@ -83,11 +83,11 @@ namespace decs::light
 			return false;
 		}
 
-		[[nodiscard]] inline uint32_t GetTypeCount() const
+		[[nodiscard]] inline uint32_t GetComponentTagCount() const
 		{
 			if (IsValid())
 			{
-				return m_EntityData->GetTypeCount();
+				return m_EntityData->GetComponentTagCount();
 			}
 			return 0;
 		}
