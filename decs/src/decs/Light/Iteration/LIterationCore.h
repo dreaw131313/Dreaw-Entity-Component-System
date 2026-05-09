@@ -640,11 +640,11 @@ namespace decs::light
 		void FetchArchetypesFromArchetypesGroup(ArchetypesGroupByOneType* group, const QueryFilterConfigType& filter)
 		{
 			if (group == nullptr) return;
-			uint64_t maxComponentCountsInGroup = group->MaxComponentsCount();
+			uint64_t maxComponentCountsInGroup = group->GetMaxComponentTagFilterCount();
 
 			for (uint64_t i = filter.GetMinComponentsCount(); i <= maxComponentCountsInGroup; i++)
 			{
-				std::span<Archetype*> archetypes = group->GetArchetypesWithTypeCount(i);
+				std::span<Archetype*> archetypes = group->GetArchetypesWithComponentTagFilterCount(i);
 				for (auto archetype : archetypes)
 				{
 					TryAddArchetypeFromGroup(*archetype, filter);

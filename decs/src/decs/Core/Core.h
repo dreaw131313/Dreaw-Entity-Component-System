@@ -86,20 +86,4 @@ namespace decs
 		Remove = 1
 	};
 
-	enum class EArchetypeTypeDataCategory
-	{
-		/// <summary>
-		/// Normal category
-		/// </summary>
-		Component,
-		/// <summary>
-		/// Normal tag
-		/// </summary>
-		Tag,
-		/// <summary>
-		/// Behaves like shared component - 
-		/// </summary>
-		Filter,
-	};
-
 }

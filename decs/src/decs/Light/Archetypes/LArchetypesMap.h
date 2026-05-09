@@ -3,6 +3,8 @@
 
 #include "decs/Core/TChunkedVector.h"
 #include "decs/Light/Component/PackedLightComponentContainer.h"
+#include "decs/Light/Filter/LFilter.h"
+
 #include "LArchetype.h"
 
 namespace decs::light
@@ -72,17 +74,62 @@ namespace decs::light
 		}
 	};
 
+	class ArchetypesGroupKey
+	{
+	public:
+		TypeID m_TypeID = InvalidTypeID;
+		IFilterContainerBase* m_FilterContainer = nullptr;
+
+	public:
+		ArchetypesGroupKey() = default;
+
+		ArchetypesGroupKey(TypeID typeID):
+			m_TypeID(typeID)
+		{
+
+		}
+
+		ArchetypesGroupKey(IFilterContainerBase* container):
+			m_TypeID(container != nullptr ? container->GetDataTypeID() : 0),
+			m_FilterContainer(container)
+		{
+
+		}
+
+		inline bool operator==(const ArchetypesGroupKey& other) const noexcept
+		{
+			return m_TypeID == other.m_TypeID && m_FilterContainer == other.m_FilterContainer;
+		}
+
+		inline bool operator!=(const ArchetypesGroupKey& other) const noexcept
+		{
+			return m_TypeID != other.m_TypeID || m_FilterContainer != other.m_FilterContainer;
+		}
+	};
+
 	class ArchetypesGroupByOneType
 	{
 	public:
 		ArchetypesGroupByOneType(
 			TChunkedVector<ArchetypeGroup>& archetypeGroupAllocator,
-			TypeID mainTypeID
+			TypeID mainTypeID,
+			IFilterContainerBase* filterContainer = nullptr
 		):
 			m_ArchetypeGroupAllocator(archetypeGroupAllocator),
-			m_MainTypeID(mainTypeID)
+			m_MainTypeID(mainTypeID),
+			m_FilterContainer(filterContainer)
 		{
 
+		}
+
+		inline bool IsFilterGroup() const noexcept
+		{
+			return m_FilterContainer != nullptr;
+		}
+
+		inline IFilterContainerBase* GetFilterContainer() const noexcept
+		{
+			return m_FilterContainer;
 		}
 
 		inline TypeID GetMainTypeID() const noexcept
@@ -100,19 +147,26 @@ namespace decs::light
 			return m_ArchetypesCount;
 		}
 
-		inline uint32_t MaxComponentsCount() const
+		inline size_t GetMaxComponentTagFilterCount() const
 		{
-			return (uint32_t)m_Groups.size();
+			return m_Groups.size();
 		}
 
 		void AddArchetype(Archetype* archetype)
 		{
 			m_ArchetypesCount += 1;
-			const uint64_t componentAndTagCount = archetype->GetTypeCount();
+			const uint64_t componentAndTagCount = archetype->GetComponentTagFilterCount();
 
 			if (componentAndTagCount == 1)
 			{
-				DECS_ASSERT(m_MainTypeID == archetype->GetTypeID(0), "Single component archetype must have component type same as m_MainTypeID!");
+				if (IsFilterGroup())
+				{
+					DECS_ASSERT(m_MainTypeID == archetype->GetFilters()[0].m_FilterTypeID, "Single component archetype must have filter type id same as m_MainTypeID!");
+				}
+				else
+				{
+					DECS_ASSERT(m_MainTypeID == archetype->GetComponentAndTagRecords()[0].m_TypeID, "Single component archetype must have component type same as m_MainTypeID!");
+				}
 				m_MainTypeArchetype = archetype;
 			}
 
@@ -129,7 +183,7 @@ namespace decs::light
 			archetypeGroup->Archetypes.push_back(archetype);
 		}
 
-		std::span<Archetype*> GetArchetypesWithTypeCount(uint64_t componentsCount) const
+		std::span<Archetype*> GetArchetypesWithComponentTagFilterCount(uint64_t componentsCount) const
 		{
 			uint64_t groupIndex = componentsCount - 1;
 			if (groupIndex >= m_Groups.size())
@@ -144,7 +198,7 @@ namespace decs::light
 			return group->Archetypes;
 		}
 
-		const ArchetypeGroup* GetGroupWithTypeCount(uint64_t componentsCount) const
+		const ArchetypeGroup* GetGroupWithComponentTagFilterCount(uint64_t componentsCount) const
 		{
 			uint64_t groupIndex = componentsCount - 1;
 			if (groupIndex >= m_Groups.size())
@@ -195,8 +249,30 @@ namespace decs::light
 		Archetype* m_MainTypeArchetype = nullptr;
 		std::vector<ArchetypeGroup*> m_Groups;
 		uint64_t m_ArchetypesCount = 0;
+		IFilterContainerBase* m_FilterContainer = nullptr;
 	};
 
+}
+
+template<>
+struct std::hash<decs::light::ArchetypesGroupKey>
+{
+public:
+	std::size_t operator()(const decs::light::ArchetypesGroupKey& v) const noexcept
+	{
+		if (v.m_FilterContainer != nullptr)
+		{
+			return std::hash<decs::light::IFilterContainerBase*>{}(v.m_FilterContainer);
+		}
+		else
+		{
+			return std::hash<decs::TypeID>{}(v.m_TypeID);
+		}
+	}
+};
+
+namespace decs::light
+{
 	class ArchetypesMap
 	{
 		friend class Container;
@@ -205,12 +281,11 @@ namespace decs::light
 		friend class IterationContainerContext;
 
 	public:
-		ArchetypesMap()
-		{
-
-		}
-
-		ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize);
+		ArchetypesMap(
+			FilterManager& filterManager,
+			uint64_t archetypesVectorChunkSize,
+			uint64_t archetypeGroupsVectorChunkSize
+		);
 
 		~ArchetypesMap();
 
@@ -274,17 +349,16 @@ namespace decs::light
 		void ClearEntityDataAndComponents();
 
 	private:
+		FilterManager& m_FilterManager;
+
 		TChunkedVector<Archetype> m_Archetypes{ 100 };
 		TChunkedVector<ArchetypeGroup> m_ArchetrypesGroupsAllocator{ 100 };
 		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeAllocator{ 100 };
 
-		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
+		ecsMap<ArchetypesGroupKey, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
 		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
 
 		uint32_t m_MaxTypeCountInArchetypes = 0;
-
-		Archetype* m_LastArchetypeFetched{};
-
 		// UTILITY
 	private:
 		void MakeArchetypeEdges_4(Archetype& archetype);
@@ -318,7 +392,7 @@ namespace decs::light
 			return group;
 		}
 
-		inline ArchetypesGroupByOneType* GetArchetypesGroupWithoutCreating(TypeID id) const
+		inline ArchetypesGroupByOneType* GetArchetypesGroupWithoutCreating(ArchetypesGroupKey id) const
 		{
 			auto it = m_ArchetypesGroupedByOneType.find(id);
 			if (it == m_ArchetypesGroupedByOneType.end())
@@ -398,6 +472,28 @@ namespace decs::light
 		void AddTypeDataAfterRemoveComponent(const Archetype& fromArchetype, Archetype& toArchetype, TypeID compType);
 
 		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, IPackedLightComponentContainer* packedContainer);
+
+		// FITLER ARCHETYPES:
+
+		template<typename FilterType>
+		Archetype* GetOrCreateSingleFilterArchetype(const FilterType& filter)
+		{
+			return nullptr;
+		}
+
+		template<typename FilterType>
+		Archetype* GetOrCreateArchetypeAfterSetFilter(const Archetype& toArchetype, const FilterType& filter)
+		{
+			return nullptr;
+		}
+
+		template<typename FilterType>
+		Archetype* GetOrCreateArchetypeAfterRemoveFilter(const Archetype& toArchetype)
+		{
+			return nullptr;
+		}
+
+
 
 	};
 }

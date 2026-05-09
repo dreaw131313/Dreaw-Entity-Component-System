@@ -2,6 +2,7 @@
 
 #include "Archetypes/LArchetypesMap.h"
 #include "LEntityManager.h"
+#include "Filter/LFilter.h"
 
 namespace decs::light
 {
@@ -367,12 +368,33 @@ namespace decs::light
 		template<typename Filter>
 		bool SetFilter(EntityData& entityData, const Filter& filter)
 		{
+			TYPE_ID_CONSTEXPR TypeID filterTypeID = Type<Filter>::ID();
 
+			Archetype* oldArchetype = entityData.m_Archetype;
+			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
+
+			Archetype* newArchetype = this->GetArchetypeAfterSetFilter<Filter>(oldArchetype, filter);
+			if (newArchetype == oldArchetype)
+			{
+				return true;
+			}
 
 			return true;
 		}
 
+		bool RemoveFilter(TypeID filterTypeID);
+
 	private:
+		FilterManager m_FilterManager{};
+
+	private:
+		template<typename Filter>
+		Archetype* GetArchetypeAfterSetFilter(Archetype* toArchetype, const Filter& filter)
+		{
+			return toArchetype;
+		}
+
+		Archetype* GetArchetypeAfterRemoveFilter(Archetype* fromArchetype, TypeID filterID);
 
 	#pragma endregion
 
@@ -449,7 +471,7 @@ namespace decs::light
 
 	#pragma region ARCHETYPES:
 	private:
-		ArchetypesMap m_ArchetypesMap{};
+		ArchetypesMap m_ArchetypesMap;
 
 	public:
 		inline void ShrinkArchetypesToFit()

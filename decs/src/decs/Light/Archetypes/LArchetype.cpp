@@ -104,13 +104,11 @@ namespace decs::light
 		TypeID neighbourTypeID = decs::InvalidTypeID;
 		uint32_t foundedNeighbourTypeCount = 0;
 
-		for (uint32_t typeIdx = 0; typeIdx < typeCount; typeIdx++)
+		for (auto& reocrd : m_TypeData)
 		{
-			const TypeID currentTypeID = GetTypeID(typeIdx);
-
-			if (!neighbour.ContainType(currentTypeID))
+			if (!neighbour.ContainType(reocrd.m_TypeID))
 			{
-				neighbourTypeID = currentTypeID;
+				neighbourTypeID = reocrd.m_TypeID;
 				foundedNeighbourTypeCount++;
 			}
 			if (foundedNeighbourTypeCount > 1)
@@ -125,6 +123,71 @@ namespace decs::light
 	std::optional<TypeID> Archetype::IsAddComponentNeighbour(const Archetype& neighbour) const
 	{
 		return neighbour.IsRemoveComponentNeighbour(*this);
+	}
+
+	bool Archetype::HasSameFiltersAs(const Archetype& other) const
+	{
+		bool result = false;
+		if (m_Filters.size() != other.m_Filters.size())
+		{
+			return false;
+		}
+
+		for (size_t i = 0; i < m_Filters.size(); i++)
+		{
+			const auto& filter = m_Filters[i];
+			const auto& otherFilter = other.m_Filters[i];
+			if (!filter.m_FilterContainer->StoresSameData(*otherFilter.m_FilterContainer))
+			{
+				return false;
+			}
+		}
+
+		return result;
+	}
+
+	std::optional<IFilterContainerBase*> Archetype::IsRemoveFilterNeighbour(const Archetype& neighbour) const
+	{
+		const size_t filterCount = GetFilterCount();
+		const size_t neighbourFilterCount = neighbour.GetFilterCount();
+
+		if (neighbourFilterCount >= filterCount || (filterCount - neighbourFilterCount) != 1)
+		{
+			return {};
+		}
+
+		IFilterContainerBase* neighbourFilter = nullptr;
+		uint32_t foundedNeighbourTypeCount = 0;
+
+		for (auto& filterRecord : m_Filters)
+		{
+			if (!neighbour.ContainFilter(filterRecord.m_FilterContainer))
+			{
+				neighbourFilter = filterRecord.m_FilterContainer;
+				foundedNeighbourTypeCount++;
+			}
+			if (foundedNeighbourTypeCount > 1)
+			{
+				return {};
+			}
+		}
+
+		return std::optional<IFilterContainerBase*>(neighbourFilter);
+	}
+
+	std::optional<IFilterContainerBase*> Archetype::IsAddFilterNeighbour(const Archetype& neighbour) const
+	{
+		return neighbour.IsRemoveFilterNeighbour(*this);
+	}
+
+	void Archetype::AddFilterEdge(IFilterContainerBase* filter, Archetype* archetype, EArchetypeEdgeType edgeType)
+	{
+		auto& edge = m_FilterEdges[filter];
+		if (!edge.IsValid())
+		{
+			edge.m_Archetype = archetype;
+			edge.m_EdgeType = edgeType;
+		}
 	}
 
 	void Archetype::ClearEntityDataAndComponents()
@@ -396,4 +459,37 @@ namespace decs::light
 
 		return true;
 	}
+
+	bool Archetype::MoveEnttiyAfterFilterChange(Archetype& fromArchetype, Archetype& toArchetype, uint64_t entityIndex)
+	{
+		if (entityIndex >= fromArchetype.EntityCount() || fromArchetype.GetTypeCount() != toArchetype.GetTypeCount())
+		{
+			return false;
+		}
+
+		DECS_ASSERT(fromArchetype.HasSameTypesAs(toArchetype), "Moving entity can be performed only to archetypes with same types!");
+
+		EntityData* entityData = fromArchetype.m_Entities.Get(entityIndex);
+		DECS_ASSERT(entityData != nullptr, "Entity data must be valid");
+
+		toArchetype.AddEntityData(entityData);
+
+		size_t typeCount = toArchetype.GetTypeCount();
+		for (size_t typeIdx = 0; typeIdx < typeCount; typeIdx++)
+		{
+			ArchetypeTypeData& fromArchetypeData = fromArchetype.m_TypeData[typeIdx];
+			ArchetypeTypeData& toTypeData = toArchetype.m_TypeData[typeIdx];
+
+			if (!fromArchetypeData.IsTag())
+			{
+				toTypeData.m_PackedContainer->MoveBack(fromArchetypeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+				fromArchetypeData.m_PackedContainer->RemoveSwapBack(entityIndex);
+			}
+		}
+
+		fromArchetype.RemoveSwapBackEntityData(entityIndex);
+
+		return true;
+	}
+
 }

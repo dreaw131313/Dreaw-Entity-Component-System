@@ -7,13 +7,14 @@
 namespace decs::light
 {
 	Container::Container():
-		m_EntityManager(m_DefaultEntitiesChunkSize)
+		m_EntityManager(m_DefaultEntitiesChunkSize),
+		m_ArchetypesMap(m_FilterManager, 100, 100)
 	{
 	}
 
 	Container::Container(const ContainerConfig& config):
 		m_EntityManager(config.EntityChunkSize),
-		m_ArchetypesMap(config.ArchetypeChunkSize, 100)
+		m_ArchetypesMap(m_FilterManager, config.ArchetypeChunkSize, 100)
 	{
 	}
 
@@ -313,6 +314,16 @@ namespace decs::light
 		}
 
 		return true;
+	}
+
+	bool Container::RemoveFilter(TypeID filterTypeID)
+	{
+		return false;
+	}
+
+	Archetype* Container::GetArchetypeAfterRemoveFilter(Archetype* fromArchetype, TypeID filterID)
+	{
+		return fromArchetype;
 	}
 
 	bool Container::RemoveTag(EntityData& entityData, TypeID tagType)

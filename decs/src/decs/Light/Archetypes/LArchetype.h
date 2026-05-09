@@ -16,6 +16,7 @@ namespace decs::light
 {
 	class Entity;
 	class Archetype;
+	struct ArchetypeHasher;
 	template<typename Components, typename Tags>
 	struct EntitySpawner;
 
@@ -198,109 +199,8 @@ namespace decs::light
 		}
 	};
 
-	struct ArchetypeFilterEdge
-	{
-	public:
-		Archetype* m_Archetype = nullptr;
-		TypeID m_FilterTypeID = InvalidTypeID;
-		IFilterContainerBase* m_FilterContainer = nullptr;
-	};
-
-	struct ArchetypeFilterEdges
-	{
-	public:
-		std::vector<ArchetypeFilterEdge> m_Edges{};
-
-	public:
-		template<typename T>
-		ArchetypeFilterEdge* GetAddEdge(const T& data)
-		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
-
-			const size_t dataHash = std::hash<T>{}(data);
-
-			for (auto& edge : m_Edges)
-			{
-				if (edge.m_FilterContainer != nullptr && typeID == edge.m_FilterTypeID && dataHash == edge.m_FilterContainer->GetDataHash())
-				{
-					const FilterContainer<T>* castedContainer = check_cast<const FilterContainer<T>>(edge.m_FilterContainer);
-					if (castedContainer->m_Data == data)
-					{
-						return &edge;
-					}
-				}
-			}
-
-			return nullptr;
-		}
-
-		template<typename T>
-		ArchetypeFilterEdge* GetAddEdge()
-		{
-			for (auto& edge : m_Edges)
-			{
-				if (edge.m_FilterContainer != nullptr && typeID == edge.m_FilterTypeID)
-				{
-					return &edge;
-				}
-			}
-
-			return nullptr;
-		}
-
-		template<typename T>
-		ArchetypeFilterEdge* GetRemoveEdge()
-		{
-			TYPE_ID_CONSTEXPR TypeID typeID = Type<T>::ID();
-
-			for (auto& edge : m_Edges)
-			{
-				if (edge.m_FilterContainer == nullptr && typeID == edge.m_FilterTypeID)
-				{
-					return &edge;
-				}
-			}
-
-			return nullptr;
-		}
-
-		template<typename T>
-		bool HasAddEdge(const T& data) const
-		{
-			return this->GetAddEdge(data) != nullptr;
-		}
-
-		template<typename T>
-		bool HasAddEdge() const
-		{
-			return this->GetAddEdge() != nullptr;
-		}
-
-		template<typename T>
-		bool HasRemoveEdge() const
-		{
-			return this->GetRemoveEdge() != nullptr;
-		}
-
-		void AddEdge(const ArchetypeFilterEdge& edge)
-		{
-			for (size_t idx = 0; idx < m_Edges.size(); idx++)
-			{
-				auto& currentEdge = m_Edges[idx];
-				if (edge.m_FilterTypeID < currentEdge.m_FilterTypeID)
-				{
-					m_Edges.insert(m_Edges.begin() + idx, edge);
-					return;
-				}
-			}
-
-			m_Edges.push_back(edge);
-		}
-	};
-
 	class Archetype final
 	{
-		friend class ArchetypeFilterEdge;
 		friend class light::Container;
 		friend class light::ContainerIterator;
 		friend class light::EntityData;
@@ -325,8 +225,8 @@ namespace decs::light
 		ArchetypeEntityList m_Entities{};
 		std::vector<ArchetypeTypeData> m_TypeData{};
 
-		ArchetypeFilterEdge m_FiltersEdges{};
 		std::vector<ArchetypeFilterRecord> m_Filters{};
+		std::unordered_map<IFilterContainerBase*, ArchetypeEdge> m_FilterEdges{};
 
 	public:
 		Archetype();
@@ -336,6 +236,15 @@ namespace decs::light
 		inline uint32_t GetTypeCount() const noexcept
 		{
 			return static_cast<uint32_t>(m_TypeData.size());
+		}
+
+		/// <summary>
+		/// Return number of components + tags + filters
+		/// </summary>
+		/// <returns></returns>
+		inline uint32_t GetComponentTagFilterCount() const noexcept
+		{
+			return static_cast<uint32_t>(m_TypeData.size() + m_Filters.size());
 		}
 
 		inline TypeID GetTypeID(uint64_t index) const
@@ -357,6 +266,11 @@ namespace decs::light
 		{
 			if (m_Entities.Capacity() == 0) return 1.f;
 			return (float)m_Entities.Size() / (float)m_Entities.Capacity();
+		}
+
+		inline std::span<const ArchetypeTypeData> GetComponentAndTagRecords() const noexcept
+		{
+			return m_TypeData;
 		}
 
 		bool ContainType(TypeID typeID) const;
@@ -487,6 +401,51 @@ namespace decs::light
 			return m_Edges.contains(toTypeID);
 		}
 
+	#pragma region FILTERS
+	public:
+		size_t GetFilterCount() const noexcept
+		{
+			return m_Filters.size();
+		}
+
+		std::span<const ArchetypeFilterRecord> GetFilters() const noexcept
+		{
+			return m_Filters;
+		}
+
+		bool HasSameFiltersAs(const Archetype& other) const;
+
+		inline bool ContainFilter(const IFilterContainerBase* filter) const
+		{
+			return  std::find_if(
+				m_Filters.begin(),
+				m_Filters.end(),
+				[&](const ArchetypeFilterRecord& record)
+			{
+				return filter == record.m_FilterContainer;
+			}
+			) != m_Filters.end();
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="neighbour">Archetype with smaller number of filters than this archetype</param>
+		/// <returns></returns>
+		std::optional<IFilterContainerBase*> IsRemoveFilterNeighbour(const Archetype& neighbour) const;
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="neighbour">Archetype with larger number of filters than this archetype</param>
+		/// <returns></returns>
+		std::optional<IFilterContainerBase*> IsAddFilterNeighbour(const Archetype& neighbour) const;
+
+	private:
+		void AddFilterEdge(IFilterContainerBase* filter, Archetype* archetype, EArchetypeEdgeType edgeType);
+
+	#pragma endregion
+
 	private:
 
 		template<typename TComponentType>
@@ -570,6 +529,12 @@ namespace decs::light
 			TypeID removedComponentTypeID
 		);
 
+		static bool MoveEnttiyAfterFilterChange(
+			Archetype& fromArchetype,
+			Archetype& toArchetype,
+			uint64_t entityIndex
+		);
+
 
 	#pragma endregion
 
@@ -599,7 +564,9 @@ namespace decs::light
 				return false;
 			}
 
-			return m_ArchetypeConst->HasSameTypesAs(*rhs.m_ArchetypeConst);
+			return m_ArchetypeConst->HasSameTypesAs(*rhs.m_ArchetypeConst)
+				&& m_ArchetypeConst->HasSameFiltersAs(*rhs.m_ArchetypeConst)
+				;
 		}
 
 		inline const Archetype* GetConstArchetype() const
@@ -614,11 +581,18 @@ namespace decs::light
 				return 0;
 			}
 
-			std::size_t finalHash = std::hash<TypeID>{}(m_ArchetypeConst->GetTypeID(0));
-			const uint32_t typeCount = m_ArchetypeConst->GetTypeCount();
-			for (uint32_t typeIdx = 1; typeIdx < typeCount; typeIdx++)
+			auto componentTagTypeRecords = m_ArchetypeConst->GetComponentAndTagRecords();
+			std::size_t finalHash = std::hash<TypeID>{}(componentTagTypeRecords[0].m_TypeID);
+			for (auto& typeRecord : componentTagTypeRecords)
 			{
-				finalHash = hash::Combine(finalHash, std::hash<TypeID>{}(m_ArchetypeConst->GetTypeID(typeIdx)));
+				finalHash = hash::Combine(finalHash, std::hash<TypeID>{}(typeRecord.m_TypeID));
+			}
+
+			auto filters = m_ArchetypeConst->GetFilters();
+			for (auto& filterRecord : filters)
+			{
+				finalHash = hash::Combine(finalHash, std::hash<TypeID>{}(filterRecord.m_FilterTypeID));
+				finalHash = hash::Combine(finalHash, std::hash<TypeID>{}(filterRecord.m_FilterContainer->GetDataHash()));
 			}
 
 			return finalHash;

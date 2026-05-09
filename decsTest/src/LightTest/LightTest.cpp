@@ -22,7 +22,6 @@ namespace Light
 		float X = 0;
 		float Y = 0;
 
-		int table[30];
 
 	public:
 		Position()
@@ -44,7 +43,7 @@ namespace Light
 	struct TestComponent
 	{
 	public:
-		int table[50];
+		int table[10];
 
 	};
 
@@ -297,7 +296,7 @@ namespace Light
 	void Test::PerformanceTest()
 	{
 		const uint32_t testCount = 1;
-		const uint32_t entityCount = 65536;
+		const uint32_t entityCount = 16384;
 
 		decs::light::ContainerConfig config{
 			.EntityChunkSize = 10000,

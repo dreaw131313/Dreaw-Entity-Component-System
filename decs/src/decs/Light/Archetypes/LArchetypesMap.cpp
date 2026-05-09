@@ -5,7 +5,12 @@
 
 namespace decs::light
 {
-	ArchetypesMap::ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize):
+	ArchetypesMap::ArchetypesMap(
+		FilterManager& filterManager,
+		uint64_t archetypesVectorChunkSize,
+		uint64_t archetypeGroupsVectorChunkSize
+	):
+		m_FilterManager(filterManager),
 		m_Archetypes(archetypesVectorChunkSize),
 		m_ArchetrypesGroupsByOneTypeAllocator(archetypeGroupsVectorChunkSize)
 	{
@@ -92,12 +97,10 @@ namespace decs::light
 		const ArchetypeGroup* bestAddTypeGroup = nullptr;
 		uint32_t bestAddTypeArchetypeCount = std::numeric_limits<uint32_t>::max();
 
-		for (uint32_t typeIdx = 0; typeIdx < typeCount; typeIdx++)
-		{
-			const ArchetypesGroupByOneType* typeGroup = GetArchetypesGroupWithoutCreating(archetype.GetTypeID(typeIdx));
-			DECS_ASSERT(typeGroup != nullptr, "This should never fail, because archetype is added to all its types groups:");
 
-			const ArchetypeGroup* currentAddTypeGroup = typeGroup->GetGroupWithTypeCount(static_cast<uint64_t>(addTypeNeighbourTypeCount));
+		auto findBestAddTypeGroup = [&](const ArchetypesGroupByOneType& typeGroup)
+		{
+			const ArchetypeGroup* currentAddTypeGroup = typeGroup.GetGroupWithComponentTagFilterCount(static_cast<uint64_t>(addTypeNeighbourTypeCount));
 			if (currentAddTypeGroup != nullptr && currentAddTypeGroup->GetArchetypeCount() < bestAddTypeArchetypeCount)
 			{
 				bestAddTypeGroup = currentAddTypeGroup;
@@ -109,7 +112,7 @@ namespace decs::light
 				/*
 				* This potenitaly is faster than checking all existing archetypes with smaller number of components
 				*/
-				const ArchetypeGroup* removeComponentGroup = typeGroup->GetGroupWithTypeCount(static_cast<uint64_t>(removeTypeNeighbourTypeCount));
+				const ArchetypeGroup* removeComponentGroup = typeGroup.GetGroupWithComponentTagFilterCount(static_cast<uint64_t>(removeTypeNeighbourTypeCount));
 				if (removeComponentGroup != nullptr)
 				{
 					for (Archetype* neighbour : removeComponentGroup->Archetypes)
@@ -123,6 +126,24 @@ namespace decs::light
 					}
 				}
 			}
+		};
+
+		// COMPONENTS AND TAGS
+		for (auto& typeDataRecord : archetype.GetComponentAndTagRecords())
+		{
+			const ArchetypesGroupByOneType* typeGroup = GetArchetypesGroupWithoutCreating(typeDataRecord.m_TypeID);
+
+			DECS_ASSERT(typeGroup != nullptr, "This should never fail, because archetype is added to all its types groups:");
+			findBestAddTypeGroup(*typeGroup);
+		}
+
+		// FILTERS:
+		for (auto& filterRecord: archetype.GetFilters())
+		{
+			const ArchetypesGroupByOneType* typeGroup = GetArchetypesGroupWithoutCreating(filterRecord.m_FilterContainer);
+
+			DECS_ASSERT(typeGroup != nullptr, "This should never fail, because archetype is added to all its types groups:");
+			findBestAddTypeGroup(*typeGroup);
 		}
 
 		/*

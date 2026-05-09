@@ -34,12 +34,14 @@ namespace decs::light
 
 		virtual size_t GetDataHash() const noexcept = 0;
 
+		virtual bool StoresSameData(const IFilterContainerBase& other) const = 0;
+
 	private:
 		uint32_t m_UseCount = 0;
 	};
 
 	template<typename FilterType>
-	class FilterContainer
+	class FilterContainer : public IFilterContainerBase
 	{
 	public:
 		const FilterType m_Data{};
@@ -48,20 +50,20 @@ namespace decs::light
 	public:
 		FilterContainer()
 		{
-			m_DataHash = std::hash<>{}(m_Data);
+			m_DataHash = std::hash<FilterType>{}(m_Data);
 		}
 
 		FilterContainer(const FilterType& data):
 			m_Data(data)
 		{
-			m_DataHash = std::hash<>{}(m_Data);
+			m_DataHash = std::hash<FilterType>{}(m_Data);
 		}
 
 		template<typename...Args>
 		FilterContainer(Args&&...args):
 			m_Data(std::forward<Args>(args)...)
 		{
-			m_DataHash = std::hash<>{}(m_Data);
+			m_DataHash = std::hash<FilterType>{}(m_Data);
 		}
 
 		inline TypeID GetDataTypeID() const noexcept
@@ -74,23 +76,168 @@ namespace decs::light
 			return m_DataHash;
 		}
 
-		inline void IncrementUseCount()
-		{
-			m_UseCount++;
-		}
 
-		inline void DecrementUseCount()
+		bool StoresSameData(const IFilterContainerBase& other) const override
 		{
-			if (m_UseCount > 0)
+			if (GetDataTypeID() != other.GetDataTypeID() || GetDataHash() != other.GetDataHash())
 			{
-				m_UseCount--;
+				return false;
+			}
+
+			FilterContainer<FilterType>* otherFilterContainer = check_cast<FilterContainer<FilterType>*>(&other);
+
+			return m_Data == otherFilterContainer->m_Data;
+		}
+	};
+
+	template<typename FilterType>
+	class FilterEntryKey
+	{
+	public:
+		const FilterType* m_DataPtr = nullptr;
+
+	public:
+		bool operator ==(FilterEntryKey& other) const noexcept
+		{
+			if (m_DataPtr == nullptr || other.m_DataPtr == nullptr)
+			{
+				return m_DataPtr == other.m_DataPtr;
+			}
+
+			return m_DataPtr == other.m_DataPtr || ((*m_DataPtr) == (*other.m_DataPtr));
+		}
+	};
+}
+
+template<typename FilterType>
+struct std::hash<decs::light::FilterEntryKey<FilterType>>
+{
+	size_t operator ()(const decs::light::FilterEntryKey<FilterType>& v) const
+	{
+		if (v.m_DataPtr != nullptr)
+		{
+			return std::hash<FilterType>{}(*v.m_DataPtr);
+		}
+		return 0;
+	}
+};
+
+namespace decs::light
+{
+	class IFilterTypeManager
+	{
+	public:
+		virtual ~IFilterTypeManager() = default;
+
+	};
+
+	template<typename FilterType>
+	class FilterTypeManager
+	{
+	public:
+		using FilterContainerType = FilterContainer<FilterType>;
+		using FilterEntryKeyType = FilterEntryKey<FilterType>;
+
+	public:
+		~FilterTypeManager()
+		{
+			for (auto& [key, value] : m_Filters)
+			{
+				delete value;
 			}
 		}
 
-		inline uint32_t GetUseCount() const noexcept
+		FilterContainerType* GetOrAddContainer(const FilterType& filter)
 		{
-			return m_UseCount;
+			// geting existing filter container
+			{
+				FilterEntryKeyType key{ &filter };
+
+				auto it = m_Filters.find(key);
+				if (it != m_Filters.end())
+				{
+					return it->second;
+				}
+			}
+
+			// create new filter container:
+			{
+				FilterContainerType* container = new FilterContainerType(filter);
+				FilterEntryKeyType key{ &container->m_Data };
+				m_Filters[key] = container;
+
+				return container;
+			}
 		}
 
+		bool RemoveContainer(FilterContainerType* container)
+		{
+			if (container == nullptr)
+			{
+				return false;
+			}
+
+			FilterEntryKeyType key{ &container->m_Data };
+
+			if (m_Filters.erase(key) == 0)
+			{
+				return false;
+			}
+
+			delete container;
+
+			return true;
+		}
+
+	private:
+		std::unordered_map<FilterEntryKeyType, FilterContainerType*> m_Filters{};
+	};
+
+	class FilterManager
+	{
+	public:
+		~FilterManager()
+		{
+			for (auto& [key, filterTypeManager] : m_FilterTypes)
+			{
+				delete filterTypeManager;
+			}
+		}
+
+	public:
+		template<typename FilterType>
+		FilterContainer<FilterType>* GetFilter(const FilterType& filter) const noexcept
+		{
+			IFilterTypeManager*& filterTypeMangerBase = m_FilterTypes[Type<FilterType>::ID()];
+			if (filterTypeMangerBase == nullptr)
+			{
+				filterTypeMangerBase = new FilterTypeManager<FilterType>();
+			}
+
+			FilterTypeManager<FilterType>* filterTypeManager = check_cast<FilterTypeManager<FilterType>*>(filterTypeMangerBase);
+			return filterTypeManager->GetOrAddContainer(filter);
+		}
+
+		template<typename FilterType>
+		bool DeleteFilter(const FilterContainer<FilterType>* filterTypeContainer)
+		{
+			if (filterTypeContainer == nullptr)
+			{
+				return false;
+			}
+
+			TYPE_ID_CONSTEXPR TypeID typeID = Type<FilterType>::ID();
+			auto it = m_FilterTypes.find(typeID);
+			if (it == m_FilterTypes.end())
+			{
+				return false;
+			}
+
+			FilterTypeManager<FilterType>* manager = check_cast<FilterTypeManager<FilterType>*>(it->second);
+			return manager->RemoveContainer(filterTypeContainer);
+		}
+
+	private:
+		std::unordered_map<TypeID, IFilterTypeManager*> m_FilterTypes{};
 	};
 }
