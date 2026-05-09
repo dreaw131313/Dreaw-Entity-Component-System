@@ -417,6 +417,7 @@ namespace Light
 		e.AddComponent<float>();
 		e.AddComponent<double>();
 		e.SetFilter<TestEntityFilter>(TestEntityFilter(10));
+		e.SetFilter<TestEntityFilter>(TestEntityFilter(1));
 
 		auto filterGet = e.GetFilter<TestEntityFilter>();
 		bool hasFilter = e.HasFilter<TestEntityFilter>();
