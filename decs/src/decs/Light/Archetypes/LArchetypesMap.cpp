@@ -423,7 +423,7 @@ namespace decs::light
 	Archetype* ArchetypesMap::GetOrCreateArchetypeAfterRemoveFilter(const Archetype& fromArchetype, TypeID filterTypeID)
 	{
 		IFilterContainerBase* archetypeFilter = fromArchetype.GetFilterContainer(filterTypeID);
-		DECS_ASSERT(archetypeFilter == nullptr, "fromArchetype must have this filter type to remove it from!");
+		DECS_ASSERT(archetypeFilter != nullptr, "fromArchetype must have this filter type to remove it from!");
 
 		if (fromArchetype.GetComponentTagFilterCount() == 1)
 		{

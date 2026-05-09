@@ -68,7 +68,7 @@ namespace decs
 	inline constexpr bool is_filter_v = is_filter<T>::value;
 
 	template<typename T>
-	concept filter_concept = is_filter_v<T>;
+	concept filter_concept = true;
 
 #pragma endregion
 

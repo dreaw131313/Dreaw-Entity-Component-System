@@ -1,6 +1,7 @@
 #pragma once
 
 #include "decs/Core/Core.h"
+#include "decs/Core/check_cast.h"
 #include "decs/Core/trait.h"
 #include "decs/Core/Type.h"
 
@@ -45,7 +46,7 @@ namespace decs::light
 		uint32_t m_UseCount = 0;
 	};
 
-	template<typename FilterType>
+	template<filter_concept FilterType>
 	class FilterContainer : public IFilterContainerBase
 	{
 	public:
@@ -88,7 +89,7 @@ namespace decs::light
 				return false;
 			}
 
-			FilterContainer<FilterType>* otherFilterContainer = check_cast<FilterContainer<FilterType>*>(&other);
+			const FilterContainer<FilterType>* otherFilterContainer = check_cast<const FilterContainer<FilterType>*>(&other);
 
 			return m_Data == otherFilterContainer->m_Data;
 		}
@@ -96,20 +97,22 @@ namespace decs::light
 		IFilterTypeManager* CreateFilterTypeManager() const override;
 	};
 
-	template<typename FilterType>
+	template<filter_concept FilterType>
 	class FilterEntryKey
 	{
 	public:
 		const FilterType* m_DataPtr = nullptr;
 
 	public:
+		FilterEntryKey() = default;
+
 		FilterEntryKey(const FilterType& filterData):
 			m_DataPtr(&filterData)
 		{
 
 		}
 
-		bool operator ==(FilterEntryKey& other) const noexcept
+		bool operator ==(const FilterEntryKey& other) const noexcept
 		{
 			if (m_DataPtr == nullptr || other.m_DataPtr == nullptr)
 			{
@@ -144,8 +147,8 @@ namespace decs::light
 		virtual IFilterContainerBase* CreateMatchingFilterContainer(const IFilterContainerBase& other) = 0;
 	};
 
-	template<typename FilterType>
-	class FilterTypeManager
+	template<filter_concept FilterType>
+	class FilterTypeManager : public IFilterTypeManager
 	{
 	public:
 		using FilterContainerType = FilterContainer<FilterType>;
@@ -164,9 +167,9 @@ namespace decs::light
 		{
 			// geting existing filter container
 			{
-				FilterEntryKeyType key{ &filter };
+				FilterEntryKeyType tempKey(filter);
 
-				auto it = m_Filters.find(key);
+				auto it = m_Filters.find(tempKey);
 				if (it != m_Filters.end())
 				{
 					return it->second;
@@ -176,8 +179,7 @@ namespace decs::light
 			// create new filter container:
 			{
 				FilterContainerType* container = new FilterContainerType(filter);
-				FilterEntryKeyType key{ &container->m_Data };
-				m_Filters[key] = container;
+				m_Filters[FilterEntryKeyType(container->m_Data)] = container;
 
 				return container;
 			}
@@ -204,19 +206,18 @@ namespace decs::light
 
 		IFilterContainerBase* CreateMatchingFilterContainer(const IFilterContainerBase& other) override
 		{
-			const FilterContainerType* otherCasted = check_cast<FilterContainerType>(&other);
+			const FilterContainerType* otherCasted = check_cast<const FilterContainerType*>(&other);
 
-			FilterEntryKeyType key{};
-			key.m_DataPtr = &otherCasted->m_Data;
+			FilterEntryKeyType tempKey(otherCasted->m_Data);
 
-			auto it = m_Filters.find(key);
+			auto it = m_Filters.find(tempKey);
 			if (it != m_Filters.end())
 			{
 				return it->second;
 			}
 
 			FilterContainerType* newFilterContainer = new FilterContainerType(otherCasted->m_Data);
-			m_Filters[FilterContainerType(newFilterContainer->m_Data)] = newFilterContainer;
+			m_Filters[FilterEntryKeyType(newFilterContainer->m_Data)] = newFilterContainer;
 			return newFilterContainer;
 		}
 
@@ -225,7 +226,7 @@ namespace decs::light
 		std::unordered_map<FilterEntryKeyType, FilterContainerType*> m_Filters{};
 	};
 
-	template<typename FilterType>
+	template<filter_concept FilterType>
 	IFilterTypeManager* FilterContainer<FilterType>::CreateFilterTypeManager() const
 	{
 		return new FilterTypeManager<FilterType>();
@@ -243,8 +244,8 @@ namespace decs::light
 		}
 
 	public:
-		template<typename FilterType>
-		FilterContainer<FilterType>* GetFilter(const FilterType& filter) const noexcept
+		template<filter_concept FilterType>
+		FilterContainer<FilterType>* GetFilter(const FilterType& filter)
 		{
 			IFilterTypeManager*& filterTypeMangerBase = m_FilterTypes[Type<FilterType>::ID()];
 			if (filterTypeMangerBase == nullptr)
@@ -269,7 +270,7 @@ namespace decs::light
 			return filterTypeMangerBase->CreateMatchingFilterContainer(other);
 		}
 
-		template<typename FilterType>
+		template<filter_concept FilterType>
 		bool DeleteFilter(const FilterContainer<FilterType>* filterTypeContainer)
 		{
 			if (filterTypeContainer == nullptr)

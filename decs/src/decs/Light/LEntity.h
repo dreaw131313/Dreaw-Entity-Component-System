@@ -207,6 +207,79 @@ namespace decs::light
 
 	#pragma endregion
 
+	#pragma region FILTERS:
+	public:
+		template<filter_concept Filter>
+		bool SetFilter(const Filter& filter)
+		{
+			if (IsValid())
+			{
+				return GetContainer()->SetFilter(*m_EntityData, filter);
+			}
+			return false;
+		}
+
+		bool RemoveFilter(TypeID filterTypeID)
+		{
+			if (IsValid())
+			{
+				return GetContainer()->RemoveFilter(*m_EntityData, filterTypeID);
+			}
+			return false;
+		}
+
+		template<filter_concept FilterType>
+		bool RemoveFilter()
+		{
+			if (IsValid())
+			{
+				return GetContainer()->RemoveFilter<FilterType>(*m_EntityData);
+			}
+			return false;
+		}
+
+		template<filter_concept FilterType>
+		[[nodiscard]] const FilterType* GetFilter()
+		{
+			if (IsValid())
+			{
+				return GetContainer()->GetFilter<FilterType>(*m_EntityData);
+			}
+			return nullptr;
+		}
+
+		[[nodiscard]] bool HasFilter(TypeID filterID)
+		{
+			if (IsValid())
+			{
+				return GetContainer()->HasFilter(*m_EntityData, filterID);
+			}
+			return false;
+		}
+
+		template<filter_concept FilterType>
+		[[nodiscard]] bool HasFilter()
+		{
+			if (IsValid())
+			{
+				return GetContainer()->HasFilter<FilterType>(*m_EntityData);
+			}
+			return false;
+		}
+
+		template<filter_concept FilterType>
+		[[nodiscard]] bool HasFilter(const FilterType& filterData)
+		{
+			if (IsValid())
+			{
+				return GetContainer()->HasFilter<FilterType>(*m_EntityData, filterData);
+			}
+			return false;
+		}
+
+
+	#pragma endregion
+
 	private:
 		mutable EntityData* m_EntityData = nullptr;
 		mutable EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();

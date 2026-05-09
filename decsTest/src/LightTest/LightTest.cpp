@@ -54,7 +54,7 @@ namespace Light
 	};
 
 	using Entity = decs::light::Entity;
-	using Container = decs::light::Container;
+	using ECSContainer = decs::light::Container;
 	template<decs::TLightComponentConcept... TComps>
 	using Query = decs::light::Query<TComps...>;
 	template<decs::TLightComponentConcept... TComps>
@@ -74,7 +74,7 @@ namespace Light
 			.ArchetypeChunkSize = 200,
 		};
 
-		Container container = { containerConfig };
+		ECSContainer container = { containerConfig };
 
 		/*{
 		Entity prefab = container.CreateEntity();
@@ -282,7 +282,7 @@ namespace Light
 			.ArchetypeChunkSize = 200,
 		};
 
-		Container container = { containerConfig };
+		ECSContainer container = { containerConfig };
 
 		Entity e = container.CreateEntity();
 		e.AddComponent<TestComponent>();
@@ -368,6 +368,62 @@ namespace Light
 		std::cout << "Final avarage time " << finalAvarage / finalTestCount << " ms\n";
 
 
+	}
+
+	struct TestEntityFilter
+	{
+	public:
+		int Data = 0;
+
+	public:
+		TestEntityFilter()
+		{
+			PrintLine("TestEntityFilter constructor");
+		}
+		TestEntityFilter(int data):
+			Data(data)
+		{
+			PrintLine("TestEntityFilter constructor");
+		}
+
+		~TestEntityFilter()
+		{
+			PrintLine("TestEntityFilter destructor");
+		}
+
+
+		bool operator==(const TestEntityFilter& other)const noexcept = default;
+	};
+}
+
+template<>
+struct std::hash<Light::TestEntityFilter>
+{
+public:
+	std::size_t operator()(const Light::TestEntityFilter& filter) const noexcept
+	{
+		return std::hash<int>{}(filter.Data);
+	}
+};
+
+namespace Light
+{
+
+	void Test::FilterTest()
+	{
+		ECSContainer container{};
+
+		Entity e = container.CreateEntity();
+		e.AddComponent<float>();
+		e.AddComponent<double>();
+		e.SetFilter<TestEntityFilter>(TestEntityFilter(10));
+
+		auto filterGet = e.GetFilter<TestEntityFilter>();
+		bool hasFilter = e.HasFilter<TestEntityFilter>();
+		hasFilter = e.HasFilter(decs::Type<TestEntityFilter>::ID());
+		//hasFilter = e.HasFilter(TestEntityFilter(11));
+
+		e.RemoveFilter<TestEntityFilter>();
 	}
 
 }

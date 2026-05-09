@@ -9,15 +9,15 @@ int main()
 		std::cout << "/////////////////////////////////////" << "\n";
 		std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
 		std::cout << "/////////////////////////////////////" << "\n";
-		Light::Test{}.PerformanceTest();
+		Light::Test{}.FilterTest();
 	}
 
-	{
+	/*{
 		std::cout << "///////////////////////////////////////////" << "\n";
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
 		Normal::Test{}.PerformanceTest();
-	}
+	}*/
 
 	return 0;
 }

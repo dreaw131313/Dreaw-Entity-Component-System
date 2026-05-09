@@ -423,10 +423,10 @@ namespace decs::light
 			return it != m_ArchetypesGroupedByOneType.end() ? it->second->GetMainTypeArchetype() : nullptr;
 		}
 
-		template<typename FilterType>
+		template<filter_concept FilterType>
 		Archetype* GetOrCreateSingleFilterArchetype(const FilterType& filter)
 		{
-			IFilterContainerBase* filterContainer = m_FilterManager.GetFilter(filter);
+			IFilterContainerBase* filterContainer = m_FilterManager.GetFilter<FilterType>(filter);
 			Archetype* archetype = GetSingleFilterArchetype(filterContainer);
 			if (archetype != nullptr)
 			{
@@ -439,7 +439,7 @@ namespace decs::light
 			return archetype;
 		}
 
-		template<typename FilterType>
+		template<filter_concept FilterType>
 		Archetype* GetOrCreateArchetypeAfterSetFilter(const Archetype& toArchetype, const FilterType& filter)
 		{
 			FilterContainer<FilterType>* archetypeFilter = toArchetype.GetFilterContainer<FilterType>();
@@ -448,7 +448,7 @@ namespace decs::light
 				if (archetypeFilter->m_Data == filter)
 				{
 					// return same container so we can drop const
-					return const_cast<Archetype>(&toArchetype);
+					return const_cast<Archetype*>(&toArchetype);
 				}
 
 				Archetype* archetypeWithoutFilter = GetOrCreateArchetypeAfterRemoveFilter<FilterType>(toArchetype);
@@ -472,7 +472,7 @@ namespace decs::light
 				return edge.m_Archetype;
 			}
 
-			Archetype& newArchetype = &m_Archetypes.EmplaceBack();
+			Archetype& newArchetype = m_Archetypes.EmplaceBack();
 			AddTypeDataAfterAddFilter(toArchetype, newArchetype, newFilterContainer);
 			AddArchetypeToCorrectContainers(newArchetype);
 
@@ -481,7 +481,7 @@ namespace decs::light
 
 		Archetype* GetOrCreateArchetypeAfterRemoveFilter(const Archetype& fromArchetype, TypeID filterTypeID);
 
-		template<typename FilterType>
+		template<filter_concept FilterType>
 		Archetype* GetOrCreateArchetypeAfterRemoveFilter(const Archetype& fromArchetype)
 		{
 			return GetOrCreateArchetypeAfterRemoveFilter(fromArchetype, Type<FilterType>::ID());

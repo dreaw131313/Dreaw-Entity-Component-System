@@ -14,6 +14,8 @@ namespace Light
 
 		void PerformanceTest();
 
+		void FilterTest();
+
 	private:
 	};
 

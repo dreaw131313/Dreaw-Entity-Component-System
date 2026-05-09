@@ -365,7 +365,7 @@ namespace decs::light
 
 	#pragma region FILTERS
 	private:
-		template<typename FilterType>
+		template<filter_concept FilterType>
 		Archetype* GetArchetypeAfterSetFilter(Archetype* toArchetype, const FilterType& filter)
 		{
 			if (toArchetype == nullptr)
@@ -380,15 +380,15 @@ namespace decs::light
 
 		Archetype* GetArchetypeAfterRemoveFilter(Archetype* fromArchetype, TypeID filterID);
 
-		template<typename Filter>
-		bool SetFilter(EntityData& entityData, const Filter& filter)
+		template<filter_concept FilterType>
+		bool SetFilter(EntityData& entityData, const FilterType& filter)
 		{
-			TYPE_ID_CONSTEXPR TypeID filterTypeID = Type<Filter>::ID();
+			TYPE_ID_CONSTEXPR TypeID filterTypeID = Type<FilterType>::ID();
 
 			Archetype* oldArchetype = entityData.m_Archetype;
 			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
-			Archetype* newArchetype = this->GetArchetypeAfterSetFilter<Filter>(oldArchetype, filter);
+			Archetype* newArchetype = this->GetArchetypeAfterSetFilter<FilterType>(oldArchetype, filter);
 			if (newArchetype == oldArchetype)
 			{
 				return true;
@@ -409,13 +409,13 @@ namespace decs::light
 
 		bool RemoveFilter(EntityData& entityData, TypeID filterTypeID);
 
-		template<typename FilterType>
+		template<filter_concept FilterType>
 		bool RemoveFilter(EntityData& entityData)
 		{
 			return RemoveFilter(entityData, Type<FilterType>::ID());
 		}
 
-		template<typename FilterType>
+		template<filter_concept FilterType>
 		const FilterType* GetFilter(EntityData& entityData)
 		{
 			if (entityData.m_Archetype == nullptr
@@ -436,13 +436,13 @@ namespace decs::light
 
 		bool HasFilter(const EntityData& entityData, TypeID filterID);
 
-		template<typename FilterType>
+		template<filter_concept FilterType>
 		bool HasFilter(const EntityData& entityData)
 		{
 			return HasFilter(entityData, Type<FilterType>::ID());
 		}
 
-		template<typename FilterType>
+		template<filter_concept FilterType>
 		bool HasFilter(const EntityData& entityData, const FilterType& filterData)
 		{
 			if (entityData.m_Archetype == nullptr
@@ -460,9 +460,6 @@ namespace decs::light
 
 			return filterContainer->m_Data == filterData;
 		}
-
-
-
 
 	private:
 		FilterManager m_FilterManager{};

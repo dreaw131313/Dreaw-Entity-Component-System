@@ -503,7 +503,7 @@ namespace decs::light
 			) != m_Filters.end();
 		}
 
-		template<typename FilterType>
+		template<filter_concept FilterType>
 		size_t GetFilterIndex()
 		{
 			TYPE_ID_CONSTEXPR TypeID id = Type<FilterType>::ID();
@@ -530,7 +530,7 @@ namespace decs::light
 			return nullptr;
 		}
 
-		template<typename FilterType>
+		template<filter_concept FilterType>
 		FilterContainer<FilterType>* GetFilterContainer() const
 		{
 			return check_cast<FilterContainer<FilterType>*>(GetFilterContainer(Type<FilterType>::ID()));
