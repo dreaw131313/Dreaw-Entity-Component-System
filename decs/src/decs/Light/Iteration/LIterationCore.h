@@ -6,6 +6,28 @@
 
 namespace decs::light
 {
+
+	template<light_component_or_filter_concept T>
+	struct query_data_container final
+	{
+	public:
+		using data_type = pure_type_t<T>;
+		using container_type = PackedLightComponentContainer<data_type>;
+		inline static constexpr bool is_filter = false;
+	};
+
+	template<filter_concept T>
+	struct query_data_container<filter<T>> final
+	{
+	public:
+		using data_type = pure_type_t<T>;
+		using container_type = FilterContainer<data_type>;
+		inline static constexpr bool is_filter = true;
+	};
+
+	template<typename T>
+	using query_data_container_t = query_data_container<T>::container_type;
+
 	class Iteration
 	{
 	public:
@@ -13,10 +35,10 @@ namespace decs::light
 		inline static void InvokeEntityIteration(
 			Callable&& func,
 			uint64_t entityIndexInArchetype,
-			const std::tuple<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
+			const std::tuple<query_data_container_t<ComponentTypes>*...>& containersTuple
 		)
 		{
-			func(std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
+			func(std::get<query_data_container_t<ComponentTypes>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
 		}
 
 		template<typename Callable, typename... ComponentTypes>
@@ -25,22 +47,22 @@ namespace decs::light
 			Entity& entityBuffer,
 			EntityData& entityData,
 			uint64_t entityIndexInArchetype,
-			const std::tuple<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
+			const std::tuple<query_data_container_t<ComponentTypes>*...>& containersTuple
 		)
 		{
 			entityBuffer.Set_Internal(entityData);
 			func(
 				entityBuffer,
-				std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
+				std::get<query_data_container_t<ComponentTypes>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
 			);
 		}
 	};
 
-	template<TLightComponentConcept... ComponentsTypes>
+	template<light_component_or_filter_concept... ComponentsTypes>
 	struct QueryFiltersConfig
 	{
 	public:
-		using TypeGroupType = TypeGroup<drop_const_t<ComponentsTypes>...>;
+		using TypeGroupType = TypeGroup<pure_type_t<ComponentsTypes>...>;
 
 	public:
 		const TypeGroupType& GetIncludes() const
@@ -141,13 +163,11 @@ namespace decs::light
 		TypeGroupType m_Includes = {};
 	};
 
-	template<TLightComponentConcept... ComponentsTypes>
+	template<light_component_or_filter_concept... ComponentsTypes>
 	class IterationArchetypeContext
 	{
 	public:
-		template<typename TComponent>
-		using TPackedContainer = PackedLightComponentContainer<drop_const_t<TComponent>>;
-		using ContainersTuple = std::tuple<TPackedContainer<drop_const_t<ComponentsTypes>>*...>;
+		using ContainersTuple = std::tuple<query_data_container_t<ComponentsTypes>*...>;
 
 	public:
 		inline static constexpr uint64_t s_ComponentCount = sizeof...(ComponentsTypes);
@@ -174,8 +194,24 @@ namespace decs::light
 
 			m_Archetype = archetype;
 
-			m_ContainersTuple = { m_Archetype->GetTypePackedContainer<drop_const_t<ComponentsTypes>>()... };
-			return ((std::get<TPackedContainer<drop_const_t<ComponentsTypes>>*>(m_ContainersTuple) != nullptr) && ...);
+			//m_ContainersTuple = { m_Archetype->GetTypePackedContainer<pure_type_t<ComponentsTypes>>()... };
+			m_ContainersTuple = { GetArchetypeDataContainer<ComponentsTypes>()... };
+
+			return ((std::get<query_data_container_t<ComponentsTypes>*>(m_ContainersTuple) != nullptr) && ...);
+		}
+
+		template<typename T>
+		query_data_container_t<T>* GetArchetypeDataContainer()
+		{
+			using data_type = query_data_container<T>::data_type;
+			if constexpr (query_data_container<T>::is_filter)
+			{
+				return m_Archetype->GetFilterContainer<data_type>();
+			}
+			else
+			{
+				return m_Archetype->GetTypePackedContainer<data_type>();
+			}
 		}
 
 	#pragma region FOREACH
@@ -392,18 +428,19 @@ namespace decs::light
 		{
 			if (GetEntityCount() > 0)
 			{
-				func(std::get<TPackedContainer<ComponentsTypes>*>(m_ContainersTuple)->GetAsSpan()...);
+				func(std::get<query_data_container_t<ComponentsTypes>*>(m_ContainersTuple)->GetAsSpan()...);
 			}
 		}
 
 	#pragma endregion
+
 	private:
 		const Archetype* m_Archetype = nullptr;
 		ContainersTuple m_ContainersTuple{};
 	};
 
 
-	template<TLightComponentConcept... ComponentsTypes>
+	template<light_component_or_filter_concept... ComponentsTypes>
 	class IterationContainerContext
 	{
 	public:

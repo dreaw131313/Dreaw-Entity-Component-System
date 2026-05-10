@@ -92,7 +92,7 @@ namespace decs::light
 			return 0;
 		}
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_or_filter_concept TComponent>
 		[[nodiscard]] inline TComponent* GetComponent() const
 		{
 			if (IsValid())
@@ -103,13 +103,13 @@ namespace decs::light
 			return nullptr;
 		}
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_or_filter_concept TComponent>
 		[[nodiscard]] inline bool HasComponent() const
 		{
 			return IsValid() && GetContainer_Internal()->HasComponent<drop_const_t<TComponent>>(*GetEntityData());
 		}
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_or_filter_concept TComponent>
 		inline bool TryGetComponent(TComponent*& component) const
 		{
 			if (IsValid())
@@ -120,7 +120,7 @@ namespace decs::light
 			return component != nullptr;
 		}
 
-		template<TLightComponentConcept TComponent, typename... Args>
+		template<light_component_or_filter_concept TComponent, typename... Args>
 		inline typename TComponent* AddComponent(Args&&... args) const
 		{
 			if (IsValid())
@@ -129,7 +129,7 @@ namespace decs::light
 			return nullptr;
 		}
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_or_filter_concept TComponent>
 		inline bool RemoveComponent() const
 		{
 			return IsValid() && GetContainer_Internal()->RemoveComponent<drop_const_t<TComponent>>(*this);

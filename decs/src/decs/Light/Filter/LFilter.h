@@ -95,6 +95,16 @@ namespace decs::light
 		}
 
 		IFilterTypeManager* CreateFilterTypeManager() const override;
+
+		inline const FilterType& GetAsRef(size_t) const
+		{
+			return m_Data;
+		}
+
+		inline std::span<const FilterType> GetAsSpan() const
+		{
+			return { &m_Data , 1 };
+		}
 	};
 
 	template<filter_concept FilterType>

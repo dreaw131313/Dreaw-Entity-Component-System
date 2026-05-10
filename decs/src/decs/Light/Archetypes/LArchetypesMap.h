@@ -220,7 +220,7 @@ namespace decs::light
 	{
 		friend class Container;
 		friend class ContainerIterator;
-		template<TLightComponentConcept...>
+		template<light_component_or_filter_concept...>
 		friend class IterationContainerContext;
 
 	public:
@@ -323,7 +323,7 @@ namespace decs::light
 			return it != m_ArchetypesGroupedByOneType.end() ? it->second->GetMainTypeArchetype() : nullptr;
 		}
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_or_filter_concept TComponent>
 		Archetype* GetSingleComponentArchetype() const
 		{
 			return GetSingleComponentArchetype(Type<TComponent>::ID());
@@ -357,7 +357,7 @@ namespace decs::light
 
 		// CREATING ARCHETYPES
 	private:
-		template<TLightComponentConcept TComponent>
+		template<light_component_or_filter_concept TComponent>
 		Archetype* CreateSingleComponentArchetype()
 		{
 			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<TComponent>::ID();
@@ -373,7 +373,7 @@ namespace decs::light
 			return archetype;
 		}
 
-		template<TLightComponentConcept T>
+		template<light_component_or_filter_concept T>
 		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype)
 		{
 			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::ID();

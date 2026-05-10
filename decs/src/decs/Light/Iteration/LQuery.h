@@ -3,7 +3,7 @@
 
 namespace decs::light
 {
-	template<TLightComponentConcept... ComponentsTypes>
+	template<light_component_or_filter_concept... ComponentsTypes>
 	class Query
 	{
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "Query must not use tags in as ComponentTypes!");
@@ -333,7 +333,7 @@ namespace decs::light
 		{
 			using QueryType = Query<ComponentsTypes...>;
 
-			template<TLightComponentConcept... Types>
+			template<light_component_or_filter_concept... Types>
 			friend class Query;
 		public:
 			BatchIterator() {}

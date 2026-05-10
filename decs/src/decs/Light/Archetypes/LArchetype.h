@@ -269,13 +269,13 @@ namespace decs::light
 		friend class light::EntityManager;
 		friend class light::ArchetypesMap;
 
-		template<decs::TLightComponentConcept...>
+		template<decs::light_component_or_filter_concept...>
 		friend class light::Query;
-		template<TLightComponentConcept...>
+		template<light_component_or_filter_concept...>
 		friend class light::MultiQuery;
-		template<TLightComponentConcept... ComponentsTypes>
+		template<light_component_or_filter_concept... ComponentsTypes>
 		friend class light::IterationArchetypeContext;
-		template<TLightComponentConcept...>
+		template<light_component_or_filter_concept...>
 		friend class light::IterationContainerContext;
 		template<typename Components, typename Tags>
 		friend struct light::EntitySpawner;
@@ -416,7 +416,7 @@ namespace decs::light
 			return true;
 		}
 
-		template<TLightComponentConcept... ComponentTypes, tag_concept... TagTypes>
+		template<light_component_or_filter_concept... ComponentTypes, tag_concept... TagTypes>
 		bool IsArchetypeWithComponentsAndTags_Exactly(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags
@@ -585,7 +585,7 @@ namespace decs::light
 	private:
 		void AddEdge(ArchetypeDataKey key, Archetype* archetype, EArchetypeEdgeType edgeType);
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_or_filter_concept TComponent>
 		ArchetypeEdge GetEdge() const
 		{
 			auto it = m_Edges.find(Type<TComponent>::ID());
