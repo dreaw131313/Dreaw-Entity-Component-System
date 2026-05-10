@@ -6,7 +6,9 @@
 #include "decs/decs.h"
 
 #include "MeasureTimer.h"
-
+/// <summary>
+/// Syntax sugar for defining sturct std::hash for own types. Must be used in global scope.
+/// </summary>
 #define STD_HASH(dataType)													\
 template<>																	\
 struct std::hash<dataType>													\
@@ -432,10 +434,7 @@ void Test::FilterTest()
 	e.SetFilter<TestEntityFilter>(TestEntityFilter(1));
 	e.AddTag<FloatTag>();
 
-	Entity e2 = container.CreateEntity();
-	e2.SetFilter<TestEntityFilter>(TestEntityFilter(2));
-	e2.AddComponent<float>(2.0f);
-	e2.AddComponent<double>();
+	container.Spawn(e);
 
 	Query<float> query(&container);
 	query.WithFilterData(TestEntityFilter(1));
@@ -448,8 +447,6 @@ void Test::FilterTest()
 		}
 		std::cout << "Entity float " << f << "\n";
 	});
-
-
 }
 
 END_NAMESPACE

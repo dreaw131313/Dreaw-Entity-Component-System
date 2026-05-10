@@ -539,7 +539,7 @@ namespace decs::light
 						if (newArchetypesCount > m_ArchetypesContexts.size())
 						{
 							// performing normal finding of archetypes
-							auto group = GetBestArchetypesGroup(filter.GetIncludes());
+							auto group = GetBestArchetypesGroup(filter);
 							FetchArchetypesFromArchetypesGroup(group, filter);
 						}
 						else
@@ -598,13 +598,23 @@ namespace decs::light
 	private:
 		inline bool ContainArchetype(Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
 
-		ArchetypesGroupByOneType* GetBestArchetypesGroup(const QueryFilterConfigType::TypeGroupType& includes)
+		const ArchetypesGroupByOneType* GetBestArchetypesGroup(const QueryFilterConfigType& filter)
 		{
 			auto& groupsMap = m_Container->m_ArchetypesMap.m_ArchetypesGroupedByOneType;
 
 			uint64_t bestArchetypesCount = std::numeric_limits<uint64_t>::max();
-			ArchetypesGroupByOneType* bestGroup = nullptr;
+			const ArchetypesGroupByOneType* bestGroup = nullptr;
 
+			if (const IFilterDataTupleHandle& filterDataTuple = filter.GetFilterDataTuple())
+			{
+				bestGroup = filterDataTuple->GetBestArchetypeGroup(m_Container->m_ArchetypesMap, bestArchetypesCount);
+				if (bestGroup != nullptr)
+				{
+					bestArchetypesCount = bestGroup->GetArchetypesCount();
+				}
+			}
+
+			const auto& includes = filter.GetIncludes();
 			for (uint64_t i = 0; i < includes.Size(); i++)
 			{
 				auto it = groupsMap.find(includes[i]);
@@ -626,6 +636,15 @@ namespace decs::light
 		{
 			if (!ContainArchetype(&archetype) && archetype.GetComponentTagFilterCount())
 			{
+				// filter data tuple
+				if (auto& filterDataTuple = filter.GetFilterDataTuple())
+				{
+					if (!filterDataTuple->TestArchetype(archetype))
+					{
+						return;
+					}
+				}
+
 				// without test
 				{
 					auto& without = filter.GetWithoutTypes();
@@ -672,16 +691,7 @@ namespace decs::light
 					}
 				}
 
-				// filter data tuple
-				if (auto& filterDataTuple = filter.GetFilterDataTuple())
-				{
-					if (!filterDataTuple->TestArchetype(archetype))
-					{
-						return;
-					}
-				}
-
-			// includes
+				// includes
 				{
 					ArchetypeContextType context{};
 					if (context.Initialize(&archetype))
@@ -693,7 +703,7 @@ namespace decs::light
 			}
 		}
 
-		void FetchArchetypesFromArchetypesGroup(ArchetypesGroupByOneType* group, const QueryFilterConfigType& filter)
+		void FetchArchetypesFromArchetypesGroup(const ArchetypesGroupByOneType* group, const QueryFilterConfigType& filter)
 		{
 			if (group == nullptr) return;
 			uint64_t maxComponentCountsInGroup = group->GetMaxComponentTagFilterCount();

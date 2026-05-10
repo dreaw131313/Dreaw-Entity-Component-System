@@ -9,6 +9,9 @@
 
 namespace decs::light
 {
+	template<typename...>
+	class TFilterDataTuple;
+
 	class ArchetypesShrinkToFitState
 	{
 		friend class ArchetypesMap;
@@ -122,7 +125,7 @@ namespace decs::light
 			return nullptr;
 		}
 
-		inline uint64_t GetArchetypesCount() const
+		inline size_t GetArchetypesCount() const
 		{
 			return m_ArchetypesCount;
 		}
@@ -232,7 +235,7 @@ namespace decs::light
 	private:
 		TChunkedVector<ArchetypeGroup>& m_ArchetypeGroupAllocator;
 		std::vector<ArchetypeGroup*> m_Groups{};
-		uint64_t m_ArchetypesCount = 0;
+		size_t m_ArchetypesCount = 0;
 
 		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
 		Archetype* m_MainTypeArchetype = nullptr;
@@ -246,6 +249,8 @@ namespace decs::light
 		friend class ContainerIterator;
 		template<light_component_or_filter_concept...>
 		friend class IterationContainerContext;
+		template<typename...>
+		friend class TFilterDataTuple;
 
 	public:
 		ArchetypesMap(
@@ -450,7 +455,7 @@ namespace decs::light
 		template<filter_concept FilterType>
 		Archetype* GetOrCreateSingleFilterArchetype(const FilterType& filter)
 		{
-			IFilterContainerBase* filterContainer = m_FilterManager.GetFilter<FilterType>(filter);
+			IFilterContainerBase* filterContainer = m_FilterManager.GetOrCreateFilter<FilterType>(filter);
 			Archetype* archetype = GetSingleFilterArchetype(filterContainer);
 			if (archetype != nullptr)
 			{
@@ -486,7 +491,7 @@ namespace decs::light
 				}
 			}
 
-			auto newFilterContainer = m_FilterManager.GetFilter<FilterType>(filter);
+			auto newFilterContainer = m_FilterManager.GetOrCreateFilter<FilterType>(filter);
 
 			auto edge = toArchetype.GetEdge(ArchetypeDataKey(newFilterContainer));
 			if (edge.IsValid())
@@ -510,7 +515,99 @@ namespace decs::light
 		{
 			return GetOrCreateArchetypeAfterRemoveFilter(fromArchetype, Type<FilterType>::ID());
 		}
-
-
 	};
+
+
+	class IFilterDataTuple : public RefCountedObject
+	{
+	public:
+		virtual bool TestArchetype(const Archetype& archetpye)  const = 0;
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns>group if found group which has less componentTagFilterInGroup than currentMaxComponentTagFilterInGroup, if not find nullptr</returns>
+		virtual const ArchetypesGroupByOneType* GetBestArchetypeGroup(
+			const ArchetypesMap& archetypesMap,
+			size_t smallestArchetypeCount
+		) const = 0;
+	};
+
+	using IFilterDataTupleHandle = TRefCountHandle<IFilterDataTuple>;
+
+	template<typename... FilterTypes>
+	class TFilterDataTuple final : public IFilterDataTuple
+	{
+	public:
+		std::tuple<pure_type_t<FilterTypes>...> m_FiltersData{};
+
+	public:
+		TFilterDataTuple(FilterTypes&&... filterData):
+			m_FiltersData(std::forward_as_tuple(std::forward<FilterTypes>(filterData)...))
+		{
+
+		}
+
+		bool TestArchetype(const Archetype& archetype) const override
+		{
+			return (CompareFilterTypeData<FilterTypes>(archetype) && ...);
+		}
+
+	private:
+		template<typename T>
+		bool CompareFilterTypeData(const Archetype& archetype) const
+		{
+			FilterContainer<T>* filterContainer = archetype.GetFilterContainer<T>();
+			if (filterContainer == nullptr)
+			{
+				return false;
+			}
+
+			const T& data = std::get<T>(m_FiltersData);
+
+			return filterContainer->m_Data == data;
+		}
+
+		const ArchetypesGroupByOneType* GetBestArchetypeGroup(
+			const ArchetypesMap& archetypesMap,
+			size_t smallestArchetypeCount
+		) const override
+		{
+			std::pair<const ArchetypesGroupByOneType*, size_t> bestResult = { nullptr, smallestArchetypeCount };
+
+			((bestResult = GetGroup<pure_type_t<FilterTypes>>(archetypesMap, bestResult.first, bestResult.second)), ...);
+
+			return bestResult.first;
+		}
+
+		template<typename T>
+		std::pair<const ArchetypesGroupByOneType*, size_t> GetGroup(const ArchetypesMap& archetypesMap, const ArchetypesGroupByOneType* currentGroup, size_t smallestArchetypeCount) const
+		{
+			const FilterManager& filterManager = archetypesMap.m_FilterManager;
+			IFilterContainerBase* filterContainer = filterManager.GetFilter(std::get<pure_type_t<T>>(m_FiltersData));
+			if (filterContainer == nullptr)
+			{
+				return { currentGroup, smallestArchetypeCount };
+			}
+
+			auto& groupsMap = archetypesMap.m_ArchetypesGroupedByOneType;
+			auto groupIt = groupsMap.find(ArchetypeDataKey(filterContainer));
+			if (groupIt == groupsMap.end())
+			{
+				return { currentGroup, smallestArchetypeCount };
+			}
+
+			const ArchetypesGroupByOneType* newBestGroup = groupIt->second;
+
+			if (newBestGroup->GetArchetypesCount() >= smallestArchetypeCount)
+			{
+				return { currentGroup, smallestArchetypeCount };
+			}
+
+			return { newBestGroup, newBestGroup->GetArchetypesCount() };
+		}
+	};
+
+	template<typename... FilterTypes>
+	using TFilterDataTupleHandle = TRefCountHandle<TFilterDataTuple<FilterTypes...>>;
 }

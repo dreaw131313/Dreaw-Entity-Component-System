@@ -195,6 +195,12 @@ namespace decs::light
 			}
 		}
 
+		inline FilterContainerType* GetContainer(const FilterType& filter) const
+		{
+			auto it = m_Filters.find(FilterEntryKeyType(filter));
+			return it != m_Filters.end() ? it->second : nullptr;
+		}
+
 		bool RemoveContainer(FilterContainerType* container)
 		{
 			if (container == nullptr)
@@ -254,7 +260,7 @@ namespace decs::light
 
 	public:
 		template<filter_concept FilterType>
-		FilterContainer<FilterType>* GetFilter(const FilterType& filter)
+		FilterContainer<FilterType>* GetOrCreateFilter(const FilterType& filter)
 		{
 			IFilterTypeManager*& filterTypeMangerBase = m_FilterTypes[Type<FilterType>::ID()];
 			if (filterTypeMangerBase == nullptr)
@@ -264,6 +270,18 @@ namespace decs::light
 
 			FilterTypeManager<FilterType>* filterTypeManager = check_cast<FilterTypeManager<FilterType>*>(filterTypeMangerBase);
 			return filterTypeManager->GetOrAddContainer(filter);
+		}
+
+		template<filter_concept FilterType>
+		IFilterContainerBase* GetFilter(const FilterType& filter) const
+		{
+			auto filterManagerIt = m_FilterTypes.find(Type<FilterType>::ID());
+			if (filterManagerIt == m_FilterTypes.end())
+			{
+				return nullptr;
+			}
+
+			return check_cast<const FilterTypeManager<FilterType>*>(filterManagerIt->second)->GetContainer(filter);
 		}
 
 		IFilterContainerBase* GetMatchingFilter(const IFilterContainerBase& other)
