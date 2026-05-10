@@ -408,6 +408,22 @@ namespace decs::light
 		}
 	}
 
+	void Archetype::ResetOnDestroy()
+	{
+		m_TypeIDsIndexes.clear();
+		m_Edges.clear();
+
+		m_Entities.Clear();
+
+		for (auto& data : m_TypeData)
+		{
+			delete data.m_PackedContainer;
+		}
+
+		m_TypeData.clear();
+		m_Filters.clear();
+	}
+
 	void Archetype::AddEdge(ArchetypeDataKey key, Archetype* archetype, EArchetypeEdgeType edgeType)
 	{
 		auto& edge = m_Edges[key];

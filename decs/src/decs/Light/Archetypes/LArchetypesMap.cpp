@@ -11,7 +11,7 @@ namespace decs::light
 		uint64_t archetypeGroupsVectorChunkSize
 	):
 		m_FilterManager(filterManager),
-		m_Archetypes(archetypesVectorChunkSize),
+		m_ArchetypeAllocator(archetypesVectorChunkSize),
 		m_ArchetypesGroupsByOneTypeAllocator(archetypeGroupsVectorChunkSize)
 	{
 
@@ -28,23 +28,15 @@ namespace decs::light
 			return;
 		}
 
-		uint64_t chunksCount = m_Archetypes.ChunkCount();
-		for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
+		m_ArchetypeAllocator.IterateOverAllArchetypes([](Archetype& arch)
 		{
-			uint64_t chunkSize = m_Archetypes.GetChunkSize(chunkIdx);
-			Archetype* chunk = m_Archetypes.GetChunk(chunkIdx);
-
-			for (uint64_t idx = 0; idx < chunkSize; idx++)
-			{
-				Archetype& archetype = chunk[idx];
-				archetype.ShrinkToFit();
-			}
-		}
+			arch.ShrinkToFit();
+		});
 	}
 
 	void ArchetypesMap::ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state)
 	{
-		if (GetArchetypesCount() == 0)
+		/*if (GetArchetypesCount() == 0)
 		{
 			return;
 		}
@@ -77,7 +69,7 @@ namespace decs::light
 		if (state.m_CurretnArchetypeIndex >= state.m_ArchetypesCountToShrink)
 		{
 			state.Reset();
-		}
+		}*/
 	}
 
 	void ArchetypesMap::ClearEntityDataAndComponents()
@@ -203,7 +195,7 @@ namespace decs::light
 
 		if (archetype == nullptr)
 		{
-			archetype = &m_Archetypes.EmplaceBack();
+			archetype = m_ArchetypeAllocator.CreateArchetype();
 			archetype->InitEmptyFromOther(fromArchetype, m_FilterManager);
 			AddArchetypeToCorrectContainers(*archetype);
 		}
@@ -255,12 +247,12 @@ namespace decs::light
 			return nullptr;
 		}
 
-		Archetype& newArchetype = m_Archetypes.EmplaceBack();
-		AddTypeDataAfterAddComponent(toArchetype, newArchetype, componentTypeID, packedContainer);
+		Archetype* newArchetype = m_ArchetypeAllocator.CreateArchetype();
+		AddTypeDataAfterAddComponent(toArchetype, *newArchetype, componentTypeID, packedContainer);
 
-		AddArchetypeToCorrectContainers(newArchetype);
+		AddArchetypeToCorrectContainers(*newArchetype);
 
-		return &newArchetype;
+		return newArchetype;
 	}
 
 	Archetype* ArchetypesMap::GetArchetypeAfterRemoveComponent(const Archetype& fromArchetype, TypeID removedComponentTypeID)
@@ -286,11 +278,11 @@ namespace decs::light
 
 		DECS_ASSERT(fromArchetype.ContainComponentOrTagType(removedComponentTypeID), "from archetype mus have component with typeID removedComponentTypeID!");
 
-		Archetype& newArchetype = m_Archetypes.EmplaceBack();
-		AddTypeDataAfterRemoveComponent(fromArchetype, newArchetype, removedComponentTypeID);
-		AddArchetypeToCorrectContainers(newArchetype);
+		Archetype* newArchetype = m_ArchetypeAllocator.CreateArchetype();
+		AddTypeDataAfterRemoveComponent(fromArchetype, *newArchetype, removedComponentTypeID);
+		AddArchetypeToCorrectContainers(*newArchetype);
 
-		return &newArchetype;
+		return newArchetype;
 	}
 
 	Archetype* ArchetypesMap::GetArchetypeAfterAddTag(const Archetype& toArchetype, TypeID tagType)
@@ -310,7 +302,7 @@ namespace decs::light
 		{
 			return archetype;
 		}
-		archetype = &m_Archetypes.EmplaceBack();
+		archetype = m_ArchetypeAllocator.CreateArchetype();
 		archetype->AddTypeData_WithoutCheck(componentTypeID, nullptr);
 		AddArchetypeToCorrectContainers(*archetype);
 
@@ -446,11 +438,11 @@ namespace decs::light
 			return edge.m_Archetype;
 		}
 
-		Archetype& newArchetype = m_Archetypes.EmplaceBack();
-		AddTypeDataAfterRemoveFilter(fromArchetype, newArchetype, archetypeFilter);
-		AddArchetypeToCorrectContainers(newArchetype);
+		Archetype* newArchetype = m_ArchetypeAllocator.CreateArchetype();
+		AddTypeDataAfterRemoveFilter(fromArchetype, *newArchetype, archetypeFilter);
+		AddArchetypeToCorrectContainers(*newArchetype);
 
-		return &newArchetype;
+		return newArchetype;
 	}
 
 }

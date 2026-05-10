@@ -263,17 +263,16 @@ namespace decs::light
 
 		inline uint64_t GetArchetypesCount() const noexcept
 		{
-			return m_Archetypes.Size();
+			return m_ArchetypeAllocator.GetArchetypes().size();
 		}
 
 		inline uint64_t EmptyArchetypesCount() const
 		{
 			uint64_t emptyArchetypesCount = 0;
-			uint64_t archetypesCount = m_Archetypes.Size();
 
-			for (uint64_t i = 0; i < archetypesCount; i++)
+			for (auto archetype : m_ArchetypeAllocator.GetArchetypes())
 			{
-				if (m_Archetypes[i].EntityCount() == 0)
+				if (archetype->EntityCount() == 0)
 				{
 					emptyArchetypesCount += 1;
 				}
@@ -309,16 +308,10 @@ namespace decs::light
 		template<typename Callable>
 		void IterateOverArchetypes(Callable&& func)
 		{
-			int64_t chunkCount = static_cast<int64_t>(m_Archetypes.ChunkCount());
-			for (int64_t chunkIdx = chunkCount - 1; chunkIdx >= 0; chunkIdx--)
+			auto archetypes = m_ArchetypeAllocator.GetArchetypes();
+			for (auto archetype : archetypes)
 			{
-				auto chunk = m_Archetypes.GetChunk(chunkIdx);
-				int64_t elementCount = m_Archetypes.GetChunkSize(chunkIdx);
-
-				for (int64_t elementIdx = elementCount - 1; elementIdx >= 0; elementIdx--)
-				{
-					func(&chunk[elementIdx]);
-				}
+				func(archetype);
 			}
 		}
 
@@ -327,7 +320,7 @@ namespace decs::light
 	private:
 		FilterManager& m_FilterManager;
 
-		TChunkedVector<Archetype> m_Archetypes{ 100 };
+		ArchetypeAllocator m_ArchetypeAllocator{ 100 };
 		TChunkedVector<ArchetypeGroup> m_ArchetypesGroupsAllocator{ 100 };
 		TChunkedVector<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };
 
@@ -396,7 +389,7 @@ namespace decs::light
 			{
 				return archetype;
 			}
-			archetype = &m_Archetypes.EmplaceBack();
+			archetype = m_ArchetypeAllocator.CreateArchetype();
 			archetype->AddTypeData_WithoutCheck(componentTypeID, new PackedLightComponentContainer<TComponent>());
 			AddArchetypeToCorrectContainers(*archetype);
 			return archetype;
@@ -419,11 +412,11 @@ namespace decs::light
 				return nullptr;
 			}
 
-			Archetype& newArchetype = m_Archetypes.EmplaceBack();
-			AddTypeDataAfterAddComponent(toArchetype, newArchetype, addedComponentTypeID, new PackedLightComponentContainer<T>());
-			AddArchetypeToCorrectContainers(newArchetype);
+			Archetype* newArchetype = m_ArchetypeAllocator.CreateArchetype();
+			AddTypeDataAfterAddComponent(toArchetype, *newArchetype, addedComponentTypeID, new PackedLightComponentContainer<T>());
+			AddArchetypeToCorrectContainers(*newArchetype);
 
-			return &newArchetype;
+			return newArchetype;
 		}
 
 		Archetype* CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IPackedLightComponentContainer* packedContainer);
@@ -462,7 +455,7 @@ namespace decs::light
 				return archetype;
 			}
 
-			archetype = &m_Archetypes.EmplaceBack();
+			archetype = m_ArchetypeAllocator.CreateArchetype();
 			archetype->AddFilter_WithoutCheckout(filterContainer);
 			AddArchetypeToCorrectContainers(*archetype);
 			return archetype;
@@ -501,11 +494,11 @@ namespace decs::light
 				return edge.m_Archetype;
 			}
 
-			Archetype& newArchetype = m_Archetypes.EmplaceBack();
-			AddTypeDataAfterAddFilter(toArchetype, newArchetype, newFilterContainer);
-			AddArchetypeToCorrectContainers(newArchetype);
+			Archetype* newArchetype = m_ArchetypeAllocator.CreateArchetype();
+			AddTypeDataAfterAddFilter(toArchetype, *newArchetype, newFilterContainer);
+			AddArchetypeToCorrectContainers(*newArchetype);
 
-			return &newArchetype;
+			return newArchetype;
 		}
 
 		Archetype* GetOrCreateArchetypeAfterRemoveFilter(const Archetype& fromArchetype, TypeID filterTypeID);

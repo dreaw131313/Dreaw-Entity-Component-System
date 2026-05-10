@@ -552,7 +552,6 @@ namespace decs::light
 					{
 						AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, filter);
 					}
-
 				}
 
 				m_ArchetypesCountDirty = containerArchetypesCount;
@@ -596,7 +595,7 @@ namespace decs::light
 		}
 
 	private:
-		inline bool ContainArchetype(Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
+		inline bool ContainArchetype(const Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
 
 		const ArchetypesGroupByOneType* GetBestArchetypesGroup(const QueryFilterConfigType& filter)
 		{
@@ -632,7 +631,7 @@ namespace decs::light
 			return bestGroup;
 		}
 
-		void TryAddArchetypeFromGroup(Archetype& archetype, const QueryFilterConfigType& filter)
+		void TryAddArchetypeFromGroup(const Archetype& archetype, const QueryFilterConfigType& filter)
 		{
 			if (!ContainArchetype(&archetype) && archetype.GetComponentTagFilterCount())
 			{
@@ -720,16 +719,16 @@ namespace decs::light
 
 		void AddingArchetypesWithCheckingOnlyNewArchetypes(ArchetypesMap& map, uint64_t startArchetypesIndex, const QueryFilterConfigType& filter)
 		{
-			auto& archetypes = map.m_Archetypes;
-			uint64_t archetypesCount = map.m_Archetypes.Size();
-			uint64_t minRequiredComponentTagFilterCount = filter.GetMinComponentFilterCount();
+			auto archetypes = map.m_ArchetypeAllocator.GetArchetypes();
+			size_t archetypesCount = archetypes.size();
+			size_t minRequiredComponentTagFilterCount = filter.GetMinComponentFilterCount();
 
-			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
+			for (size_t i = startArchetypesIndex; i < archetypesCount; i++)
 			{
-				Archetype& arch = archetypes[i];
-				if (arch.GetComponentTagFilterCount() >= minRequiredComponentTagFilterCount)
+				const Archetype* arch = archetypes[i];
+				if (arch->GetComponentTagFilterCount() >= minRequiredComponentTagFilterCount)
 				{
-					TryAddArchetypeFromGroup(arch, filter);
+					TryAddArchetypeFromGroup(*arch, filter);
 				}
 			}
 		}

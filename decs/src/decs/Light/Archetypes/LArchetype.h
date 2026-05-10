@@ -4,6 +4,7 @@
 #include "decs/Core/trait.h"
 #include "decs/Core/Hash.h"
 #include "decs/Core/check_cast.h"
+#include "decs/Core/TChunkedVector.h"
 #include "decs/Light/Component/PackedLightComponentContainer.h"
 #include "decs/Light/Filter/LFilter.h"
 #include "decs/Light/LEntityData.h"
@@ -16,6 +17,7 @@ namespace decs::light
 {
 	class Entity;
 	class Archetype;
+	class ArchetypeAllocator;
 	struct ArchetypeHasher;
 	template<typename Components, typename Tags>
 	struct EntitySpawner;
@@ -260,7 +262,6 @@ public:
 
 namespace decs::light
 {
-
 	class Archetype final
 	{
 		friend class light::Container;
@@ -268,6 +269,8 @@ namespace decs::light
 		friend class light::EntityData;
 		friend class light::EntityManager;
 		friend class light::ArchetypesMap;
+		friend class light::ArchetypesMap;
+		friend class light::ArchetypeAllocator;
 
 		template<decs::light_component_or_filter_concept...>
 		friend class light::Query;
@@ -287,6 +290,8 @@ namespace decs::light
 		ArchetypeEntityList m_Entities{};
 		std::vector<ArchetypeTypeData> m_TypeData{};
 		std::vector<ArchetypeFilterRecord> m_Filters{};
+
+		size_t m_CreatedIndexInAllocator = std::numeric_limits<size_t>::max();
 
 	public:
 		Archetype();
@@ -584,6 +589,11 @@ namespace decs::light
 
 		void ShrinkToFit();
 
+		/// <summary>
+		/// Used when destroying archetypes, and this archetypes will be reused
+		/// </summary>
+		void ResetOnDestroy();
+
 	#pragma region EDGES
 	private:
 		void AddEdge(ArchetypeDataKey key, Archetype* archetype, EArchetypeEdgeType edgeType);
@@ -700,6 +710,105 @@ namespace decs::light
 	private:
 		const Archetype* m_ArchetypeConst = nullptr;
 	};
+
+	class ArchetypeAllocator
+	{
+	public:
+		ArchetypeAllocator() = default;
+
+		ArchetypeAllocator(uint32_t chunkSize):
+			m_Archetypes(chunkSize)
+		{
+
+		}
+
+		~ArchetypeAllocator()
+		{
+
+		}
+
+		/// <summary>
+		/// </summary>
+		/// <returns>created archetypes span</returns>
+		inline std::span<const Archetype* const> GetArchetypes() const noexcept
+		{
+			return m_Created;
+		}
+
+		/// <summary>
+		/// </summary>
+		/// <returns>created archetypes span</returns>
+		inline std::span<Archetype* const> GetArchetypes()
+		{
+			return m_Created;
+		}
+
+		Archetype* CreateArchetype()
+		{
+			Archetype* newArchetype = nullptr;
+
+			if (!m_FreeList.empty())
+			{
+				newArchetype = m_FreeList.back();
+				m_FreeList.pop_back();
+			}
+			else
+			{
+				newArchetype = &m_Archetypes.EmplaceBack();
+			}
+
+			newArchetype->m_CreatedIndexInAllocator = m_Created.size();
+			m_Created.push_back(newArchetype);
+
+			return newArchetype;
+		}
+
+		bool Destroy(Archetype* archetype)
+		{
+			if (archetype == nullptr 
+				|| archetype->m_CreatedIndexInAllocator >= m_Created.size())
+			{
+				return false;
+			}
+
+			size_t createdIndex = archetype->m_CreatedIndexInAllocator;
+			if (createdIndex < (m_Created.size() - 1))
+			{
+				auto lastCreatedArchetype = m_Created.back();
+				m_Created[createdIndex] = lastCreatedArchetype;
+				lastCreatedArchetype->m_CreatedIndexInAllocator = createdIndex;
+			}
+			m_Created.pop_back();
+
+			archetype->m_CreatedIndexInAllocator = std::numeric_limits<size_t>::max();
+			m_FreeList.push_back(archetype);
+			archetype->ResetOnDestroy();
+
+			return true;
+		}
+
+		template<typename Func>
+		void IterateOverAllArchetypes(Func&& func)
+		{
+			uint64_t chunksCount = m_Archetypes.ChunkCount();
+			for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
+			{
+				uint64_t chunkSize = m_Archetypes.GetChunkSize(chunkIdx);
+				Archetype* chunk = m_Archetypes.GetChunk(chunkIdx);
+
+				for (uint64_t idx = 0; idx < chunkSize; idx++)
+				{
+					func(chunk[idx]);
+				}
+			}
+		}
+
+	private:
+		TChunkedVector<Archetype> m_Archetypes{ 100 };
+		std::vector<Archetype*> m_Created{};
+		std::vector<Archetype*> m_FreeList{};
+	};
+
 
 }
 
