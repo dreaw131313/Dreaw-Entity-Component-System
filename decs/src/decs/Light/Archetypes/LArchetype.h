@@ -335,7 +335,7 @@ namespace decs::light
 			return m_TypeData;
 		}
 
-		bool ContainType(TypeID typeID) const;
+		bool ContainComponentOrTagType(TypeID typeID) const;
 
 		inline bool HasComponentType(TypeID typeID) const
 		{
@@ -407,7 +407,7 @@ namespace decs::light
 
 			for (uint32_t i = 0; i < componentAndTagCount; i++)
 			{
-				if (!ContainType(group[i]))
+				if (!ContainComponentOrTagType(group[i]))
 				{
 					return false;
 				}
@@ -429,7 +429,7 @@ namespace decs::light
 
 			for (uint32_t i = 0; i < components.Size(); i++)
 			{
-				if (!ContainType(components[i]))
+				if (!ContainComponentOrTagType(components[i]))
 				{
 					return false;
 				}
@@ -437,7 +437,7 @@ namespace decs::light
 
 			for (uint32_t i = 0; i < tags.Size(); i++)
 			{
-				if (!ContainType(tags[i]))
+				if (!ContainComponentOrTagType(tags[i]))
 				{
 					return false;
 				}
@@ -491,7 +491,7 @@ namespace decs::light
 			) != m_Filters.end();
 		}
 
-		inline bool HasFilterWithType (TypeID filterTypeID) const
+		inline bool HasFilterWithType(TypeID filterTypeID) const
 		{
 			return  std::find_if(
 				m_Filters.begin(),
@@ -542,6 +542,9 @@ namespace decs::light
 		void AddFilterInCorrectPlace(IFilterContainerBase& filter);
 
 	#pragma endregion
+
+	public:
+		bool ContainComponentOrTagOrFilterType(TypeID typeID) const noexcept;
 
 	private:
 		template<typename TComponentType>

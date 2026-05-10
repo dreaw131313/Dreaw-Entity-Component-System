@@ -129,7 +129,42 @@ namespace decs
 	concept light_component_or_filter_concept =light_component_concept<T> || filter_concept<T>;
 
 	template<typename T>
-	concept TLightComponentOrTagConcept = light_component_or_filter_concept<T> || tag_concept<T>;
+	concept light_component_or_tag_or_filter_concept = light_component_or_filter_concept<T> || tag_concept<T>;
+
+	template<typename T>
+	struct ligth_component_or_filter
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	struct ligth_component_or_filter<filter<T>>
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	using ligth_component_or_filter_t = ligth_component_or_filter<T>::Type;
+
+	template<typename T>
+	struct ligth_component_or_tag_or_filter
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	struct ligth_component_or_tag_or_filter<filter<T>>
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	using ligth_component_or_tag_or_filter_t = ligth_component_or_tag_or_filter<T>::Type;
+
 
 	template<light_component_or_filter_concept... Types>
 	class LightComponentTypeGroup
@@ -166,23 +201,6 @@ namespace decs
 	private:
 		TypeGroup<Types...> m_Group{};
 	};
-
-	template<typename T>
-	struct ligth_component_or_filter
-	{
-	public:
-		using Type = T;
-	};
-
-	template<typename T>
-	struct ligth_component_or_filter<filter<T>>
-	{
-	public:
-		using Type = T;
-	};
-
-	template<typename T>
-	using ligth_component_or_filter_t = ligth_component_or_filter<T>::Type;
 
 	template<typename TCallable, typename... TComponentTypes>
 	concept query_callable = std::is_invocable_v<TCallable, TComponentTypes...>

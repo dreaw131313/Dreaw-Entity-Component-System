@@ -422,23 +422,30 @@ void Test::PerformanceTest()
 
 void Test::FilterTest()
 {
+	using FloatTag = decs::tag<float>;
+
 	ECSContainer container{};
 
 	Entity e = container.CreateEntity();
-	e.AddComponent<float>();
+	e.AddComponent<float>(1.0f);
 	e.AddComponent<double>();
-	e.SetFilter<TestEntityFilter>(TestEntityFilter(10));
+	e.SetFilter<TestEntityFilter>(TestEntityFilter(1));
+	e.AddTag<FloatTag>();
 
 	Entity e2 = container.CreateEntity();
-	e2.SetFilter(TestEntityFilter(11));
-	e2.AddComponent<float>();
+	e2.AddComponent<float>(2.0f);
 	e2.AddComponent<double>();
 
-	Query<decs::filter<TestEntityFilter>> query(&container);
+	Query<float> query(&container);
+	query.Without<decs::filter<TestEntityFilter>>();
 
-	query.ForEach([](const TestEntityFilter& entityFilter)
+	query.ForEach([](const Entity& ent, const float& f)
 	{
-		std::cout << "Entity filter value " << entityFilter.Data << "\n";
+		if (ent.HasFilter<TestEntityFilter>())
+		{
+			PrintLine("has filter");
+		}
+		std::cout << "Entity float " << f << "\n";
 	});
 
 

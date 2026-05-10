@@ -249,7 +249,7 @@ namespace decs::light
 			}
 		}
 
-		if (toArchetype.ContainType(componentTypeID))
+		if (toArchetype.ContainComponentOrTagType(componentTypeID))
 		{
 			assert(false);
 			return nullptr;
@@ -284,7 +284,7 @@ namespace decs::light
 			}
 		}
 
-		DECS_ASSERT(fromArchetype.ContainType(removedComponentTypeID), "from archetype mus have component with typeID removedComponentTypeID!");
+		DECS_ASSERT(fromArchetype.ContainComponentOrTagType(removedComponentTypeID), "from archetype mus have component with typeID removedComponentTypeID!");
 
 		Archetype& newArchetype = m_Archetypes.EmplaceBack();
 		AddTypeDataAfterRemoveComponent(fromArchetype, newArchetype, removedComponentTypeID);

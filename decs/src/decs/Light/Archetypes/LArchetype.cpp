@@ -17,7 +17,7 @@ namespace decs::light
 		}
 	}
 
-	bool Archetype::ContainType(TypeID typeID) const
+	bool Archetype::ContainComponentOrTagType(TypeID typeID) const
 	{
 		if (GetComponentTagCount() <= Limits::MinComponentsInArchetypeToPerformMapLookup)
 		{
@@ -118,7 +118,7 @@ namespace decs::light
 
 		for (uint32_t i = 0; i < componentAndTagCount; i++)
 		{
-			if (!ContainType(types[i]))
+			if (!ContainComponentOrTagType(types[i]))
 			{
 				return false;
 			}
@@ -142,7 +142,7 @@ namespace decs::light
 
 		for (auto& reocrd : m_TypeData)
 		{
-			if (!neighbour.ContainType(reocrd.m_TypeID))
+			if (!neighbour.ContainComponentOrTagType(reocrd.m_TypeID))
 			{
 				dataKey = reocrd.m_TypeID;
 				foundedNeighbourTypeCount++;
@@ -217,6 +217,11 @@ namespace decs::light
 		}
 
 		m_Filters.push_back(ArchetypeFilterRecord(&filterContainer));
+	}
+
+	bool Archetype::ContainComponentOrTagOrFilterType(TypeID typeID) const noexcept
+	{
+		return ContainComponentOrTagType(typeID) || HasFilterWithType(typeID);
 	}
 
 	void Archetype::ClearEntityDataAndComponents()

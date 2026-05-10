@@ -46,7 +46,7 @@ namespace decs::light
 			return entityCount;
 		}
 
-		template<TLightComponentOrTagConcept... WithoutTypes>
+		template<light_component_or_tag_or_filter_concept... WithoutTypes>
 		MultiQuery& Without()
 		{
 			m_IsDirty = true;
@@ -54,7 +54,7 @@ namespace decs::light
 			return *this;
 		}
 
-		template<TLightComponentOrTagConcept... WithAnyTypes>
+		template<light_component_or_tag_or_filter_concept... WithAnyTypes>
 		MultiQuery& WithAny()
 		{
 			m_IsDirty = true;
@@ -62,7 +62,7 @@ namespace decs::light
 			return *this;
 		}
 
-		template<TLightComponentOrTagConcept... WithTypes>
+		template<light_component_or_tag_or_filter_concept... WithTypes>
 		MultiQuery& With()
 		{
 			m_IsDirty = true;

@@ -92,7 +92,7 @@ namespace decs::light
 			return sizeof...(ComponentsTypes) + m_WithAll.size();
 		}
 
-		template<TLightComponentOrTagConcept... WithoutTypes>
+		template<light_component_or_tag_or_filter_concept... WithoutTypes>
 		void Without()
 		{
 			if constexpr (sizeof...(WithoutTypes) == 0)
@@ -102,11 +102,11 @@ namespace decs::light
 			else
 			{
 				m_Without.reserve(sizeof...(WithoutTypes));
-				(m_Without.push_back(Type<drop_const_t<WithoutTypes>>::ID()), ...);
+				(m_Without.push_back(Type<drop_const_t<ligth_component_or_tag_or_filter_t<WithoutTypes>>>::ID()), ...);
 			}
 		}
 
-		template<TLightComponentOrTagConcept... WithAnyTypes>
+		template<light_component_or_tag_or_filter_concept... WithAnyTypes>
 		void WithAny()
 		{
 			if constexpr (sizeof...(WithAnyTypes) == 0)
@@ -116,11 +116,11 @@ namespace decs::light
 			else
 			{
 				m_WithAnyOf.reserve(sizeof...(WithAnyTypes));
-				(m_WithAnyOf.push_back(Type<drop_const_t<WithAnyTypes>>::ID()), ...);
+				(m_WithAnyOf.push_back(Type<drop_const_t<ligth_component_or_tag_or_filter_t<WithAnyTypes>>>::ID()), ...);
 			}
 		}
 
-		template<TLightComponentOrTagConcept... WithTypes>
+		template<light_component_or_tag_or_filter_concept... WithTypes>
 		void With()
 		{
 			if constexpr (sizeof...(WithTypes) == 0)
@@ -130,7 +130,7 @@ namespace decs::light
 			else
 			{
 				m_WithAll.reserve(sizeof...(WithTypes));
-				(m_WithAll.push_back(Type<drop_const_t<WithTypes>>::ID()), ...);
+				(m_WithAll.push_back(Type<drop_const_t<ligth_component_or_tag_or_filter_t<WithTypes>>>::ID()), ...);
 			}
 		}
 
@@ -623,7 +623,7 @@ namespace decs::light
 					uint64_t excludeCount = without.size();
 					for (int i = 0; i < excludeCount; i++)
 					{
-						if (archetype.ContainType(without[i]))
+						if (archetype.ContainComponentOrTagOrFilterType(without[i]))
 						{
 							return;
 						}
@@ -639,7 +639,7 @@ namespace decs::light
 
 					for (int i = 0; i < requiredAnyCount; i++)
 					{
-						if (archetype.ContainType(withAnyOf[i]))
+						if (archetype.ContainComponentOrTagOrFilterType(withAnyOf[i]))
 						{
 							containRequiredAny = true;
 							break;
@@ -655,7 +655,7 @@ namespace decs::light
 
 					for (int i = 0; i < requiredAllCount; i++)
 					{
-						if (!archetype.ContainType(withAll[i]))
+						if (!archetype.ContainComponentOrTagOrFilterType(withAll[i]))
 						{
 							return;
 						}

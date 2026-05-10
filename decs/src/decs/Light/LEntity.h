@@ -210,7 +210,7 @@ namespace decs::light
 	#pragma region FILTERS:
 	public:
 		template<filter_concept Filter>
-		bool SetFilter(const Filter& filter)
+		bool SetFilter(const Filter& filter) const
 		{
 			if (IsValid())
 			{
@@ -219,7 +219,7 @@ namespace decs::light
 			return false;
 		}
 
-		bool RemoveFilter(TypeID filterTypeID)
+		bool RemoveFilter(TypeID filterTypeID) const
 		{
 			if (IsValid())
 			{
@@ -229,7 +229,7 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		bool RemoveFilter()
+		bool RemoveFilter() const
 		{
 			if (IsValid())
 			{
@@ -239,7 +239,7 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		[[nodiscard]] const FilterType* GetFilter()
+		[[nodiscard]] const FilterType* GetFilter() const 
 		{
 			if (IsValid())
 			{
@@ -248,7 +248,7 @@ namespace decs::light
 			return nullptr;
 		}
 
-		[[nodiscard]] bool HasFilter(TypeID filterID)
+		[[nodiscard]] bool HasFilter(TypeID filterID)const
 		{
 			if (IsValid())
 			{
@@ -258,7 +258,7 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		[[nodiscard]] bool HasFilter()
+		[[nodiscard]] bool HasFilter()const
 		{
 			if (IsValid())
 			{
@@ -268,7 +268,7 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		[[nodiscard]] bool HasFilter(const FilterType& filterData)
+		[[nodiscard]] bool HasFilter(const FilterType& filterData)const
 		{
 			if (IsValid())
 			{

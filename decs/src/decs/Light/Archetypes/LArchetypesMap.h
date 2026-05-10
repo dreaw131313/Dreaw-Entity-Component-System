@@ -408,7 +408,7 @@ namespace decs::light
 				return edge.m_Archetype;
 			}
 
-			if (toArchetype.ContainType(addedComponentTypeID))
+			if (toArchetype.ContainComponentOrTagType(addedComponentTypeID))
 			{
 				DECS_ASSERT(false, "This path has no sense!");
 				return nullptr;

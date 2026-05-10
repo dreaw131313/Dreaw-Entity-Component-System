@@ -69,7 +69,7 @@ namespace decs::light
 			return 0;
 		}
 
-		template<TLightComponentOrTagConcept... WithoutTypes>
+		template<light_component_or_tag_or_filter_concept... WithoutTypes>
 		Query& Without()
 		{
 			m_IsDirty = true;
@@ -77,7 +77,7 @@ namespace decs::light
 			return *this;
 		}
 
-		template<TLightComponentOrTagConcept... WithAnyTypes>
+		template<light_component_or_tag_or_filter_concept... WithAnyTypes>
 		Query& WithAny()
 		{
 			m_IsDirty = true;
@@ -85,7 +85,7 @@ namespace decs::light
 			return *this;
 		}
 
-		template<TLightComponentOrTagConcept... WithTypes>
+		template<light_component_or_tag_or_filter_concept... WithTypes>
 		Query& With()
 		{
 			m_IsDirty = true;
