@@ -62,7 +62,7 @@ namespace decs::light
 	struct QueryFiltersConfig
 	{
 	public:
-		using TypeGroupType = TypeGroup<pure_type_t<ComponentsTypes>...>;
+		using TypeGroupType = TypeGroup<pure_type_t<ligth_component_or_filter_t<ComponentsTypes>>...>;
 
 	public:
 		const TypeGroupType& GetIncludes() const
@@ -85,7 +85,7 @@ namespace decs::light
 			return m_WithAll;
 		}
 
-		inline uint64_t GetMinComponentsCount() const
+		inline uint64_t GetMinComponentFilterCount() const
 		{
 			uint64_t includesCount = sizeof...(ComponentsTypes);
 			if (m_WithAnyOf.size() > 0) includesCount += 1;
@@ -512,7 +512,7 @@ namespace decs::light
 
 		void Fetch(const QueryFilterConfigType& filter)
 		{
-			uint64_t minComponentsCount = filter.GetMinComponentsCount();
+			uint64_t minComponentsCount = filter.GetMinComponentFilterCount();
 
 			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.GetArchetypesCount();
 			if (m_ArchetypesCountDirty != containerArchetypesCount)
@@ -588,7 +588,7 @@ namespace decs::light
 
 		inline bool ContainArchetype(Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
 
-		ArchetypesGroupByOneType* GetBestArchetypesGroup(const TypeGroup<ComponentsTypes...>& includes)
+		ArchetypesGroupByOneType* GetBestArchetypesGroup(const QueryFilterConfigType::TypeGroupType& includes)
 		{
 			auto& groupsMap = m_Container->m_ArchetypesMap.m_ArchetypesGroupedByOneType;
 
@@ -614,7 +614,7 @@ namespace decs::light
 
 		void TryAddArchetypeFromGroup(Archetype& archetype, const QueryFilterConfigType& filter)
 		{
-			if (!ContainArchetype(&archetype) && archetype.GetComponentTagCount())
+			if (!ContainArchetype(&archetype) && archetype.GetComponentTagFilterCount())
 			{
 				// without test
 				{
@@ -679,7 +679,7 @@ namespace decs::light
 			if (group == nullptr) return;
 			uint64_t maxComponentCountsInGroup = group->GetMaxComponentTagFilterCount();
 
-			for (uint64_t i = filter.GetMinComponentsCount(); i <= maxComponentCountsInGroup; i++)
+			for (uint64_t i = filter.GetMinComponentFilterCount(); i <= maxComponentCountsInGroup; i++)
 			{
 				std::span<Archetype*> archetypes = group->GetArchetypesWithComponentTagFilterCount(i);
 				for (auto archetype : archetypes)
@@ -693,12 +693,12 @@ namespace decs::light
 		{
 			auto& archetypes = map.m_Archetypes;
 			uint64_t archetypesCount = map.m_Archetypes.Size();
-			uint64_t minRequiredComponentsCount = filter.GetMinComponentsCount();
+			uint64_t minRequiredComponentTagFilterCount = filter.GetMinComponentFilterCount();
 
 			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
 			{
 				Archetype& arch = archetypes[i];
-				if (arch.GetComponentTagCount() >= minRequiredComponentsCount)
+				if (arch.GetComponentTagFilterCount() >= minRequiredComponentTagFilterCount)
 				{
 					TryAddArchetypeFromGroup(arch, filter);
 				}

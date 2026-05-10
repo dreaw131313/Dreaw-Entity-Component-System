@@ -434,19 +434,16 @@ void Test::FilterTest()
 	auto filterGet = e.GetFilter<TestEntityFilter>();
 	bool hasFilter = e.HasFilter<TestEntityFilter>();
 	hasFilter = e.HasFilter(decs::Type<TestEntityFilter>::ID());
-	//hasFilter = e.HasFilter(TestEntityFilter(11));
-
-	e.RemoveFilter<TestEntityFilter>();
+	hasFilter = e.HasFilter(TestEntityFilter(11));
 
 
-	if (std::is_same_v<decs::light::query_data_container_t<decs::filter<TestEntityFilter>>, decs::light::FilterContainer<TestEntityFilter>>)
+	Query<float, decs::filter<TestEntityFilter>> query(&container);
+
+	query.ForEach([](float f, const TestEntityFilter& entityFilter)
 	{
-		PrintLine("Is filter");
-	}
-	if (std::is_same_v<decs::light::query_data_container_t<TestEntityFilter>, decs::light::PackedLightComponentContainer<TestEntityFilter>>)
-	{
-		PrintLine("Is not filter");
-	}
+		PrintLine("Filter entity");
+	});
+
 
 }
 
