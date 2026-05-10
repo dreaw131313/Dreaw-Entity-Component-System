@@ -11,6 +11,7 @@ int main()
 		std::cout << "/////////////////////////////////////" << "\n";
 		//Light::Test{}.IterationTest();
 		Light::Test{}.FilterTest();
+		//Light::Test{}.PerformanceTest();
 	}
 
 	/*{

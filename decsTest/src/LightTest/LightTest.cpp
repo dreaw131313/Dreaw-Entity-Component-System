@@ -433,11 +433,12 @@ void Test::FilterTest()
 	e.AddTag<FloatTag>();
 
 	Entity e2 = container.CreateEntity();
+	e2.SetFilter<TestEntityFilter>(TestEntityFilter(2));
 	e2.AddComponent<float>(2.0f);
 	e2.AddComponent<double>();
 
 	Query<float> query(&container);
-	query.Without<decs::filter<TestEntityFilter>>();
+	query.WithFilterData(TestEntityFilter(1));
 
 	query.ForEach([](const Entity& ent, const float& f)
 	{

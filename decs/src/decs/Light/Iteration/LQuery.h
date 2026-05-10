@@ -93,6 +93,12 @@ namespace decs::light
 			return *this;
 		}
 
+		template<filter_concept... FilterTypes>
+		void WithFilterData(FilterTypes&&... filterData)
+		{
+			m_FilterConfig.WithFilterData(std::forward<FilterTypes>(filterData)...);
+		}
+
 		void ClearFilters()
 		{
 			if (m_FilterConfig.Clear())

@@ -6,8 +6,6 @@ namespace Light
 	class Test
 	{
 	public:
-		void Run();
-
 		void IterationTest();
 
 		void ComponentCreationTest();
@@ -16,7 +14,6 @@ namespace Light
 
 		void FilterTest();
 
-	private:
 	};
 
 }

@@ -4,7 +4,7 @@
 #include "decs/Core/check_cast.h"
 #include "decs/Core/trait.h"
 #include "decs/Core/Type.h"
-
+#include "decs/Core/RefCounterHandle.h"
 
 namespace decs::light
 {
@@ -301,4 +301,5 @@ namespace decs::light
 	private:
 		std::unordered_map<TypeID, IFilterTypeManager*> m_FilterTypes{};
 	};
+
 }

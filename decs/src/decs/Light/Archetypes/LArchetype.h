@@ -700,6 +700,52 @@ namespace decs::light
 	private:
 		const Archetype* m_ArchetypeConst = nullptr;
 	};
+
+
+	class IFilterDataTuple : public RefCountedObject
+	{
+	public:
+		virtual bool TestArchetype(const Archetype& archetpye)  const = 0;
+	};
+
+	using IFilterDataTupleHandle = TRefCountHandle<IFilterDataTuple>;
+
+	template<typename... FilterTypes>
+	class TFilterDataTuple final : public IFilterDataTuple
+	{
+	public:
+		std::tuple<pure_type_t<FilterTypes>...> m_FiltersData{};
+
+	public:
+		TFilterDataTuple(FilterTypes&&... filterData):
+			m_FiltersData(std::forward_as_tuple(std::forward<FilterTypes>(filterData)...))
+		{
+
+		}
+
+		bool TestArchetype(const Archetype& archetype) const override
+		{
+			return (CompareFilterTypeData<FilterTypes>(archetype) && ...);
+		}
+
+	private:
+		template<typename T>
+		bool CompareFilterTypeData(const Archetype& archetype) const
+		{
+			FilterContainer<T>* filterContainer = archetype.GetFilterContainer<T>();
+			if (filterContainer  == nullptr)
+			{
+				return false;
+			}
+
+			const T& data = std::get<T>(m_FiltersData);
+
+			return filterContainer->m_Data == data;
+		}
+	};
+
+	template<typename... FilterTypes>
+	using TFilterDataTupleHandle = TRefCountHandle<TFilterDataTuple<FilterTypes...>>;
 }
 
 template<>

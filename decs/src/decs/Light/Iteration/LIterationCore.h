@@ -85,6 +85,11 @@ namespace decs::light
 			return m_WithAll;
 		}
 
+		inline const IFilterDataTupleHandle& GetFilterDataTuple() const noexcept
+		{
+			return m_FilterDataTuple;
+		}
+
 		inline uint64_t GetMinComponentFilterCount() const
 		{
 			uint64_t includesCount = sizeof...(ComponentsTypes);
@@ -134,6 +139,12 @@ namespace decs::light
 			}
 		}
 
+		template<filter_concept... FilterTypes>
+		void WithFilterData(FilterTypes&&... filterData)
+		{
+			m_FilterDataTuple = TFilterDataTupleHandle<FilterTypes...>::Create(std::forward<FilterTypes>(filterData)...).Cast<IFilterDataTuple>();
+		}
+
 		[[nodiscard]] bool Clear()
 		{
 			bool bResult = false;
@@ -161,6 +172,7 @@ namespace decs::light
 		std::vector<TypeID> m_WithAnyOf{};
 		std::vector<TypeID> m_WithAll{};
 		TypeGroupType m_Includes = {};
+		IFilterDataTupleHandle m_FilterDataTuple{};
 	};
 
 	template<light_component_or_filter_concept... ComponentsTypes>
@@ -439,7 +451,6 @@ namespace decs::light
 		ContainersTuple m_ContainersTuple{};
 	};
 
-
 	template<light_component_or_filter_concept... ComponentsTypes>
 	class IterationContainerContext
 	{
@@ -585,7 +596,6 @@ namespace decs::light
 		}
 
 	private:
-
 		inline bool ContainArchetype(Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
 
 		ArchetypesGroupByOneType* GetBestArchetypesGroup(const QueryFilterConfigType::TypeGroupType& includes)
@@ -662,7 +672,16 @@ namespace decs::light
 					}
 				}
 
-				// includes
+				// filter data tuple
+				if (auto& filterDataTuple = filter.GetFilterDataTuple())
+				{
+					if (!filterDataTuple->TestArchetype(archetype))
+					{
+						return;
+					}
+				}
+
+			// includes
 				{
 					ArchetypeContextType context{};
 					if (context.Initialize(&archetype))
