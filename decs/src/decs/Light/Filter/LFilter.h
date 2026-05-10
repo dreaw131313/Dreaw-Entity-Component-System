@@ -231,7 +231,6 @@ namespace decs::light
 			return newFilterContainer;
 		}
 
-
 	private:
 		std::unordered_map<FilterEntryKeyType, FilterContainerType*> m_Filters{};
 	};

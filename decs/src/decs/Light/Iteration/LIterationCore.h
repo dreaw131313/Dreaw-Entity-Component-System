@@ -512,7 +512,7 @@ namespace decs::light
 
 		void Fetch(const QueryFilterConfigType& filter)
 		{
-			uint64_t minComponentsCount = filter.GetMinComponentFilterCount();
+			uint64_t minComponentFilterCount = filter.GetMinComponentFilterCount();
 
 			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.GetArchetypesCount();
 			if (m_ArchetypesCountDirty != containerArchetypesCount)
@@ -521,7 +521,7 @@ namespace decs::light
 
 				ArchetypesMap& map = m_Container->m_ArchetypesMap;
 				uint64_t maxComponentsInArchetype = map.GetMaxComponentTagFilterCount();
-				if (maxComponentsInArchetype >= minComponentsCount)
+				if (maxComponentsInArchetype >= minComponentFilterCount)
 				{
 					if (filter.GetIncludes().Size() > 0)
 					{

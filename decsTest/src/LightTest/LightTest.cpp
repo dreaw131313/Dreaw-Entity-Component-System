@@ -418,7 +418,6 @@ void Test::PerformanceTest()
 
 	std::cout << "Final avarage time " << finalAvarage / finalTestCount << " ms\n";
 
-
 }
 
 void Test::FilterTest()
@@ -429,19 +428,17 @@ void Test::FilterTest()
 	e.AddComponent<float>();
 	e.AddComponent<double>();
 	e.SetFilter<TestEntityFilter>(TestEntityFilter(10));
-	e.SetFilter<TestEntityFilter>(TestEntityFilter(1));
 
-	auto filterGet = e.GetFilter<TestEntityFilter>();
-	bool hasFilter = e.HasFilter<TestEntityFilter>();
-	hasFilter = e.HasFilter(decs::Type<TestEntityFilter>::ID());
-	hasFilter = e.HasFilter(TestEntityFilter(11));
+	Entity e2 = container.CreateEntity();
+	e2.SetFilter(TestEntityFilter(11));
+	e2.AddComponent<float>();
+	e2.AddComponent<double>();
 
+	Query<decs::filter<TestEntityFilter>> query(&container);
 
-	Query<float, decs::filter<TestEntityFilter>> query(&container);
-
-	query.ForEach([](float f, const TestEntityFilter& entityFilter)
+	query.ForEach([](const TestEntityFilter& entityFilter)
 	{
-		PrintLine("Filter entity");
+		std::cout << "Entity filter value " << entityFilter.Data << "\n";
 	});
 
 

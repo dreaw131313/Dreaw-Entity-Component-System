@@ -288,8 +288,8 @@ namespace decs
 		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
 
 		TChunkedVector<Archetype> m_Archetypes{ 100 };
-		TChunkedVector<ArchetypeGroup> m_ArchetrypesGroupsAllocator{ 100 };
-		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeAllocator{ 100 };
+		TChunkedVector<ArchetypeGroup> m_ArchetypesGroupsAllocator{ 100 };
+		TChunkedVector<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };
 
 		uint32_t m_MaxComponentTagFilterCount = 0;
 
@@ -320,7 +320,7 @@ namespace decs
 			ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
 			if (group == nullptr)
 			{
-				group = &m_ArchetrypesGroupsByOneTypeAllocator.EmplaceBack(m_ArchetrypesGroupsAllocator, id);
+				group = &m_ArchetypesGroupsByOneTypeAllocator.EmplaceBack(m_ArchetypesGroupsAllocator, id);
 			}
 			return group;
 		}

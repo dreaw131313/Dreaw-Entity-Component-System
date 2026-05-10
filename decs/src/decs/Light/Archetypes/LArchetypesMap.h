@@ -74,37 +74,52 @@ namespace decs::light
 		}
 	};
 
+	enum class EArchetypesGroupType : uint8_t
+	{
+		ComponentOrTagType,
+		FilterType,
+		FilterData
+	};
+
 	class ArchetypesGroupByOneType
 	{
 	public:
 		ArchetypesGroupByOneType(
 			TChunkedVector<ArchetypeGroup>& archetypeGroupAllocator,
-			ArchetypeDataKey id
+			TypeID id,
+			EArchetypesGroupType groupType
 		):
 			m_ArchetypeGroupAllocator(archetypeGroupAllocator),
-			m_MainTypeID(id)
+			m_MainTypeID(id),
+			m_GroupType(groupType)
 		{
 
+		}
+
+		EArchetypesGroupType GetGroupType() const noexcept
+		{
+			return m_GroupType;
+		}
+
+		inline bool ShouldHaveMainArchetype() const noexcept
+		{
+			return m_GroupType == EArchetypesGroupType::FilterData || m_GroupType == EArchetypesGroupType::ComponentOrTagType;
 		}
 
 		inline bool IsFilterGroup() const noexcept
 		{
-			return m_MainTypeID.m_FilterContainer != nullptr;
-		}
-
-		inline IFilterContainerBase* GetFilterContainer() const noexcept
-		{
-			return m_MainTypeID.m_FilterContainer;
-		}
-
-		inline TypeID GetMainTypeID() const noexcept
-		{
-			return m_MainTypeID.m_TypeID;
+			return m_GroupType == EArchetypesGroupType::FilterType || m_GroupType == EArchetypesGroupType::FilterData;
 		}
 
 		inline Archetype* GetMainTypeArchetype() const
 		{
-			return m_MainTypeArchetype;
+			// if group is of type FilterType, then there can be more than one archetype with one filter of this type but with different filter data
+
+			if (m_GroupType == EArchetypesGroupType::FilterData || m_GroupType == EArchetypesGroupType::ComponentOrTagType)
+			{
+				return m_MainTypeArchetype;
+			}
+			return nullptr;
 		}
 
 		inline uint64_t GetArchetypesCount() const
@@ -120,27 +135,33 @@ namespace decs::light
 		void AddArchetype(Archetype* archetype)
 		{
 			m_ArchetypesCount += 1;
-			const uint64_t componentAndTagCount = archetype->GetComponentTagFilterCount();
+			const uint64_t componentTagFilterCount = archetype->GetComponentTagFilterCount();
 
-			if (componentAndTagCount == 1)
+			if (componentTagFilterCount == 1 && ShouldHaveMainArchetype())
 			{
 				if (IsFilterGroup())
 				{
-					DECS_ASSERT(m_MainTypeID.m_FilterContainer == archetype->GetFilters()[0].m_FilterContainer, "Single component archetype must have filter type id same as m_MainTypeID!");
+					DECS_ASSERT(
+						m_MainTypeID == archetype->GetFilters()[0].m_FilterTypeID,
+						"Single component archetype must have filter type id same as m_MainTypeID!"
+					);
 				}
 				else
 				{
-					DECS_ASSERT(m_MainTypeID.m_TypeID == archetype->GetComponentAndTagRecords()[0].m_TypeID, "Single component archetype must have component type same as m_MainTypeID!");
+					DECS_ASSERT(
+						m_MainTypeID == archetype->GetComponentAndTagRecords()[0].m_TypeID,
+						"Single component archetype must have component type same as m_MainTypeID!"
+					);
 				}
 				m_MainTypeArchetype = archetype;
 			}
 
-			if (componentAndTagCount > m_Groups.size())
+			if (componentTagFilterCount > m_Groups.size())
 			{
-				m_Groups.resize(componentAndTagCount);
+				m_Groups.resize(componentTagFilterCount);
 			}
 
-			auto& archetypeGroup = m_Groups[componentAndTagCount - 1];
+			auto& archetypeGroup = m_Groups[componentTagFilterCount - 1];
 			if (archetypeGroup == nullptr)
 			{
 				archetypeGroup = &m_ArchetypeGroupAllocator.EmplaceBack();
@@ -210,10 +231,13 @@ namespace decs::light
 
 	private:
 		TChunkedVector<ArchetypeGroup>& m_ArchetypeGroupAllocator;
-		ArchetypeDataKey m_MainTypeID = std::numeric_limits<TypeID>::max();
-		Archetype* m_MainTypeArchetype = nullptr;
-		std::vector<ArchetypeGroup*> m_Groups;
+		std::vector<ArchetypeGroup*> m_Groups{};
 		uint64_t m_ArchetypesCount = 0;
+
+		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
+		Archetype* m_MainTypeArchetype = nullptr;
+
+		EArchetypesGroupType m_GroupType = EArchetypesGroupType::ComponentOrTagType;
 	};
 
 	class ArchetypesMap
@@ -299,8 +323,8 @@ namespace decs::light
 		FilterManager& m_FilterManager;
 
 		TChunkedVector<Archetype> m_Archetypes{ 100 };
-		TChunkedVector<ArchetypeGroup> m_ArchetrypesGroupsAllocator{ 100 };
-		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeAllocator{ 100 };
+		TChunkedVector<ArchetypeGroup> m_ArchetypesGroupsAllocator{ 100 };
+		TChunkedVector<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };
 
 		ecsMap<ArchetypeDataKey, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
 		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
@@ -329,12 +353,12 @@ namespace decs::light
 			return GetSingleComponentArchetype(Type<TComponent>::ID());
 		}
 
-		inline ArchetypesGroupByOneType* GetArchetypesGroup(ArchetypeDataKey id)
+		inline ArchetypesGroupByOneType* GetArchetypesGroup(ArchetypeDataKey id, EArchetypesGroupType groupType)
 		{
 			ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
 			if (group == nullptr)
 			{
-				group = &m_ArchetrypesGroupsByOneTypeAllocator.EmplaceBack(m_ArchetrypesGroupsAllocator, id);
+				group = &m_ArchetypesGroupsByOneTypeAllocator.EmplaceBack(m_ArchetypesGroupsAllocator, id.m_TypeID, groupType);
 			}
 			return group;
 		}

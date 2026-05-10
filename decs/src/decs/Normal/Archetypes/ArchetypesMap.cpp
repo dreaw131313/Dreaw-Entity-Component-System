@@ -31,7 +31,7 @@ namespace decs
 
 	ArchetypesMap::ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize):
 		m_Archetypes(archetypesVectorChunkSize),
-		m_ArchetrypesGroupsByOneTypeAllocator(archetypeGroupsVectorChunkSize)
+		m_ArchetypesGroupsByOneTypeAllocator(archetypeGroupsVectorChunkSize)
 	{
 
 	}

@@ -12,7 +12,7 @@ namespace decs::light
 	):
 		m_FilterManager(filterManager),
 		m_Archetypes(archetypesVectorChunkSize),
-		m_ArchetrypesGroupsByOneTypeAllocator(archetypeGroupsVectorChunkSize)
+		m_ArchetypesGroupsByOneTypeAllocator(archetypeGroupsVectorChunkSize)
 	{
 
 	}
@@ -215,14 +215,21 @@ namespace decs::light
 	{
 		for (auto& record : arch.GetComponentAndTagRecords())
 		{
-			ArchetypesGroupByOneType* group = GetArchetypesGroup(record.m_TypeID);
+			ArchetypesGroupByOneType* group = GetArchetypesGroup(record.m_TypeID, EArchetypesGroupType::ComponentOrTagType);
 			group->AddArchetype(&arch);
 		}
 
 		for (auto& filter : arch.GetFilters())
 		{
-			ArchetypesGroupByOneType* group = GetArchetypesGroup(filter.m_FilterContainer);
-			group->AddArchetype(&arch);
+			{
+				ArchetypesGroupByOneType* filterDataGroup = GetArchetypesGroup(filter.m_FilterContainer, EArchetypesGroupType::FilterData);
+				filterDataGroup->AddArchetype(&arch);
+			}
+
+			{
+				ArchetypesGroupByOneType* filterTypeGroup = GetArchetypesGroup(filter.m_FilterContainer->GetDataTypeID(), EArchetypesGroupType::FilterType);
+				filterTypeGroup->AddArchetype(&arch);
+			}
 		}
 	}
 
