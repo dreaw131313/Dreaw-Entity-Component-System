@@ -21,6 +21,7 @@ namespace decs::light
 	struct ArchetypeHasher;
 	template<typename Components, typename Tags>
 	struct EntitySpawner;
+	struct ArchetypeHandle;
 
 	struct ArchetypeEntityList
 	{
@@ -271,6 +272,7 @@ namespace decs::light
 		friend class light::ArchetypesMap;
 		friend class light::ArchetypesMap;
 		friend class light::ArchetypeAllocator;
+		friend struct light::ArchetypeHandle;
 
 		template<decs::light_component_or_filter_concept...>
 		friend class light::Query;
@@ -292,6 +294,7 @@ namespace decs::light
 		std::vector<ArchetypeFilterRecord> m_Filters{};
 
 		size_t m_CreatedIndexInAllocator = std::numeric_limits<size_t>::max();
+		uint32_t m_Version = 0;
 
 	public:
 		Archetype();
@@ -649,6 +652,39 @@ namespace decs::light
 
 	};
 
+	struct ArchetypeHandle final
+	{
+	public:
+		ArchetypeHandle() = default;
+
+		ArchetypeHandle(Archetype* archetype):
+			m_Archetype(archetype),
+			m_Version(archetype != nullptr ? archetype->m_Version : std::numeric_limits<uint32_t>::max())
+		{
+
+		}
+
+		inline bool IsValid() const noexcept
+		{
+			return m_Archetype != nullptr && m_Archetype->m_Version == m_Version;
+		}
+
+		inline operator bool() const noexcept
+		{
+			return IsValid();
+		}
+
+		inline Archetype* operator->() const noexcept
+		{
+			return m_Archetype;
+		}
+
+	private:
+		Archetype* m_Archetype = nullptr;
+		uint32_t m_Version = std::numeric_limits<uint32_t>::max();
+
+	};
+
 	struct ArchetypeHasher final
 	{
 	public:
@@ -730,7 +766,7 @@ namespace decs::light
 		/// <summary>
 		/// </summary>
 		/// <returns>created archetypes span</returns>
-		inline std::span<const Archetype* const> GetArchetypes() const noexcept
+		inline std::span<const Archetype* const> GetCreatedArchetypes() const noexcept
 		{
 			return m_Created;
 		}
@@ -738,7 +774,7 @@ namespace decs::light
 		/// <summary>
 		/// </summary>
 		/// <returns>created archetypes span</returns>
-		inline std::span<Archetype* const> GetArchetypes()
+		inline std::span<Archetype* const> GetCreatedArchetypes()
 		{
 			return m_Created;
 		}
@@ -765,7 +801,7 @@ namespace decs::light
 
 		bool Destroy(Archetype* archetype)
 		{
-			if (archetype == nullptr 
+			if (archetype == nullptr
 				|| archetype->m_CreatedIndexInAllocator >= m_Created.size())
 			{
 				return false;
@@ -780,9 +816,10 @@ namespace decs::light
 			}
 			m_Created.pop_back();
 
-			archetype->m_CreatedIndexInAllocator = std::numeric_limits<size_t>::max();
-			m_FreeList.push_back(archetype);
+			OnDestroyArchetype(*archetype);
 			archetype->ResetOnDestroy();
+
+			m_FreeList.push_back(archetype);
 
 			return true;
 		}
@@ -807,9 +844,14 @@ namespace decs::light
 		TChunkedVector<Archetype> m_Archetypes{ 100 };
 		std::vector<Archetype*> m_Created{};
 		std::vector<Archetype*> m_FreeList{};
+
+	private:
+		void OnDestroyArchetype(Archetype& archetype)
+		{
+			archetype.m_CreatedIndexInAllocator = std::numeric_limits<size_t>::max();
+			archetype.m_Version++;
+		}
 	};
-
-
 }
 
 template<>

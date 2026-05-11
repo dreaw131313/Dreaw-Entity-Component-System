@@ -101,6 +101,11 @@ namespace decs::light
 			return m_Data;
 		}
 
+		inline const FilterType* GetAsPtr(size_t) const
+		{
+			return &m_Data;
+		}
+
 		inline std::span<const FilterType> GetAsSpan() const
 		{
 			return { &m_Data , 1 };

@@ -719,7 +719,7 @@ namespace decs::light
 
 		void AddingArchetypesWithCheckingOnlyNewArchetypes(ArchetypesMap& map, uint64_t startArchetypesIndex, const QueryFilterConfigType& filter)
 		{
-			auto archetypes = map.m_ArchetypeAllocator.GetArchetypes();
+			auto archetypes = map.m_ArchetypeAllocator.GetCreatedArchetypes();
 			size_t archetypesCount = archetypes.size();
 			size_t minRequiredComponentTagFilterCount = filter.GetMinComponentFilterCount();
 

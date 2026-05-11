@@ -439,6 +439,8 @@ void Test::FilterTest()
 	Query<float> query(&container);
 	query.WithFilterData(TestEntityFilter(1));
 
+	decs::QueryTypeGroup<float> group{};
+
 	query.ForEach([](const Entity& ent, const float& f)
 	{
 		if (ent.HasFilter<TestEntityFilter>())

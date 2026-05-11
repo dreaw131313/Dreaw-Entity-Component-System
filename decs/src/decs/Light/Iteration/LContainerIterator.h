@@ -23,7 +23,7 @@ namespace decs::light
 				callable(entityBuffer);
 			}
 
-			auto archetypesSpan = container.m_ArchetypesMap.m_ArchetypeAllocator.GetArchetypes();
+			auto archetypesSpan = container.m_ArchetypesMap.m_ArchetypeAllocator.GetCreatedArchetypes();
 			for (auto archetype : archetypesSpan)
 			{
 				const auto& entities = archetype->GetEntities();

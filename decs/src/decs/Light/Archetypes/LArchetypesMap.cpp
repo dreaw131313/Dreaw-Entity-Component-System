@@ -11,7 +11,7 @@ namespace decs::light
 		uint64_t archetypeGroupsVectorChunkSize
 	):
 		m_FilterManager(filterManager),
-		m_ArchetypeAllocator(archetypesVectorChunkSize),
+		m_ArchetypeAllocator(static_cast<uint32_t>(archetypesVectorChunkSize)),
 		m_ArchetypesGroupsByOneTypeAllocator(archetypeGroupsVectorChunkSize)
 	{
 

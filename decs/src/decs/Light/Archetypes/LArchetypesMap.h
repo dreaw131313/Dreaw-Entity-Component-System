@@ -263,14 +263,14 @@ namespace decs::light
 
 		inline uint64_t GetArchetypesCount() const noexcept
 		{
-			return m_ArchetypeAllocator.GetArchetypes().size();
+			return m_ArchetypeAllocator.GetCreatedArchetypes().size();
 		}
 
 		inline uint64_t EmptyArchetypesCount() const
 		{
 			uint64_t emptyArchetypesCount = 0;
 
-			for (auto archetype : m_ArchetypeAllocator.GetArchetypes())
+			for (auto archetype : m_ArchetypeAllocator.GetCreatedArchetypes())
 			{
 				if (archetype->EntityCount() == 0)
 				{
@@ -308,7 +308,7 @@ namespace decs::light
 		template<typename Callable>
 		void IterateOverArchetypes(Callable&& func)
 		{
-			auto archetypes = m_ArchetypeAllocator.GetArchetypes();
+			auto archetypes = m_ArchetypeAllocator.GetCreatedArchetypes();
 			for (auto archetype : archetypes)
 			{
 				func(archetype);
