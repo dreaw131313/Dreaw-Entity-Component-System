@@ -110,6 +110,13 @@ using Query = decs::light::Query<TComps...>;
 template<decs::light_component_or_filter_concept... TComps>
 using MultiQuery = decs::light::MultiQuery<TComps...>;
 
+void Test::Run()
+{
+	IterationTest();
+	PerformanceTest();
+	FilterTest();
+}
+
 void Test::IterationTest()
 {
 	using FloatFilter = decs::filter<float>;
@@ -438,8 +445,6 @@ void Test::FilterTest()
 
 	Query<float> query(&container);
 	query.WithFilterData(TestEntityFilter(1));
-
-	decs::QueryTypeGroup<float> group{};
 
 	query.ForEach([](const Entity& ent, const float& f)
 	{
