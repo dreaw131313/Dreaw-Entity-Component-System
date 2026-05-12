@@ -28,9 +28,44 @@ namespace decs::light
 	template<typename T>
 	using query_data_container_t = query_data_container<T>::container_type;
 
+
 	class Iteration
 	{
 	public:
+
+		template<typename Desired, typename TupleType>
+		inline static Desired* get_optional_data_from_tuple(
+			uint64_t entityIndexInArchetype,
+			const TupleType& containersTuple
+		)
+		{
+			if constexpr (tuple_has_type_v<query_data_container_t<Desired>*, TupleType>)
+			{
+				return std::get<query_data_container_t<Desired>*>(containersTuple)->GetAsPtr(entityIndexInArchetype);
+			}
+			else
+			{
+				return nullptr;
+			}
+		}
+
+		template<typename Callable, typename TupleType, typename... ComponentTypes>
+		inline static void InvokeEntityIteration_WithOptional(
+			Callable&& func,
+			uint64_t entityIndexInArchetype,
+			const TupleType& containersTuple
+		)
+		{
+			if constexpr (sizeof...(ComponentTypes) != 0)
+			{
+				func(*get_optional_data_from_tuple<ComponentTypes, TupleType>(entityIndexInArchetype, containersTuple)...);
+			}
+			else
+			{
+				func();
+			}
+		}
+
 		template<typename Callable, typename... ComponentTypes>
 		inline static void InvokeEntityIteration(
 			Callable&& func,
@@ -38,7 +73,10 @@ namespace decs::light
 			const std::tuple<query_data_container_t<ComponentTypes>*...>& containersTuple
 		)
 		{
-			func(std::get<query_data_container_t<ComponentTypes>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
+			using TupleType = std::tuple<query_data_container_t<ComponentTypes>*...>;
+			InvokeEntityIteration_WithOptional<Callable, TupleType, ComponentTypes...>(func, entityIndexInArchetype, containersTuple);
+
+			//func(std::get<query_data_container_t<ComponentTypes>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
 		}
 
 		template<typename Callable, typename... ComponentTypes>

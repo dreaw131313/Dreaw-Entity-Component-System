@@ -1,6 +1,8 @@
 #pragma once
 #include "LIterationCore.h"
 
+#include "LQueryManager.h"
+
 namespace decs::light
 {
 	template<light_component_or_filter_concept... ComponentsTypes>

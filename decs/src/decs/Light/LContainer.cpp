@@ -8,13 +8,13 @@ namespace decs::light
 {
 	Container::Container():
 		m_EntityManager(m_DefaultEntitiesChunkSize),
-		m_ArchetypesMap(m_FilterManager, 100, 100)
+		m_ArchetypesMap(m_FilterManager, m_QueryManager, 100, 100)
 	{
 	}
 
 	Container::Container(const ContainerConfig& config):
 		m_EntityManager(config.EntityChunkSize),
-		m_ArchetypesMap(m_FilterManager, config.ArchetypeChunkSize, 100)
+		m_ArchetypesMap(m_FilterManager, m_QueryManager, config.ArchetypeChunkSize, 100)
 	{
 	}
 
@@ -403,6 +403,17 @@ namespace decs::light
 		}
 
 		return true;
+	}
+
+
+	void Container::AddQuery(ILightQueryImpl* query)
+	{
+		m_QueryManager.AddQuery(query);
+	}
+
+	void Container::RemoveQuery(ILightQueryImpl* query)
+	{
+		m_QueryManager.RemoveQuery(query);
 	}
 
 }

@@ -6,6 +6,8 @@
 #include "decs/Light/Filter/LFilter.h"
 
 #include "LArchetype.h"
+#include "LArchetypeAllocator.h"
+#include "decs/Light/Iteration/LQueryManager.h"
 
 namespace decs::light
 {
@@ -255,6 +257,7 @@ namespace decs::light
 	public:
 		ArchetypesMap(
 			FilterManager& filterManager,
+			QueryManager& queryManger,
 			uint64_t archetypesVectorChunkSize,
 			uint64_t archetypeGroupsVectorChunkSize
 		);
@@ -319,8 +322,9 @@ namespace decs::light
 
 	private:
 		FilterManager& m_FilterManager;
+		QueryManager& m_QueryMangaer;
 
-		ArchetypeAllocator m_ArchetypeAllocator{ 100 };
+		ArchetypeAllocator m_ArchetypeAllocator{100};
 		TChunkedVector<ArchetypeGroup> m_ArchetypesGroupsAllocator{ 100 };
 		TChunkedVector<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };
 

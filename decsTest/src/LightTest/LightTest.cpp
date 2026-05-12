@@ -36,6 +36,7 @@ public:
 	float X = 0;
 	float Y = 0;
 
+	int i[10];
 
 public:
 	Position()
@@ -113,8 +114,8 @@ using MultiQuery = decs::light::MultiQuery<TComps...>;
 void Test::Run()
 {
 	IterationTest();
-	PerformanceTest();
-	FilterTest();
+	//PerformanceTest();
+	//FilterTest();
 }
 
 void Test::IterationTest()
@@ -356,7 +357,7 @@ void Test::ComponentCreationTest()
 void Test::PerformanceTest()
 {
 	const uint32_t testCount = 1;
-	const uint32_t entityCount = 16384;
+	const uint32_t entityCount = 65536;
 
 	decs::light::ContainerConfig config{
 		.EntityChunkSize = 10000,
@@ -378,6 +379,8 @@ void Test::PerformanceTest()
 	double reserveSpaceTime = reserveSpaceTimer.ElapsedAsMilisecond();
 	PrintLine(std::format("Rerve space time: {0} ms", reserveSpaceTime));*/
 
+	size_t testCounter = 0;
+
 	auto perfTest = [&]()
 	{
 		decs::LightComponentTypeGroup<Position, TestComponent> comps{};
@@ -387,10 +390,17 @@ void Test::PerformanceTest()
 		{
 			MeasureTimer timer(true);
 			{
-				entitySpawner.Spawn(entityCount, [](Position& pos, TestComponent& test)
+				/*entitySpawner.Spawn(entityCount, [](Position& pos, TestComponent& test)
 				{
 
-				});
+				});*/
+
+				for (size_t i = 0; i < entityCount; i++)
+				{
+					container.CreateEntity(comps, [](auto&, auto&) {});
+					/*e.AddComponent<Position>();
+					e.AddComponent<TestComponent>();*/
+				}
 
 				/*for (uint32_t i = 0; i < entityCount; i++)
 				{
@@ -405,6 +415,12 @@ void Test::PerformanceTest()
 			container.Clear();
 		}
 
+		testCounter++;
+		if (testCounter == 1)
+		{
+			//return;
+		}
+
 		double avarage = sum / testCount;
 
 		finalAvarage += avarage;
@@ -417,15 +433,16 @@ void Test::PerformanceTest()
 		perfTest();
 	}
 
-	std::cout << "Final avarage time " << finalAvarage / finalTestCount << " ms\n";
+	std::cout << "Final avarage time " << finalAvarage / (finalTestCount-1) << " ms\n";
 
+	testCounter = 0;
 	finalAvarage = 0;
 	for (uint32_t i = 0; i < finalTestCount; i++)
 	{
 		perfTest();
 	}
 
-	std::cout << "Final avarage time " << finalAvarage / finalTestCount << " ms\n";
+	std::cout << "Final avarage time " << finalAvarage / (finalTestCount-1) << " ms\n";
 
 }
 

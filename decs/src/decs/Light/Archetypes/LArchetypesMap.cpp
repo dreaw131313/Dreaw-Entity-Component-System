@@ -7,11 +7,13 @@ namespace decs::light
 {
 	ArchetypesMap::ArchetypesMap(
 		FilterManager& filterManager,
+		QueryManager& queryManger,
 		uint64_t archetypesVectorChunkSize,
 		uint64_t archetypeGroupsVectorChunkSize
 	):
 		m_FilterManager(filterManager),
 		m_ArchetypeAllocator(static_cast<uint32_t>(archetypesVectorChunkSize)),
+		m_QueryMangaer(queryManger),
 		m_ArchetypesGroupsByOneTypeAllocator(archetypeGroupsVectorChunkSize)
 	{
 
@@ -169,6 +171,8 @@ namespace decs::light
 		}
 
 		MakeArchetypeEdges_4(archetype);
+
+		m_QueryMangaer.OnCreateArchetype(&archetype);
 	}
 
 	Archetype* ArchetypesMap::FindMatchingArchetype(const Archetype& toArchetype)

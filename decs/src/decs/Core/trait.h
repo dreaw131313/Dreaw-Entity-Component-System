@@ -7,6 +7,25 @@
 namespace decs
 {
 
+#pragma region TUPLE TRAITS:
+
+	template<typename T, typename TupleType>
+	struct tuple_has_type : public std::false_type
+	{
+
+	};
+
+	template<typename T, typename... Ts>
+	struct tuple_has_type<T, std::tuple<Ts...>> : public std::bool_constant<(std::is_same_v<T, Ts> || ...)>
+	{
+
+	};
+
+	template<typename T, typename Ts>
+	inline static constexpr bool tuple_has_type_v = tuple_has_type<T, Ts>::value;
+
+#pragma endregion
+
 #pragma region TAG
 
 	template<typename T>
@@ -123,10 +142,10 @@ namespace decs
 	concept container_iterator_archetype_func = std::is_invocable_v<Func, const Archetype*>;
 
 	template<typename T>
-	concept light_component_concept = !std::is_same_v<T, bool> && !is_tag_v<T> ;
+	concept light_component_concept = !std::is_same_v<T, bool> && !is_tag_v<T>;
 
 	template<typename T>
-	concept light_component_or_filter_concept =light_component_concept<T> || filter_concept<T>;
+	concept light_component_or_filter_concept = light_component_concept<T> || filter_concept<T>;
 
 	template<typename T>
 	concept light_component_or_tag_or_filter_concept = light_component_or_filter_concept<T> || tag_concept<T>;

@@ -3,6 +3,7 @@
 #include "Archetypes/LArchetypesMap.h"
 #include "LEntityManager.h"
 #include "Filter/LFilter.h"
+#include "Iteration/LQueryManager.h"
 
 namespace decs::light
 {
@@ -539,6 +540,7 @@ namespace decs::light
 
 	#pragma region ARCHETYPES:
 	private:
+		QueryManager m_QueryManager{};
 		ArchetypesMap m_ArchetypesMap;
 
 	public:
@@ -589,6 +591,11 @@ namespace decs::light
 
 			return spawnArchetype;
 		}
+
+		void AddQuery(ILightQueryImpl* query);
+
+		void RemoveQuery(ILightQueryImpl* query);
+
 
 	#pragma endregion
 
