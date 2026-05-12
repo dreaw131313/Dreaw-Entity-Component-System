@@ -28,6 +28,11 @@ namespace decs::light
 
 		virtual void OnRemoveFromManager() = 0;
 
+		/// <summary>
+		/// Called when query manager destructor is invoked and query manager has queries.
+		/// </summary>
+		virtual void OnQueryManagerDestroy() = 0;
+
 	};
 
 	class QueryManager final
@@ -35,7 +40,7 @@ namespace decs::light
 	public:
 		QueryManager() = default;
 
-		~QueryManager() = default;
+		~QueryManager();
 
 		bool AddQuery(IQuery* query);
 

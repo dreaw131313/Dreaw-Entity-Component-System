@@ -21,10 +21,6 @@ namespace decs::light
 
 	ArchetypesMap::~ArchetypesMap()
 	{
-		for (auto archetype : m_ArchetypeAllocator.GetCreatedArchetypes())
-		{
-			m_QueryManager.OnDestroyArchetype(archetype);
-		}
 	}
 
 	void ArchetypesMap::ShrinkArchetypesToFit()

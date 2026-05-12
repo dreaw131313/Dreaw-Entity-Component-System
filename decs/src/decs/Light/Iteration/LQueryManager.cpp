@@ -3,6 +3,14 @@
 
 namespace decs::light
 {
+	QueryManager::~QueryManager()
+	{
+		for (auto query : m_Queries)
+		{
+			query->OnQueryManagerDestroy();
+		}
+	}
+
 	bool QueryManager::AddQuery(IQuery* query)
 	{
 		DECS_ASSERT(query!= nullptr && query->m_ParentManager == nullptr, "Query must not be nullptr!");

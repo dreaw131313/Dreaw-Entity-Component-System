@@ -1,6 +1,8 @@
 #pragma once
 #include "LIterationCore.h"
 
+#include "LQuery.h"
+
 namespace decs::light
 {
 	class IMultiQuery
@@ -22,10 +24,11 @@ namespace decs::light
 		static_assert(!::decs::contain_tags_v<ComponentsTypes...>, "MultiQuery must not use tags in as ComponentTypes!");
 
 	private:
-		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
-		using ArchetypeContextType = ContainerContextType::ArchetypeContextType;
-		using ContainersTupleType = ArchetypeContextType::ContainersTuple;
-		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
+		using InternalQueryType = QueryImpl<ComponentsTypes...>;
+		using ArchetypeContextType = InternalQueryType::ArchetypeContextType;
+		using ContainersTupleType = InternalQueryType::ContainersTupleType;
+		using QueryFilterConfigType = InternalQueryType::QueryFilterConfigType;
+		using ContainerContextType = InternalQueryType::ContainerContextType;
 
 		template<typename TComponent>
 		using PackedContainerType = PackedLightComponentContainer<TComponent>*;

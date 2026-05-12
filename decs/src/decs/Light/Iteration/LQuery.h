@@ -12,14 +12,14 @@ namespace decs::light
 		using ArchetypeContextType = IterationArchetypeContext<drop_const_t<ComponentsTypes>...>;
 		using ContainersTupleType = ArchetypeContextType::ContainersTuple;
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
-		using QueryContainerContext = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
+		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
 
 		template<typename TComponent>
 		using PackedContainerType = PackedLightComponentContainer<TComponent>*;
 
 	public:
 		const QueryFilterConfigType& m_FilterConfig;
-		QueryContainerContext m_ContainerContext{};
+		ContainerContextType m_ContainerContext{};
 		bool m_IsDirty = true;
 
 	public:
@@ -257,6 +257,10 @@ namespace decs::light
 			m_IsDirty = true;
 		}
 
+		void OnQueryManagerDestroy() override
+		{
+			m_ContainerContext.SetContainer(nullptr);
+		}
 	#pragma endregion
 
 	};
@@ -267,12 +271,7 @@ namespace decs::light
 	private:
 		using QueryImplType = QueryImpl<ComponentsTypes...>;
 		using ArchetypeContextType = QueryImplType::ArchetypeContextType;
-		using ContainersTupleType = QueryImplType::ContainersTupleType;
 		using QueryFilterConfigType = QueryImplType::QueryFilterConfigType;
-		using QueryContainerContext = QueryImplType::QueryContainerContext;
-
-		template<typename TComponent>
-		using PackedContainerType = PackedLightComponentContainer<TComponent>*;
 
 	public:
 		Query():
