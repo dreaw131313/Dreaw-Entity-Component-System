@@ -406,12 +406,12 @@ namespace decs::light
 	}
 
 
-	void Container::AddQuery(ILightQueryImpl* query)
+	void Container::AddQuery(IQuery* query)
 	{
 		m_QueryManager.AddQuery(query);
 	}
 
-	void Container::RemoveQuery(ILightQueryImpl* query)
+	void Container::RemoveQuery(IQuery* query)
 	{
 		m_QueryManager.RemoveQuery(query);
 	}

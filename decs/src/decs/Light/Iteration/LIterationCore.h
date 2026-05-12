@@ -560,6 +560,11 @@ namespace decs::light
 
 		void Fetch(const QueryFilterConfigType& filter)
 		{
+			if (!IsValid())
+			{
+				return;
+			}
+
 			uint64_t minComponentFilterCount = filter.GetMinComponentFilterCount();
 
 			ArchetypesMap& map = m_Container->m_ArchetypesMap;

@@ -3,7 +3,7 @@
 
 namespace decs::light
 {
-	bool QueryManager::AddQuery(ILightQueryImpl* query)
+	bool QueryManager::AddQuery(IQuery* query)
 	{
 		DECS_ASSERT(query!= nullptr && query->m_ParentManager == nullptr, "Query must not be nullptr!");
 
@@ -16,7 +16,7 @@ namespace decs::light
 		return true;
 	}
 
-	bool QueryManager::RemoveQuery(ILightQueryImpl* query)
+	bool QueryManager::RemoveQuery(IQuery* query)
 	{
 		DECS_ASSERT(query != nullptr && query->m_ParentManager == this && query->m_IndexInParentManager < m_Queries.size(), "Query invalid!");
 

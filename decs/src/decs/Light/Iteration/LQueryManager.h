@@ -6,14 +6,14 @@ namespace decs::light
 {
 	class QueryManager;
 
-	class ILightQueryImpl
+	class IQuery
 	{
 		friend class QueryManager;
 
 	public:
-		ILightQueryImpl() = default;
+		IQuery() = default;
 
-		virtual ~ILightQueryImpl() = default;
+		virtual ~IQuery() = default;
 
 	private:
 		QueryManager* m_ParentManager = nullptr;
@@ -37,16 +37,16 @@ namespace decs::light
 
 		~QueryManager() = default;
 
-		bool AddQuery(ILightQueryImpl* query);
+		bool AddQuery(IQuery* query);
 
-		bool RemoveQuery(ILightQueryImpl* query);
+		bool RemoveQuery(IQuery* query);
 
 		void OnCreateArchetype(const Archetype* archetype);
 
 		void OnDestroyArchetype(const Archetype* archetype);
 
 	private:
-		std::vector<ILightQueryImpl*> m_Queries{};
+		std::vector<IQuery*> m_Queries{};
 
 	};
 

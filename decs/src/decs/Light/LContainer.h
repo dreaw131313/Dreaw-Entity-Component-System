@@ -21,6 +21,8 @@ namespace decs::light
 
 	class Container final : private NonCopyableNonMoveable
 	{
+		template<light_component_or_filter_concept... ComponentsTypes>
+		friend class QueryImpl;
 		template<light_component_or_filter_concept ...Types>
 		friend class light::Query;
 		template<light_component_or_filter_concept ...Types>
@@ -592,9 +594,9 @@ namespace decs::light
 			return spawnArchetype;
 		}
 
-		void AddQuery(ILightQueryImpl* query);
+		void AddQuery(IQuery* query);
 
-		void RemoveQuery(ILightQueryImpl* query);
+		void RemoveQuery(IQuery* query);
 
 
 	#pragma endregion

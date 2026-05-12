@@ -236,18 +236,10 @@ void Test::IterationTest()
 		query.ForEach(testFunc);
 		PrintLine("ForEach With Entity");
 		query.ForEach(testFuncWithEntity);
-		PrintLine("ForEach Safe");
-		query.ForEach_Safe(testFunc);
-		PrintLine("ForEach With Entity Safe");
-		query.ForEach_Safe(testFuncWithEntity);
 		PrintLine("ForEachBackward");
 		query.ForEachBackward(testFunc);
 		PrintLine("ForEachBackward With Entity");
 		query.ForEachBackward(testFuncWithEntity);
-		PrintLine("ForEachBackward Safe");
-		query.ForEachBackward_Safe(testFunc);
-		PrintLine("ForEachBackward With Entity Safe");
-		query.ForEachBackward_Safe(testFuncWithEntity);
 
 		if (false)
 		{
