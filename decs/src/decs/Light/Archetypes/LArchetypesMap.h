@@ -322,7 +322,7 @@ namespace decs::light
 
 	private:
 		FilterManager& m_FilterManager;
-		QueryManager& m_QueryMangaer;
+		QueryManager& m_QueryManager;
 
 		ArchetypeAllocator m_ArchetypeAllocator{100};
 		TChunkedVector<ArchetypeGroup> m_ArchetypesGroupsAllocator{ 100 };

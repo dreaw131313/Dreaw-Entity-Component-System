@@ -6,7 +6,7 @@
 namespace decs::light
 {
 	template<light_component_or_filter_concept... ComponentsTypes>
-	class Query
+	class Query : public ILightQueryImpl
 	{
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "Query must not use tags in as ComponentTypes!");
 
@@ -27,20 +27,23 @@ namespace decs::light
 		Query(Container* container):
 			m_ContainerContext(container, true)
 		{
-
+			AddToContainer();
 		}
 
 		~Query()
 		{
-
+			RemoveFromContainer();
 		}
 
 		inline void SetContainer(Container* container)
 		{
 			if (m_ContainerContext.GetContainer() != container)
 			{
-				m_IsDirty = true;
+				RemoveFromContainer();
 				m_ContainerContext.SetContainer(container);
+				AddToContainer();
+
+				m_IsDirty = true;
 			}
 		}
 
@@ -278,7 +281,7 @@ namespace decs::light
 			if (entity.IsValid())
 			{
 				Fetch();
-				return m_ContainerContext.GetArchetypes().contains(entity.GetArchetype());
+				return m_ContainerContext.ContainsArchetype(entity.GetArchetype());
 			}
 			return false;
 		}
@@ -290,15 +293,53 @@ namespace decs::light
 		bool m_IsDirty = true;
 
 	private:
+		void AddToContainer()
+		{
+			Container* container = m_ContainerContext.GetContainer();
+			if (container != nullptr)
+			{
+				container->AddQuery(this);
+			}
+		}
+
+		void RemoveFromContainer()
+		{
+			Container* container = m_ContainerContext.GetContainer();
+			if (container != nullptr)
+			{
+				container->RemoveQuery(this);
+			}
+		}
+
+		void TryAddArchetype(const Archetype& archetype) override
+		{
+			m_ContainerContext.TryAddArchetype(archetype, m_FilterConfig);
+		}
+
+		void TryRemoveArchetpye(const Archetype& archetype) override
+		{
+			m_ContainerContext.TryRemoveArchetype(archetype);
+		}
+
+		void OnAddToManager() override
+		{
+
+		}
+
+		void OnRemoveFromManager() override
+		{
+			m_ContainerContext.SetContainer(nullptr);
+			m_IsDirty = true;
+		}
+
 		void FetchInternal()
 		{
 			if (m_IsDirty)
 			{
 				m_IsDirty = false;
-				Invalidate();
+				m_ContainerContext.Clear();
+				m_ContainerContext.Fetch(m_FilterConfig);
 			}
-
-			m_ContainerContext.Fetch(m_FilterConfig);
 		}
 
 		template<typename Callable>
@@ -330,10 +371,6 @@ namespace decs::light
 			}
 		}
 
-		void Invalidate()
-		{
-			m_ContainerContext.Clear();
-		}
 
 	#pragma region BATCH ITERATOR
 	public:

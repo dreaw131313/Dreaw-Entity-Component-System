@@ -499,9 +499,8 @@ namespace decs::light
 
 	public:
 		std::vector<ArchetypeContextType> m_ArchetypesContexts{};
-		ecsSet<const Archetype*> m_ContainedArchetypes{};
+		ecsMap<const Archetype*, size_t> m_ArchetypeIndices{};
 		Container* m_Container = nullptr;
-		uint64_t m_ArchetypesCountDirty = 0;
 		bool m_bIsEnabled = true;
 
 	public:
@@ -542,16 +541,15 @@ namespace decs::light
 			return m_ArchetypesContexts;
 		}
 
-		const ecsSet<const Archetype*>& GetArchetypes() const
+		inline bool ContainsArchetype(const Archetype* archetype) const
 		{
-			return m_ContainedArchetypes;
+			return m_ArchetypeIndices.contains(archetype);
 		}
 
 		void Clear()
 		{
 			m_ArchetypesContexts.clear();
-			m_ContainedArchetypes.clear();
-			m_ArchetypesCountDirty = 0;
+			m_ArchetypeIndices.clear();
 		}
 
 		void SetContainer(Container* container)
@@ -564,42 +562,25 @@ namespace decs::light
 		{
 			uint64_t minComponentFilterCount = filter.GetMinComponentFilterCount();
 
-			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.GetArchetypesCount();
-			if (m_ArchetypesCountDirty != containerArchetypesCount)
+			ArchetypesMap& map = m_Container->m_ArchetypesMap;
+			uint64_t maxComponentsInArchetype = map.GetMaxComponentTagFilterCount();
+			if (maxComponentsInArchetype >= minComponentFilterCount)
 			{
-				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
-
-				ArchetypesMap& map = m_Container->m_ArchetypesMap;
-				uint64_t maxComponentsInArchetype = map.GetMaxComponentTagFilterCount();
-				if (maxComponentsInArchetype >= minComponentFilterCount)
+				if (filter.GetIncludes().Size() > 0)
 				{
-					if (filter.GetIncludes().Size() > 0)
-					{
-						if (newArchetypesCount > m_ArchetypesContexts.size())
-						{
-							// performing normal finding of archetypes
-							auto group = GetBestArchetypesGroup(filter);
-							FetchArchetypesFromArchetypesGroup(group, filter);
-						}
-						else
-						{
-							// checking only new archetypes:
-							AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, filter);
-						}
-					}
-					else
-					{
-						AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, filter);
-					}
+					auto group = GetBestArchetypesGroup(filter);
+					FetchArchetypesFromArchetypesGroup(group, filter);
 				}
-
-				m_ArchetypesCountDirty = containerArchetypesCount;
+				else
+				{
+					AddAllArchetypesToQuery(map, filter);
+				}
 			}
 		}
 
 		bool Contain(const Entity& entity)
 		{
-			return m_ContainedArchetypes.find(entity.GetArchetype()) != m_ContainedArchetypes.end();
+			return m_ArchetypeIndices.find(entity.GetArchetype()) != m_ArchetypeIndices.end();
 		}
 
 		void ValidateCachedEntityCount()
@@ -633,8 +614,10 @@ namespace decs::light
 			}
 		}
 
-	private:
-		inline bool ContainArchetype(const Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
+		inline bool ContainArchetype(const Archetype* arch) const
+		{
+			return m_ArchetypeIndices.contains(arch);
+		}
 
 		const ArchetypesGroupByOneType* GetBestArchetypesGroup(const QueryFilterConfigType& filter)
 		{
@@ -670,7 +653,7 @@ namespace decs::light
 			return bestGroup;
 		}
 
-		void TryAddArchetypeFromGroup(const Archetype& archetype, const QueryFilterConfigType& filter)
+		void TryAddArchetype(const Archetype& archetype, const QueryFilterConfigType& filter)
 		{
 			if (!ContainArchetype(&archetype) && archetype.GetComponentTagFilterCount())
 			{
@@ -734,11 +717,30 @@ namespace decs::light
 					ArchetypeContextType context{};
 					if (context.Initialize(&archetype))
 					{
-						m_ContainedArchetypes.insert(&archetype);
+						m_ArchetypeIndices[&archetype] = m_ArchetypesContexts.size();
 						m_ArchetypesContexts.push_back(context);
 					}
 				}
 			}
+		}
+
+		void TryRemoveArchetype(const Archetype& archetype)
+		{
+			auto it = m_ArchetypeIndices.find(&archetype);
+			if (it == m_ArchetypeIndices.end())
+			{
+				return;
+			}
+
+			size_t index = it->second;
+			if (index < (m_ArchetypesContexts.size() - 1))
+			{
+				ArchetypeContextType& lastArchetypeContext = m_ArchetypesContexts.back();
+				m_ArchetypesContexts[index] = lastArchetypeContext;
+				m_ArchetypeIndices[lastArchetypeContext.GetArchetype()] = index;
+			}
+			m_ArchetypesContexts.pop_back();
+			m_ArchetypeIndices.erase(&archetype);
 		}
 
 		void FetchArchetypesFromArchetypesGroup(const ArchetypesGroupByOneType* group, const QueryFilterConfigType& filter)
@@ -751,7 +753,7 @@ namespace decs::light
 				std::span<Archetype*> archetypes = group->GetArchetypesWithComponentTagFilterCount(i);
 				for (auto archetype : archetypes)
 				{
-					TryAddArchetypeFromGroup(*archetype, filter);
+					TryAddArchetype(*archetype, filter);
 				}
 			}
 		}
@@ -767,7 +769,19 @@ namespace decs::light
 				const Archetype* arch = archetypes[i];
 				if (arch->GetComponentTagFilterCount() >= minRequiredComponentTagFilterCount)
 				{
-					TryAddArchetypeFromGroup(*arch, filter);
+					TryAddArchetype(*arch, filter);
+				}
+			}
+		}
+
+		void AddAllArchetypesToQuery(ArchetypesMap& map, const QueryFilterConfigType& filter)
+		{
+			size_t minRequiredComponentTagFilterCount = filter.GetMinComponentFilterCount();
+			for (auto archetype : map.m_ArchetypeAllocator.GetCreatedArchetypes())
+			{
+				if (archetype->GetComponentTagFilterCount() >= minRequiredComponentTagFilterCount)
+				{
+					TryAddArchetype(*archetype, filter);
 				}
 			}
 		}
