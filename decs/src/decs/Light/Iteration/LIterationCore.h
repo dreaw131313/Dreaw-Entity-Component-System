@@ -90,6 +90,7 @@ namespace decs::light
 			return m_FilterDataTuple;
 		}
 
+
 		inline uint64_t GetMinComponentFilterCount() const
 		{
 			uint64_t includesCount = sizeof...(ComponentsTypes);
