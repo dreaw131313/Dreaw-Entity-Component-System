@@ -260,7 +260,7 @@ void Test::IterationTest()
 		}
 	}
 
-	if (true)
+	if (false)
 	{
 		decs::TypeGroup<int, float> t{};
 
@@ -268,9 +268,10 @@ void Test::IterationTest()
 
 		using QueryType = MultiQuery<const TestComponent>;
 		QueryType query{};
-		query.With< Renderer, Position, FloatTag, IntTag, BoolTag>();
 		query.AddContainer(&container);
 
+
+		PrintLine("MULTI QUERRY");
 		PrintLine("ForEachArchetype");
 		query.ForEachArchetype(forEachArchetypeFunc);
 
@@ -290,9 +291,8 @@ void Test::IterationTest()
 		query.ForEachBackward_Safe(testFunc);
 		PrintLine("ForEachBackward With Entity Safe");
 		query.ForEachBackward_Safe(testFuncWithEntity);
-		PrintLine("ForEach_IngoreEntityActiveState");
 
-		if (false)
+		if (true)
 		{
 			std::vector<QueryType::BatchIterator> iterators{};
 			query.CreateBatchIteratorsWithMaxNumberPerBatch(iterators, 7);

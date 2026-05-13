@@ -313,23 +313,13 @@ namespace decs::light
 
 		void Fetch()
 		{
-			uint64_t containerContextsSize = m_ContainerContexts.size();
 			if (m_IsDirty)
 			{
 				m_IsDirty = false;
-				for (uint64_t i = 0; i < containerContextsSize; i++)
+				for (ContainerContextType& containerContext: m_ContainerContexts)
 				{
-					ContainerContextType& containerContext = m_ContainerContexts[i];
 					containerContext.Clear();
 					containerContext.Fetch(m_FilterConfig);
-				}
-			}
-			else
-			{
-				for (uint64_t i = 0; i < containerContextsSize; i++)
-				{
-					ContainerContextType& containerContext = m_ContainerContexts[i];
-					m_ContainerContexts[i].Fetch(m_FilterConfig);
 				}
 			}
 		}
