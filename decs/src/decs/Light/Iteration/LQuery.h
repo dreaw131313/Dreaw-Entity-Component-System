@@ -6,7 +6,7 @@
 namespace decs::light
 {
 	template<light_component_or_filter_concept... ComponentsTypes>
-	class QueryImpl final : public IQuery
+	class QueryImpl : public IQuery
 	{
 	public:
 		using ArchetypeContextType = IterationArchetypeContext<drop_const_t<ComponentsTypes>...>;

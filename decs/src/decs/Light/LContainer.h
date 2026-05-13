@@ -542,7 +542,7 @@ namespace decs::light
 
 	#pragma region ARCHETYPES:
 	private:
-		QueryManager m_QueryManager{};
+		QueryManager m_QueryManager;
 		ArchetypesMap m_ArchetypesMap;
 
 	public:
@@ -597,6 +597,10 @@ namespace decs::light
 		void AddQuery(IQuery* query);
 
 		void RemoveQuery(IQuery* query);
+
+		void AddMultiQuery(IMultiQuery* query);
+
+		void RemoveMultiQuery(IMultiQuery* query);
 
 
 	#pragma endregion

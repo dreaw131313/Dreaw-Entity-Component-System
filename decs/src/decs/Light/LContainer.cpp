@@ -8,18 +8,21 @@ namespace decs::light
 {
 	Container::Container():
 		m_EntityManager(m_DefaultEntitiesChunkSize),
+		m_QueryManager(this),
 		m_ArchetypesMap(m_FilterManager, m_QueryManager, 100, 100)
 	{
 	}
 
 	Container::Container(const ContainerConfig& config):
 		m_EntityManager(config.EntityChunkSize),
+		m_QueryManager(this),
 		m_ArchetypesMap(m_FilterManager, m_QueryManager, config.ArchetypeChunkSize, 100)
 	{
 	}
 
 	Container::~Container()
 	{
+		m_QueryManager.OnDestroyContainer();
 		m_ArchetypesMap.ClearEntityDataAndComponents();
 	}
 
@@ -414,6 +417,16 @@ namespace decs::light
 	void Container::RemoveQuery(IQuery* query)
 	{
 		m_QueryManager.RemoveQuery(query);
+	}
+
+	void Container::AddMultiQuery(IMultiQuery* query)
+	{
+		m_QueryManager.AddMultiQuery(query);
+	}
+
+	void Container::RemoveMultiQuery(IMultiQuery* query)
+	{
+		m_QueryManager.RemoveMultiQuery(query);
 	}
 
 }
