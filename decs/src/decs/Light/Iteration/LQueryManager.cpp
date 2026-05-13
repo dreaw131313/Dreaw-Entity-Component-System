@@ -46,7 +46,6 @@ namespace decs::light
 		query->m_IndexInParentManager = m_Queries.size();
 
 		m_Queries.push_back(query);
-		query->OnAddToManager();
 
 		return true;
 	}
@@ -71,7 +70,6 @@ namespace decs::light
 
 		query->m_ParentManager = nullptr;
 		query->m_IndexInParentManager = std::numeric_limits<size_t>::max();
-		query->OnRemoveFromManager();
 
 		return true;
 	}

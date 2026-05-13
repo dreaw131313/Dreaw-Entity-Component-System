@@ -25,10 +25,6 @@ namespace decs::light
 
 		virtual void TryRemoveArchetpye(const Archetype& archetype) = 0;
 
-		virtual void OnAddToManager() = 0;
-
-		virtual void OnRemoveFromManager() = 0;
-
 		/// <summary>
 		/// Called when query manager destructor is invoked and query manager has queries.
 		/// </summary>

@@ -113,9 +113,11 @@ using MultiQuery = decs::light::MultiQuery<TComps...>;
 
 void Test::Run()
 {
-	IterationTest();
+	//IterationTest();
 	//PerformanceTest();
 	//FilterTest();
+
+	QueryManagerTest();
 }
 
 void Test::IterationTest()
@@ -425,7 +427,7 @@ void Test::PerformanceTest()
 		perfTest();
 	}
 
-	std::cout << "Final avarage time " << finalAvarage / (finalTestCount-1) << " ms\n";
+	std::cout << "Final avarage time " << finalAvarage / (finalTestCount - 1) << " ms\n";
 
 	testCounter = 0;
 	finalAvarage = 0;
@@ -434,7 +436,7 @@ void Test::PerformanceTest()
 		perfTest();
 	}
 
-	std::cout << "Final avarage time " << finalAvarage / (finalTestCount-1) << " ms\n";
+	std::cout << "Final avarage time " << finalAvarage / (finalTestCount - 1) << " ms\n";
 
 }
 
@@ -463,6 +465,44 @@ void Test::FilterTest()
 		}
 		std::cout << "Entity float " << f << "\n";
 	});
+}
+
+void Light::Test::QueryManagerTest()
+{
+	std::unique_ptr<ECSContainer> container = std::make_unique<ECSContainer>();;
+
+	{
+		Query<TestComponent> query{ container.get() };
+		MultiQuery<TestComponent> multiQuery{};
+		multiQuery.AddContainer(container.get());
+
+		auto testFunc = [](TestComponent& component)
+		{
+			PrintLine("Test component!");
+		};
+
+
+		auto callQueriesForEach = [&]()
+		{
+			PrintLine("Query::ForEach");
+			query.ForEach(testFunc);
+			PrintLine("MultiQuery::ForEach");
+			multiQuery.ForEach(testFunc);
+		};
+
+		callQueriesForEach();
+
+		Entity e = container->CreateEntity();
+		e.AddComponent<float>();
+		e.AddComponent<TestComponent>();
+
+		callQueriesForEach();
+
+	}
+
+
+	container.reset();
+
 }
 
 END_NAMESPACE

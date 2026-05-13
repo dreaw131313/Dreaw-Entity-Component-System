@@ -17,6 +17,7 @@ namespace Light
 
 		void FilterTest();
 
+		void QueryManagerTest();
 	};
 
 }

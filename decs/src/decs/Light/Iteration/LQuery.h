@@ -284,17 +284,6 @@ namespace decs::light
 			m_ContainerContext.TryRemoveArchetype(archetype);
 		}
 
-		void OnAddToManager() override
-		{
-
-		}
-
-		void OnRemoveFromManager() override
-		{
-			m_ContainerContext.SetContainer(nullptr);
-			m_IsDirty = true;
-		}
-
 		void OnQueryManagerDestroy() override
 		{
 			m_ContainerContext.SetContainer(nullptr);
