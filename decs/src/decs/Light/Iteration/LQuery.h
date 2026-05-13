@@ -6,32 +6,65 @@
 namespace decs::light
 {
 	template<light_component_or_filter_concept... ComponentsTypes>
-	class QueryImpl : public IQuery
+	class Query : public IQuery
 	{
-	public:
+	private:
 		using ArchetypeContextType = IterationArchetypeContext<drop_const_t<ComponentsTypes>...>;
 		using ContainersTupleType = ArchetypeContextType::ContainersTuple;
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
 
-		template<typename TComponent>
-		using PackedContainerType = PackedLightComponentContainer<TComponent>*;
-
 	public:
-		const QueryFilterConfigType& m_FilterConfig;
-		ContainerContextType m_ContainerContext{};
-		bool m_IsDirty = true;
+		Query() = default;
 
-	public:
-		QueryImpl(const QueryFilterConfigType& filter):
-			m_FilterConfig(filter)
+		Query(Container* container):
+			m_ContainerContext(container)
 		{
-
+			AddToContainer();
 		}
 
-		~QueryImpl()
+		~Query()
 		{
 			RemoveFromContainer();
+		}
+
+		template<light_component_or_tag_or_filter_concept... WithoutTypes>
+		Query& Without()
+		{
+			MakeDirty();
+			m_FilterConfig.Without<WithoutTypes...>();
+			return *this;
+		}
+
+		template<light_component_or_tag_or_filter_concept... WithAnyTypes>
+		Query& WithAny()
+		{
+			MakeDirty();
+			m_FilterConfig.WithAny<WithAnyTypes...>();
+			return *this;
+		}
+
+		template<light_component_or_tag_or_filter_concept... WithTypes>
+		Query& With()
+		{
+			MakeDirty();
+			m_FilterConfig.With<WithTypes...>();
+			return *this;
+		}
+
+		template<filter_concept... FilterTypes>
+		void WithFilterData(FilterTypes&&... filterData)
+		{
+			MakeDirty();
+			m_FilterConfig.WithFilterData(std::forward<FilterTypes>(filterData)...);
+		}
+
+		void ClearFilters()
+		{
+			if (m_FilterConfig.Clear())
+			{
+				MakeDirty();
+			}
 		}
 
 		inline void SetContainer(Container* container)
@@ -60,7 +93,7 @@ namespace decs::light
 		{
 			if (IsValid())
 			{
-				FetchArchetypesFromContainer();
+				Fetch();
 
 				const auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
 				uint64_t entityCount = 0;
@@ -85,7 +118,7 @@ namespace decs::light
 		inline void ForEach(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
-			FetchArchetypesFromContainer();
+			Fetch();
 
 			Container* container = m_ContainerContext.GetContainer();
 			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
@@ -122,7 +155,7 @@ namespace decs::light
 		void ForEachBackward(Callable&& func) noexcept
 		{
 			if (!IsValid()) return;
-			FetchArchetypesFromContainer();
+			Fetch();
 
 			Container* container = m_ContainerContext.GetContainer();
 			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
@@ -151,7 +184,7 @@ namespace decs::light
 		void ForEachArchetype(TCallable&& func)
 		{
 			if (!IsValid()) return;
-			FetchArchetypesFromContainer();
+			Fetch();
 
 			m_ContainerContext.ForEachContainer(func);
 		}
@@ -165,18 +198,13 @@ namespace decs::light
 		{
 			if (entity.IsValid())
 			{
-				FetchArchetypesFromContainer();
+				Fetch();
 				return m_ContainerContext.ContainsArchetype(entity.GetArchetype());
 			}
 			return false;
 		}
 
-		void MakeDirty()
-		{
-			m_IsDirty = true;
-		}
-
-		void FetchArchetypesFromContainer()
+		void Fetch()
 		{
 			if (m_IsDirty)
 			{
@@ -187,6 +215,16 @@ namespace decs::light
 		}
 
 	private:
+		QueryFilterConfigType m_FilterConfig{};
+		ContainerContextType m_ContainerContext{};
+		bool m_IsDirty = true;
+
+	private:
+		void MakeDirty()
+		{
+			m_IsDirty = true;
+		}
+
 		template<typename Callable>
 		inline static void InvokeEntityIteration(
 			Callable&& func,
@@ -263,149 +301,6 @@ namespace decs::light
 		}
 	#pragma endregion
 
-	};
-
-	template<light_component_or_filter_concept... ComponentsTypes>
-	class Query
-	{
-	private:
-		using QueryImplType = QueryImpl<ComponentsTypes...>;
-		using ArchetypeContextType = QueryImplType::ArchetypeContextType;
-		using QueryFilterConfigType = QueryImplType::QueryFilterConfigType;
-
-	public:
-		Query():
-			m_QueryImpl(m_FilterConfig)
-		{
-
-		}
-
-		Query(Container* container):
-			m_QueryImpl(m_FilterConfig)
-		{
-			m_QueryImpl.SetContainer(container);
-		}
-
-		~Query()
-		{
-
-		}
-
-		inline void SetContainer(Container* container)
-		{
-			m_QueryImpl.SetContainer(container);
-		}
-
-		[[nodiscard]] inline Container* GetContainer() const
-		{
-			return m_QueryImpl.GetContainer();
-		}
-
-		[[nodiscard]] inline bool IsValid()const
-		{
-			return m_QueryImpl.IsValid();
-		}
-
-		[[nodiscard]] inline uint64_t GetEntityCount()
-		{
-			return m_QueryImpl.GetEntityCount();
-		}
-
-		template<light_component_or_tag_or_filter_concept... WithoutTypes>
-		Query& Without()
-		{
-			m_QueryImpl.MakeDirty();
-			m_FilterConfig.Without<WithoutTypes...>();
-			return *this;
-		}
-
-		template<light_component_or_tag_or_filter_concept... WithAnyTypes>
-		Query& WithAny()
-		{
-			m_QueryImpl.MakeDirty();
-			m_FilterConfig.WithAny<WithAnyTypes...>();
-			return *this;
-		}
-
-		template<light_component_or_tag_or_filter_concept... WithTypes>
-		Query& With()
-		{
-			m_QueryImpl.MakeDirty();
-			m_FilterConfig.With<WithTypes...>();
-			return *this;
-		}
-
-		template<filter_concept... FilterTypes>
-		void WithFilterData(FilterTypes&&... filterData)
-		{
-			m_QueryImpl.MakeDirty();
-			m_FilterConfig.WithFilterData(std::forward<FilterTypes>(filterData)...);
-		}
-
-		void ClearFilters()
-		{
-			if (m_FilterConfig.Clear())
-			{
-				m_QueryImpl.MakeDirty();
-			}
-		}
-
-		/// <summary>
-		/// Iterates over entities in archetypes from first to last. During iteration with this method creating, destroying and adding or removing component is forbidden on all entities, because it can cause undefined behavior. 
-		/// Destroying entites and adding or removing component to any entity, can cause that iteration index will go out of bound. 
-		/// Creating new entities will not cause index out of bound but if created entity has components which satisfys this query, it is undefined if that entity will be iterated or not in this function. If created entity will be placed in archetype that is not valid for this query it is safe to create it.
-		/// </summary>
-		/// <typeparam name="Callable"></typeparam>
-		/// <param name="func"></param>
-		template<typename Callable>
-			requires light_query_callable<Callable, ComponentsTypes...>
-		inline void ForEach(Callable&& func) noexcept
-		{
-			m_QueryImpl.ForEach(func);
-		}
-
-		/// <summary>
-		/// Iterates over entities in archetypes from last to first. During iteration with this method only destroying current entity is not forbidden. Any other operation on all entities are undefined behaviors. 
-		/// Creating new entities will not cause index out of bound but if created entity has components which satisfys this query, it is undefined if that entity will be iterated or not in this function. 
-		/// Destroying entities other than currently iterated and removing or adding component from them can cause index out of bound.
-		/// Creating new entities will not cause index out of bound, but if created entity has components which satisfys this query, it is undefined if that entity will be iterated or not in this function. If created entity will be placed in archetype that is not valid for this query it is safe to create it.
-		/// Adding or removing components from currnet iterated entity will not cause index out of bound, but it can cause that this entity will be iterated again. If after add or remove component, entity will be moved to archetype which is not valid for this query it is known that entity will not be iterated again.
-		/// </summary>
-		/// <typeparam name="Callable"></typeparam>
-		/// <param name="func"></param>
-		template<typename Callable>
-			requires light_query_callable<Callable, ComponentsTypes...>
-		void ForEachBackward(Callable&& func) noexcept
-		{
-			m_QueryImpl.ForEachBackward(func);
-		}
-
-		template<typename TCallable>
-			requires light_query_iterate_container_callable<TCallable, ComponentsTypes...>
-		void ForEachArchetype(TCallable&& func)
-		{
-			m_QueryImpl.ForEachArchetype(func);
-		}
-
-		inline void Fetch()
-		{
-			m_QueryImpl.FetchArchetypesFromContainer();
-		}
-
-		/// <summary>
-		/// Checks if entity belong to this query.
-		/// </summary>
-		/// <param name="entity"></param>
-		/// <returns></returns>
-		[[nodiscard]] bool Contain(const Entity& entity)
-		{
-			m_QueryImpl.Contain(entity);
-		}
-
-	private:
-		QueryFilterConfigType m_FilterConfig{};
-		QueryImplType m_QueryImpl;
-
 	#pragma region BATCH ITERATOR
 	public:
 		class BatchIterator
@@ -447,7 +342,7 @@ namespace decs::light
 				}
 
 				Container* container = m_Query->GetContainer();
-				auto& archetypeContexts = m_Query->m_QueryImpl.m_ContainerContext.GetArchetypeContexts();
+				auto& archetypeContexts = m_Query->m_ContainerContext.GetArchetypeContexts();
 
 				Entity entityBuffer = {};
 
@@ -509,15 +404,14 @@ namespace decs::light
 			uint64_t minBatchSize
 		)
 		{
-			if (!m_QueryImpl.IsValid())
+			if (!IsValid())
 			{
 				return;
 			}
 
-			m_QueryImpl.FetchArchetypesFromContainer();
+			Fetch();
 
-			auto& containerCtx = m_QueryImpl.m_ContainerContext;
-			const auto& archetypeContexts = containerCtx.GetArchetypeContexts();
+			const auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
 
 			uint64_t entitiesCount = 0;
 			for (const ArchetypeContextType& archContext : archetypeContexts)

@@ -241,7 +241,7 @@ void Test::IterationTest()
 		PrintLine("ForEachBackward With Entity");
 		query.ForEachBackward(testFuncWithEntity);
 
-		if (false)
+		if (true)
 		{
 			std::vector<QueryType::BatchIterator> iterators{};
 			query.CreateBatchIterators(iterators, 10, 3);
