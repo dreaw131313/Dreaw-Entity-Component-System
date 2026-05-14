@@ -604,6 +604,28 @@ namespace decs
 			return nullptr;
 		}
 
+		template<light_component_concept... ComponentTypes>
+		std::tuple<ComponentTypes*...> GetComponents(EntityData& entityData) const
+		{
+			if (entityData.m_Archetype != nullptr)
+			{
+				size_t entityIndex = static_cast<size_t>(entityData.m_IndexInArchetype);
+				return { GetComponentFromArchetypeAtIndex<pure_type_t<ComponentTypes>>(*entityData.m_Archetype, entityIndex) ... };
+			}
+			return { static_cast<ComponentTypes*>(nullptr) ... };
+		}
+
+		template<light_component_concept ComponentType>
+		ComponentType* GetComponentFromArchetypeAtIndex(Archetype& archetype, size_t index) const
+		{
+			PackedStableComponentContainer<ComponentType>* container = archetype.GetTypePackedContainer<ComponentType>();
+			if (container != nullptr)
+			{
+				return container->GetAsPtr(index);
+			}
+			return nullptr;
+		}
+
 		/// <summary>
 		/// 
 		/// </summary>

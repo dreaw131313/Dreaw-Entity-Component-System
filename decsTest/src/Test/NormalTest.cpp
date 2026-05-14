@@ -132,6 +132,9 @@ namespace Normal
 			{
 				auto e = container.CreateEntity();
 				e.AddComponent_NoObserver<TestComponent>();
+				e.AddComponent_NoObserver<Position>();
+
+				auto [pos, test, hevyDataComp] = e.GetComponents<Position, TestComponent, HeavyDataComponent>();
 
 				container.InvokeEntitesOnCreateListeners();
 			}

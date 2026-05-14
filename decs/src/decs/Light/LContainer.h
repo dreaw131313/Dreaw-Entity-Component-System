@@ -356,7 +356,7 @@ namespace decs::light
 				return false;
 			}
 
-			return HasComponentInternal(entityData, Type<TComponent>::ID());
+			return HasComponentInternal(entityData, Type<pure_type_t<TComponent>>::ID());
 		}
 
 		template<light_component_concept... ComponentTypes>
@@ -365,9 +365,9 @@ namespace decs::light
 			if (entityData.m_Archetype != nullptr)
 			{
 				size_t entityIndex = static_cast<size_t>(entityData.m_IndexInArchetype);
-				return { GetComponentFromArchetypeAtIndex<ComponentTypes>(*entityData.m_Archetype, entityIndex) ... };
+				return { GetComponentFromArchetypeAtIndex<pure_type_t<ComponentTypes>>(*entityData.m_Archetype, entityIndex) ... };
 			}
-			return { static_cast<ComponentTypes*>(nullptr)... };
+			return { static_cast<ComponentTypes*>(nullptr) ... };
 		}
 
 		template<light_component_concept ComponentType>

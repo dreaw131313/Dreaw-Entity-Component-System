@@ -247,6 +247,17 @@ namespace decs
 			return nullptr;
 		}
 
+		template<TComponentConcept... ComponentTypes>
+		[[nodiscard]] inline std::tuple<ComponentTypes*...> GetComponents()
+		{
+			if (IsValid())
+			{
+				return GetContainer()->GetComponents<ComponentTypes...>(*m_EntityData);
+			}
+
+			return { static_cast<ComponentTypes*>(nullptr) ... };
+		}
+
 		[[nodiscard]] inline EntityComponent* GetComponent(TypeID componentType) const
 		{
 			if (IsValid())

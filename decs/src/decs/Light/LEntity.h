@@ -110,7 +110,6 @@ namespace decs::light
 			{
 				return GetContainer()->GetComponents<ComponentTypes...>(*m_EntityData);
 			}
-
 			return { static_cast<ComponentTypes*>(nullptr) ... };
 		}
 

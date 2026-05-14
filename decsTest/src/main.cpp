@@ -12,12 +12,12 @@ int main()
 		Light::Test{}.Run();
 	}
 
-	/*{
+	{
 		std::cout << "///////////////////////////////////////////" << "\n";
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
-		Normal::Test{}.PerformanceTest();
-	}*/
+		Normal::Test{}.QueryIterationTest();
+	}
 
 	return 0;
 }
