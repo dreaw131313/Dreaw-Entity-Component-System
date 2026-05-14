@@ -447,9 +447,15 @@ void Test::FilterTest()
 
 	Entity e = container.CreateEntity();
 	e.SetFilter<TestEntityFilter>(TestEntityFilter(1));
-	e.AddComponent<float>(1.0f);
-	e.AddComponent<double>();
+	e.AddComponent<float>(14.0f);
+	e.AddComponent<double>(21.);
 	e.AddTag<FloatTag>();
+
+	auto [f, i, d] = e.GetComponents<float, int, double>();
+	if (f && d && !i)
+	{
+		PrintLine("Expected pointers values!");
+	}
 
 	auto e2 = container.Spawn(e);
 	e2.SetFilter<TestEntityFilter>(2);
@@ -465,6 +471,8 @@ void Test::FilterTest()
 		}
 		std::cout << "Entity float " << f << "\n";
 	});
+
+
 }
 
 void Light::Test::QueryManagerTest()

@@ -92,7 +92,7 @@ namespace decs::light
 			return 0;
 		}
 
-		template<light_component_or_filter_concept TComponent>
+		template<light_component_concept TComponent>
 		[[nodiscard]] inline TComponent* GetComponent() const
 		{
 			if (IsValid())
@@ -103,13 +103,24 @@ namespace decs::light
 			return nullptr;
 		}
 
-		template<light_component_or_filter_concept TComponent>
+		template<light_component_concept... ComponentTypes>
+		[[nodiscard]] inline std::tuple<ComponentTypes*...> GetComponents()
+		{
+			if (IsValid())
+			{
+				return GetContainer()->GetComponents<ComponentTypes...>(*m_EntityData);
+			}
+
+			return { static_cast<ComponentTypes*>(nullptr) ... };
+		}
+
+		template<light_component_concept TComponent>
 		[[nodiscard]] inline bool HasComponent() const
 		{
 			return IsValid() && GetContainer_Internal()->HasComponent<drop_const_t<TComponent>>(*GetEntityData());
 		}
 
-		template<light_component_or_filter_concept TComponent>
+		template<light_component_concept TComponent>
 		inline bool TryGetComponent(TComponent*& component) const
 		{
 			if (IsValid())
@@ -120,7 +131,7 @@ namespace decs::light
 			return component != nullptr;
 		}
 
-		template<light_component_or_filter_concept TComponent, typename... Args>
+		template<light_component_concept TComponent, typename... Args>
 		inline typename TComponent* AddComponent(Args&&... args) const
 		{
 			if (IsValid())
@@ -129,7 +140,7 @@ namespace decs::light
 			return nullptr;
 		}
 
-		template<light_component_or_filter_concept TComponent>
+		template<light_component_concept TComponent>
 		inline bool RemoveComponent() const
 		{
 			return IsValid() && GetContainer_Internal()->RemoveComponent<drop_const_t<TComponent>>(*this);
@@ -239,7 +250,7 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		[[nodiscard]] const FilterType* GetFilter() const 
+		[[nodiscard]] const FilterType* GetFilter() const
 		{
 			if (IsValid())
 			{

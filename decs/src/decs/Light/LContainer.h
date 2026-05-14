@@ -284,7 +284,7 @@ namespace decs::light
 
 	#pragma region COMPONENTS:
 	private:
-		template<light_component_or_filter_concept TComponent, typename ...Args>
+		template<light_component_concept TComponent, typename ...Args>
 		TComponent* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<TComponent>::ID();
@@ -316,7 +316,7 @@ namespace decs::light
 			return componentPtr;
 		}
 
-		template<light_component_or_filter_concept TComponent>
+		template<light_component_concept TComponent>
 		bool RemoveComponent(const Entity& entity)
 		{
 			return RemoveComponent(entity, Type<TComponent>::ID());
@@ -324,14 +324,9 @@ namespace decs::light
 
 		bool RemoveComponent(const Entity& entity, TypeID componentTypeID);
 
-		template<light_component_or_filter_concept TComponent>
+		template<light_component_concept TComponent>
 		TComponent* GetComponent(EntityData& entityData) const
 		{
-			if constexpr (is_tag_v<TComponent>)
-			{
-				return nullptr;
-			}
-
 			if (entityData.m_Archetype != nullptr)
 			{
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
@@ -353,7 +348,7 @@ namespace decs::light
 			return false;
 		}
 
-		template<light_component_or_filter_concept TComponent>
+		template<light_component_concept TComponent>
 		bool HasComponent(EntityData& entityData) const
 		{
 			if constexpr (is_tag_v<TComponent>)
@@ -362,6 +357,28 @@ namespace decs::light
 			}
 
 			return HasComponentInternal(entityData, Type<TComponent>::ID());
+		}
+
+		template<light_component_concept... ComponentTypes>
+		std::tuple<ComponentTypes*...> GetComponents(EntityData& entityData) const
+		{
+			if (entityData.m_Archetype != nullptr)
+			{
+				size_t entityIndex = static_cast<size_t>(entityData.m_IndexInArchetype);
+				return { GetComponentFromArchetypeAtIndex<ComponentTypes>(*entityData.m_Archetype, entityIndex) ... };
+			}
+			return { static_cast<ComponentTypes*>(nullptr)... };
+		}
+
+		template<light_component_concept ComponentType>
+		ComponentType* GetComponentFromArchetypeAtIndex(Archetype& archetype, size_t index) const
+		{
+			PackedLightComponentContainer<ComponentType>* container = archetype.GetTypePackedContainer<ComponentType>();
+			if (container != nullptr)
+			{
+				return container->GetAsPtr(index);
+			}
+			return nullptr;
 		}
 
 	#pragma endregion
