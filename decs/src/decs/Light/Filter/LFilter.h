@@ -7,6 +7,8 @@
 #include "decs/Core/RefCounterHandle.h"
 #include "decs/Core/TChunkedVector.h"
 
+#include <iostream>
+
 namespace decs::light
 {
 	class IFilterTypeManager;
@@ -17,12 +19,12 @@ namespace decs::light
 	public:
 		virtual ~IFilterContainerBase() = default;
 
-		inline void IncrementUseCount()
+		inline void IncrementRefCount()
 		{
 			m_UseCount++;
 		}
 
-		inline void DecrementUseCount()
+		inline void DecrementRefCount()
 		{
 			if (m_UseCount > 0)
 			{
@@ -30,7 +32,7 @@ namespace decs::light
 			}
 		}
 
-		inline uint32_t GetUseCount() const noexcept
+		inline uint32_t GetRefCount() const noexcept
 		{
 			return m_UseCount;
 		}
@@ -168,6 +170,8 @@ namespace decs::light
 		virtual IFilterContainerBase* CreateMatchingFilterContainer(const IFilterContainerBase& other) = 0;
 
 		virtual void Clear() = 0;
+
+		virtual bool RemoveContainer(IFilterContainerBase* container) = 0;
 	};
 
 	template<filter_concept FilterType>
@@ -178,6 +182,14 @@ namespace decs::light
 		using FilterEntryKeyType = FilterEntryKey<FilterType>;
 
 	public:
+		~FilterTypeManager()
+		{
+			for (size_t i = 0; i < m_Allocator.Size(); i++)
+			{
+				std::cout << m_Allocator[i].GetRefCount() << "\n";
+			}
+		}
+
 		void Clear() override
 		{
 			m_Allocator.Clear();
@@ -206,7 +218,7 @@ namespace decs::light
 
 		bool RemoveContainer(FilterContainerType* container)
 		{
-			if (container == nullptr)
+			if (container == nullptr || container->GetRefCount() > 0)
 			{
 				return false;
 			}
@@ -239,6 +251,11 @@ namespace decs::light
 			}
 
 			return CreateContainer(otherCasted->m_Data);
+		}
+
+		bool RemoveContainer(IFilterContainerBase* container) override
+		{
+			return RemoveContainer(::decs::check_cast<FilterContainerType*>(container));
 		}
 
 	private:
@@ -303,7 +320,7 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		IFilterContainerBase* GetFilter(const FilterType& filter) const
+		IFilterContainerBase* GetFilterWithoutIncrementRefCount(const FilterType& filter) const
 		{
 			auto filterManagerIt = m_FilterTypes.find(Type<FilterType>::ID());
 			if (filterManagerIt == m_FilterTypes.end())
@@ -328,7 +345,7 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		bool DeleteFilter(const FilterContainer<FilterType>* filterTypeContainer)
+		bool DeleteFilter(FilterContainer<FilterType>* filterTypeContainer)
 		{
 			if (filterTypeContainer == nullptr)
 			{
@@ -344,6 +361,22 @@ namespace decs::light
 
 			FilterTypeManager<FilterType>* manager = check_cast<FilterTypeManager<FilterType>*>(it->second);
 			return manager->RemoveContainer(filterTypeContainer);
+		}
+
+		bool DeleteFilter(IFilterContainerBase* filterTypeContainer)
+		{
+			if (filterTypeContainer == nullptr)
+			{
+				return false;
+			}
+
+			TypeID typeID = filterTypeContainer->GetDataTypeID();
+			auto it = m_FilterTypes.find(typeID);
+			if (it == m_FilterTypes.end())
+			{
+				return false;
+			}
+			return it->second->RemoveContainer(filterTypeContainer);
 		}
 
 	private:

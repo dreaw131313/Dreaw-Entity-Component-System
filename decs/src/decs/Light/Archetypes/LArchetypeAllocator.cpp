@@ -2,7 +2,8 @@
 
 namespace decs::light
 {
-	ArchetypeAllocator::ArchetypeAllocator(uint32_t chunkSize):
+	ArchetypeAllocator::ArchetypeAllocator(FilterManager& filterManager, uint32_t chunkSize):
+		m_FilterManager(filterManager),
 		m_Archetypes(chunkSize)
 	{
 
@@ -46,7 +47,7 @@ namespace decs::light
 		m_Created.pop_back();
 
 		OnDestroyArchetype(*archetype);
-		archetype->ResetOnDestroy();
+		archetype->ResetOnDestroy(m_FilterManager);
 
 		m_FreeList.push_back(archetype);
 

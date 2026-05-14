@@ -8,7 +8,7 @@ namespace decs::light
 	class ArchetypeAllocator
 	{
 	public:
-		ArchetypeAllocator(uint32_t chunkSize);
+		ArchetypeAllocator(FilterManager& filterManager, uint32_t chunkSize);
 
 		~ArchetypeAllocator() = default;
 
@@ -49,6 +49,7 @@ namespace decs::light
 		}
 
 	private:
+		FilterManager& m_FilterManager;
 		TChunkedVector<Archetype> m_Archetypes{ 100 };
 		std::vector<Archetype*> m_Created{};
 		std::vector<Archetype*> m_FreeList{};

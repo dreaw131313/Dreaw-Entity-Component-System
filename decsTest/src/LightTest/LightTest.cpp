@@ -446,9 +446,9 @@ void Test::FilterTest()
 	ECSContainer container{};
 
 	Entity e = container.CreateEntity();
+	e.SetFilter<TestEntityFilter>(TestEntityFilter(1));
 	e.AddComponent<float>(1.0f);
 	e.AddComponent<double>();
-	e.SetFilter<TestEntityFilter>(TestEntityFilter(1));
 	e.AddTag<FloatTag>();
 
 	auto e2 = container.Spawn(e);

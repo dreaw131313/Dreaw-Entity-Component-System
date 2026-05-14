@@ -324,7 +324,7 @@ namespace decs::light
 		FilterManager& m_FilterManager;
 		QueryManager& m_QueryManager;
 
-		ArchetypeAllocator m_ArchetypeAllocator{100};
+		ArchetypeAllocator m_ArchetypeAllocator;
 		TChunkedVector<ArchetypeGroup> m_ArchetypesGroupsAllocator{ 100 };
 		TChunkedVector<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };
 
@@ -581,7 +581,7 @@ namespace decs::light
 		std::pair<const ArchetypesGroupByOneType*, size_t> GetGroup(const ArchetypesMap& archetypesMap, const ArchetypesGroupByOneType* currentGroup, size_t smallestArchetypeCount) const
 		{
 			const FilterManager& filterManager = archetypesMap.m_FilterManager;
-			IFilterContainerBase* filterContainer = filterManager.GetFilter(std::get<pure_type_t<T>>(m_FiltersData));
+			IFilterContainerBase* filterContainer = filterManager.GetFilterWithoutIncrementRefCount(std::get<pure_type_t<T>>(m_FiltersData));
 			if (filterContainer == nullptr)
 			{
 				return { currentGroup, smallestArchetypeCount };

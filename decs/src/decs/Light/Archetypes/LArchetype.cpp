@@ -203,16 +203,19 @@ namespace decs::light
 		}
 
 		m_Filters.emplace_back(filter);
+		filter->IncrementRefCount();
 	}
 
 	void Archetype::AddFilterInCorrectPlace(IFilterContainerBase& filterContainer)
 	{
+		filterContainer.IncrementRefCount();
 		for (size_t idx = 0; idx < m_Filters.size(); idx++)
 		{
 			auto& filterRecord = m_Filters[idx];
 			if (filterContainer.GetDataTypeID() < filterRecord.m_FilterTypeID)
 			{
 				m_Filters.insert(m_Filters.begin() + idx, ArchetypeFilterRecord(&filterContainer));
+				return;
 			}
 		}
 
@@ -408,7 +411,7 @@ namespace decs::light
 		}
 	}
 
-	void Archetype::ResetOnDestroy()
+	void Archetype::ResetOnDestroy(FilterManager& filterManager)
 	{
 		m_TypeIDsIndexes.clear();
 		m_Edges.clear();
@@ -418,6 +421,12 @@ namespace decs::light
 		for (auto& data : m_TypeData)
 		{
 			delete data.m_PackedContainer;
+		}
+
+		for (auto& filter : m_Filters)
+		{
+			filter.m_FilterContainer->DecrementRefCount();
+			filterManager.DeleteFilter(filter.m_FilterContainer);
 		}
 
 		m_TypeData.clear();

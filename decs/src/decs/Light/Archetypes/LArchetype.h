@@ -595,7 +595,7 @@ namespace decs::light
 		/// <summary>
 		/// Used when destroying archetypes, and this archetypes will be reused
 		/// </summary>
-		void ResetOnDestroy();
+		void ResetOnDestroy(FilterManager& filterManager);
 
 	#pragma region EDGES
 	private:
