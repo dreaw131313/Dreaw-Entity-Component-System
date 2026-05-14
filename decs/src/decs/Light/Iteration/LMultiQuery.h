@@ -27,11 +27,12 @@ namespace decs::light
 
 		~MultiQuery()
 		{
-			for (auto& containerCtx : m_ContainerContexts)
-			{
-				RemoveFromContainer(containerCtx.GetContainer());
-			}
-			m_ContainerContexts.clear();
+			ClearContainerContexts();
+		}
+
+		void Clear()
+		{
+			ClearContainerContexts();
 		}
 
 		[[nodiscard]] uint64_t GetEntityCount()
@@ -331,6 +332,15 @@ namespace decs::light
 		bool m_IsDirty = true;
 
 	private:
+		void ClearContainerContexts()
+		{
+			for (auto& containerCtx : m_ContainerContexts)
+			{
+				RemoveFromContainer(containerCtx.GetContainer());
+			}
+			m_ContainerContexts.clear();
+		}
+
 		uint64_t CalculateEntityCount()
 		{
 			uint64_t entitiesCount = 0;
@@ -347,7 +357,6 @@ namespace decs::light
 			return entitiesCount;
 		}
 
-	private:
 		template<typename Callable>
 		inline static void InvokeEntityIteration(
 			Callable&& func,
