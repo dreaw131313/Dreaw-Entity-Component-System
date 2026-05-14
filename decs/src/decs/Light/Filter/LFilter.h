@@ -5,6 +5,7 @@
 #include "decs/Core/trait.h"
 #include "decs/Core/Type.h"
 #include "decs/Core/RefCounterHandle.h"
+#include "decs/Core/TChunkedVector.h"
 
 namespace decs::light
 {
@@ -50,7 +51,7 @@ namespace decs::light
 	class FilterContainer : public IFilterContainerBase
 	{
 	public:
-		const FilterType m_Data{};
+		FilterType m_Data{};
 		size_t m_DataHash = 0;
 
 	public:
@@ -70,6 +71,11 @@ namespace decs::light
 			m_Data(std::forward<Args>(args)...)
 		{
 			m_DataHash = std::hash<FilterType>{}(m_Data);
+		}
+
+		inline const FilterType& GetFilterData() const
+		{
+			return m_Data;
 		}
 
 		inline TypeID GetDataTypeID() const noexcept
@@ -160,6 +166,8 @@ namespace decs::light
 		virtual ~IFilterTypeManager() = default;
 
 		virtual IFilterContainerBase* CreateMatchingFilterContainer(const IFilterContainerBase& other) = 0;
+
+		virtual void Clear() = 0;
 	};
 
 	template<filter_concept FilterType>
@@ -170,40 +178,30 @@ namespace decs::light
 		using FilterEntryKeyType = FilterEntryKey<FilterType>;
 
 	public:
-		~FilterTypeManager()
+		void Clear() override
 		{
-			for (auto& [key, value] : m_Filters)
-			{
-				delete value;
-			}
+			m_Allocator.Clear();
+			m_FreeList.clear();
+			m_FiltersMap.clear();
 		}
 
 		FilterContainerType* GetOrAddContainer(const FilterType& filter)
 		{
-			// geting existing filter container
-			{
-				FilterEntryKeyType tempKey(filter);
+			FilterEntryKeyType tempKey(filter);
 
-				auto it = m_Filters.find(tempKey);
-				if (it != m_Filters.end())
-				{
-					return it->second;
-				}
+			auto it = m_FiltersMap.find(tempKey);
+			if (it != m_FiltersMap.end())
+			{
+				return it->second;
 			}
 
-			// create new filter container:
-			{
-				FilterContainerType* container = new FilterContainerType(filter);
-				m_Filters[FilterEntryKeyType(container->m_Data)] = container;
-
-				return container;
-			}
+			return CreateContainer(filter);
 		}
 
 		inline FilterContainerType* GetContainer(const FilterType& filter) const
 		{
-			auto it = m_Filters.find(FilterEntryKeyType(filter));
-			return it != m_Filters.end() ? it->second : nullptr;
+			auto it = m_FiltersMap.find(FilterEntryKeyType(filter));
+			return it != m_FiltersMap.end() ? it->second : nullptr;
 		}
 
 		bool RemoveContainer(FilterContainerType* container)
@@ -213,37 +211,59 @@ namespace decs::light
 				return false;
 			}
 
-			FilterEntryKeyType key{ &container->m_Data };
-
-			if (m_Filters.erase(key) == 0)
+			if (m_FiltersMap.erase(FilterEntryKeyType(container->m_Data)) == 0)
 			{
 				return false;
 			}
 
-			delete container;
+			if (container == (&m_Allocator.Back()))
+			{
+				m_Allocator.PopBack();
+			}
+			else
+			{
+				m_FreeList.push_back(container);
+			}
 
 			return true;
 		}
 
 		IFilterContainerBase* CreateMatchingFilterContainer(const IFilterContainerBase& other) override
 		{
-			const FilterContainerType* otherCasted = check_cast<const FilterContainerType*>(&other);
+			const FilterContainerType* otherCasted = ::decs::check_cast<const FilterContainerType*>(&other);
 
-			FilterEntryKeyType tempKey(otherCasted->m_Data);
-
-			auto it = m_Filters.find(tempKey);
-			if (it != m_Filters.end())
+			auto it = m_FiltersMap.find(FilterEntryKeyType(otherCasted->m_Data));
+			if (it != m_FiltersMap.end())
 			{
 				return it->second;
 			}
 
-			FilterContainerType* newFilterContainer = new FilterContainerType(otherCasted->m_Data);
-			m_Filters[FilterEntryKeyType(newFilterContainer->m_Data)] = newFilterContainer;
-			return newFilterContainer;
+			return CreateContainer(otherCasted->m_Data);
 		}
 
 	private:
-		std::unordered_map<FilterEntryKeyType, FilterContainerType*> m_Filters{};
+		TChunkedVector<FilterContainerType> m_Allocator{ 20 };
+		std::vector<FilterContainerType*> m_FreeList{};
+		ecsMap<FilterEntryKeyType, FilterContainerType*> m_FiltersMap{};
+
+	private:
+		FilterContainerType* CreateContainer(const FilterType& filter)
+		{
+			FilterContainerType* newContainer = nullptr;
+			if (m_FreeList.empty())
+			{
+				newContainer = &m_Allocator.EmplaceBack(filter);
+			}
+			else
+			{
+				newContainer = m_FreeList.back();
+				m_FreeList.pop_back();
+				newContainer->m_Data = filter;
+			}
+
+			m_FiltersMap[FilterEntryKeyType(newContainer->m_Data)] = newContainer;
+			return newContainer;
+		}
 	};
 
 	template<filter_concept FilterType>
@@ -257,13 +277,18 @@ namespace decs::light
 	public:
 		~FilterManager()
 		{
+			Clear();
+		}
+
+		void Clear()
+		{
 			for (auto& [key, filterTypeManager] : m_FilterTypes)
 			{
 				delete filterTypeManager;
 			}
+			m_FilterTypes.clear();
 		}
 
-	public:
 		template<filter_concept FilterType>
 		FilterContainer<FilterType>* GetOrCreateFilter(const FilterType& filter)
 		{

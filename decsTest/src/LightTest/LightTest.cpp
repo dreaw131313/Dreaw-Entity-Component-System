@@ -115,9 +115,9 @@ void Test::Run()
 {
 	//IterationTest();
 	//PerformanceTest();
-	//FilterTest();
+	FilterTest();
 
-	QueryManagerTest();
+	//QueryManagerTest();
 }
 
 void Test::IterationTest()
@@ -347,7 +347,6 @@ void Test::ComponentCreationTest()
 	Entity e2 = container.Spawn(e);
 }
 
-
 void Test::PerformanceTest()
 {
 	const uint32_t testCount = 1;
@@ -452,7 +451,8 @@ void Test::FilterTest()
 	e.SetFilter<TestEntityFilter>(TestEntityFilter(1));
 	e.AddTag<FloatTag>();
 
-	container.Spawn(e);
+	auto e2 = container.Spawn(e);
+	e2.SetFilter<TestEntityFilter>(2);
 
 	Query<float> query(&container);
 	query.WithFilterData(TestEntityFilter(1));
