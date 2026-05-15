@@ -100,14 +100,21 @@ namespace Normal
 		}
 	};
 
+	void Test::Run()
+	{
+		std::cout << "///////////////////////////////////////////" << "\n";
+		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
+		std::cout << "///////////////////////////////////////////" << "\n";
+
+		QueryIterationTest();
+	}
+
 	void Test::QueryIterationTest()
 	{
 		using FloatTag = decs::tag<float>;
 		using IntTag = decs::tag<int>;
 		using DoubleTag = decs::tag<double>;
 		using BoolTag = decs::tag<bool>;
-
-		std::cout << decs::Type<int>::ID() << "\n";
 
 		TestComponetObserver testComponentObserver = {};
 

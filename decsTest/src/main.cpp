@@ -5,19 +5,9 @@
 
 int main()
 {
-	{
-		std::cout << "/////////////////////////////////////" << "\n";
-		std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
-		std::cout << "/////////////////////////////////////" << "\n";
-		Light::Test{}.Run();
-	}
-
-	{
-		std::cout << "///////////////////////////////////////////" << "\n";
-		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
-		std::cout << "///////////////////////////////////////////" << "\n";
-		//Normal::Test{}.QueryIterationTest();
-	}
+	Light::Test{}.Run();
+	std::cout << "\n";
+	Normal::Test{}.Run();
 
 	return 0;
 }
