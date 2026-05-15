@@ -8,6 +8,12 @@ namespace decs
 {
 
 #pragma region TUPLE TRAITS:
+	template<typename T, typename... Ts>
+	constexpr std::size_t type_index_v = []{
+		std::size_t i = 0;
+		((std::is_same_v<T, Ts> ? false : (++i, true)) && ...);
+		return i;
+	}();
 
 	template<typename T, typename TupleType>
 	struct tuple_has_type : public std::false_type

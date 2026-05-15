@@ -553,6 +553,9 @@ void Test::RemovingArchetypesTest()
 	{
 		PrintLine("Float iteration 2");
 	});
+
+	constexpr size_t idx = decs::type_index_v<int, float, bool, double, int, uint32_t>;
+
 }
 
 END_NAMESPACE
