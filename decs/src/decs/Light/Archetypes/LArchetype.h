@@ -96,22 +96,6 @@ namespace decs::light
 			return m_Entities[index];
 		}
 
-		inline bool RemoveSwapBack(size_t index)
-		{
-			if (index >= m_Entities.size())
-			{
-				return false;
-			}
-
-			if (index < (m_Entities.size() - 1))
-			{
-				m_Entities[index] = m_Entities.back();
-			}
-			m_Entities.pop_back();
-
-			return true;
-		}
-
 		inline bool RemoveSwapBack_UpdateEntityIndex(size_t index)
 		{
 			if (index >= m_Entities.size())

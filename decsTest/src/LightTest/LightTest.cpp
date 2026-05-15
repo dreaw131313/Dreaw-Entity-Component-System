@@ -83,7 +83,7 @@ public:
 	{ }
 
 	~TestEntityFilter()
-	{ 
+	{
 		PrintLine("TestEntityFilter::~TestEntityFilter");
 	}
 
@@ -112,6 +112,10 @@ using MultiQuery = decs::light::MultiQuery<TComps...>;
 
 void Test::Run()
 {
+	std::cout << "/////////////////////////////////////" << "\n";
+	std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
+	std::cout << "/////////////////////////////////////" << "\n";
+
 	//IterationTest();
 	//PerformanceTest();
 	//IterationTest();
@@ -523,6 +527,7 @@ void Test::RemovingArchetypesTest()
 		.m_bDestroyOnlyArchetypesWithFilters = true,
 	};
 
+	decs::light::Query<float> query{ &ecs };
 
 	{
 		auto e = ecs.CreateEntity();
@@ -534,11 +539,23 @@ void Test::RemovingArchetypesTest()
 		e.AddTag<decs::tag<float>>();
 		e.AddTag<decs::tag<int>>();
 
+		query.ForEach([] (float f) 
+		{
+			PrintLine("Float iteration");
+		});
+
 		e.Destroy();
 	}
 
-
 	ecs.TryDestroyArchetypes(state, config);
+
+	query.ForEach([] (float f) 
+	{
+		PrintLine("Float iteration 2");
+	});
+
+	constexpr size_t idx = decs::type_index_v<int, float, bool, double, int, uint32_t>;
+
 }
 
 END_NAMESPACE

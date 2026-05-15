@@ -73,10 +73,7 @@ namespace decs::light
 			const std::tuple<query_data_container_t<ComponentTypes>*...>& containersTuple
 		)
 		{
-			using TupleType = std::tuple<query_data_container_t<ComponentTypes>*...>;
-			InvokeEntityIteration_WithOptional<Callable, TupleType, ComponentTypes...>(func, entityIndexInArchetype, containersTuple);
-
-			//func(std::get<query_data_container_t<ComponentTypes>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
+			func(std::get<query_data_container_t<ComponentTypes>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
 		}
 
 		template<typename Callable, typename... ComponentTypes>
@@ -127,7 +124,6 @@ namespace decs::light
 		{
 			return m_FilterDataTuple;
 		}
-
 
 		inline uint64_t GetMinComponentFilterCount() const
 		{

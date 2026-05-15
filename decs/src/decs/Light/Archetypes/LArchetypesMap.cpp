@@ -20,8 +20,7 @@ namespace decs::light
 	}
 
 	ArchetypesMap::~ArchetypesMap()
-	{
-	}
+	{ }
 
 	void ArchetypesMap::ShrinkArchetypesToFit()
 	{
@@ -30,7 +29,7 @@ namespace decs::light
 			return;
 		}
 
-		m_ArchetypeAllocator.IterateOverAllArchetypes([](Archetype& arch)
+		m_ArchetypeAllocator.IterateOverAllArchetypes([] (Archetype& arch)
 		{
 			arch.ShrinkToFit();
 		});
@@ -76,7 +75,7 @@ namespace decs::light
 
 	void ArchetypesMap::ClearEntityDataAndComponents()
 	{
-		IterateOverArchetypes([](Archetype* arch)
+		IterateOverArchetypes([] (Archetype* arch)
 		{
 			arch->ClearEntityDataAndComponents();
 		});
@@ -91,7 +90,7 @@ namespace decs::light
 		const ArchetypeGroup* bestAddTypeGroup = nullptr;
 		size_t bestAddTypeArchetypeCount = std::numeric_limits<size_t>::max();
 
-		auto findBestAddTypeGroup = [&](const ArchetypesGroupByOneType& typeGroup)
+		auto findBestAddTypeGroup = [&] (const ArchetypesGroupByOneType& typeGroup)
 		{
 			const ArchetypeGroup* currentAddTypeGroup = typeGroup.GetGroupWithComponentTagFilterCount(static_cast<uint64_t>(addTypeNeighbourTypeCount));
 			if (currentAddTypeGroup != nullptr && currentAddTypeGroup->GetArchetypeCount() < bestAddTypeArchetypeCount)
@@ -471,23 +470,25 @@ namespace decs::light
 
 	void ArchetypesMap::TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config)
 	{
-		if (state.m_LastCheckdArchetypeIndex >= m_ArchetypeAllocator.GetCreatedArchetypes().size())
+		const size_t startArchetypeCount = m_ArchetypeAllocator.GetCreatedArchetypes().size();
+		if (state.m_LastCheckdArchetypeIndex >= startArchetypeCount)
 		{
 			state.m_LastCheckdArchetypeIndex = 0;
 		}
 
+		const size_t maxArchetypesToIterate = config.m_MaxArchetypesToCheck < startArchetypeCount ? config.m_MaxArchetypesToCheck : startArchetypeCount;
 		size_t iteratedArchetypes = 0;
 		size_t destroyedArchetypes = 0;
 
-		auto endDestroying = [&]()->bool
+		auto endDestroying = [&] ()->bool
 		{
 			return destroyedArchetypes >= config.m_MaxArchetypesDestroy
-				|| iteratedArchetypes >= config.m_MaxArchetypesToCheck
+				|| iteratedArchetypes >= maxArchetypesToIterate
 				|| m_ArchetypeAllocator.GetCreatedArchetypes().empty()
 				;
 		};
 
-		auto skipArchetype = [&](Archetype* archetype)-> bool
+		auto skipArchetype = [&] (Archetype* archetype)-> bool
 		{
 			return !archetype->IsEmpty()
 				&& (!config.m_bDestroyOnlyArchetypesWithFilters || archetype->GetFilterCount() > 0)
@@ -496,10 +497,11 @@ namespace decs::light
 
 		while (!endDestroying())
 		{
-			size_t index = state.m_LastCheckdArchetypeIndex % m_ArchetypeAllocator.GetCreatedArchetypes().size();
+			auto createdArchetypes = m_ArchetypeAllocator.GetCreatedArchetypes();
+			size_t index = state.m_LastCheckdArchetypeIndex % createdArchetypes.size();
 			iteratedArchetypes++;
 
-			Archetype* currentArchetype = m_ArchetypeAllocator.GetCreatedArchetypes()[index];
+			Archetype* currentArchetype = createdArchetypes[index];
 			if (skipArchetype(currentArchetype))
 			{
 				state.m_LastCheckdArchetypeIndex++;
@@ -507,6 +509,7 @@ namespace decs::light
 			}
 
 			RemoveArchetypeFromMap(currentArchetype);
+			destroyedArchetypes++;
 		}
 	}
 
