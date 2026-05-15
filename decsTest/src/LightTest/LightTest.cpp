@@ -40,12 +40,10 @@ public:
 
 public:
 	Position()
-	{
-	}
+	{ }
 
 	Position(float x, float y): X(x), Y(y)
-	{
-	}
+	{ }
 
 	void TestFunc(int& i)
 	{
@@ -77,15 +75,16 @@ public:
 public:
 	TestEntityFilter()
 	{
+		PrintLine("TestEntityFilter::TestEntityFilter");
 	}
 
 	TestEntityFilter(int data):
 		Data(data)
-	{
-	}
+	{ }
 
 	~TestEntityFilter()
-	{
+	{ 
+		PrintLine("TestEntityFilter::~TestEntityFilter");
 	}
 
 
@@ -115,9 +114,10 @@ void Test::Run()
 {
 	//IterationTest();
 	//PerformanceTest();
-	IterationTest();
+	//IterationTest();
 
 	//QueryManagerTest();
+	RemovingArchetypesTest();
 }
 
 void Test::IterationTest()
@@ -160,7 +160,7 @@ void Test::IterationTest()
 		ComponentTypeGroup componetns{};
 		TagTypeGroup tags{};
 
-		auto initFunc = [](const Entity& e, TestComponent& component, Renderer& renderer, Position& position)
+		auto initFunc = [] (const Entity& e, TestComponent& component, Renderer& renderer, Position& position)
 		{
 			PrintLine("Init from entity spawner!");
 		};
@@ -209,16 +209,16 @@ void Test::IterationTest()
 	}*/
 
 	uint32_t counter = 0;
-	auto testFunc = [&](const TestComponent& test)
+	auto testFunc = [&] (const TestComponent& test)
 	{
 		PrintLine("Test func!");
 	};
-	auto testFuncWithEntity = [&](const Entity& entity, const TestComponent& test)
+	auto testFuncWithEntity = [&] (const Entity& entity, const TestComponent& test)
 	{
 		PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
 	};
 
-	auto forEachArchetypeFunc = [](std::span<const TestComponent> components)
+	auto forEachArchetypeFunc = [] (std::span<const TestComponent> components)
 	{
 		PrintLine(std::format("{0} component count", components.size()));
 	};
@@ -318,12 +318,12 @@ void Test::IterationTest()
 		EntityQuery query{ &container };
 		query.Without<Position>();
 
-		query.ForEach([]()
+		query.ForEach([] ()
 		{
 			PrintLine("Empty query iteration");
 		});
 
-		query.ForEach([](const Entity& e)
+		query.ForEach([] (const Entity& e)
 		{
 			PrintLine("Empty query iteration with entity");
 		});
@@ -374,7 +374,7 @@ void Test::PerformanceTest()
 
 	size_t testCounter = 0;
 
-	auto perfTest = [&]()
+	auto perfTest = [&] ()
 	{
 		decs::LightComponentTypeGroup<Position, TestComponent> comps{};
 
@@ -390,7 +390,7 @@ void Test::PerformanceTest()
 
 				for (size_t i = 0; i < entityCount; i++)
 				{
-					container.CreateEntity(comps, [](auto&, auto&) {});
+					container.CreateEntity(comps, [] (auto&, auto&) { });
 					/*e.AddComponent<Position>();
 					e.AddComponent<TestComponent>();*/
 				}
@@ -463,7 +463,7 @@ void Test::FilterTest()
 	Query<float> query(&container);
 	query.WithFilterData(TestEntityFilter(1));
 
-	query.ForEach([](const Entity& ent, const float& f)
+	query.ForEach([] (const Entity& ent, const float& f)
 	{
 		if (ent.HasFilter<TestEntityFilter>())
 		{
@@ -484,13 +484,13 @@ void Light::Test::QueryManagerTest()
 		MultiQuery<TestComponent> multiQuery{};
 		multiQuery.AddContainer(container.get());
 
-		auto testFunc = [](TestComponent& component)
+		auto testFunc = [] (TestComponent& component)
 		{
 			PrintLine("Test component!");
 		};
 
 
-		auto callQueriesForEach = [&]()
+		auto callQueriesForEach = [&] ()
 		{
 			PrintLine("Query::ForEach");
 			query.ForEach(testFunc);
@@ -510,7 +510,35 @@ void Light::Test::QueryManagerTest()
 
 
 	container.reset();
+}
 
+void Test::RemovingArchetypesTest()
+{
+	ECSContainer ecs{};
+
+	decs::light::ArchetypeDestroyState state{};
+	decs::light::ArchetypeDestroyConfig config{
+		.m_MaxArchetypesToCheck = 1000000,
+		.m_MaxArchetypesDestroy = 1000000,
+		.m_bDestroyOnlyArchetypesWithFilters = true,
+	};
+
+
+	{
+		auto e = ecs.CreateEntity();
+
+		e.AddComponent<float>();
+		e.SetFilter<TestEntityFilter>(TestEntityFilter(10));
+		e.AddComponent<int>();
+		e.AddComponent<double>();
+		e.AddTag<decs::tag<float>>();
+		e.AddTag<decs::tag<int>>();
+
+		e.Destroy();
+	}
+
+
+	ecs.TryDestroyArchetypes(state, config);
 }
 
 END_NAMESPACE
