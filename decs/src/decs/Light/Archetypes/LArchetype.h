@@ -659,39 +659,6 @@ namespace decs::light
 
 	};
 
-	struct ArchetypeHandle final
-	{
-	public:
-		ArchetypeHandle() = default;
-
-		ArchetypeHandle(Archetype* archetype):
-			m_Archetype(archetype),
-			m_Version(archetype != nullptr ? archetype->m_Version : std::numeric_limits<uint32_t>::max())
-		{
-
-		}
-
-		inline bool IsValid() const noexcept
-		{
-			return m_Archetype != nullptr && m_Archetype->m_Version == m_Version;
-		}
-
-		inline operator bool() const noexcept
-		{
-			return IsValid();
-		}
-
-		inline Archetype* operator->() const noexcept
-		{
-			return m_Archetype;
-		}
-
-	private:
-		Archetype* m_Archetype = nullptr;
-		uint32_t m_Version = std::numeric_limits<uint32_t>::max();
-
-	};
-
 	struct ArchetypeHasher final
 	{
 	public:

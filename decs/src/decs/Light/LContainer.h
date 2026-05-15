@@ -563,6 +563,11 @@ namespace decs::light
 		ArchetypesMap m_ArchetypesMap;
 
 	public:
+		/// <summary>
+		/// Function which destroy empty archetypes
+		/// </summary>
+		void TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config);
+
 		inline void ShrinkArchetypesToFit()
 		{
 			m_ArchetypesMap.ShrinkArchetypesToFit();

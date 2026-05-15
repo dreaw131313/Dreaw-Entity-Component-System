@@ -408,6 +408,10 @@ namespace decs::light
 		return true;
 	}
 
+	void Container::TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config)
+	{
+		m_ArchetypesMap.TryDestroyArchetypes(state, config);
+	}
 
 	void Container::AddQuery(IQuery* query)
 	{
