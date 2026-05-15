@@ -42,6 +42,23 @@ namespace decs
 	};
 
 	template<typename T>
+	struct make_tag
+	{
+	public:
+		using tag_type = tag<T>;
+	};
+
+	template<typename T>
+	struct make_tag<tag<T>>
+	{
+	public:
+		using tag_type = tag<T>;
+	};
+
+	template<typename T>
+	using make_tag_t = make_tag<T>::tag_type;
+
+	template<typename T>
 	struct is_tag final
 	{
 	public:

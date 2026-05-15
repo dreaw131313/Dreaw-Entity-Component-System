@@ -740,6 +740,17 @@ namespace decs
 			return HasTag(entityData, Type<TTag>::ID());
 		}
 
+		template<tag_concept... TagType>
+		inline bool HasTags(const EntityData& entityData)
+		{
+			if (entityData.m_Archetype == nullptr)
+			{
+				return false;
+			}
+
+			return (entityData.m_Archetype->HasTag(Type<TagType>::ID()) && ...);
+		}
+
 		template<tag_concept TTag>
 		bool AddTag(EntityData& entityData)
 		{

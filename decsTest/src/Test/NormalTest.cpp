@@ -141,6 +141,10 @@ namespace Normal
 				e.AddComponent_NoObserver<TestComponent>();
 				e.AddComponent_NoObserver<Position>();
 
+				e.AddTag<float>();
+				e.HasTags<float, decs::tag<int>>();
+				e.HasTag<decs::tag<int>>();
+
 				auto [pos, test, hevyDataComp] = e.GetComponents<Position, TestComponent, HeavyDataComponent>();
 
 				container.InvokeEntitesOnCreateListeners();

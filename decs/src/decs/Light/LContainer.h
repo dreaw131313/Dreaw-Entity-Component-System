@@ -513,22 +513,33 @@ namespace decs::light
 			return entityData.m_Archetype->HasTag(tagType);
 		}
 
-		template<tag_concept TTag>
+		template<tag_concept TagType>
 		inline bool HasTag(const EntityData& entityData)
 		{
-			return HasTag(entityData, Type<TTag>::ID());
+			return HasTag(entityData, Type<TagType>::ID());
 		}
 
-		template<tag_concept TTag>
+		template<tag_concept... TagType>
+		inline bool HasTags(const EntityData& entityData)
+		{
+			if (entityData.m_Archetype == nullptr)
+			{
+				return false;
+			}
+
+			return (entityData.m_Archetype->HasTag(Type<TagType>::ID()) && ...);
+		}
+
+		template<tag_concept TagType>
 		bool AddTag(EntityData& entityData)
 		{
 			Archetype* oldArchetype = entityData.m_Archetype;
-			if (oldArchetype != nullptr && oldArchetype->HasTag<TTag>())
+			if (oldArchetype != nullptr && oldArchetype->HasTag<TagType>())
 			{
 				return true;
 			}
 
-			TYPE_ID_CONSTEXPR const TypeID tagTypeID = Type<TTag>::ID();
+			TYPE_ID_CONSTEXPR const TypeID tagTypeID = Type<TagType>::ID();
 
 			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 			Archetype* newArchetype = GetArchetypeAfterAddTag(oldArchetype, tagTypeID);
@@ -549,10 +560,10 @@ namespace decs::light
 
 		bool RemoveTag(EntityData& entityData, TypeID tagType);
 
-		template<tag_concept TTag>
+		template<tag_concept TagType>
 		bool RemoveTag(EntityData& entityData)
 		{
-			return RemoveTag(entityData, Type<TTag>::ID());
+			return RemoveTag(entityData, Type<TagType>::ID());
 		}
 
 	#pragma endregion

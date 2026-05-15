@@ -447,6 +447,11 @@ namespace decs
 
 	#pragma region TAGS:
 	public:
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="tagType">it must be type id acquired by Type<decs::tag<TagType>::ID()></param>
+		/// <returns></returns>
 		[[nodiscard]] inline bool HasTag(TypeID tagType)const
 		{
 			if (IsValid())
@@ -456,26 +461,56 @@ namespace decs
 			return false;
 		}
 
-		template<tag_concept TTag>
+		template<typename TagType>
 		[[nodiscard]] inline bool HasTag()const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->HasTag<TTag>(*m_EntityData);
+				if constexpr (tag_concept<TagType>)
+				{
+					return GetContainer()->HasTag<TagType>(*m_EntityData);
+				}
+				else
+				{
+					return GetContainer()->HasTag<tag<TagType>>(*m_EntityData);
+				}
+
 			}
 			return false;
 		}
 
-		template<tag_concept TTag>
-		bool AddTag()const
+		template<typename... TagType>
+		[[nodiscard]] inline bool HasTags()const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->AddTag<TTag>(*m_EntityData);
+				return GetContainer()->HasTags<make_tag_t<TagType>...>(*m_EntityData);
 			}
 			return false;
 		}
 
+		template<typename TagType>
+		bool AddTag() const
+		{
+			if (IsValid())
+			{
+				if constexpr (tag_concept<TagType>)
+				{
+					return GetContainer()->AddTag<TagType>(*m_EntityData);
+				}
+				else
+				{
+					return GetContainer()->AddTag<tag<TagType>>(*m_EntityData);
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="tagType">it must be type id acquired by Type<decs::tag<TagType>::ID()</param>
+		/// <returns></returns>
 		bool RemoveTag(TypeID tagType)const
 		{
 			if (IsValid())
@@ -485,12 +520,19 @@ namespace decs
 			return false;
 		}
 
-		template<tag_concept TTag>
+		template<typename TagType>
 		bool RemoveTag() const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->RemoveTag<TTag>(*m_EntityData);
+				if constexpr (tag_concept<TagType>)
+				{
+					return GetContainer()->RemoveTag<TagType>(*m_EntityData);
+				}
+				else
+				{
+					return GetContainer()->RemoveTag<tag<TagType>>(*m_EntityData);
+				}
 			}
 			return false;
 		}

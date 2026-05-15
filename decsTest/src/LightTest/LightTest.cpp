@@ -36,7 +36,7 @@ public:
 	float X = 0;
 	float Y = 0;
 
-	int i[10];
+	int i[100];
 
 public:
 	Position()
@@ -56,7 +56,7 @@ public:
 struct TestComponent
 {
 public:
-	int table[10];
+	int table[100];
 
 };
 
@@ -353,8 +353,8 @@ void Test::ComponentCreationTest()
 
 void Test::PerformanceTest()
 {
-	const uint32_t testCount = 1;
-	const uint32_t entityCount = 65536;
+	const uint32_t testCount = 100;
+	const uint32_t entityCount = 100000;
 
 	decs::light::ContainerConfig config{
 		.EntityChunkSize = 10000,
@@ -362,6 +362,7 @@ void Test::PerformanceTest()
 	};
 
 	double finalAvarage = 0;
+	double finalEntityAvarage = 0;
 
 	decs::light::Container container{ config };
 
@@ -387,17 +388,17 @@ void Test::PerformanceTest()
 		{
 			MeasureTimer timer(true);
 			{
-				/*entitySpawner.Spawn(entityCount, [](Position& pos, TestComponent& test)
+				entitySpawner.Spawn(entityCount, [](Position& pos, TestComponent& test)
 				{
 
-				});*/
+				});
 
-				for (size_t i = 0; i < entityCount; i++)
+				/*for (size_t i = 0; i < entityCount; i++)
 				{
-					container.CreateEntity(comps, [] (auto&, auto&) { });
-					/*e.AddComponent<Position>();
-					e.AddComponent<TestComponent>();*/
-				}
+					auto e = container.CreateEntity();
+					e.AddComponent<Position>();
+					e.AddComponent<TestComponent>();
+				}*/
 
 				/*for (uint32_t i = 0; i < entityCount; i++)
 				{
@@ -412,16 +413,18 @@ void Test::PerformanceTest()
 			container.Clear();
 		}
 
-		testCounter++;
-		if (testCounter == 1)
-		{
-			//return;
-		}
-
 		double avarage = sum / testCount;
+		double entityAvarageTime = avarage / entityCount;
 
-		finalAvarage += avarage;
-		std::cout << "Creating " << entityCount << " entities -> " << avarage << " ms\n";
+		std::cout << "Creating " << entityCount << " entities -> " << avarage << " ms (entity avarage time " << entityAvarageTime * 1000. << "us)\n";
+
+		if (testCounter > 0)
+		{
+			finalAvarage += avarage;
+			finalEntityAvarage += entityAvarageTime;
+		}
+		testCounter++;
+
 	};
 
 	uint32_t finalTestCount = 100;
@@ -430,16 +433,12 @@ void Test::PerformanceTest()
 		perfTest();
 	}
 
-	std::cout << "Final avarage time " << finalAvarage / (finalTestCount - 1) << " ms\n";
+	double validTestCount = (finalTestCount - 1.);
+	double finalEntitiesCreationTime = finalAvarage / validTestCount;
+	double finalSingleEntityCreationTime = finalEntityAvarage / validTestCount;
 
-	testCounter = 0;
-	finalAvarage = 0;
-	for (uint32_t i = 0; i < finalTestCount; i++)
-	{
-		perfTest();
-	}
-
-	std::cout << "Final avarage time " << finalAvarage / (finalTestCount - 1) << " ms\n";
+	std::cout << "Final avarage "<< entityCount <<" entity creation time " << finalEntitiesCreationTime << " ms\n";
+	std::cout << "Final avarage single entity creation time " << finalSingleEntityCreationTime * 1000. << " us ("<< finalSingleEntityCreationTime <<"ms)\n";
 
 }
 
@@ -536,10 +535,21 @@ void Test::RemovingArchetypesTest()
 		e.SetFilter<TestEntityFilter>(TestEntityFilter(10));
 		e.AddComponent<int>();
 		e.AddComponent<double>();
-		e.AddTag<decs::tag<float>>();
+		e.AddTag<float>();
 		e.AddTag<decs::tag<int>>();
 
-		query.ForEach([] (float f) 
+		e.HasTag<float>();
+		e.HasTag<decs::tag<float>>();
+
+		if (e.HasTags<float, decs::tag<int>, bool>())
+		{
+			PrintLine("Has tags");
+		}
+
+		e.RemoveTag<float>();
+		e.RemoveTag<decs::tag<int>>();
+
+		query.ForEach([] (float f)
 		{
 			PrintLine("Float iteration");
 		});
@@ -549,7 +559,7 @@ void Test::RemovingArchetypesTest()
 
 	ecs.TryDestroyArchetypes(state, config);
 
-	query.ForEach([] (float f) 
+	query.ForEach([] (float f)
 	{
 		PrintLine("Float iteration 2");
 	});
