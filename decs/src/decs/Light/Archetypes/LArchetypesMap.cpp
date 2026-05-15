@@ -14,7 +14,7 @@ namespace decs::light
 		m_FilterManager(filterManager),
 		m_ArchetypeAllocator(filterManager, static_cast<uint32_t>(archetypesVectorChunkSize)),
 		m_QueryManager(queryManger),
-		m_ArchetypesGroupsByOneTypeAllocator(archetypeGroupsVectorChunkSize)
+		m_ArchetypesGroupsByOneTypeAllocator(static_cast<uint32_t>(archetypeGroupsVectorChunkSize))
 	{
 
 	}
@@ -173,6 +173,26 @@ namespace decs::light
 		MakeArchetypeEdges_4(archetype);
 
 		m_QueryManager.OnCreateArchetype(&archetype);
+	}
+
+	ArchetypesGroupByOneType* ArchetypesMap::GetArchetypesGroup(ArchetypeDataKey id, EArchetypesGroupType groupType)
+	{
+		ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
+		if (group == nullptr)
+		{
+			group = m_ArchetypesGroupsByOneTypeAllocator.Create(m_ArchetypesGroupsAllocator, id.m_TypeID, groupType);
+		}
+		return group;
+	}
+
+	ArchetypesGroupByOneType* ArchetypesMap::GetArchetypesGroupWithoutCreating(ArchetypeDataKey id) const
+	{
+		auto it = m_ArchetypesGroupedByOneType.find(id);
+		if (it == m_ArchetypesGroupedByOneType.end())
+		{
+			return nullptr;
+		}
+		return it->second;
 	}
 
 	Archetype* ArchetypesMap::FindMatchingArchetype(const Archetype& toArchetype)
@@ -447,6 +467,92 @@ namespace decs::light
 		AddArchetypeToCorrectContainers(*newArchetype);
 
 		return newArchetype;
+	}
+
+	void ArchetypesMap::TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config)
+	{
+		if (state.m_LastCheckdArchetypeIndex >= m_ArchetypeAllocator.GetCreatedArchetypes().size())
+		{
+			state.m_LastCheckdArchetypeIndex = 0;
+		}
+
+		size_t iteratedArchetypes = 0;
+		size_t destroyedArchetypes = 0;
+
+		auto endDestroying = [&]()->bool
+		{
+			return destroyedArchetypes >= config.m_MaxArchetypesDestroy
+				|| iteratedArchetypes >= config.m_MaxArchetypesToCheck
+				;
+		};
+
+		auto skipArchetype = [&](Archetype* archetype)-> bool
+		{
+			return !archetype->IsEmpty()
+				&& (!config.m_bDestroyOnlyArchetypesWithFilters || archetype->GetFilterCount() > 0)
+				;
+		};
+
+		while (!endDestroying())
+		{
+			size_t index = state.m_LastCheckdArchetypeIndex % m_ArchetypeAllocator.GetCreatedArchetypes().size();
+			state.m_LastCheckdArchetypeIndex++;
+			iteratedArchetypes++;
+
+			Archetype* currentArchetype = m_ArchetypeAllocator.GetCreatedArchetypes()[index];
+			if (skipArchetype(currentArchetype))
+			{
+				continue;
+			}
+
+			RemoveArchetypeFromMap(currentArchetype);
+		}
+	}
+
+	void ArchetypesMap::RemoveArchetypeFromMap(Archetype* archetype)
+	{
+		m_QueryManager.OnDestroyArchetype(archetype);
+		archetype->RemoveFromNeighbours();
+
+		ArchetypeHasher hasher(archetype);
+		m_HashedArchetypes.erase(archetype);
+
+		// remove from archetype groups
+		{
+			for (auto& typeData : archetype->m_TypeData)
+			{
+				auto groupIt = m_ArchetypesGroupedByOneType.find(ArchetypeDataKey(typeData.m_TypeID));
+				if (groupIt == m_ArchetypesGroupedByOneType.end())
+				{
+					continue;
+				}
+				auto group = groupIt->second;
+				group->RemoveArchetype(archetype);
+				if (group->IsEmpty())
+				{
+					m_ArchetypesGroupedByOneType.erase(groupIt);
+					m_ArchetypesGroupsByOneTypeAllocator.Destroy(group);
+				}
+			}
+
+			for (auto& filterData : archetype->m_Filters)
+			{
+				auto groupIt = m_ArchetypesGroupedByOneType.find(ArchetypeDataKey(filterData.m_FilterContainer));
+				if (groupIt == m_ArchetypesGroupedByOneType.end())
+				{
+					continue;
+				}
+				auto group = groupIt->second;
+				group->RemoveArchetype(archetype);
+				if (group->IsEmpty())
+				{
+					m_ArchetypesGroupedByOneType.erase(groupIt);
+					m_ArchetypesGroupsByOneTypeAllocator.Destroy(group);
+				}
+			}
+		}
+
+		m_ArchetypeAllocator.Destroy(archetype);
 	}
 
 }

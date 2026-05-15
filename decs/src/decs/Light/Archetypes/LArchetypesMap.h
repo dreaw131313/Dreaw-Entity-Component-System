@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "decs/Core/TChunkedVector.h"
+#include "decs/Core/ChunkAllocator.h"
 #include "decs/Light/Component/PackedLightComponentContainer.h"
 #include "decs/Light/Filter/LFilter.h"
 
@@ -11,6 +12,7 @@
 
 namespace decs::light
 {
+	class ArchetypesMap;
 	template<typename...>
 	class TFilterDataTuple;
 
@@ -65,7 +67,24 @@ namespace decs::light
 		}
 	};
 
-	struct ArchetypeGroup
+	struct ArchetypeDestroyState
+	{
+		friend class ArchetypesMap;
+	public:
+
+	private:
+		size_t m_LastCheckdArchetypeIndex = 0;
+	};
+
+	struct ArchetypeDestroyConfig
+	{
+	public:
+		size_t m_MaxArchetypesToCheck = 10;
+		size_t m_MaxArchetypesDestroy = 2;
+		bool m_bDestroyOnlyArchetypesWithFilters = true;
+	};
+
+	struct ArchetypeGroup : public ChunkAllocatorResource
 	{
 	public:
 		std::vector<Archetype*> Archetypes;
@@ -86,11 +105,11 @@ namespace decs::light
 		FilterData
 	};
 
-	class ArchetypesGroupByOneType
+	class ArchetypesGroupByOneType : public ChunkAllocatorResource
 	{
 	public:
 		ArchetypesGroupByOneType(
-			TChunkedVector<ArchetypeGroup>& archetypeGroupAllocator,
+			TChunkAllocator<ArchetypeGroup>& archetypeGroupAllocator,
 			TypeID id,
 			EArchetypesGroupType groupType
 		):
@@ -99,6 +118,14 @@ namespace decs::light
 			m_GroupType(groupType)
 		{
 
+		}
+
+		~ArchetypesGroupByOneType()
+		{
+			for (auto group : m_Groups)
+			{
+				m_ArchetypeGroupAllocator.Destroy(group);
+			}
 		}
 
 		EArchetypesGroupType GetGroupType() const noexcept
@@ -125,6 +152,11 @@ namespace decs::light
 				return m_MainTypeArchetype;
 			}
 			return nullptr;
+		}
+
+		inline bool IsEmpty() const noexcept
+		{
+			return m_ArchetypesCount == 0;
 		}
 
 		inline size_t GetArchetypesCount() const
@@ -169,9 +201,44 @@ namespace decs::light
 			auto& archetypeGroup = m_Groups[componentTagFilterCount - 1];
 			if (archetypeGroup == nullptr)
 			{
-				archetypeGroup = &m_ArchetypeGroupAllocator.EmplaceBack();
+				archetypeGroup = m_ArchetypeGroupAllocator.Create();
 			}
 			archetypeGroup->Archetypes.push_back(archetype);
+		}
+
+		void RemoveArchetype(Archetype* archetype)
+		{
+			if (IsEmpty())
+			{
+				return;
+			}
+
+			const uint64_t componentTagFilterCount = archetype->GetComponentTagFilterCount();
+
+			if (componentTagFilterCount > m_Groups.size())
+			{
+				return;
+			}
+
+			auto& archetypes = m_Groups[componentTagFilterCount - 1]->Archetypes;
+			for (size_t idx = 0; idx < archetypes.size(); idx++)
+			{
+				if (archetypes[idx] == archetype)
+				{
+					if (archetype == m_MainTypeArchetype)
+					{
+						m_MainTypeArchetype = nullptr;
+					}
+
+					if (idx < (archetypes.size() - 1))
+					{
+						archetypes[idx] = archetypes.back();
+					}
+					archetypes.pop_back();
+					m_ArchetypesCount--;
+					break;
+				}
+			}
 		}
 
 		std::span<Archetype*> GetArchetypesWithComponentTagFilterCount(uint64_t componentsCount) const
@@ -235,7 +302,7 @@ namespace decs::light
 		}
 
 	private:
-		TChunkedVector<ArchetypeGroup>& m_ArchetypeGroupAllocator;
+		TChunkAllocator<ArchetypeGroup>& m_ArchetypeGroupAllocator;
 		std::vector<ArchetypeGroup*> m_Groups{};
 		size_t m_ArchetypesCount = 0;
 
@@ -325,8 +392,8 @@ namespace decs::light
 		QueryManager& m_QueryManager;
 
 		ArchetypeAllocator m_ArchetypeAllocator;
-		TChunkedVector<ArchetypeGroup> m_ArchetypesGroupsAllocator{ 100 };
-		TChunkedVector<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };
+		TChunkAllocator<ArchetypeGroup> m_ArchetypesGroupsAllocator{ 100 };
+		TChunkAllocator<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };
 
 		ecsMap<ArchetypeDataKey, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
 		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
@@ -355,25 +422,9 @@ namespace decs::light
 			return GetSingleComponentArchetype(Type<TComponent>::ID());
 		}
 
-		inline ArchetypesGroupByOneType* GetArchetypesGroup(ArchetypeDataKey id, EArchetypesGroupType groupType)
-		{
-			ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
-			if (group == nullptr)
-			{
-				group = &m_ArchetypesGroupsByOneTypeAllocator.EmplaceBack(m_ArchetypesGroupsAllocator, id.m_TypeID, groupType);
-			}
-			return group;
-		}
+		ArchetypesGroupByOneType* GetArchetypesGroup(ArchetypeDataKey id, EArchetypesGroupType groupType);
 
-		inline ArchetypesGroupByOneType* GetArchetypesGroupWithoutCreating(ArchetypeDataKey id) const
-		{
-			auto it = m_ArchetypesGroupedByOneType.find(id);
-			if (it == m_ArchetypesGroupedByOneType.end())
-			{
-				return nullptr;
-			}
-			return it->second;
-		}
+		ArchetypesGroupByOneType* GetArchetypesGroupWithoutCreating(ArchetypeDataKey id) const;
 
 		Archetype* FindMatchingArchetype(const Archetype& toArchetype);
 
@@ -442,7 +493,6 @@ namespace decs::light
 		void AddTypeDataAfterAddFilter(const Archetype& baseArchetype, Archetype& toArchetype, IFilterContainerBase* filterContainer);
 
 		// FITLER ARCHETYPES:
-
 		Archetype* GetSingleFilterArchetype(IFilterContainerBase* filterContainer)
 		{
 			auto it = m_ArchetypesGroupedByOneType.find(filterContainer);
@@ -512,6 +562,11 @@ namespace decs::light
 		{
 			return GetOrCreateArchetypeAfterRemoveFilter(fromArchetype, Type<FilterType>::ID());
 		}
+
+		// DESTROYING ARCHETYPES OVER TIME
+		void TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config);
+
+		void RemoveArchetypeFromMap(Archetype* archetpye);
 	};
 
 

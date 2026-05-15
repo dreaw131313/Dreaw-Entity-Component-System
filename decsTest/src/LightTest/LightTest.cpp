@@ -115,7 +115,7 @@ void Test::Run()
 {
 	//IterationTest();
 	//PerformanceTest();
-	FilterTest();
+	IterationTest();
 
 	//QueryManagerTest();
 }

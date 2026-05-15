@@ -16,7 +16,7 @@ int main()
 		std::cout << "///////////////////////////////////////////" << "\n";
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
-		Normal::Test{}.QueryIterationTest();
+		//Normal::Test{}.QueryIterationTest();
 	}
 
 	return 0;

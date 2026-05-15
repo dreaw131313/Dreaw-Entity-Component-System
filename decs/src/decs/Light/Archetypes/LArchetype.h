@@ -332,6 +332,11 @@ namespace decs::light
 			return m_Entities;
 		}
 
+		inline bool IsEmpty() const noexcept
+		{
+			return m_Entities.Empty();
+		}
+
 		inline float GetLoadFactor()const
 		{
 			if (m_Entities.Capacity() == 0) return 1.f;
@@ -621,6 +626,8 @@ namespace decs::light
 			}
 			return {};
 		}
+
+		void RemoveFromNeighbours();
 
 	#pragma endregion
 

@@ -443,6 +443,18 @@ namespace decs::light
 		}
 	}
 
+	void Archetype::RemoveFromNeighbours()
+	{
+		ArchetypeDataKey addEdegKey{};
+		ArchetypeDataKey removeEdgeKey{};
+
+		for (auto& [edgeKey, edge] : m_Edges)
+		{
+			edge.m_Archetype->m_Edges.erase(edgeKey);
+		}
+		m_Edges.clear();
+	}
+
 	bool Archetype::MoveEntityAfterAddType(
 		Archetype& fromArchetype,
 		Archetype& toArchetype,
