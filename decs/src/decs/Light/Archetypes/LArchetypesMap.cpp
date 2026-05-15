@@ -483,6 +483,7 @@ namespace decs::light
 		{
 			return destroyedArchetypes >= config.m_MaxArchetypesDestroy
 				|| iteratedArchetypes >= config.m_MaxArchetypesToCheck
+				|| m_ArchetypeAllocator.GetCreatedArchetypes().empty()
 				;
 		};
 
@@ -496,12 +497,12 @@ namespace decs::light
 		while (!endDestroying())
 		{
 			size_t index = state.m_LastCheckdArchetypeIndex % m_ArchetypeAllocator.GetCreatedArchetypes().size();
-			state.m_LastCheckdArchetypeIndex++;
 			iteratedArchetypes++;
 
 			Archetype* currentArchetype = m_ArchetypeAllocator.GetCreatedArchetypes()[index];
 			if (skipArchetype(currentArchetype))
 			{
+				state.m_LastCheckdArchetypeIndex++;
 				continue;
 			}
 
