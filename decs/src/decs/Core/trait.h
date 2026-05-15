@@ -6,6 +6,28 @@
 
 namespace decs
 {
+
+#pragma region TUPLE TRAITS:
+
+	template<typename T, typename TupleType>
+	struct tuple_has_type : public std::false_type
+	{
+
+	};
+
+	template<typename T, typename... Ts>
+	struct tuple_has_type<T, std::tuple<Ts...>> : public std::bool_constant<(std::is_same_v<T, Ts> || ...)>
+	{
+
+	};
+
+	template<typename T, typename Ts>
+	inline static constexpr bool tuple_has_type_v = tuple_has_type<T, Ts>::value;
+
+#pragma endregion
+
+#pragma region TAG
+
 	template<typename T>
 	struct tag final
 	{
@@ -34,7 +56,40 @@ namespace decs
 	inline constexpr bool contain_tags_v = (is_tag_v<Ts> || ...);
 
 	template<typename TTag>
-	concept TTagConcept = is_tag_v<TTag>;
+	concept tag_concept = is_tag_v<TTag>;
+
+#pragma endregion
+
+#pragma region FILTER
+
+	template<typename T>
+	struct filter
+	{
+	public:
+		using UnderlyingType = T;
+	};
+
+	template<typename T>
+	struct is_filter final
+	{
+	public:
+		inline static constexpr bool value = false;
+	};
+
+	template<typename T>
+	struct is_filter<filter<T>> final
+	{
+	public:
+		inline static constexpr bool value = true;
+	};
+
+	template<typename T>
+	inline constexpr bool is_filter_v = is_filter<T>::value;
+
+	template<typename T>
+	concept filter_concept = true;
+
+#pragma endregion
 
 	template<typename T>
 	struct is_const
@@ -71,35 +126,7 @@ namespace decs
 	using drop_const_t = drop_const<T>::Type;
 
 	template<typename T>
-	struct pure_type
-	{
-	public:
-		using Type = T;
-	};
-
-	template<typename T>
-	struct pure_type<T&>
-	{
-	public:
-		using Type = T;
-	};
-
-	template<typename T>
-	struct pure_type<const T&>
-	{
-	public:
-		using Type = T;
-	};
-
-	template<typename T>
-	struct pure_type<const T>
-	{
-	public:
-		using Type = T;
-	};
-
-	template<typename T>
-	using pure_type_t = pure_type<T>::Type;
+	using pure_type_t = std::remove_cvref_t<T>;
 
 	class Archetype;
 	class Entity;
@@ -108,35 +135,6 @@ namespace decs
 		class Entity;
 	}
 
-	template<typename TCallable, typename... TComponentTypes>
-	concept query_callable = std::is_invocable_v<TCallable, TComponentTypes...>
-		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes...>
-		|| std::is_invocable_v<TCallable, TComponentTypes&...>
-		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
-
-	template<typename TCallable, typename... TComponentTypes>
-	concept light_query_callable = std::is_invocable_v<TCallable, TComponentTypes...>
-		|| std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes...>
-		|| std::is_invocable_v<TCallable, TComponentTypes&...>
-		|| std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes&...>;
-
-	template<typename TCallable, typename... TComponentTypes>
-	concept	light_query_iterate_container_callable = std::is_invocable_v<TCallable, std::span<TComponentTypes>...>
-		|| std::is_invocable_v<TCallable, std::span<const TComponentTypes>...>
-		|| std::is_invocable_v<TCallable, const std::span<TComponentTypes>...>
-		|| std::is_invocable_v<TCallable, const std::span<TComponentTypes>&...>
-		|| std::is_invocable_v<TCallable, const std::span<const TComponentTypes>...>
-		|| std::is_invocable_v<TCallable, const std::span<const TComponentTypes>&...>
-		;
-
-	template<typename TCallable, typename... TComponentTypes>
-	constexpr bool is_invocable_with_entity_v = std::is_invocable_v<TCallable, const Entity&, TComponentTypes...>
-		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
-
-	template<typename TCallable, typename... TComponentTypes>
-	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes...>
-		|| std::is_invocable_v<TCallable, const light::Entity&, TComponentTypes&...>;
-
 	template<typename Func>
 	concept container_iterator_entity_func = std::is_invocable_v<Func, const Entity&>;
 
@@ -144,12 +142,50 @@ namespace decs
 	concept container_iterator_archetype_func = std::is_invocable_v<Func, const Archetype*>;
 
 	template<typename T>
-	concept TLightComponentConcept = !std::is_same_v<T, bool> && !is_tag_v<T>;
+	concept light_component_concept = !std::is_same_v<T, bool> && !is_tag_v<T>;
 
 	template<typename T>
-	concept TLightComponentOrTagConcept = TLightComponentConcept<T> || TTagConcept<T>;
+	concept light_component_or_filter_concept = light_component_concept<T> || filter_concept<T>;
 
-	template<TLightComponentConcept... Types>
+	template<typename T>
+	concept light_component_or_tag_or_filter_concept = light_component_or_filter_concept<T> || tag_concept<T>;
+
+	template<typename T>
+	struct ligth_component_or_filter
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	struct ligth_component_or_filter<filter<T>>
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	using ligth_component_or_filter_t = ligth_component_or_filter<T>::Type;
+
+	template<typename T>
+	struct ligth_component_or_tag_or_filter
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	struct ligth_component_or_tag_or_filter<filter<T>>
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	using ligth_component_or_tag_or_filter_t = ligth_component_or_tag_or_filter<T>::Type;
+
+
+	template<light_component_or_filter_concept... Types>
 	class LightComponentTypeGroup
 	{
 	public:
@@ -167,7 +203,7 @@ namespace decs
 		TypeGroup<Types...> m_Group{};
 	};
 
-	template<TTagConcept... Types>
+	template<tag_concept... Types>
 	class TagTypeGroup
 	{
 	public:
@@ -184,5 +220,34 @@ namespace decs
 	private:
 		TypeGroup<Types...> m_Group{};
 	};
+
+	template<typename TCallable, typename... TComponentTypes>
+	concept query_callable = std::is_invocable_v<TCallable, TComponentTypes...>
+		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes...>
+		|| std::is_invocable_v<TCallable, TComponentTypes&...>
+		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
+
+	template<typename TCallable, typename... TComponentTypes>
+	constexpr bool is_invocable_with_entity_v = std::is_invocable_v<TCallable, const Entity&, TComponentTypes...>
+		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
+
+	template<typename TCallable, typename... ComponentTypes>
+	concept light_query_callable = std::is_invocable_v<TCallable, ligth_component_or_filter_t<ComponentTypes>...>
+		|| std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>...>
+		|| std::is_invocable_v<TCallable, ligth_component_or_filter_t<ComponentTypes>&...>
+		|| std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
+
+	template<typename TCallable, typename... ComponentTypes>
+	concept	light_query_iterate_container_callable = std::is_invocable_v<TCallable, std::span<ligth_component_or_filter_t<ComponentTypes>>...>
+		|| std::is_invocable_v<TCallable, std::span<const ligth_component_or_filter_t<ComponentTypes>>...>
+		|| std::is_invocable_v<TCallable, const std::span<ligth_component_or_filter_t<ComponentTypes>>...>
+		|| std::is_invocable_v<TCallable, const std::span<ligth_component_or_filter_t<ComponentTypes>>&...>
+		|| std::is_invocable_v<TCallable, const std::span<const ligth_component_or_filter_t<ComponentTypes>>...>
+		|| std::is_invocable_v<TCallable, const std::span<const ligth_component_or_filter_t<ComponentTypes>>&...>
+		;
+
+	template<typename TCallable, typename... ComponentTypes>
+	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>...>
+		|| std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
 
 }

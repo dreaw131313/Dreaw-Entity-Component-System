@@ -1,39 +1,38 @@
 #pragma once
 #include "LIterationCore.h"
 
+#include "decs/Core/RefCounterHandle.h"
+#include "LQueryManager.h"
+
 namespace decs::light
 {
-	class IMultiQuery
-	{
-	public:
-		virtual ~IMultiQuery()
-		{
-
-		}
-
-		virtual bool AddContainer(Container* container, bool bIsEnabled = true) = 0;
-		virtual bool RemoveContainer(Container* container) = 0;
-		virtual void SetContainerEnabled(Container* container, bool isEnabled) = 0;
-	};
-
-	template<TLightComponentConcept... ComponentsTypes>
+	template<light_component_or_filter_concept... ComponentsTypes>
 	class MultiQuery : public IMultiQuery
 	{
 		static_assert(!::decs::contain_tags_v<ComponentsTypes...>, "MultiQuery must not use tags in as ComponentTypes!");
 
 	private:
-		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
-		using ArchetypeContextType = ContainerContextType::ArchetypeContextType;
+		using ArchetypeContextType = IterationArchetypeContext<drop_const_t<ComponentsTypes>...>;
 		using ContainersTupleType = ArchetypeContextType::ContainersTuple;
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
+		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
 
 		template<typename TComponent>
 		using PackedContainerType = PackedLightComponentContainer<TComponent>*;
 
-	public:
-		MultiQuery()
-		{
+		friend class SubQueryType;
 
+	public:
+		MultiQuery() = default;
+
+		~MultiQuery()
+		{
+			ClearContainerContexts();
+		}
+
+		void Clear()
+		{
+			ClearContainerContexts();
 		}
 
 		[[nodiscard]] uint64_t GetEntityCount()
@@ -46,7 +45,7 @@ namespace decs::light
 			return entityCount;
 		}
 
-		template<TLightComponentOrTagConcept... WithoutTypes>
+		template<light_component_or_tag_or_filter_concept... WithoutTypes>
 		MultiQuery& Without()
 		{
 			m_IsDirty = true;
@@ -54,7 +53,7 @@ namespace decs::light
 			return *this;
 		}
 
-		template<TLightComponentOrTagConcept... WithAnyTypes>
+		template<light_component_or_tag_or_filter_concept... WithAnyTypes>
 		MultiQuery& WithAny()
 		{
 			m_IsDirty = true;
@@ -62,12 +61,18 @@ namespace decs::light
 			return *this;
 		}
 
-		template<TLightComponentOrTagConcept... WithTypes>
+		template<light_component_or_tag_or_filter_concept... WithTypes>
 		MultiQuery& With()
 		{
 			m_IsDirty = true;
 			m_FilterConfig.With<WithTypes...>();
 			return *this;
+		}
+
+		template<filter_concept... FilterTypes>
+		void WithFilterData(FilterTypes&&... filterData)
+		{
+			m_FilterConfig.WithFilterData(std::forward<FilterTypes>(filterData)...);
 		}
 
 		void ClearFilters()
@@ -242,7 +247,7 @@ namespace decs::light
 				}
 			}
 		}
-		
+
 		template<typename TCallable>
 			requires light_query_iterate_container_callable<TCallable, ComponentsTypes...>
 		void ForEachArchetype(TCallable&& func)
@@ -263,11 +268,9 @@ namespace decs::light
 
 		bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{
-			auto& contextIndex = m_ContainerContextsIndexes[container];
-			if (contextIndex >= m_ContainerContexts.size() || m_ContainerContexts[contextIndex].m_Container != container)
+			if (AddContainer_Impl(container, bIsEnabled))
 			{
-				contextIndex = m_ContainerContexts.size();
-				m_ContainerContexts.emplace_back(container, bIsEnabled);
+				AddToContainer(container);
 				return true;
 			}
 			return false;
@@ -275,20 +278,9 @@ namespace decs::light
 
 		bool RemoveContainer(Container* container) override
 		{
-			auto it = m_ContainerContextsIndexes.find(container);
-			if (it != m_ContainerContextsIndexes.end())
+			if (RemoveContainer_Impl(container))
 			{
-				const uint64_t index = it->second;
-				m_ContainerContextsIndexes.erase(it);
-
-				if (index < (m_ContainerContexts.size() - 1))
-				{
-					auto& lastContext = m_ContainerContexts.back();
-					m_ContainerContextsIndexes[lastContext.m_Container] = index;
-					m_ContainerContexts[index] = lastContext;
-				}
-				m_ContainerContexts.pop_back();
-
+				RemoveFromContainer(container);
 				return true;
 			}
 			return false;
@@ -296,8 +288,8 @@ namespace decs::light
 
 		void SetContainerEnabled(Container* container, bool bIsEnabled) override
 		{
-			auto it = m_ContainerContextsIndexes.find(container);
-			if (it != m_ContainerContextsIndexes.end())
+			auto it = m_ContainerContextsIndices.find(container);
+			if (it != m_ContainerContextsIndices.end())
 			{
 				ContainerContextType& context = m_ContainerContexts[it->second];
 				context.m_bIsEnabled = bIsEnabled;
@@ -308,8 +300,8 @@ namespace decs::light
 		{
 			if (entity.IsValid())
 			{
-				auto containerCtxIdxIt = m_ContainerContextsIndexes.find(entity.GetContainer());
-				if (containerCtxIdxIt != m_ContainerContextsIndexes.end())
+				auto containerCtxIdxIt = m_ContainerContextsIndices.find(entity.GetContainer());
+				if (containerCtxIdxIt != m_ContainerContextsIndices.end())
 				{
 					auto& ctx = m_ContainerContexts[containerCtxIdxIt->second];
 					ctx.Fetch(m_FilterConfig);
@@ -321,35 +313,34 @@ namespace decs::light
 
 		void Fetch()
 		{
-			uint64_t containerContextsSize = m_ContainerContexts.size();
 			if (m_IsDirty)
 			{
 				m_IsDirty = false;
-				for (uint64_t i = 0; i < containerContextsSize; i++)
+				for (ContainerContextType& containerContext: m_ContainerContexts)
 				{
-					ContainerContextType& containerContext = m_ContainerContexts[i];
 					containerContext.Clear();
 					containerContext.Fetch(m_FilterConfig);
 				}
 			}
-			else
-			{
-				for (uint64_t i = 0; i < containerContextsSize; i++)
-				{
-					ContainerContextType& containerContext = m_ContainerContexts[i];
-					m_ContainerContexts[i].Fetch(m_FilterConfig);
-				}
-			}
 		}
-	private:
-		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
-		QueryFilterConfigType m_FilterConfig{};
 
-		std::vector<ContainerContextType> m_ContainerContexts = {};
+	private:
+		QueryFilterConfigType m_FilterConfig{};
+		ecsMap<Container*, uint64_t> m_ContainerContextsIndices{};
+		std::vector<ContainerContextType> m_ContainerContexts{};
 
 		bool m_IsDirty = true;
 
 	private:
+		void ClearContainerContexts()
+		{
+			for (auto& containerCtx : m_ContainerContexts)
+			{
+				RemoveFromContainer(containerCtx.GetContainer());
+			}
+			m_ContainerContexts.clear();
+		}
+
 		uint64_t CalculateEntityCount()
 		{
 			uint64_t entitiesCount = 0;
@@ -366,7 +357,6 @@ namespace decs::light
 			return entitiesCount;
 		}
 
-	private:
 		template<typename Callable>
 		inline static void InvokeEntityIteration(
 			Callable&& func,
@@ -388,6 +378,89 @@ namespace decs::light
 			{
 				func(std::get<PackedContainerType<drop_const_t<ComponentsTypes>>>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
 			}
+		}
+
+
+		void TryAddArchetype(Container& container, const Archetype& archetype) override
+		{
+			auto it = m_ContainerContextsIndices.find(&container);
+			if (it == m_ContainerContextsIndices.end())
+			{
+				return;
+			}
+
+			auto& containerCtx = m_ContainerContexts[it->second];
+			containerCtx.TryAddArchetype(archetype, m_FilterConfig);
+		}
+
+		void TryRemoveArchetpye(Container& container, const Archetype& archetype) override
+		{
+			auto it = m_ContainerContextsIndices.find(&container);
+			if (it == m_ContainerContextsIndices.end())
+			{
+				return;
+			}
+
+			auto& containerCtx = m_ContainerContexts[it->second];
+			containerCtx.TryRemoveArchetype(archetype);
+		}
+
+		void OnDestroyContainer(Container* container) override
+		{
+			RemoveContainer_Impl(container);
+		}
+
+		void AddToContainer(Container* container)
+		{
+			if (container == nullptr)
+			{
+				return;
+			}
+
+			container->AddMultiQuery(this);
+		}
+
+		void RemoveFromContainer(Container* container)
+		{
+			if (container == nullptr)
+			{
+				return;
+			}
+
+			container->RemoveMultiQuery(this);
+		}
+
+		bool AddContainer_Impl(Container* container, bool bIsEnabled = true)
+		{
+			auto& contextIndex = m_ContainerContextsIndices[container];
+			if (contextIndex >= m_ContainerContexts.size() || m_ContainerContexts[contextIndex].m_Container != container)
+			{
+				contextIndex = m_ContainerContexts.size();
+				m_ContainerContexts.emplace_back(container, bIsEnabled);
+				return true;
+			}
+			return false;
+		}
+
+		bool RemoveContainer_Impl(Container* container)
+		{
+			auto it = m_ContainerContextsIndices.find(container);
+			if (it != m_ContainerContextsIndices.end())
+			{
+				const uint64_t index = it->second;
+				m_ContainerContextsIndices.erase(it);
+
+				if (index < (m_ContainerContexts.size() - 1))
+				{
+					auto& lastContext = m_ContainerContexts.back();
+					m_ContainerContextsIndices[lastContext.m_Container] = index;
+					m_ContainerContexts[index] = lastContext;
+				}
+				m_ContainerContexts.pop_back();
+
+				return true;
+			}
+			return false;
 		}
 
 	public:
@@ -624,4 +697,5 @@ namespace decs::light
 			}
 		}
 	};
+
 }

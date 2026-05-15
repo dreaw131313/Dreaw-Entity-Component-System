@@ -260,7 +260,7 @@ namespace decs
 	{
 	public:
 		Archetype* m_Archetype = nullptr;
-		EComponentEdgeType m_EdgeType = EComponentEdgeType::Add;
+		EArchetypeEdgeType m_EdgeType = EArchetypeEdgeType::Add;
 
 	public:
 		ArchetypeEdge()
@@ -268,7 +268,7 @@ namespace decs
 
 		}
 
-		ArchetypeEdge(Archetype* archetype, EComponentEdgeType edgeType):
+		ArchetypeEdge(Archetype* archetype, EArchetypeEdgeType edgeType):
 			m_Archetype(archetype), m_EdgeType(edgeType)
 		{
 
@@ -329,7 +329,7 @@ namespace decs
 			return m_EntityStorage;
 		}
 
-		inline uint32_t GetTypeCount() const noexcept
+		inline uint32_t GetComponentTagCount() const noexcept
 		{
 			return static_cast<uint32_t>(m_TypeData.size());
 		}
@@ -340,7 +340,7 @@ namespace decs
 		/// <returns></returns>
 		inline uint32_t GetComponentAndTagCount() const noexcept
 		{
-			return GetTypeCount();
+			return GetComponentTagCount();
 		}
 
 		inline uint32_t GetComponentOnlyCount() const
@@ -400,7 +400,7 @@ namespace decs
 			return m_TypeData[index].IsTag();
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		inline bool HasTag() const
 		{
 			return HasTag(Type<TTag>::ID());
@@ -411,7 +411,7 @@ namespace decs
 			return m_TypeData[typeIndex].IsTag();
 		}
 
-		bool HasSameTypesAs(const Archetype& archetype)  const;
+		bool HasSameComponentsTagsAs(const Archetype& archetype)  const;
 
 		/// <summary>
 		/// if types.size() is different thant archetype type count returns false.
@@ -447,13 +447,13 @@ namespace decs
 			return true;
 		}
 
-		template<TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<TComponentConcept... ComponentTypes, tag_concept... TagTypes>
 		bool IsArchetypeWithComponentsAndTags_Exactly(
 			const ComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags
 		) const noexcept
 		{
-			if ((sizeof...(ComponentTypes) + sizeof...(TagTypes)) != GetTypeCount())
+			if ((sizeof...(ComponentTypes) + sizeof...(TagTypes)) != GetComponentTagCount())
 			{
 				return false;
 			}
@@ -482,14 +482,14 @@ namespace decs
 		/// </summary>
 		/// <param name="neighbour">Archetype with smaller number of componetnts than this archetype</param>
 		/// <returns></returns>
-		std::optional<TypeID> IsRemoveComponentNeighbour(const Archetype& neighbour) const;
+		std::optional<TypeID> IsRemoveAnyDataNeighbour(const Archetype& neighbour) const;
 
 		/// <summary>
 		/// 
 		/// </summary>
 		/// <param name="neighbour"></param>
 		/// <returns>Archetype with larger number of componetns than this archetype</returns>
-		std::optional<TypeID> IsAddComponentNeighbour(const Archetype& neighbour) const;
+		std::optional<TypeID> IsAddAnyDataNeighbour(const Archetype& neighbour) const;
 
 		inline bool HasAnyEdge(TypeID toTypeID) const noexcept
 		{
@@ -602,7 +602,7 @@ namespace decs
 
 	#pragma region EDGES
 	private:
-		void AddEdge(TypeID componentTypeID, Archetype* archetype, EComponentEdgeType edgeType);
+		void AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType);
 
 		template<TComponentConcept TComponent>
 		ArchetypeEdge GetEdge() const
@@ -674,13 +674,13 @@ namespace decs
 				return true;
 			}
 			if (m_ArchetypeConst == nullptr || rhs.m_ArchetypeConst == nullptr
-				|| m_ArchetypeConst->GetTypeCount() != rhs.m_ArchetypeConst->GetTypeCount()
+				|| m_ArchetypeConst->GetComponentTagCount() != rhs.m_ArchetypeConst->GetComponentTagCount()
 				)
 			{
 				return false;
 			}
 
-			return m_ArchetypeConst->HasSameTypesAs(*rhs.m_ArchetypeConst);
+			return m_ArchetypeConst->HasSameComponentsTagsAs(*rhs.m_ArchetypeConst);
 		}
 
 		inline const Archetype* GetConstArchetype() const

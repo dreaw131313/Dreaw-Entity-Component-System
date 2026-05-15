@@ -150,6 +150,15 @@
     <ClInclude Include="src\decs\Light\LEntitySpawner.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\decs\Light\Filter\LFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\Light\Iteration\LQueryManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\decs\Light\Archetypes\LArchetypeAllocator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\decs\decs.cpp">
@@ -189,6 +198,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\decs\Normal\EntityManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\decs\Light\Iteration\LQueryManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\decs\Light\Archetypes\LArchetypeAllocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

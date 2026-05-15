@@ -7,18 +7,22 @@
 namespace decs::light
 {
 	Container::Container():
-		m_EntityManager(m_DefaultEntitiesChunkSize)
+		m_EntityManager(m_DefaultEntitiesChunkSize),
+		m_QueryManager(this),
+		m_ArchetypesMap(m_FilterManager, m_QueryManager, 100, 100)
 	{
 	}
 
 	Container::Container(const ContainerConfig& config):
 		m_EntityManager(config.EntityChunkSize),
-		m_ArchetypesMap(config.ArchetypeChunkSize, 100)
+		m_QueryManager(this),
+		m_ArchetypesMap(m_FilterManager, m_QueryManager, config.ArchetypeChunkSize, 100)
 	{
 	}
 
 	Container::~Container()
 	{
+		m_QueryManager.OnDestroyContainer();
 		m_ArchetypesMap.ClearEntityDataAndComponents();
 	}
 
@@ -262,7 +266,7 @@ namespace decs::light
 		auto& spawnArchetypeTypeData = spawnArchetype.m_TypeData;
 		auto& prefabArchetypeTypeData = prefabArchetype.m_TypeData;
 
-		const uint64_t typeCount = prefabArchetype.GetTypeCount();
+		const uint64_t typeCount = prefabArchetype.GetComponentTagCount();
 
 		for (uint32_t i = 0; i < typeCount; i++)
 		{
@@ -315,6 +319,58 @@ namespace decs::light
 		return true;
 	}
 
+	Archetype* Container::GetArchetypeAfterRemoveFilter(Archetype* fromArchetype, TypeID filterID)
+	{
+		if (fromArchetype == nullptr)
+		{
+			return nullptr;
+		}
+		else
+		{
+			return m_ArchetypesMap.GetOrCreateArchetypeAfterRemoveFilter(*fromArchetype, filterID);
+		}
+	}
+
+	bool Container::RemoveFilter(EntityData& entityData, TypeID filterTypeID)
+	{
+		Archetype* oldArchetype = entityData.m_Archetype;
+		if (oldArchetype == nullptr)
+		{
+			return false;
+		}
+		const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
+
+		Archetype* newArchetype = this->GetArchetypeAfterRemoveFilter(oldArchetype, filterTypeID);
+		if (newArchetype == oldArchetype)
+		{
+			return false;
+		}
+
+		if (newArchetype != nullptr)
+		{
+			Archetype::MoveEntiyAfterFilterChange(*oldArchetype, *newArchetype, indexInOldArchetype);
+		}
+		else
+		{
+			oldArchetype->RemoveSwapBackEntity(indexInOldArchetype);
+			AddToEmptyEntities(entityData);
+		}
+
+		return true;
+	}
+
+	bool Container::HasFilter(const EntityData& entityData, TypeID filterID)
+	{
+		if (entityData.m_Archetype == nullptr
+			|| entityData.m_Archetype->GetFilters().size() == 0
+			)
+		{
+			return false;
+		}
+
+		return entityData.m_Archetype->HasFilterWithType(filterID);
+	}
+
 	bool Container::RemoveTag(EntityData& entityData, TypeID tagType)
 	{
 		if (entityData.m_Container != this || entityData.m_Archetype == nullptr)
@@ -350,6 +406,31 @@ namespace decs::light
 		}
 
 		return true;
+	}
+
+	void Container::TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config)
+	{
+		m_ArchetypesMap.TryDestroyArchetypes(state, config);
+	}
+
+	void Container::AddQuery(IQuery* query)
+	{
+		m_QueryManager.AddQuery(query);
+	}
+
+	void Container::RemoveQuery(IQuery* query)
+	{
+		m_QueryManager.RemoveQuery(query);
+	}
+
+	void Container::AddMultiQuery(IMultiQuery* query)
+	{
+		m_QueryManager.AddMultiQuery(query);
+	}
+
+	void Container::RemoveMultiQuery(IMultiQuery* query)
+	{
+		m_QueryManager.RemoveMultiQuery(query);
 	}
 
 }

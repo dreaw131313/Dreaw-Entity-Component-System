@@ -1,6 +1,6 @@
 #pragma once
 #include "decs/Core/Core.h"
-#include "decs/Core/TChunkedVector.h"
+#include "decs/Core/trait.h"
 #include "decs/Core/check_cast.h"
 
 namespace decs::light
@@ -99,7 +99,7 @@ namespace decs::light
 			m_Data.reserve(newCapacity);
 		}
 
-		inline void* GetComponentBasePtr(uint64_t index)  override
+		inline void* GetComponentBasePtr(uint64_t index) override
 		{
 			return &m_Data[index];
 		}

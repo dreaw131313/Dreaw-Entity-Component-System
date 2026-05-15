@@ -508,7 +508,7 @@ namespace decs
 	{
 		const Archetype& prefabArchetype = *prefabEntityData.m_Archetype;
 		const uint32_t prefabIndexInArchetype = prefabEntityData.m_IndexInArchetype;
-		const uint64_t typeCount = prefabArchetype.GetTypeCount();
+		const uint64_t typeCount = prefabArchetype.GetComponentTagCount();
 
 		if ((&prefabContainer) == this)
 		{

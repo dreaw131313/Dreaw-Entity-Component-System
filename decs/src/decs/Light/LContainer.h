@@ -2,6 +2,8 @@
 
 #include "Archetypes/LArchetypesMap.h"
 #include "LEntityManager.h"
+#include "Filter/LFilter.h"
+#include "Iteration/LQueryManager.h"
 
 namespace decs::light
 {
@@ -19,11 +21,13 @@ namespace decs::light
 
 	class Container final : private NonCopyableNonMoveable
 	{
-		template<TLightComponentConcept ...Types>
+		template<light_component_or_filter_concept... ComponentsTypes>
+		friend class QueryImpl;
+		template<light_component_or_filter_concept ...Types>
 		friend class light::Query;
-		template<TLightComponentConcept ...Types>
+		template<light_component_or_filter_concept ...Types>
 		friend class light::MultiQuery;
-		template<TLightComponentConcept...>
+		template<light_component_or_filter_concept...>
 		friend class light::IterationContainerContext;
 		friend class light::Entity;
 		friend class light::ContainerIterator;
@@ -85,7 +89,7 @@ namespace decs::light
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<typename InitFunc, light_component_or_filter_concept... ComponentTypes, tag_concept... TagTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
 			const LightComponentTypeGroup<ComponentTypes...> components,
@@ -144,7 +148,7 @@ namespace decs::light
 			}
 		}
 
-		template<typename InitFunc, TLightComponentConcept... ComponentTypes>
+		template<typename InitFunc, light_component_or_filter_concept... ComponentTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
 			const LightComponentTypeGroup<ComponentTypes...> components,
@@ -169,7 +173,7 @@ namespace decs::light
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<typename InitFunc, light_component_or_filter_concept... ComponentTypes, tag_concept... TagTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
 			const LightComponentTypeGroup<ComponentTypes...> components,
@@ -224,7 +228,7 @@ namespace decs::light
 			return Entity();
 		}
 
-		template<typename InitFunc, TLightComponentConcept... ComponentTypes>
+		template<typename InitFunc, light_component_or_filter_concept... ComponentTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
 			const LightComponentTypeGroup<ComponentTypes...> components,
@@ -280,7 +284,7 @@ namespace decs::light
 
 	#pragma region COMPONENTS:
 	private:
-		template<TLightComponentConcept TComponent, typename ...Args>
+		template<light_component_concept TComponent, typename ...Args>
 		TComponent* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<TComponent>::ID();
@@ -312,7 +316,7 @@ namespace decs::light
 			return componentPtr;
 		}
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_concept TComponent>
 		bool RemoveComponent(const Entity& entity)
 		{
 			return RemoveComponent(entity, Type<TComponent>::ID());
@@ -320,14 +324,9 @@ namespace decs::light
 
 		bool RemoveComponent(const Entity& entity, TypeID componentTypeID);
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_concept TComponent>
 		TComponent* GetComponent(EntityData& entityData) const
 		{
-			if constexpr (is_tag_v<TComponent>)
-			{
-				return nullptr;
-			}
-
 			if (entityData.m_Archetype != nullptr)
 			{
 				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
@@ -349,7 +348,7 @@ namespace decs::light
 			return false;
 		}
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_concept TComponent>
 		bool HasComponent(EntityData& entityData) const
 		{
 			if constexpr (is_tag_v<TComponent>)
@@ -357,8 +356,133 @@ namespace decs::light
 				return false;
 			}
 
-			return HasComponentInternal(entityData, Type<TComponent>::ID());
+			return HasComponentInternal(entityData, Type<pure_type_t<TComponent>>::ID());
 		}
+
+		template<light_component_concept... ComponentTypes>
+		std::tuple<ComponentTypes*...> GetComponents(EntityData& entityData) const
+		{
+			if (entityData.m_Archetype != nullptr)
+			{
+				size_t entityIndex = static_cast<size_t>(entityData.m_IndexInArchetype);
+				return { GetComponentFromArchetypeAtIndex<pure_type_t<ComponentTypes>>(*entityData.m_Archetype, entityIndex) ... };
+			}
+			return { static_cast<ComponentTypes*>(nullptr) ... };
+		}
+
+		template<light_component_concept ComponentType>
+		ComponentType* GetComponentFromArchetypeAtIndex(Archetype& archetype, size_t index) const
+		{
+			PackedLightComponentContainer<ComponentType>* container = archetype.GetTypePackedContainer<ComponentType>();
+			if (container != nullptr)
+			{
+				return container->GetAsPtr(index);
+			}
+			return nullptr;
+		}
+
+	#pragma endregion
+
+	#pragma region FILTERS
+	private:
+		template<filter_concept FilterType>
+		Archetype* GetArchetypeAfterSetFilter(Archetype* toArchetype, const FilterType& filter)
+		{
+			if (toArchetype == nullptr)
+			{
+				return m_ArchetypesMap.GetOrCreateSingleFilterArchetype<FilterType>(filter);
+			}
+			else
+			{
+				return m_ArchetypesMap.GetOrCreateArchetypeAfterSetFilter<FilterType>(*toArchetype, filter);
+			}
+		}
+
+		Archetype* GetArchetypeAfterRemoveFilter(Archetype* fromArchetype, TypeID filterID);
+
+		template<filter_concept FilterType>
+		bool SetFilter(EntityData& entityData, const FilterType& filter)
+		{
+			TYPE_ID_CONSTEXPR TypeID filterTypeID = Type<FilterType>::ID();
+
+			Archetype* oldArchetype = entityData.m_Archetype;
+			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
+
+			Archetype* newArchetype = this->GetArchetypeAfterSetFilter<FilterType>(oldArchetype, filter);
+			if (newArchetype == oldArchetype)
+			{
+				return true;
+			}
+
+			if (oldArchetype != nullptr)
+			{
+				Archetype::MoveEntiyAfterFilterChange(*oldArchetype, *newArchetype, indexInOldArchetype);
+			}
+			else
+			{
+				RemoveFromEmptyEntities(entityData);
+				newArchetype->AddEntityData(&entityData);
+			}
+
+			return true;
+		}
+
+		bool RemoveFilter(EntityData& entityData, TypeID filterTypeID);
+
+		template<filter_concept FilterType>
+		bool RemoveFilter(EntityData& entityData)
+		{
+			return RemoveFilter(entityData, Type<FilterType>::ID());
+		}
+
+		template<filter_concept FilterType>
+		const FilterType* GetFilter(EntityData& entityData)
+		{
+			if (entityData.m_Archetype == nullptr
+				|| entityData.m_Archetype->GetFilters().size() == 0
+				)
+			{
+				return nullptr;
+			}
+
+			FilterContainer<FilterType>* filterContainer = entityData.m_Archetype->GetFilterContainer<FilterType>();
+			if (filterContainer == nullptr)
+			{
+				return nullptr;
+			}
+
+			return &filterContainer->m_Data;
+		}
+
+		bool HasFilter(const EntityData& entityData, TypeID filterID);
+
+		template<filter_concept FilterType>
+		bool HasFilter(const EntityData& entityData)
+		{
+			return HasFilter(entityData, Type<FilterType>::ID());
+		}
+
+		template<filter_concept FilterType>
+		bool HasFilter(const EntityData& entityData, const FilterType& filterData)
+		{
+			if (entityData.m_Archetype == nullptr
+				|| entityData.m_Archetype->GetFilters().size() == 0
+				)
+			{
+				return false;
+			}
+
+			FilterContainer<FilterType>* filterContainer = entityData.m_Archetype->GetFilterContainer<FilterType>();
+			if (filterContainer == nullptr)
+			{
+				return false;
+			}
+
+			return filterContainer->m_Data == filterData;
+		}
+
+	private:
+		FilterManager m_FilterManager{};
 
 	#pragma endregion
 
@@ -389,13 +513,13 @@ namespace decs::light
 			return entityData.m_Archetype->HasTag(tagType);
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		inline bool HasTag(const EntityData& entityData)
 		{
 			return HasTag(entityData, Type<TTag>::ID());
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		bool AddTag(EntityData& entityData)
 		{
 			Archetype* oldArchetype = entityData.m_Archetype;
@@ -425,7 +549,7 @@ namespace decs::light
 
 		bool RemoveTag(EntityData& entityData, TypeID tagType);
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		bool RemoveTag(EntityData& entityData)
 		{
 			return RemoveTag(entityData, Type<TTag>::ID());
@@ -435,9 +559,15 @@ namespace decs::light
 
 	#pragma region ARCHETYPES:
 	private:
-		ArchetypesMap m_ArchetypesMap{};
+		QueryManager m_QueryManager;
+		ArchetypesMap m_ArchetypesMap;
 
 	public:
+		/// <summary>
+		/// Function which destroy empty archetypes
+		/// </summary>
+		void TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config);
+
 		inline void ShrinkArchetypesToFit()
 		{
 			m_ArchetypesMap.ShrinkArchetypesToFit();
@@ -472,7 +602,7 @@ namespace decs::light
 			return entityNewArchetype;
 		}
 
-		template<TLightComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<light_component_or_filter_concept... ComponentTypes, tag_concept... TagTypes>
 		Archetype* GetArchetypeWithComponentsAndTags(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags
@@ -485,6 +615,15 @@ namespace decs::light
 
 			return spawnArchetype;
 		}
+
+		void AddQuery(IQuery* query);
+
+		void RemoveQuery(IQuery* query);
+
+		void AddMultiQuery(IMultiQuery* query);
+
+		void RemoveMultiQuery(IMultiQuery* query);
+
 
 	#pragma endregion
 

@@ -7,6 +7,7 @@ namespace Light
 	{
 	public:
 		void Run();
+	private:
 
 		void IterationTest();
 
@@ -14,7 +15,11 @@ namespace Light
 
 		void PerformanceTest();
 
-	private:
+		void FilterTest();
+
+		void QueryManagerTest();
+
+		void RemovingArchetypesTest();
 	};
 
 }

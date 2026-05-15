@@ -83,16 +83,16 @@ namespace decs::light
 			return false;
 		}
 
-		[[nodiscard]] inline uint32_t GetTypeCount() const
+		[[nodiscard]] inline uint32_t GetComponentTagCount() const
 		{
 			if (IsValid())
 			{
-				return m_EntityData->GetTypeCount();
+				return m_EntityData->GetComponentTagCount();
 			}
 			return 0;
 		}
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_concept TComponent>
 		[[nodiscard]] inline TComponent* GetComponent() const
 		{
 			if (IsValid())
@@ -103,13 +103,23 @@ namespace decs::light
 			return nullptr;
 		}
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_concept... ComponentTypes>
+		[[nodiscard]] inline std::tuple<ComponentTypes*...> GetComponents()
+		{
+			if (IsValid())
+			{
+				return GetContainer()->GetComponents<ComponentTypes...>(*m_EntityData);
+			}
+			return { static_cast<ComponentTypes*>(nullptr) ... };
+		}
+
+		template<light_component_concept TComponent>
 		[[nodiscard]] inline bool HasComponent() const
 		{
 			return IsValid() && GetContainer_Internal()->HasComponent<drop_const_t<TComponent>>(*GetEntityData());
 		}
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_concept TComponent>
 		inline bool TryGetComponent(TComponent*& component) const
 		{
 			if (IsValid())
@@ -120,7 +130,7 @@ namespace decs::light
 			return component != nullptr;
 		}
 
-		template<TLightComponentConcept TComponent, typename... Args>
+		template<light_component_concept TComponent, typename... Args>
 		inline typename TComponent* AddComponent(Args&&... args) const
 		{
 			if (IsValid())
@@ -129,7 +139,7 @@ namespace decs::light
 			return nullptr;
 		}
 
-		template<TLightComponentConcept TComponent>
+		template<light_component_concept TComponent>
 		inline bool RemoveComponent() const
 		{
 			return IsValid() && GetContainer_Internal()->RemoveComponent<drop_const_t<TComponent>>(*this);
@@ -166,7 +176,7 @@ namespace decs::light
 			return false;
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		[[nodiscard]] inline bool HasTag()const
 		{
 			if (IsValid())
@@ -176,7 +186,7 @@ namespace decs::light
 			return false;
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		bool AddTag()const
 		{
 			if (IsValid())
@@ -195,7 +205,7 @@ namespace decs::light
 			return false;
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		bool RemoveTag() const
 		{
 			if (IsValid())
@@ -204,6 +214,79 @@ namespace decs::light
 			}
 			return false;
 		}
+
+	#pragma endregion
+
+	#pragma region FILTERS:
+	public:
+		template<filter_concept Filter>
+		bool SetFilter(const Filter& filter) const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->SetFilter(*m_EntityData, filter);
+			}
+			return false;
+		}
+
+		bool RemoveFilter(TypeID filterTypeID) const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->RemoveFilter(*m_EntityData, filterTypeID);
+			}
+			return false;
+		}
+
+		template<filter_concept FilterType>
+		bool RemoveFilter() const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->RemoveFilter<FilterType>(*m_EntityData);
+			}
+			return false;
+		}
+
+		template<filter_concept FilterType>
+		[[nodiscard]] const FilterType* GetFilter() const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->GetFilter<FilterType>(*m_EntityData);
+			}
+			return nullptr;
+		}
+
+		[[nodiscard]] bool HasFilter(TypeID filterID)const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->HasFilter(*m_EntityData, filterID);
+			}
+			return false;
+		}
+
+		template<filter_concept FilterType>
+		[[nodiscard]] bool HasFilter()const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->HasFilter<FilterType>(*m_EntityData);
+			}
+			return false;
+		}
+
+		template<filter_concept FilterType>
+		[[nodiscard]] bool HasFilter(const FilterType& filterData)const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->HasFilter<FilterType>(*m_EntityData, filterData);
+			}
+			return false;
+		}
+
 
 	#pragma endregion
 

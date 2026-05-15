@@ -6,17 +6,77 @@
 
 namespace decs::light
 {
+
+	template<light_component_or_filter_concept T>
+	struct query_data_container final
+	{
+	public:
+		using data_type = pure_type_t<T>;
+		using container_type = PackedLightComponentContainer<data_type>;
+		inline static constexpr bool is_filter = false;
+	};
+
+	template<filter_concept T>
+	struct query_data_container<filter<T>> final
+	{
+	public:
+		using data_type = pure_type_t<T>;
+		using container_type = FilterContainer<data_type>;
+		inline static constexpr bool is_filter = true;
+	};
+
+	template<typename T>
+	using query_data_container_t = query_data_container<T>::container_type;
+
+
 	class Iteration
 	{
 	public:
+
+		template<typename Desired, typename TupleType>
+		inline static Desired* get_optional_data_from_tuple(
+			uint64_t entityIndexInArchetype,
+			const TupleType& containersTuple
+		)
+		{
+			if constexpr (tuple_has_type_v<query_data_container_t<Desired>*, TupleType>)
+			{
+				return std::get<query_data_container_t<Desired>*>(containersTuple)->GetAsPtr(entityIndexInArchetype);
+			}
+			else
+			{
+				return nullptr;
+			}
+		}
+
+		template<typename Callable, typename TupleType, typename... ComponentTypes>
+		inline static void InvokeEntityIteration_WithOptional(
+			Callable&& func,
+			uint64_t entityIndexInArchetype,
+			const TupleType& containersTuple
+		)
+		{
+			if constexpr (sizeof...(ComponentTypes) != 0)
+			{
+				func(*get_optional_data_from_tuple<ComponentTypes, TupleType>(entityIndexInArchetype, containersTuple)...);
+			}
+			else
+			{
+				func();
+			}
+		}
+
 		template<typename Callable, typename... ComponentTypes>
 		inline static void InvokeEntityIteration(
 			Callable&& func,
 			uint64_t entityIndexInArchetype,
-			const std::tuple<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
+			const std::tuple<query_data_container_t<ComponentTypes>*...>& containersTuple
 		)
 		{
-			func(std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
+			using TupleType = std::tuple<query_data_container_t<ComponentTypes>*...>;
+			InvokeEntityIteration_WithOptional<Callable, TupleType, ComponentTypes...>(func, entityIndexInArchetype, containersTuple);
+
+			//func(std::get<query_data_container_t<ComponentTypes>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
 		}
 
 		template<typename Callable, typename... ComponentTypes>
@@ -25,22 +85,22 @@ namespace decs::light
 			Entity& entityBuffer,
 			EntityData& entityData,
 			uint64_t entityIndexInArchetype,
-			const std::tuple<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
+			const std::tuple<query_data_container_t<ComponentTypes>*...>& containersTuple
 		)
 		{
 			entityBuffer.Set_Internal(entityData);
 			func(
 				entityBuffer,
-				std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
+				std::get<query_data_container_t<ComponentTypes>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
 			);
 		}
 	};
 
-	template<TLightComponentConcept... ComponentsTypes>
+	template<light_component_or_filter_concept... ComponentsTypes>
 	struct QueryFiltersConfig
 	{
 	public:
-		using TypeGroupType = TypeGroup<drop_const_t<ComponentsTypes>...>;
+		using TypeGroupType = TypeGroup<pure_type_t<ligth_component_or_filter_t<ComponentsTypes>>...>;
 
 	public:
 		const TypeGroupType& GetIncludes() const
@@ -63,14 +123,20 @@ namespace decs::light
 			return m_WithAll;
 		}
 
-		inline uint64_t GetMinComponentsCount() const
+		inline const IFilterDataTupleHandle& GetFilterDataTuple() const noexcept
+		{
+			return m_FilterDataTuple;
+		}
+
+
+		inline uint64_t GetMinComponentFilterCount() const
 		{
 			uint64_t includesCount = sizeof...(ComponentsTypes);
 			if (m_WithAnyOf.size() > 0) includesCount += 1;
 			return sizeof...(ComponentsTypes) + m_WithAll.size();
 		}
 
-		template<TLightComponentOrTagConcept... WithoutTypes>
+		template<light_component_or_tag_or_filter_concept... WithoutTypes>
 		void Without()
 		{
 			if constexpr (sizeof...(WithoutTypes) == 0)
@@ -80,11 +146,11 @@ namespace decs::light
 			else
 			{
 				m_Without.reserve(sizeof...(WithoutTypes));
-				(m_Without.push_back(Type<drop_const_t<WithoutTypes>>::ID()), ...);
+				(m_Without.push_back(Type<drop_const_t<ligth_component_or_tag_or_filter_t<WithoutTypes>>>::ID()), ...);
 			}
 		}
 
-		template<TLightComponentOrTagConcept... WithAnyTypes>
+		template<light_component_or_tag_or_filter_concept... WithAnyTypes>
 		void WithAny()
 		{
 			if constexpr (sizeof...(WithAnyTypes) == 0)
@@ -94,11 +160,11 @@ namespace decs::light
 			else
 			{
 				m_WithAnyOf.reserve(sizeof...(WithAnyTypes));
-				(m_WithAnyOf.push_back(Type<drop_const_t<WithAnyTypes>>::ID()), ...);
+				(m_WithAnyOf.push_back(Type<drop_const_t<ligth_component_or_tag_or_filter_t<WithAnyTypes>>>::ID()), ...);
 			}
 		}
 
-		template<TLightComponentOrTagConcept... WithTypes>
+		template<light_component_or_tag_or_filter_concept... WithTypes>
 		void With()
 		{
 			if constexpr (sizeof...(WithTypes) == 0)
@@ -108,8 +174,14 @@ namespace decs::light
 			else
 			{
 				m_WithAll.reserve(sizeof...(WithTypes));
-				(m_WithAll.push_back(Type<drop_const_t<WithTypes>>::ID()), ...);
+				(m_WithAll.push_back(Type<drop_const_t<ligth_component_or_tag_or_filter_t<WithTypes>>>::ID()), ...);
 			}
+		}
+
+		template<filter_concept... FilterTypes>
+		void WithFilterData(FilterTypes&&... filterData)
+		{
+			m_FilterDataTuple = TFilterDataTupleHandle<FilterTypes...>::Create(std::forward<FilterTypes>(filterData)...).Cast<IFilterDataTuple>();
 		}
 
 		[[nodiscard]] bool Clear()
@@ -139,15 +211,14 @@ namespace decs::light
 		std::vector<TypeID> m_WithAnyOf{};
 		std::vector<TypeID> m_WithAll{};
 		TypeGroupType m_Includes = {};
+		IFilterDataTupleHandle m_FilterDataTuple{};
 	};
 
-	template<TLightComponentConcept... ComponentsTypes>
+	template<light_component_or_filter_concept... ComponentsTypes>
 	class IterationArchetypeContext
 	{
 	public:
-		template<typename TComponent>
-		using TPackedContainer = PackedLightComponentContainer<drop_const_t<TComponent>>;
-		using ContainersTuple = std::tuple<TPackedContainer<drop_const_t<ComponentsTypes>>*...>;
+		using ContainersTuple = std::tuple<query_data_container_t<ComponentsTypes>*...>;
 
 	public:
 		inline static constexpr uint64_t s_ComponentCount = sizeof...(ComponentsTypes);
@@ -174,8 +245,24 @@ namespace decs::light
 
 			m_Archetype = archetype;
 
-			m_ContainersTuple = { m_Archetype->GetTypePackedContainer<drop_const_t<ComponentsTypes>>()... };
-			return ((std::get<TPackedContainer<drop_const_t<ComponentsTypes>>*>(m_ContainersTuple) != nullptr) && ...);
+			//m_ContainersTuple = { m_Archetype->GetTypePackedContainer<pure_type_t<ComponentsTypes>>()... };
+			m_ContainersTuple = { GetArchetypeDataContainer<ComponentsTypes>()... };
+
+			return ((std::get<query_data_container_t<ComponentsTypes>*>(m_ContainersTuple) != nullptr) && ...);
+		}
+
+		template<typename T>
+		query_data_container_t<T>* GetArchetypeDataContainer()
+		{
+			using data_type = query_data_container<T>::data_type;
+			if constexpr (query_data_container<T>::is_filter)
+			{
+				return m_Archetype->GetFilterContainer<data_type>();
+			}
+			else
+			{
+				return m_Archetype->GetTypePackedContainer<data_type>();
+			}
 		}
 
 	#pragma region FOREACH
@@ -392,18 +479,18 @@ namespace decs::light
 		{
 			if (GetEntityCount() > 0)
 			{
-				func(std::get<TPackedContainer<ComponentsTypes>*>(m_ContainersTuple)->GetAsSpan()...);
+				func(std::get<query_data_container_t<ComponentsTypes>*>(m_ContainersTuple)->GetAsSpan()...);
 			}
 		}
 
 	#pragma endregion
+
 	private:
 		const Archetype* m_Archetype = nullptr;
 		ContainersTuple m_ContainersTuple{};
 	};
 
-
-	template<TLightComponentConcept... ComponentsTypes>
+	template<light_component_or_filter_concept... ComponentsTypes>
 	class IterationContainerContext
 	{
 	public:
@@ -412,9 +499,8 @@ namespace decs::light
 
 	public:
 		std::vector<ArchetypeContextType> m_ArchetypesContexts{};
-		ecsSet<const Archetype*> m_ContainedArchetypes{};
+		ecsMap<const Archetype*, size_t> m_ArchetypeIndices{};
 		Container* m_Container = nullptr;
-		uint64_t m_ArchetypesCountDirty = 0;
 		bool m_bIsEnabled = true;
 
 	public:
@@ -455,16 +541,15 @@ namespace decs::light
 			return m_ArchetypesContexts;
 		}
 
-		const ecsSet<const Archetype*>& GetArchetypes() const
+		inline bool ContainsArchetype(const Archetype* archetype) const
 		{
-			return m_ContainedArchetypes;
+			return m_ArchetypeIndices.contains(archetype);
 		}
 
 		void Clear()
 		{
 			m_ArchetypesContexts.clear();
-			m_ContainedArchetypes.clear();
-			m_ArchetypesCountDirty = 0;
+			m_ArchetypeIndices.clear();
 		}
 
 		void SetContainer(Container* container)
@@ -475,45 +560,32 @@ namespace decs::light
 
 		void Fetch(const QueryFilterConfigType& filter)
 		{
-			uint64_t minComponentsCount = filter.GetMinComponentsCount();
-
-			uint64_t containerArchetypesCount = m_Container->m_ArchetypesMap.GetArchetypesCount();
-			if (m_ArchetypesCountDirty != containerArchetypesCount)
+			if (!IsValid())
 			{
-				uint64_t newArchetypesCount = containerArchetypesCount - m_ArchetypesCountDirty;
+				return;
+			}
 
-				ArchetypesMap& map = m_Container->m_ArchetypesMap;
-				uint64_t maxComponentsInArchetype = map.MaxTypeCountInArchetypes();
-				if (maxComponentsInArchetype >= minComponentsCount)
+			uint64_t minComponentFilterCount = filter.GetMinComponentFilterCount();
+
+			ArchetypesMap& map = m_Container->m_ArchetypesMap;
+			uint64_t maxComponentsInArchetype = map.GetMaxComponentTagFilterCount();
+			if (maxComponentsInArchetype >= minComponentFilterCount)
+			{
+				if (filter.GetIncludes().Size() > 0)
 				{
-					if (filter.GetIncludes().Size() > 0)
-					{
-						if (newArchetypesCount > m_ArchetypesContexts.size())
-						{
-							// performing normal finding of archetypes
-							auto group = GetBestArchetypesGroup(filter.GetIncludes());
-							FetchArchetypesFromArchetypesGroup(group, filter);
-						}
-						else
-						{
-							// checking only new archetypes:
-							AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, filter);
-						}
-					}
-					else
-					{
-						AddingArchetypesWithCheckingOnlyNewArchetypes(map, m_ArchetypesCountDirty, filter);
-					}
-
+					auto group = GetBestArchetypesGroup(filter);
+					FetchArchetypesFromArchetypesGroup(group, filter);
 				}
-
-				m_ArchetypesCountDirty = containerArchetypesCount;
+				else
+				{
+					AddAllArchetypesToQuery(map, filter);
+				}
 			}
 		}
 
 		bool Contain(const Entity& entity)
 		{
-			return m_ContainedArchetypes.find(entity.GetArchetype()) != m_ContainedArchetypes.end();
+			return m_ArchetypeIndices.find(entity.GetArchetype()) != m_ArchetypeIndices.end();
 		}
 
 		void ValidateCachedEntityCount()
@@ -547,17 +619,28 @@ namespace decs::light
 			}
 		}
 
-	private:
+		inline bool ContainArchetype(const Archetype* arch) const
+		{
+			return m_ArchetypeIndices.contains(arch);
+		}
 
-		inline bool ContainArchetype(Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
-
-		ArchetypesGroupByOneType* GetBestArchetypesGroup(const TypeGroup<ComponentsTypes...>& includes)
+		const ArchetypesGroupByOneType* GetBestArchetypesGroup(const QueryFilterConfigType& filter)
 		{
 			auto& groupsMap = m_Container->m_ArchetypesMap.m_ArchetypesGroupedByOneType;
 
 			uint64_t bestArchetypesCount = std::numeric_limits<uint64_t>::max();
-			ArchetypesGroupByOneType* bestGroup = nullptr;
+			const ArchetypesGroupByOneType* bestGroup = nullptr;
 
+			if (const IFilterDataTupleHandle& filterDataTuple = filter.GetFilterDataTuple())
+			{
+				bestGroup = filterDataTuple->GetBestArchetypeGroup(m_Container->m_ArchetypesMap, bestArchetypesCount);
+				if (bestGroup != nullptr)
+				{
+					bestArchetypesCount = bestGroup->GetArchetypesCount();
+				}
+			}
+
+			const auto& includes = filter.GetIncludes();
 			for (uint64_t i = 0; i < includes.Size(); i++)
 			{
 				auto it = groupsMap.find(includes[i]);
@@ -575,10 +658,19 @@ namespace decs::light
 			return bestGroup;
 		}
 
-		void TryAddArchetypeFromGroup(Archetype& archetype, const QueryFilterConfigType& filter)
+		void TryAddArchetype(const Archetype& archetype, const QueryFilterConfigType& filter)
 		{
-			if (!ContainArchetype(&archetype) && archetype.GetTypeCount())
+			if (!ContainArchetype(&archetype) && archetype.GetComponentTagFilterCount())
 			{
+				// filter data tuple
+				if (auto& filterDataTuple = filter.GetFilterDataTuple())
+				{
+					if (!filterDataTuple->TestArchetype(archetype))
+					{
+						return;
+					}
+				}
+
 				// without test
 				{
 					auto& without = filter.GetWithoutTypes();
@@ -586,7 +678,7 @@ namespace decs::light
 					uint64_t excludeCount = without.size();
 					for (int i = 0; i < excludeCount; i++)
 					{
-						if (archetype.ContainType(without[i]))
+						if (archetype.ContainComponentOrTagOrFilterType(without[i]))
 						{
 							return;
 						}
@@ -602,7 +694,7 @@ namespace decs::light
 
 					for (int i = 0; i < requiredAnyCount; i++)
 					{
-						if (archetype.ContainType(withAnyOf[i]))
+						if (archetype.ContainComponentOrTagOrFilterType(withAnyOf[i]))
 						{
 							containRequiredAny = true;
 							break;
@@ -618,7 +710,7 @@ namespace decs::light
 
 					for (int i = 0; i < requiredAllCount; i++)
 					{
-						if (!archetype.ContainType(withAll[i]))
+						if (!archetype.ContainComponentOrTagOrFilterType(withAll[i]))
 						{
 							return;
 						}
@@ -630,40 +722,71 @@ namespace decs::light
 					ArchetypeContextType context{};
 					if (context.Initialize(&archetype))
 					{
-						m_ContainedArchetypes.insert(&archetype);
+						m_ArchetypeIndices[&archetype] = m_ArchetypesContexts.size();
 						m_ArchetypesContexts.push_back(context);
 					}
 				}
 			}
 		}
 
-		void FetchArchetypesFromArchetypesGroup(ArchetypesGroupByOneType* group, const QueryFilterConfigType& filter)
+		void TryRemoveArchetype(const Archetype& archetype)
+		{
+			auto it = m_ArchetypeIndices.find(&archetype);
+			if (it == m_ArchetypeIndices.end())
+			{
+				return;
+			}
+
+			size_t index = it->second;
+			if (index < (m_ArchetypesContexts.size() - 1))
+			{
+				ArchetypeContextType& lastArchetypeContext = m_ArchetypesContexts.back();
+				m_ArchetypesContexts[index] = lastArchetypeContext;
+				m_ArchetypeIndices[lastArchetypeContext.GetArchetype()] = index;
+			}
+			m_ArchetypesContexts.pop_back();
+			m_ArchetypeIndices.erase(&archetype);
+		}
+
+		void FetchArchetypesFromArchetypesGroup(const ArchetypesGroupByOneType* group, const QueryFilterConfigType& filter)
 		{
 			if (group == nullptr) return;
-			uint64_t maxComponentCountsInGroup = group->MaxComponentsCount();
+			uint64_t maxComponentCountsInGroup = group->GetMaxComponentTagFilterCount();
 
-			for (uint64_t i = filter.GetMinComponentsCount(); i <= maxComponentCountsInGroup; i++)
+			for (uint64_t i = filter.GetMinComponentFilterCount(); i <= maxComponentCountsInGroup; i++)
 			{
-				std::span<Archetype*> archetypes = group->GetArchetypesWithTypeCount(i);
+				std::span<Archetype*> archetypes = group->GetArchetypesWithComponentTagFilterCount(i);
 				for (auto archetype : archetypes)
 				{
-					TryAddArchetypeFromGroup(*archetype, filter);
+					TryAddArchetype(*archetype, filter);
 				}
 			}
 		}
 
 		void AddingArchetypesWithCheckingOnlyNewArchetypes(ArchetypesMap& map, uint64_t startArchetypesIndex, const QueryFilterConfigType& filter)
 		{
-			auto& archetypes = map.m_Archetypes;
-			uint64_t archetypesCount = map.m_Archetypes.Size();
-			uint64_t minRequiredComponentsCount = filter.GetMinComponentsCount();
+			auto archetypes = map.m_ArchetypeAllocator.GetCreatedArchetypes();
+			size_t archetypesCount = archetypes.size();
+			size_t minRequiredComponentTagFilterCount = filter.GetMinComponentFilterCount();
 
-			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
+			for (size_t i = startArchetypesIndex; i < archetypesCount; i++)
 			{
-				Archetype& arch = archetypes[i];
-				if (arch.GetTypeCount() >= minRequiredComponentsCount)
+				const Archetype* arch = archetypes[i];
+				if (arch->GetComponentTagFilterCount() >= minRequiredComponentTagFilterCount)
 				{
-					TryAddArchetypeFromGroup(arch, filter);
+					TryAddArchetype(*arch, filter);
+				}
+			}
+		}
+
+		void AddAllArchetypesToQuery(ArchetypesMap& map, const QueryFilterConfigType& filter)
+		{
+			size_t minRequiredComponentTagFilterCount = filter.GetMinComponentFilterCount();
+			for (auto archetype : map.m_ArchetypeAllocator.GetCreatedArchetypes())
+			{
+				if (archetype->GetComponentTagFilterCount() >= minRequiredComponentTagFilterCount)
+				{
+					TryAddArchetype(*archetype, filter);
 				}
 			}
 		}

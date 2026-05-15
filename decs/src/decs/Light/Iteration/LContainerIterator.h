@@ -14,9 +14,6 @@ namespace decs::light
 		void Foreach(Container& container, TCallable&& callable) const
 		{
 			auto& archetypesMap = container.m_ArchetypesMap;
-			auto& archetypesVector = container.m_ArchetypesMap.m_Archetypes;
-
-			uint64_t archetypesChunks = archetypesVector.ChunkCount();
 
 			Entity entityBuffer = {};
 
@@ -26,31 +23,22 @@ namespace decs::light
 				callable(entityBuffer);
 			}
 
-			for (uint64_t chunkIdx = 0; chunkIdx < archetypesChunks; chunkIdx++)
+			auto archetypesSpan = container.m_ArchetypesMap.m_ArchetypeAllocator.GetCreatedArchetypes();
+			for (auto archetype : archetypesSpan)
 			{
-				uint64_t elementsCount = archetypesVector.GetChunkSize(chunkIdx);
-
-				auto chunk = archetypesVector.GetChunk(chunkIdx);
-
-				for (uint64_t archetypeIdx = 0; archetypeIdx < elementsCount; archetypeIdx++)
+				const auto& entities = archetype->GetEntities();
+				uint64_t entitesCount = archetype->EntityCount();
+				for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 				{
-					Archetype& archetype = chunk[archetypeIdx];
-					const auto& entities = archetype.GetEntities();
-					uint64_t entitesCount = archetype.EntityCount();
-					if (entitesCount > 0)
+					auto archetypeEntityData = entities.Get(entityIdx);
+					if (archetypeEntityData != nullptr)
 					{
-						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
-						{
-							auto archetypeEntityData = entities.Get(entityIdx);
-							if (archetypeEntityData!= nullptr)
-							{
-								entityBuffer.Set_Internal(*archetypeEntityData);
-								callable(entityBuffer);
-							}
-						}
+						entityBuffer.Set_Internal(*archetypeEntityData);
+						callable(entityBuffer);
 					}
 				}
 			}
+
 		}
 	};
 }

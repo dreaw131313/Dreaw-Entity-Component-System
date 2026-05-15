@@ -132,6 +132,9 @@ namespace Normal
 			{
 				auto e = container.CreateEntity();
 				e.AddComponent_NoObserver<TestComponent>();
+				e.AddComponent_NoObserver<Position>();
+
+				auto [pos, test, hevyDataComp] = e.GetComponents<Position, TestComponent, HeavyDataComponent>();
 
 				container.InvokeEntitesOnCreateListeners();
 			}
@@ -311,10 +314,10 @@ namespace Normal
 	void Test::PerformanceTest()
 	{
 		const uint32_t testCount = 1;
-		const uint32_t entityCount = 65356;
+		const uint32_t entityCount = 16384;
 
 		decs::ContainerConfig config{
-			.EntityChunkSize = 100000,
+			.EntityChunkSize = 10000,
 			.DefaultComponentChunkSize = 1000,
 			.ArchetypeChunkSize = 100,
 		};

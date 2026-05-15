@@ -19,7 +19,7 @@ namespace decs
 
 	bool Archetype::ContainType(TypeID typeID) const
 	{
-		if (GetTypeCount() <= Limits::MinComponentsInArchetypeToPerformMapLookup)
+		if (GetComponentTagCount() <= Limits::MinComponentsInArchetypeToPerformMapLookup)
 		{
 			for (auto& typeData : m_TypeData)
 			{
@@ -51,7 +51,7 @@ namespace decs
 		return it->second;
 	}
 
-	bool Archetype::HasSameTypesAs(const Archetype& archetype) const
+	bool Archetype::HasSameComponentsTagsAs(const Archetype& archetype) const
 	{
 		const uint32_t componentAndTagCount = GetComponentAndTagCount();
 
@@ -91,10 +91,10 @@ namespace decs
 		return true;
 	}
 
-	std::optional<TypeID> Archetype::IsRemoveComponentNeighbour(const Archetype& neighbour) const
+	std::optional<TypeID> Archetype::IsRemoveAnyDataNeighbour(const Archetype& neighbour) const
 	{
-		const uint32_t typeCount = GetTypeCount();
-		const uint32_t neighbourTypeCount = neighbour.GetTypeCount();
+		const uint32_t typeCount = GetComponentTagCount();
+		const uint32_t neighbourTypeCount = neighbour.GetComponentTagCount();
 
 		if (neighbourTypeCount >= typeCount || (typeCount - neighbourTypeCount) != 1)
 		{
@@ -122,9 +122,9 @@ namespace decs
 		return std::optional<TypeID>(neighbourTypeID);
 	}
 
-	std::optional<TypeID> Archetype::IsAddComponentNeighbour(const Archetype& neighbour) const
+	std::optional<TypeID> Archetype::IsAddAnyDataNeighbour(const Archetype& neighbour) const
 	{
-		return neighbour.IsRemoveComponentNeighbour(*this);
+		return neighbour.IsRemoveAnyDataNeighbour(*this);
 	}
 
 	void Archetype::ClearEntityDataAndComponents()
@@ -459,7 +459,7 @@ namespace decs
 		}
 	}
 
-	void Archetype::AddEdge(TypeID componentTypeID, Archetype* archetype, EComponentEdgeType edgeType)
+	void Archetype::AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType)
 	{
 		auto& edge = m_Edges[componentTypeID];
 		if (!edge.IsValid())

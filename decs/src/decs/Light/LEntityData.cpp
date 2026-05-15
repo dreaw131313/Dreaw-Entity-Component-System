@@ -4,10 +4,10 @@
 
 namespace decs::light
 {
-	uint32_t EntityData::GetTypeCount() const
+	uint32_t EntityData::GetComponentTagCount() const
 	{
 		if (m_Archetype == nullptr) return 0;
-		return m_Archetype->GetTypeCount();
+		return m_Archetype->GetComponentTagCount();
 	}
 
 }

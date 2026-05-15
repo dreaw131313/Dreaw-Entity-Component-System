@@ -220,9 +220,9 @@ namespace decs
 			return emptyArchetypesCount;
 		}
 
-		inline uint64_t MaxTypeCountInArchetypes() const
+		inline uint64_t GetMaxComponentTagFilterCount() const
 		{
-			return m_MaxTypeCountInArchetypes;
+			return m_MaxComponentTagFilterCount;
 		}
 
 		void ShrinkArchetypesToFit();
@@ -288,10 +288,10 @@ namespace decs
 		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
 
 		TChunkedVector<Archetype> m_Archetypes{ 100 };
-		TChunkedVector<ArchetypeGroup> m_ArchetrypesGroupsAllocator{ 100 };
-		TChunkedVector<ArchetypesGroupByOneType> m_ArchetrypesGroupsByOneTypeAllocator{ 100 };
+		TChunkedVector<ArchetypeGroup> m_ArchetypesGroupsAllocator{ 100 };
+		TChunkedVector<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };
 
-		uint32_t m_MaxTypeCountInArchetypes = 0;
+		uint32_t m_MaxComponentTagFilterCount = 0;
 
 	private:
 		void MakeArchetypeEdges_4(Archetype& archetype);
@@ -320,7 +320,7 @@ namespace decs
 			ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
 			if (group == nullptr)
 			{
-				group = &m_ArchetrypesGroupsByOneTypeAllocator.EmplaceBack(m_ArchetrypesGroupsAllocator, id);
+				group = &m_ArchetypesGroupsByOneTypeAllocator.EmplaceBack(m_ArchetypesGroupsAllocator, id);
 			}
 			return group;
 		}
@@ -363,7 +363,7 @@ namespace decs
 			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::ID();
 			auto edge = toArchetype.GetEdge(addedComponentTypeID);
 
-			if (edge.IsValid() && edge.m_EdgeType == EComponentEdgeType::Add)
+			if (edge.IsValid() && edge.m_EdgeType == EArchetypeEdgeType::Add)
 			{
 				return edge.m_Archetype;
 			}

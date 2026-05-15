@@ -129,7 +129,7 @@ namespace decs
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<typename InitFunc, TComponentConcept... ComponentTypes, tag_concept... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -239,7 +239,7 @@ namespace decs
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<typename InitFunc, TComponentConcept... ComponentTypes, tag_concept... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -604,6 +604,28 @@ namespace decs
 			return nullptr;
 		}
 
+		template<light_component_concept... ComponentTypes>
+		std::tuple<ComponentTypes*...> GetComponents(EntityData& entityData) const
+		{
+			if (entityData.m_Archetype != nullptr)
+			{
+				size_t entityIndex = static_cast<size_t>(entityData.m_IndexInArchetype);
+				return { GetComponentFromArchetypeAtIndex<pure_type_t<ComponentTypes>>(*entityData.m_Archetype, entityIndex) ... };
+			}
+			return { static_cast<ComponentTypes*>(nullptr) ... };
+		}
+
+		template<light_component_concept ComponentType>
+		ComponentType* GetComponentFromArchetypeAtIndex(Archetype& archetype, size_t index) const
+		{
+			PackedStableComponentContainer<ComponentType>* container = archetype.GetTypePackedContainer<ComponentType>();
+			if (container != nullptr)
+			{
+				return container->GetAsPtr(index);
+			}
+			return nullptr;
+		}
+
 		/// <summary>
 		/// 
 		/// </summary>
@@ -712,13 +734,13 @@ namespace decs
 			return entityData.m_Archetype->HasTag(tagType);
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		inline bool HasTag(const EntityData& entityData)
 		{
 			return HasTag(entityData, Type<TTag>::ID());
 		}
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		bool AddTag(EntityData& entityData)
 		{
 			if (!m_CanAddComponents || !entityData.IsValidToPerformComponentOperation())
@@ -761,7 +783,7 @@ namespace decs
 
 		bool RemoveTag(EntityData& entityData, TypeID tagType);
 
-		template<TTagConcept TTag>
+		template<tag_concept TTag>
 		bool RemoveTag(EntityData& entityData)
 		{
 			return RemoveTag(entityData, Type<TTag>::ID());
@@ -1148,7 +1170,7 @@ namespace decs
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<typename InitFunc, TComponentConcept... ComponentTypes, tag_concept... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity_NoObserver(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -1233,7 +1255,7 @@ namespace decs
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, TComponentConcept... ComponentTypes, TTagConcept... TagTypes>
+		template<typename InitFunc, TComponentConcept... ComponentTypes, tag_concept... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities_NoObserver(
 			const ComponentTypeGroup<ComponentTypes...> components,

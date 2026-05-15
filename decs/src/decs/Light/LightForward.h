@@ -11,13 +11,13 @@ namespace decs::light
 	class Container;
 	class Entity;
 	class Iteration;
-	template<TLightComponentConcept... ComponentsTypes>
+	template<light_component_or_filter_concept... ComponentsTypes>
 	class Query;
-	template<TLightComponentConcept... ComponentsTypes>
+	template<light_component_or_filter_concept... ComponentsTypes>
 	class MultiQuery;
-	template<TLightComponentConcept... ComponentsTypes>
+	template<light_component_or_filter_concept... ComponentsTypes>
 	class IterationArchetypeContext;
-	template<TLightComponentConcept...>
+	template<light_component_or_filter_concept...>
 	class IterationContainerContext;
 	class ContainerIterator;
 
