@@ -37,7 +37,7 @@ namespace decs::light
 			return m_UseCount;
 		}
 
-		virtual TypeID GetDataTypeID() const noexcept = 0;
+		virtual TypeID GetFilterTypeID() const noexcept = 0;
 
 		virtual size_t GetDataHash() const noexcept = 0;
 
@@ -53,34 +53,37 @@ namespace decs::light
 	class FilterContainer : public IFilterContainerBase
 	{
 	public:
-		FilterType m_Data{};
+		using FilterDataType = FilterType::DataType;
+
+	public:
+		FilterDataType m_Data{};
 		size_t m_DataHash = 0;
 
 	public:
 		FilterContainer()
 		{
-			m_DataHash = std::hash<FilterType>{}(m_Data);
+			m_DataHash = std::hash<FilterDataType>{}(m_Data);
 		}
 
-		FilterContainer(const FilterType& data):
+		FilterContainer(const FilterDataType& data):
 			m_Data(data)
 		{
-			m_DataHash = std::hash<FilterType>{}(m_Data);
+			m_DataHash = std::hash<FilterDataType>{}(m_Data);
 		}
 
 		template<typename...Args>
 		FilterContainer(Args&&...args):
 			m_Data(std::forward<Args>(args)...)
 		{
-			m_DataHash = std::hash<FilterType>{}(m_Data);
+			m_DataHash = std::hash<FilterDataType>{}(m_Data);
 		}
 
-		inline const FilterType& GetFilterData() const
+		inline const FilterDataType& GetFilterData() const
 		{
 			return m_Data;
 		}
 
-		inline TypeID GetDataTypeID() const noexcept
+		virtual TypeID GetFilterTypeID() const noexcept override
 		{
 			return Type<FilterType>::ID();
 		}
@@ -92,7 +95,7 @@ namespace decs::light
 
 		bool StoresSameData(const IFilterContainerBase& other) const override
 		{
-			if (GetDataTypeID() != other.GetDataTypeID() || GetDataHash() != other.GetDataHash())
+			if (GetFilterTypeID() != other.GetFilterTypeID() || GetDataHash() != other.GetDataHash())
 			{
 				return false;
 			}
@@ -104,17 +107,17 @@ namespace decs::light
 
 		IFilterTypeManager* CreateFilterTypeManager() const override;
 
-		inline const FilterType& GetAsRef(size_t) const
+		inline const FilterDataType& GetAsRef(size_t) const
 		{
 			return m_Data;
 		}
 
-		inline const FilterType* GetAsPtr(size_t) const
+		inline const FilterDataType* GetAsPtr(size_t) const
 		{
 			return &m_Data;
 		}
 
-		inline std::span<const FilterType> GetAsSpan() const
+		inline std::span<const FilterDataType> GetAsSpan() const
 		{
 			return { &m_Data , 1 };
 		}
@@ -124,12 +127,13 @@ namespace decs::light
 	class FilterEntryKey
 	{
 	public:
-		const FilterType* m_DataPtr = nullptr;
+		using DataType = FilterType::DataType;
+		const DataType* m_DataPtr = nullptr;
 
 	public:
 		FilterEntryKey() = default;
 
-		FilterEntryKey(const FilterType& filterData):
+		FilterEntryKey(const DataType& filterData):
 			m_DataPtr(&filterData)
 		{
 
@@ -147,14 +151,14 @@ namespace decs::light
 	};
 }
 
-template<typename FilterType>
+template<::decs::filter_concept FilterType>
 struct std::hash<decs::light::FilterEntryKey<FilterType>>
 {
 	size_t operator ()(const decs::light::FilterEntryKey<FilterType>& v) const
 	{
 		if (v.m_DataPtr != nullptr)
 		{
-			return std::hash<FilterType>{}(*v.m_DataPtr);
+			return std::hash<typename FilterType::DataType>{}(*v.m_DataPtr);
 		}
 		return 0;
 	}
@@ -181,15 +185,9 @@ namespace decs::light
 		using FilterContainerType = FilterContainer<FilterType>;
 		using FilterEntryKeyType = FilterEntryKey<FilterType>;
 
-	public:
-		~FilterTypeManager()
-		{
-			for (size_t i = 0; i < m_Allocator.Size(); i++)
-			{
-				std::cout << m_Allocator[i].GetRefCount() << "\n";
-			}
-		}
+		using FilterDataType = FilterType::DataType;
 
+	public:
 		void Clear() override
 		{
 			m_Allocator.Clear();
@@ -197,7 +195,7 @@ namespace decs::light
 			m_FiltersMap.clear();
 		}
 
-		FilterContainerType* GetOrAddContainer(const FilterType& filter)
+		FilterContainerType* GetOrAddContainer(const FilterDataType& filter)
 		{
 			FilterEntryKeyType tempKey(filter);
 
@@ -210,7 +208,7 @@ namespace decs::light
 			return CreateContainer(filter);
 		}
 
-		inline FilterContainerType* GetContainer(const FilterType& filter) const
+		inline FilterContainerType* GetContainer(const FilterDataType& filter) const
 		{
 			auto it = m_FiltersMap.find(FilterEntryKeyType(filter));
 			return it != m_FiltersMap.end() ? it->second : nullptr;
@@ -264,7 +262,7 @@ namespace decs::light
 		ecsMap<FilterEntryKeyType, FilterContainerType*> m_FiltersMap{};
 
 	private:
-		FilterContainerType* CreateContainer(const FilterType& filter)
+		FilterContainerType* CreateContainer(const FilterDataType& filter)
 		{
 			FilterContainerType* newContainer = nullptr;
 			if (m_FreeList.empty())
@@ -307,7 +305,7 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		FilterContainer<FilterType>* GetOrCreateFilter(const FilterType& filter)
+		FilterContainer<FilterType>* GetOrCreateFilter(const FilterType::DataType& filter)
 		{
 			IFilterTypeManager*& filterTypeMangerBase = m_FilterTypes[Type<FilterType>::ID()];
 			if (filterTypeMangerBase == nullptr)
@@ -320,7 +318,7 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		IFilterContainerBase* GetFilterWithoutIncrementRefCount(const FilterType& filter) const
+		IFilterContainerBase* GetFilterWithoutIncrementRefCount(const FilterType::DataType& filter) const
 		{
 			auto filterManagerIt = m_FilterTypes.find(Type<FilterType>::ID());
 			if (filterManagerIt == m_FilterTypes.end())
@@ -333,7 +331,7 @@ namespace decs::light
 
 		IFilterContainerBase* GetMatchingFilter(const IFilterContainerBase& other)
 		{
-			const TypeID filterTypeID = other.GetDataTypeID();
+			const TypeID filterTypeID = other.GetFilterTypeID();
 
 			IFilterTypeManager*& filterTypeMangerBase = m_FilterTypes[filterTypeID];
 			if (filterTypeMangerBase == nullptr)
@@ -370,7 +368,7 @@ namespace decs::light
 				return false;
 			}
 
-			TypeID typeID = filterTypeContainer->GetDataTypeID();
+			TypeID typeID = filterTypeContainer->GetFilterTypeID();
 			auto it = m_FilterTypes.find(typeID);
 			if (it == m_FilterTypes.end())
 			{

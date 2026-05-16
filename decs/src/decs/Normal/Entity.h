@@ -484,7 +484,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->HasTags<make_tag_t<TagType>...>(*m_EntityData);
+				return GetContainer()->HasTags<tag_type_t<TagType>...>(*m_EntityData);
 			}
 			return false;
 		}

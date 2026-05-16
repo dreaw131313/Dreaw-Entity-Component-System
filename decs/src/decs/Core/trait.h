@@ -9,7 +9,8 @@ namespace decs
 
 #pragma region TUPLE TRAITS:
 	template<typename T, typename... Ts>
-	constexpr std::size_t type_index_v = []{
+	constexpr std::size_t type_index_v = []
+	{
 		std::size_t i = 0;
 		((std::is_same_v<T, Ts> ? false : (++i, true)) && ...);
 		return i;
@@ -38,25 +39,20 @@ namespace decs
 	struct tag final
 	{
 	public:
+		using tag_type = tag<T>;
 		using UnderlyingType = T;
 	};
 
 	template<typename T>
-	struct make_tag
+	struct tag<tag<T>> final
 	{
 	public:
 		using tag_type = tag<T>;
+		using UnderlyingType = T;
 	};
 
 	template<typename T>
-	struct make_tag<tag<T>>
-	{
-	public:
-		using tag_type = tag<T>;
-	};
-
-	template<typename T>
-	using make_tag_t = make_tag<T>::tag_type;
+	using tag_type_t = tag<T>::tag_type;
 
 	template<typename T>
 	struct is_tag final
@@ -89,7 +85,16 @@ namespace decs
 	struct filter
 	{
 	public:
-		using UnderlyingType = T;
+		using DataType = T;
+		using FilterType = filter<T>;
+	};
+
+	template<typename T>
+	struct filter<filter<T>>
+	{
+	public:
+		using DataType = T;
+		using FilterType = filter<T>;
 	};
 
 	template<typename T>
@@ -110,7 +115,13 @@ namespace decs
 	inline constexpr bool is_filter_v = is_filter<T>::value;
 
 	template<typename T>
-	concept filter_concept = true;
+	using filter_type_t = filter<T>::FilterType;
+
+	template<typename T>
+	using filter_data_t = filter<T>::DataType;
+
+	template<typename T>
+	concept filter_concept = is_filter_v<T>;
 
 #pragma endregion
 
@@ -165,7 +176,7 @@ namespace decs
 	concept container_iterator_archetype_func = std::is_invocable_v<Func, const Archetype*>;
 
 	template<typename T>
-	concept light_component_concept = !std::is_same_v<T, bool> && !is_tag_v<T>;
+	concept light_component_concept = !std::is_same_v<T, bool> && !is_tag_v<T> && !is_filter_v<T>;
 
 	template<typename T>
 	concept light_component_or_filter_concept = light_component_concept<T> || filter_concept<T>;
@@ -207,8 +218,7 @@ namespace decs
 	template<typename T>
 	using ligth_component_or_tag_or_filter_t = ligth_component_or_tag_or_filter<T>::Type;
 
-
-	template<light_component_or_filter_concept... Types>
+	template<light_component_concept... Types>
 	class LightComponentTypeGroup
 	{
 	public:
@@ -226,7 +236,7 @@ namespace decs
 		TypeGroup<Types...> m_Group{};
 	};
 
-	template<tag_concept... Types>
+	template<typename... Types>
 	class TagTypeGroup
 	{
 	public:
@@ -241,7 +251,25 @@ namespace decs
 		}
 
 	private:
-		TypeGroup<Types...> m_Group{};
+		TypeGroup<tag_type_t<Types>...> m_Group{};
+	};
+
+	template<typename... Types>
+	class FilterTypeGroup
+	{
+	public:
+		constexpr TypeID operator[](const uint64_t index) const
+		{
+			return m_Group[index];
+		}
+
+		constexpr uint64_t Size() const
+		{
+			return m_Group.Size();
+		}
+
+	private:
+		TypeGroup<filter_type_t<Types>...> m_Group{};
 	};
 
 	template<typename TCallable, typename... TComponentTypes>

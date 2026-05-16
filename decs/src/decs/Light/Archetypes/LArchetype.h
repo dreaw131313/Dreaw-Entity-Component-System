@@ -180,7 +180,7 @@ namespace decs::light
 
 		ArchetypeFilterRecord(IFilterContainerBase* filterContainer):
 			m_FilterContainer(filterContainer),
-			m_FilterTypeID(filterContainer != nullptr ? filterContainer->GetDataTypeID() : InvalidTypeID)
+			m_FilterTypeID(filterContainer != nullptr ? filterContainer->GetFilterTypeID() : InvalidTypeID)
 		{
 
 		}
@@ -210,7 +210,7 @@ namespace decs::light
 		}
 
 		ArchetypeDataKey(IFilterContainerBase* container):
-			m_TypeID(container != nullptr ? container->GetDataTypeID() : 0),
+			m_TypeID(container != nullptr ? container->GetFilterTypeID() : 0),
 			m_FilterContainer(container)
 		{
 

@@ -121,7 +121,8 @@ void Test::Run()
 	//IterationTest();
 
 	//QueryManagerTest();
-	RemovingArchetypesTest();
+	FilterTest();
+	//RemovingArchetypesTest();
 }
 
 void Test::IterationTest()
@@ -448,11 +449,17 @@ void Test::FilterTest()
 
 	ECSContainer container{};
 
+
+	decs::TagTypeGroup<float, int> group{};
+
 	Entity e = container.CreateEntity();
 	e.SetFilter<TestEntityFilter>(TestEntityFilter(1));
 	e.AddComponent<float>(14.0f);
 	e.AddComponent<double>(21.);
 	e.AddTag<FloatTag>();
+
+	DECS_ASSERT(e.HasFilter<TestEntityFilter>(), "Must be true");
+	DECS_ASSERT(e.HasFilter<decs::filter<TestEntityFilter>>(), "Must be true");
 
 	auto [f, i, d] = e.GetComponents<float, int, double>();
 	if (f && d && !i)
@@ -463,16 +470,11 @@ void Test::FilterTest()
 	auto e2 = container.Spawn(e);
 	e2.SetFilter<TestEntityFilter>(2);
 
-	Query<float> query(&container);
-	query.WithFilterData(TestEntityFilter(1));
+	Query<decs::filter<TestEntityFilter>> queryWithFilter(&container);
 
-	query.ForEach([] (const Entity& ent, const float& f)
+	queryWithFilter.ForEach([] (const TestEntityFilter& filter)
 	{
-		if (ent.HasFilter<TestEntityFilter>())
-		{
-			PrintLine("has filter");
-		}
-		std::cout << "Entity float " << f << "\n";
+		std::cout << "Filter value: " << filter.Data << "\n";
 	});
 
 
@@ -522,17 +524,20 @@ void Test::RemovingArchetypesTest()
 	decs::light::ArchetypeDestroyState state{};
 	decs::light::ArchetypeDestroyConfig config{
 		.m_MaxArchetypesToCheck = 1000000,
-		.m_MaxArchetypesDestroy = 1000000,
+		.m_MaxArchetypesDestroy = 100000,
 		.m_bDestroyOnlyArchetypesWithFilters = true,
 	};
 
 	decs::light::Query<float> query{ &ecs };
+	query.With<TestEntityFilter>();
 
 	{
 		auto e = ecs.CreateEntity();
 
 		e.AddComponent<float>();
 		e.SetFilter<TestEntityFilter>(TestEntityFilter(10));
+		e.AddComponent<TestEntityFilter>();
+
 		e.AddComponent<int>();
 		e.AddComponent<double>();
 		e.AddTag<float>();

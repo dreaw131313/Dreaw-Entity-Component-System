@@ -21,8 +21,6 @@ namespace decs::light
 
 	class Container final : private NonCopyableNonMoveable
 	{
-		template<light_component_or_filter_concept... ComponentsTypes>
-		friend class QueryImpl;
 		template<light_component_or_filter_concept ...Types>
 		friend class light::Query;
 		template<light_component_or_filter_concept ...Types>
@@ -89,7 +87,7 @@ namespace decs::light
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, light_component_or_filter_concept... ComponentTypes, tag_concept... TagTypes>
+		template<typename InitFunc, light_component_concept... ComponentTypes, tag_concept... TagTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
 			const LightComponentTypeGroup<ComponentTypes...> components,
@@ -148,7 +146,7 @@ namespace decs::light
 			}
 		}
 
-		template<typename InitFunc, light_component_or_filter_concept... ComponentTypes>
+		template<typename InitFunc, light_component_concept... ComponentTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
 			const LightComponentTypeGroup<ComponentTypes...> components,
@@ -173,7 +171,7 @@ namespace decs::light
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, light_component_or_filter_concept... ComponentTypes, tag_concept... TagTypes>
+		template<typename InitFunc, light_component_concept... ComponentTypes, tag_concept... TagTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
 			const LightComponentTypeGroup<ComponentTypes...> components,
@@ -228,7 +226,7 @@ namespace decs::light
 			return Entity();
 		}
 
-		template<typename InitFunc, light_component_or_filter_concept... ComponentTypes>
+		template<typename InitFunc, light_component_concept... ComponentTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
 			const LightComponentTypeGroup<ComponentTypes...> components,
@@ -386,22 +384,22 @@ namespace decs::light
 	#pragma region FILTERS
 	private:
 		template<filter_concept FilterType>
-		Archetype* GetArchetypeAfterSetFilter(Archetype* toArchetype, const FilterType& filter)
+		Archetype* GetArchetypeAfterSetFilter(Archetype* toArchetype, const filter_data_t<FilterType>& filterData)
 		{
 			if (toArchetype == nullptr)
 			{
-				return m_ArchetypesMap.GetOrCreateSingleFilterArchetype<FilterType>(filter);
+				return m_ArchetypesMap.GetOrCreateSingleFilterArchetype<FilterType>(filterData);
 			}
 			else
 			{
-				return m_ArchetypesMap.GetOrCreateArchetypeAfterSetFilter<FilterType>(*toArchetype, filter);
+				return m_ArchetypesMap.GetOrCreateArchetypeAfterSetFilter<FilterType>(*toArchetype, filterData);
 			}
 		}
 
 		Archetype* GetArchetypeAfterRemoveFilter(Archetype* fromArchetype, TypeID filterID);
 
 		template<filter_concept FilterType>
-		bool SetFilter(EntityData& entityData, const FilterType& filter)
+		bool SetFilter(EntityData& entityData, const filter_data_t<FilterType>& filter)
 		{
 			TYPE_ID_CONSTEXPR TypeID filterTypeID = Type<FilterType>::ID();
 
@@ -463,7 +461,7 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		bool HasFilter(const EntityData& entityData, const FilterType& filterData)
+		bool HasFilter(const EntityData& entityData, const filter_data_t<FilterType>& filterData)
 		{
 			if (entityData.m_Archetype == nullptr
 				|| entityData.m_Archetype->GetFilters().size() == 0
@@ -613,7 +611,7 @@ namespace decs::light
 			return entityNewArchetype;
 		}
 
-		template<light_component_or_filter_concept... ComponentTypes, tag_concept... TagTypes>
+		template<light_component_concept... ComponentTypes, tag_concept... TagTypes>
 		Archetype* GetArchetypeWithComponentsAndTags(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags

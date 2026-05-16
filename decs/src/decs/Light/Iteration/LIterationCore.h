@@ -7,7 +7,7 @@
 namespace decs::light
 {
 
-	template<light_component_or_filter_concept T>
+	template<typename T>
 	struct query_data_container final
 	{
 	public:
@@ -16,12 +16,11 @@ namespace decs::light
 		inline static constexpr bool is_filter = false;
 	};
 
-	template<filter_concept T>
+	template<typename T>
 	struct query_data_container<filter<T>> final
 	{
 	public:
-		using data_type = pure_type_t<T>;
-		using container_type = FilterContainer<data_type>;
+		using container_type = FilterContainer<filter<T>>;
 		inline static constexpr bool is_filter = true;
 	};
 
@@ -97,7 +96,7 @@ namespace decs::light
 	struct QueryFiltersConfig
 	{
 	public:
-		using TypeGroupType = TypeGroup<pure_type_t<ligth_component_or_filter_t<ComponentsTypes>>...>;
+		using TypeGroupType = TypeGroup<pure_type_t<ComponentsTypes>...>;
 
 	public:
 		const TypeGroupType& GetIncludes() const
@@ -250,14 +249,13 @@ namespace decs::light
 		template<typename T>
 		query_data_container_t<T>* GetArchetypeDataContainer()
 		{
-			using data_type = query_data_container<T>::data_type;
 			if constexpr (query_data_container<T>::is_filter)
 			{
-				return m_Archetype->GetFilterContainer<data_type>();
+				return m_Archetype->GetFilterContainer<filter_type_t<T>>();
 			}
 			else
 			{
-				return m_Archetype->GetTypePackedContainer<data_type>();
+				return m_Archetype->GetTypePackedContainer<typename query_data_container<T>::data_type>();
 			}
 		}
 

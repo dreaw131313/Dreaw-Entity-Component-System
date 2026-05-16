@@ -13,7 +13,7 @@
 namespace decs::light
 {
 	class ArchetypesMap;
-	template<typename...>
+	template<filter_concept...>
 	class TFilterDataTuple;
 
 	class ArchetypesShrinkToFitState
@@ -318,7 +318,7 @@ namespace decs::light
 		friend class ContainerIterator;
 		template<light_component_or_filter_concept...>
 		friend class IterationContainerContext;
-		template<typename...>
+		template<filter_concept...>
 		friend class TFilterDataTuple;
 
 	public:
@@ -500,7 +500,7 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		Archetype* GetOrCreateSingleFilterArchetype(const FilterType& filter)
+		Archetype* GetOrCreateSingleFilterArchetype(const FilterType::DataType & filter)
 		{
 			IFilterContainerBase* filterContainer = m_FilterManager.GetOrCreateFilter<FilterType>(filter);
 			Archetype* archetype = GetSingleFilterArchetype(filterContainer);
@@ -516,7 +516,7 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		Archetype* GetOrCreateArchetypeAfterSetFilter(const Archetype& toArchetype, const FilterType& filter)
+		Archetype* GetOrCreateArchetypeAfterSetFilter(const Archetype& toArchetype, const FilterType::DataType& filter)
 		{
 			FilterContainer<FilterType>* archetypeFilter = toArchetype.GetFilterContainer<FilterType>();
 			if (archetypeFilter != nullptr)
@@ -586,7 +586,7 @@ namespace decs::light
 
 	using IFilterDataTupleHandle = TRefCountHandle<IFilterDataTuple>;
 
-	template<typename... FilterTypes>
+	template<filter_concept... FilterTypes>
 	class TFilterDataTuple final : public IFilterDataTuple
 	{
 	public:

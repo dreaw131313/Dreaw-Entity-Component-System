@@ -242,7 +242,7 @@ namespace decs::light
 			}
 
 			{
-				ArchetypesGroupByOneType* filterTypeGroup = GetArchetypesGroup(filter.m_FilterContainer->GetDataTypeID(), EArchetypesGroupType::FilterType);
+				ArchetypesGroupByOneType* filterTypeGroup = GetArchetypesGroup(filter.m_FilterContainer->GetFilterTypeID(), EArchetypesGroupType::FilterType);
 				filterTypeGroup->AddArchetype(&arch);
 			}
 		}
@@ -428,7 +428,7 @@ namespace decs::light
 
 		for (auto& baseFilterRecord : baseArchetype.GetFilters())
 		{
-			if (!bisNewFilterAdded && filterContainer->GetDataTypeID() < baseFilterRecord.m_FilterTypeID)
+			if (!bisNewFilterAdded && filterContainer->GetFilterTypeID() < baseFilterRecord.m_FilterTypeID)
 			{
 				toArchetype.AddFilter_WithoutCheckout(filterContainer);
 				bisNewFilterAdded = true;

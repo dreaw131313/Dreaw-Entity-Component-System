@@ -212,7 +212,7 @@ namespace decs::light
 		for (size_t idx = 0; idx < m_Filters.size(); idx++)
 		{
 			auto& filterRecord = m_Filters[idx];
-			if (filterContainer.GetDataTypeID() < filterRecord.m_FilterTypeID)
+			if (filterContainer.GetFilterTypeID() < filterRecord.m_FilterTypeID)
 			{
 				m_Filters.insert(m_Filters.begin() + idx, ArchetypeFilterRecord(&filterContainer));
 				return;
