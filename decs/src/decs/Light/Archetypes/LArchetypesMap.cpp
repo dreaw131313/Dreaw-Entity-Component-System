@@ -488,28 +488,38 @@ namespace decs::light
 				;
 		};
 
-		auto skipArchetype = [&] (Archetype* archetype)-> bool
+		auto destroyArchetype = [&] (Archetype* archetype)-> bool
 		{
-			return !archetype->IsEmpty()
-				&& (!config.m_bDestroyOnlyArchetypesWithFilters || archetype->GetFilterCount() > 0)
-				;
+			if (!archetype->IsEmpty())
+			{
+				return false;
+			}
+
+			if (archetype->GetFilterCount() > 0)
+			{
+				return true;
+			}
+
+			return !config.m_bDestroyOnlyArchetypesWithFilters;
 		};
 
 		while (!endDestroying())
 		{
 			auto createdArchetypes = m_ArchetypeAllocator.GetCreatedArchetypes();
 			size_t index = state.m_LastCheckdArchetypeIndex % createdArchetypes.size();
+
 			iteratedArchetypes++;
 
 			Archetype* currentArchetype = createdArchetypes[index];
-			if (skipArchetype(currentArchetype))
+			if (destroyArchetype(currentArchetype))
+			{
+				RemoveArchetypeFromMap(currentArchetype);
+				destroyedArchetypes++;
+			}
+			else
 			{
 				state.m_LastCheckdArchetypeIndex++;
-				continue;
 			}
-
-			RemoveArchetypeFromMap(currentArchetype);
-			destroyedArchetypes++;
 		}
 	}
 

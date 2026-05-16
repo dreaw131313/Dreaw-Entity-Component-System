@@ -569,7 +569,6 @@ namespace decs::light
 		void RemoveArchetypeFromMap(Archetype* archetpye);
 	};
 
-
 	class IFilterDataTuple : public RefCountedObject
 	{
 	public:
