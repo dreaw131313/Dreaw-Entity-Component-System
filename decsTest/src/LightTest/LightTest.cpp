@@ -354,7 +354,7 @@ void Test::ComponentCreationTest()
 
 void Test::PerformanceTest()
 {
-	const uint32_t testCount = 100;
+	const uint32_t testCount = 10;
 	const uint32_t entityCount = 100000;
 
 	decs::light::ContainerConfig config{
@@ -383,6 +383,8 @@ void Test::PerformanceTest()
 	auto perfTest = [&] ()
 	{
 		decs::LightComponentTypeGroup<Position, TestComponent> comps{};
+		decs::TagTypeGroup<float, int> tags{};
+		std::tuple<int, bool> filters{};
 
 		double sum = 0;
 		for (uint32_t testIdx = 0; testIdx < testCount; testIdx++)
@@ -401,13 +403,18 @@ void Test::PerformanceTest()
 					e.AddComponent<TestComponent>();
 				}*/
 
-				for (uint32_t i = 0; i < entityCount; i++)
+				/*for (uint32_t i = 0; i < entityCount; i++)
 				{
-					container.CreateEntity(comps, [](Position& pos, TestComponent& test)
+					container.CreateEntity(comps, tags, filters, [] (Position& pos, TestComponent& test)
 					{
 
 					});
-				}
+				}*/
+
+				container.CreateEntities(comps, tags, filters, entityCount, [] (Position& pos, TestComponent& test)
+				{
+
+				});
 			}
 			sum += timer.ElapsedAsMilisecond();
 
@@ -438,8 +445,8 @@ void Test::PerformanceTest()
 	double finalEntitiesCreationTime = finalAvarage / validTestCount;
 	double finalSingleEntityCreationTime = finalEntityAvarage / validTestCount;
 
-	std::cout << "Final avarage "<< entityCount <<" entity creation time " << finalEntitiesCreationTime << " ms\n";
-	std::cout << "Final avarage single entity creation time " << finalSingleEntityCreationTime * 1000. << " us ("<< finalSingleEntityCreationTime <<"ms)\n";
+	std::cout << "Final avarage " << entityCount << " entity creation time " << finalEntitiesCreationTime << " ms\n";
+	std::cout << "Final avarage single entity creation time " << finalSingleEntityCreationTime * 1000. << " us (" << finalSingleEntityCreationTime << "ms)\n";
 
 }
 
@@ -462,7 +469,7 @@ void Test::FilterTest()
 	bool hasFilters = e.HasFilters<float, decs::filter<TestEntityFilter>>();
 	DECS_ASSERT(hasFilters, "Must be true");
 
-	
+
 
 	auto [f, i, d] = e.GetComponents<float, int, double>();
 	if (f && d && !i)

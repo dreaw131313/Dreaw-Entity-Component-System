@@ -87,11 +87,12 @@ namespace decs::light
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes>
+		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
 			const LightComponentTypeGroup<ComponentTypes...>& components,
 			const TagTypeGroup<TagTypes...>& tags,
+			const std::tuple<FiltersData...>& filtersTupleData,
 			uint32_t entityCount,
 			InitFunc&& initFunc
 		)
@@ -111,7 +112,7 @@ namespace decs::light
 			}
 			else
 			{
-				Archetype* spawnArchetype = GetArchetypeWithComponentsTags(components, tags);
+				Archetype* spawnArchetype = GetArchetypeWithComponentsTagsFilters(components, tags, filtersTupleData);
 
 				if (spawnArchetype != nullptr)
 				{
@@ -143,6 +144,19 @@ namespace decs::light
 			}
 		}
 
+		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes>
+			requires light_query_callable<InitFunc, ComponentTypes...>
+		void CreateEntities(
+			const LightComponentTypeGroup<ComponentTypes...> components,
+			const TagTypeGroup<TagTypes...>& tags,
+			uint32_t entityCount,
+			InitFunc&& initFunc
+		)
+		{
+			const std::tuple<> filtersTuple{};
+			CreateEntities(components, tags, filtersTuple, entityCount, initFunc);
+		}
+
 		template<typename InitFunc, light_component_concept... ComponentTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
@@ -152,7 +166,8 @@ namespace decs::light
 		)
 		{
 			constexpr const TagTypeGroup<> tags{};
-			CreateEntities(components, tags, entityCount, initFunc);
+			const std::tuple<> filtersTuple{};
+			CreateEntities(components, tags, filtersTuple, entityCount, initFunc);
 		}
 
 		/// <summary>
@@ -168,11 +183,12 @@ namespace decs::light
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes>
+		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
+			const std::tuple<FiltersData...>& filtersTupleData,
 			InitFunc&& initFunc
 		)
 		{
@@ -186,7 +202,7 @@ namespace decs::light
 			}
 			else
 			{
-				Archetype* spawnArchetype = GetArchetypeWithComponentsTags(components, tags);
+				Archetype* spawnArchetype = GetArchetypeWithComponentsTagsFilters(components, tags, filtersTupleData);
 
 				if (spawnArchetype != nullptr)
 				{
@@ -220,6 +236,18 @@ namespace decs::light
 			return Entity();
 		}
 
+		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes>
+			requires light_query_callable<InitFunc, ComponentTypes...>
+		Entity CreateEntity(
+			const LightComponentTypeGroup<ComponentTypes...> components,
+			const TagTypeGroup<TagTypes...> tags,
+			InitFunc&& initFunc
+		)
+		{
+			const std::tuple<> filtersTuple{};
+			return CreateEntity(components, tags, filtersTuple, initFunc);
+		}
+
 		template<typename InitFunc, light_component_concept... ComponentTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
@@ -228,7 +256,8 @@ namespace decs::light
 		)
 		{
 			constexpr const TagTypeGroup<> tags{};
-			return CreateEntity(components, tags, initFunc);
+			const std::tuple<> filtersTuple{};
+			return CreateEntity(components, tags, filtersTuple, initFunc);
 		}
 
 
@@ -597,6 +626,24 @@ namespace decs::light
 			Archetype* spawnArchetype = nullptr;
 
 			((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<tag_type_t<TagTypes>>::ID())), ...);
+			((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
+
+			return spawnArchetype;
+		}
+
+		template<light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
+		Archetype* GetArchetypeWithComponentsTagsFilters(
+			const LightComponentTypeGroup<ComponentTypes...>&,
+			const TagTypeGroup<TagTypes...>&,
+			const std::tuple<FiltersData...>& filtersDataTuple
+		)
+		{
+			Archetype* spawnArchetype = nullptr;
+
+			((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<tag_type_t<TagTypes>>::ID())), ...);
+
+			((spawnArchetype = GetArchetypeAfterSetFilter<filter_type_t<pure_type_t<FiltersData>>>(spawnArchetype, std::get<FiltersData>(filtersDataTuple))), ...);
+
 			((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
 
 			return spawnArchetype;
