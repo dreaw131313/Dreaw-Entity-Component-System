@@ -295,7 +295,6 @@ namespace decs::light
 			return false;
 		}
 
-
 		template<typename FilterType>
 		[[nodiscard]] const FilterType* GetFilter() const
 		{
@@ -339,6 +338,16 @@ namespace decs::light
 			return false;
 		}
 
+		template<typename... FilterType>
+		[[nodiscard]] bool HasFilters()const
+		{
+			if (IsValid())
+			{
+				auto container = GetContainer();
+				return ((container->HasFilter<filter_type_t<FilterType>>(*m_EntityData)) && ...);
+			}
+			return false;
+		}
 
 	#pragma endregion
 

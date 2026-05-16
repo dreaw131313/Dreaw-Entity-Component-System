@@ -454,12 +454,15 @@ void Test::FilterTest()
 
 	Entity e = container.CreateEntity();
 	e.SetFilter<TestEntityFilter>(TestEntityFilter(1));
+	e.SetFilter<float>(1.f);
 	e.AddComponent<float>(14.0f);
 	e.AddComponent<double>(21.);
 	e.AddTag<FloatTag>();
 
-	DECS_ASSERT(e.HasFilter<TestEntityFilter>(), "Must be true");
-	DECS_ASSERT(e.HasFilter<decs::filter<TestEntityFilter>>(), "Must be true");
+	bool hasFilters = e.HasFilters<float, decs::filter<TestEntityFilter>>();
+	DECS_ASSERT(hasFilters, "Must be true");
+
+	
 
 	auto [f, i, d] = e.GetComponents<float, int, double>();
 	if (f && d && !i)
@@ -476,7 +479,6 @@ void Test::FilterTest()
 	{
 		std::cout << "Filter value: " << filter.Data << "\n";
 	});
-
 
 }
 
