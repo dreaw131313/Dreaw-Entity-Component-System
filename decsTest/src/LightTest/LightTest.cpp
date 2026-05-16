@@ -117,11 +117,11 @@ void Test::Run()
 	std::cout << "/////////////////////////////////////" << "\n";
 
 	//IterationTest();
-	PerformanceTest();
+	//PerformanceTest();
 	//IterationTest();
 
 	//QueryManagerTest();
-	//FilterTest();
+	FilterTest();
 	//RemovingArchetypesTest();
 }
 
@@ -469,6 +469,19 @@ void Test::FilterTest()
 	bool hasFilters = e.HasFilters<float, decs::filter<TestEntityFilter>>();
 	DECS_ASSERT(hasFilters, "Must be true");
 
+	{
+		decs::LightComponentTypeGroup<Position, TestComponent> comps{};
+		decs::TagTypeGroup<float, int> tags{};
+		std::tuple<int, bool> filters{};
+
+		auto entity = container.CreateEntity(comps, tags, filters, [] (Position& pos, TestComponent& test)
+		{
+
+		});
+
+		bool hasFiltes = entity.HasFilters<int, bool>();
+		DECS_ASSERT(hasFiltes, "Must have filters");
+	}
 
 
 	auto [f, i, d] = e.GetComponents<float, int, double>();
