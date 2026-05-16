@@ -11,7 +11,7 @@ namespace decs::light
 
 		friend struct std::hash<decs::light::Entity>;
 
-		template<typename Components, typename Tags>
+		template<typename, typename, typename>
 		friend struct light::EntitySpawner;
 
 	public:

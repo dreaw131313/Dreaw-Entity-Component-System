@@ -19,7 +19,7 @@ namespace decs::light
 	class Archetype;
 	class ArchetypeAllocator;
 	struct ArchetypeHasher;
-	template<typename Components, typename Tags>
+	template<typename, typename, typename>
 	struct EntitySpawner;
 	struct ArchetypeHandle;
 
@@ -266,7 +266,7 @@ namespace decs::light
 		friend class light::IterationArchetypeContext;
 		template<light_component_or_filter_concept...>
 		friend class light::IterationContainerContext;
-		template<typename Components, typename Tags>
+		template<typename, typename, typename>
 		friend struct light::EntitySpawner;
 
 	private:
@@ -481,7 +481,7 @@ namespace decs::light
 			return  std::find_if(
 				m_Filters.begin(),
 				m_Filters.end(),
-				[&](const ArchetypeFilterRecord& record)
+				[&] (const ArchetypeFilterRecord& record)
 			{
 				return filter == record.m_FilterContainer;
 			}
@@ -493,7 +493,7 @@ namespace decs::light
 			return  std::find_if(
 				m_Filters.begin(),
 				m_Filters.end(),
-				[&](const ArchetypeFilterRecord& record)
+				[&] (const ArchetypeFilterRecord& record)
 			{
 				return filterTypeID == record.m_FilterTypeID;
 			}

@@ -8,7 +8,7 @@
 namespace decs::light
 {
 	class Entity;
-	template<typename Components, typename Tags>
+	template<typename, typename, typename>
 	struct EntitySpawner;
 
 
@@ -30,7 +30,7 @@ namespace decs::light
 		friend class light::Entity;
 		friend class light::ContainerIterator;
 
-		template<typename Components, typename Tags>
+		template<typename, typename, typename>
 		friend struct light::EntitySpawner;
 
 	private:

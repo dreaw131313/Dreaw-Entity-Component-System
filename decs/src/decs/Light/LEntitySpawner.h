@@ -9,16 +9,20 @@
 namespace decs::light
 {
 
-	template<typename Components, typename Tags = TagTypeGroup<>>
+	template<typename Components, typename Tags = TagTypeGroup<>, typename Filterstuple = std::tuple<>>
 	struct EntitySpawner;
 
-	template<light_component_or_filter_concept... ComponentTypes, tag_concept... TagTypes>
-	struct EntitySpawner<LightComponentTypeGroup<ComponentTypes...>, TagTypeGroup<TagTypes...>>
+	template<light_component_or_filter_concept... ComponentTypes, typename... TagTypes, typename... FiltersType>
+	struct EntitySpawner<LightComponentTypeGroup<ComponentTypes...>, TagTypeGroup<TagTypes...>, std::tuple<FiltersType...>>
 	{
+	public:
+		using FilterTupleType = std::tuple<FiltersType...>;
+
 	public:
 		EntitySpawner() = default;
 
-		EntitySpawner(Container* container)
+		EntitySpawner(Container* container, const FilterTupleType& filters = {}):
+			m_FiltersTuple(filters)
 		{
 			SetContainer(container);
 		}
@@ -35,6 +39,17 @@ namespace decs::light
 				return;
 			}
 			m_Container = container;
+			FetchArchetype();
+		}
+
+		void SetFilters(const FilterTupleType& filters)
+		{
+			if (m_FiltersTuple == filters)
+			{
+				return;
+			}
+			m_FiltersTuple = filters;
+
 			FetchArchetype();
 		}
 
@@ -131,7 +146,7 @@ namespace decs::light
 		std::tuple<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*...> m_ComponentsPackedContainers{};
 		LightComponentTypeGroup<ComponentTypes...> m_ComponentsTypeGroup{};
 		TagTypeGroup<TagTypes...> m_TagsTypeGroup{};
-
+		FilterTupleType m_FiltersTuple{};
 	private:
 		void Invalidate()
 		{
@@ -148,7 +163,7 @@ namespace decs::light
 				return;
 			}
 
-			m_Archetype = m_Container->GetArchetypeWithComponentsAndTags(m_ComponentsTypeGroup, m_TagsTypeGroup);
+			m_Archetype = m_Container->GetArchetypeWithComponentsTagsFilters(m_ComponentsTypeGroup, m_TagsTypeGroup, m_FiltersTuple);
 			if (m_Archetype == nullptr)
 			{
 				Invalidate();

@@ -117,11 +117,11 @@ void Test::Run()
 	std::cout << "/////////////////////////////////////" << "\n";
 
 	//IterationTest();
-	//PerformanceTest();
+	PerformanceTest();
 	//IterationTest();
 
 	//QueryManagerTest();
-	FilterTest();
+	//FilterTest();
 	//RemovingArchetypesTest();
 }
 
@@ -354,8 +354,8 @@ void Test::ComponentCreationTest()
 
 void Test::PerformanceTest()
 {
-	const uint32_t testCount = 10;
-	const uint32_t entityCount = 100000;
+	const uint32_t testCount = 100;
+	const uint32_t entityCount = 1000;
 
 	decs::light::ContainerConfig config{
 		.EntityChunkSize = 10000,
@@ -367,9 +367,12 @@ void Test::PerformanceTest()
 
 	decs::light::Container container{ config };
 
-	using SpawnerComponentTypes = decs::LightComponentTypeGroup<Position, TestComponent>;
-	using SpawnerComponentTags = decs::TagTypeGroup<>;
-	decs::light::EntitySpawner<SpawnerComponentTypes> entitySpawner{ &container };
+
+	decs::LightComponentTypeGroup<Position, TestComponent> comps{};
+	decs::TagTypeGroup<float, int> tags{};
+	std::tuple<int, bool> filters{ 1, false };
+
+	decs::light::EntitySpawner<decltype(comps), decltype(tags), decltype(filters)> entitySpawner{ &container };
 
 	/*MeasureTimer reserveSpaceTimer(true);
 	{
@@ -382,23 +385,24 @@ void Test::PerformanceTest()
 
 	auto perfTest = [&] ()
 	{
-		decs::LightComponentTypeGroup<Position, TestComponent> comps{};
-		decs::TagTypeGroup<float, int> tags{};
-		std::tuple<int, bool> filters{};
 
 		double sum = 0;
 		for (uint32_t testIdx = 0; testIdx < testCount; testIdx++)
 		{
 			MeasureTimer timer(true);
 			{
-				/*entitySpawner.Spawn(entityCount, [](Position& pos, TestComponent& test)
+				entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
 				{
 
-				});*/
+				});
 
 				/*for (size_t i = 0; i < entityCount; i++)
 				{
 					auto e = container.CreateEntity();
+					e.AddTag<float>();
+					e.AddTag<int>();
+					e.SetFilter<int>(1);
+					e.SetFilter<bool>(false);
 					e.AddComponent<Position>();
 					e.AddComponent<TestComponent>();
 				}*/
@@ -411,10 +415,10 @@ void Test::PerformanceTest()
 					});
 				}*/
 
-				container.CreateEntities(comps, tags, filters, entityCount, [] (Position& pos, TestComponent& test)
+				/*container.CreateEntities(comps, tags, filters, entityCount, [] (Position& pos, TestComponent& test)
 				{
 
-				});
+				});*/
 			}
 			sum += timer.ElapsedAsMilisecond();
 
