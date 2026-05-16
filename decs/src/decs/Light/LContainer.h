@@ -87,11 +87,11 @@ namespace decs::light
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, light_component_concept... ComponentTypes, tag_concept... TagTypes>
+		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
-			const LightComponentTypeGroup<ComponentTypes...> components,
-			const TagTypeGroup<TagTypes...> tags,
+			const LightComponentTypeGroup<ComponentTypes...>& components,
+			const TagTypeGroup<TagTypes...>& tags,
 			uint32_t entityCount,
 			InitFunc&& initFunc
 		)
@@ -111,14 +111,11 @@ namespace decs::light
 			}
 			else
 			{
-				Archetype* spawnArchetype = nullptr;
-
-				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
-				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
+				Archetype* spawnArchetype = GetArchetypeWithComponentsTags(components, tags);
 
 				if (spawnArchetype != nullptr)
 				{
-					std::tuple<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*...> packedContainerTyple = { spawnArchetype->GetTypePackedContainer<drop_const_t<ComponentTypes>>()... };
+					std::tuple<PackedLightComponentContainer<pure_type_t<ComponentTypes>>*...> packedContainerTyple = { spawnArchetype->GetTypePackedContainer<drop_const_t<ComponentTypes>>()... };
 
 					for (uint32_t i = 0; i < entityCount; i++)
 					{
@@ -171,7 +168,7 @@ namespace decs::light
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, light_component_concept... ComponentTypes, tag_concept... TagTypes>
+		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes>
 			requires light_query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
 			const LightComponentTypeGroup<ComponentTypes...> components,
@@ -189,14 +186,11 @@ namespace decs::light
 			}
 			else
 			{
-				Archetype* spawnArchetype = nullptr;
-
-				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
-				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
+				Archetype* spawnArchetype = GetArchetypeWithComponentsTags(components, tags);
 
 				if (spawnArchetype != nullptr)
 				{
-					std::tuple<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*...> packedContainerTyple = { spawnArchetype->GetTypePackedContainer<drop_const_t<ComponentTypes>>()... };
+					std::tuple<PackedLightComponentContainer<pure_type_t<ComponentTypes>>*...> packedContainerTyple = { spawnArchetype->GetTypePackedContainer<drop_const_t<ComponentTypes>>()... };
 
 					if (Entity entity = CreateEntityRaw())
 					{
@@ -236,6 +230,8 @@ namespace decs::light
 			constexpr const TagTypeGroup<> tags{};
 			return CreateEntity(components, tags, initFunc);
 		}
+
+
 
 	private:
 		/// <summary>
@@ -590,6 +586,20 @@ namespace decs::light
 		inline uint64_t GetArchetypeCount() const
 		{
 			return m_ArchetypesMap.GetArchetypesCount();
+		}
+
+		template<light_component_concept... ComponentTypes, typename... TagTypes>
+		Archetype* GetArchetypeWithComponentsTags(
+			const LightComponentTypeGroup<ComponentTypes...>& components,
+			const TagTypeGroup<TagTypes...>& tags
+		)
+		{
+			Archetype* spawnArchetype = nullptr;
+
+			((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<tag_type_t<TagTypes>>::ID())), ...);
+			((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
+
+			return spawnArchetype;
 		}
 
 	private:

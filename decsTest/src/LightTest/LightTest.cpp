@@ -117,11 +117,11 @@ void Test::Run()
 	std::cout << "/////////////////////////////////////" << "\n";
 
 	//IterationTest();
-	//PerformanceTest();
+	PerformanceTest();
 	//IterationTest();
 
 	//QueryManagerTest();
-	FilterTest();
+	//FilterTest();
 	//RemovingArchetypesTest();
 }
 
@@ -389,10 +389,10 @@ void Test::PerformanceTest()
 		{
 			MeasureTimer timer(true);
 			{
-				entitySpawner.Spawn(entityCount, [](Position& pos, TestComponent& test)
+				/*entitySpawner.Spawn(entityCount, [](Position& pos, TestComponent& test)
 				{
 
-				});
+				});*/
 
 				/*for (size_t i = 0; i < entityCount; i++)
 				{
@@ -401,13 +401,13 @@ void Test::PerformanceTest()
 					e.AddComponent<TestComponent>();
 				}*/
 
-				/*for (uint32_t i = 0; i < entityCount; i++)
+				for (uint32_t i = 0; i < entityCount; i++)
 				{
 					container.CreateEntity(comps, [](Position& pos, TestComponent& test)
 					{
 
 					});
-				}*/
+				}
 			}
 			sum += timer.ElapsedAsMilisecond();
 
