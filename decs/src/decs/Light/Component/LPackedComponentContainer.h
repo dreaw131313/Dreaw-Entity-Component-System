@@ -32,6 +32,8 @@ namespace decs::light
 
 		virtual void* GetComponentBasePtr(uint64_t index) = 0;
 
+		virtual void* GetBackComponentBasePtr() = 0;
+
 		virtual void RemoveSwapBack(uint64_t index) = 0;
 
 		virtual void PushBack(void* componentPtr) = 0;
@@ -102,6 +104,12 @@ namespace decs::light
 		inline void* GetComponentBasePtr(uint64_t index) override
 		{
 			return &m_Data[index];
+		}
+
+		inline void* GetBackComponentBasePtr() override
+		{
+			DECS_ASSERT(!m_Data.empty(), "m_Data must not be empty!");
+			return &m_Data.back();
 		}
 
 		inline void RemoveSwapBack(uint64_t index) override

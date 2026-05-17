@@ -116,13 +116,12 @@ void Test::Run()
 	std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
 	std::cout << "/////////////////////////////////////" << "\n";
 
-	IterationTest();
-	//PerformanceTest();
 	//IterationTest();
-
+	//PerformanceTest();
 	//QueryManagerTest();
 	//FilterTest();
 	//RemovingArchetypesTest();
+	ObserversTest();
 }
 
 void Test::IterationTest()
@@ -330,7 +329,7 @@ void Test::ComponentCreationTest()
 void Test::PerformanceTest()
 {
 	const uint32_t testCount = 1;
-	const uint32_t entityCount = 262144;
+	const uint32_t entityCount = 16384;
 
 	decs::light::ContainerConfig config{
 		.EntityChunkSize = 10000,
@@ -366,21 +365,21 @@ void Test::PerformanceTest()
 		{
 			MeasureTimer timer(true);
 			{
-				/*entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
+				entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
 				{
 
-				});*/
+				});
 
-				//for (size_t i = 0; i < entityCount; i++)
-				//{
-				//	auto e = container.CreateEntity();
-				//	/*e.AddTag<float>();
-				//	e.AddTag<int>();
-				//	e.SetFilter<int>(1);
-				//	e.SetFilter<bool>(false);*/
-				//	e.AddComponent<Position>();
-				//	e.AddComponent<TestComponent>();
-				//}
+				/*for (size_t i = 0; i < entityCount; i++)
+				{
+					auto e = container.CreateEntity();
+					e.AddTag<float>();
+					e.AddTag<int>();
+					e.SetFilter<int>(1);
+					e.SetFilter<bool>(false);
+					e.AddComponent<Position>();
+					e.AddComponent<TestComponent>();
+				}*/
 
 				for (uint32_t i = 0; i < entityCount; i++)
 				{
@@ -398,10 +397,10 @@ void Test::PerformanceTest()
 				{
 
 				});*/
-				container.CreateEntities(comps, entityCount, [] (Position& pos, TestComponent& test)
+				/*container.CreateEntities(comps, entityCount, [] (Position& pos, TestComponent& test)
 				{
 
-				});
+				});*/
 			}
 			sum += timer.ElapsedAsMilisecond();
 
@@ -580,6 +579,24 @@ void Test::RemovingArchetypesTest()
 
 	constexpr size_t idx = decs::type_index_v<int, float, bool, double, int, uint32_t>;
 
+}
+
+void Test::ObserversTest()
+{
+	decs::light::Container container{};
+
+	uint32_t createObserverID = container.AddComponentCreateObserver<Position>([] (const Entity& entity, Position& pos)
+	{
+		PrintLine("Position create observer");
+	});
+
+	uint32_t destroyObserverID = container.AddComponentDestroyObserver<Position>([] (const Entity& entity, Position pos)
+	{
+		PrintLine("Position destroy observer");
+	});
+
+	container.RemoveComponentCreateObserver<Position>(createObserverID);
+	container.RemoveComponentDestroyObserver<Position>(destroyObserverID);
 }
 
 END_NAMESPACE

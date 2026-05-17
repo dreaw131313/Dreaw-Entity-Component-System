@@ -307,6 +307,52 @@ namespace decs::light
 	#pragma endregion
 
 	#pragma region COMPONENTS:
+	public:
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="Func"></typeparam>
+		/// <typeparam name="ComponentType"></typeparam>
+		/// <param name="func"></param>
+		/// <returns>id for removing function observer</returns>
+		template<light_component_concept ComponentType, typename Func>
+			requires light_component_observer_func<Func, ComponentType>
+		uint32_t AddComponentCreateObserver(Func&& func)
+		{
+			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
+			return context->m_OnCreateFunction.AddFunction(func);
+		}
+
+		template<light_component_concept ComponentType>
+		bool RemoveComponentCreateObserver(uint32_t id)
+		{
+			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
+			return context->m_OnCreateFunction.RemoveFunction(id);
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="Func"></typeparam>
+		/// <typeparam name="ComponentType"></typeparam>
+		/// <param name="func"></param>
+		/// <returns>id for removing function observer</returns>
+		template<light_component_concept ComponentType, typename Func>
+			requires light_component_observer_func<Func, ComponentType>
+		uint32_t AddComponentDestroyObserver(Func&& func)
+		{
+			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
+			return context->m_OnDestroyFunction.AddFunction(func);
+		}
+
+		template<light_component_concept ComponentType>
+		bool RemoveComponentDestroyObserver(uint32_t id)
+		{
+			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
+			return context->m_OnDestroyFunction.RemoveFunction(id);
+		}
+
+
 	private:
 		ComponentContextManager m_ComponentContextManager{};
 

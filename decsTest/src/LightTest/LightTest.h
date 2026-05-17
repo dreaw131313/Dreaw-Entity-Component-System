@@ -20,6 +20,8 @@ namespace Light
 		void QueryManagerTest();
 
 		void RemovingArchetypesTest();
+
+		void ObserversTest();
 	};
 
 }

@@ -281,6 +281,23 @@ namespace decs::light
 
 			currentSpawnTypeData.m_PackedContainer->PushBack(currentPrefabTypeData.m_PackedContainer->GetComponentBasePtr(prefabIndexInArchetype));
 		}
+
+		// invoke observers:
+		{
+			for (uint32_t i = 0; i < typeCount; i++)
+			{
+				ArchetypeTypeData& typeData = spawnArchetypeTypeData[i];
+				if (typeData.IsTag())
+				{
+					continue;
+				}
+
+				typeData.m_ComponentContext->InvokeOnCreateObserver(
+					spawnedEntity, 
+					typeData.m_PackedContainer->GetBackComponentBasePtr()
+					);
+			}
+		}
 	}
 
 	bool Container::RemoveComponent(const Entity& entity, TypeID componentTypeID)

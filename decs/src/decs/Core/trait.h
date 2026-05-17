@@ -301,4 +301,7 @@ namespace decs
 	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>...>
 		|| std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
 
+	template<typename Func, typename ComponentType>
+	concept light_component_observer_func = std::is_invocable_v<Func, const light::Entity&, ComponentType&>;
+
 }
