@@ -18,10 +18,7 @@ namespace decs
 		using PackedContainerType = PackedStableComponentContainer<TComponent>*;
 
 	public:
-		Query()
-		{
-
-		}
+		Query() = default;
 
 		Query(Container* container):
 			m_ContainerContext(container, true)

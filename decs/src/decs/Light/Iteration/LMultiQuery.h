@@ -30,6 +30,61 @@ namespace decs::light
 			ClearContainerContexts();
 		}
 
+		MultiQuery(const MultiQuery& other):
+			m_FilterConfig(other.m_FilterConfig),
+			m_ContainerContextsIndices(other.m_ContainerContextsIndices),
+			m_ContainerContexts(other.m_ContainerContexts)
+		{
+			AddToContainer();
+		}
+
+		MultiQuery& operator=(const MultiQuery& other)
+		{
+			if (this != &other)
+			{
+				RemoveFromAllContainers();
+
+				m_FilterConfig = other.m_FilterConfig;
+				m_ContainerContextsIndices = other.m_ContainerContextsIndices;
+				m_ContainerContexts = other.m_ContainerContexts;
+				m_IsDirty = true;
+				
+				AddToAllContainers();
+			}
+
+			return *this;
+		}
+
+		MultiQuery(MultiQuery&& other) noexcept
+		{
+			other.RemoveFromAllContainers();
+
+			m_FilterConfig = other.m_FilterConfig;
+			m_ContainerContextsIndices = other.m_ContainerContextsIndices;
+			m_ContainerContexts = other.m_ContainerContexts;
+
+			AddToAllContainers();
+		}
+
+		MultiQuery& operator=(MultiQuery&& other) noexcept
+		{
+			if (this != &other)
+			{
+				other.RemoveFromAllContainers();
+
+				RemoveFromAllContainers();
+
+				m_FilterConfig = std::move(other.m_FilterConfig);
+				m_ContainerContextsIndices = std::move(other.m_ContainerContextsIndices);
+				m_ContainerContexts = std::move(other.m_ContainerContexts);
+				m_IsDirty = true;
+
+				AddToAllContainers();
+			}
+
+			return *this;
+		}
+
 		void Clear()
 		{
 			ClearContainerContexts();
@@ -316,7 +371,7 @@ namespace decs::light
 			if (m_IsDirty)
 			{
 				m_IsDirty = false;
-				for (ContainerContextType& containerContext: m_ContainerContexts)
+				for (ContainerContextType& containerContext : m_ContainerContexts)
 				{
 					containerContext.Clear();
 					containerContext.Fetch(m_FilterConfig);
@@ -461,6 +516,22 @@ namespace decs::light
 				return true;
 			}
 			return false;
+		}
+
+		void AddToAllContainers()
+		{
+			for (auto& containerCtx : m_ContainerContexts)
+			{
+				AddToContainer(containerCtx.GetContainer());
+			}
+		}
+
+		void RemoveFromAllContainers()
+		{
+			for (auto& containerCtx : m_ContainerContexts)
+			{
+				RemoveFromContainer(containerCtx.GetContainer());
+			}
 		}
 
 	public:

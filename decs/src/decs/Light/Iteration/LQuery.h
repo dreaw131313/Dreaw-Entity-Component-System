@@ -13,7 +13,6 @@ namespace decs::light
 		using ContainersTupleType = ArchetypeContextType::ContainersTuple;
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
-
 	public:
 		Query() = default;
 
@@ -26,6 +25,52 @@ namespace decs::light
 		~Query()
 		{
 			RemoveFromContainer();
+		}
+
+		Query(const Query& other):
+			m_ContainerContext(other.m_ContainerContext),
+			m_FilterConfig(other.m_FilterConfig)
+		{
+			AddToContainer();
+		}
+
+		Query& operator=(const Query& other)
+		{
+			if (this != &other)
+			{
+				RemoveFromContainer();
+
+				m_FilterConfig = other.m_FilterConfig;
+				SetContainer(other.GetContainer());
+				AddToContainer();
+			}
+
+			return *this;
+		}
+
+		Query(Query&& other) noexcept:
+			m_ContainerContext(std::move(other.m_ContainerContext)),
+			m_FilterConfig(std::move(other.m_FilterConfig))
+		{
+			other.SetContainer(nullptr);
+			other.m_FilterConfig.Clear();
+			AddToContainer();
+		}
+
+		Query& operator=(Query&& other) noexcept
+		{
+			if (this != &other)
+			{
+				RemoveFromContainer();
+
+				m_FilterConfig = std::move(other.m_FilterConfig);
+				m_ContainerContext = std::move(other.m_ContainerContext);
+				other.SetContainer(nullptr);
+
+				AddToContainer();
+			}
+
+			return *this;
 		}
 
 		template<light_component_or_tag_or_filter_concept... WithoutTypes>
@@ -299,7 +344,7 @@ namespace decs::light
 			template<light_component_or_filter_concept... Types>
 			friend class Query;
 		public:
-			BatchIterator() {}
+			BatchIterator() { }
 
 			BatchIterator(
 				QueryType* query,
@@ -311,10 +356,9 @@ namespace decs::light
 				m_FirstArchetypeIndex(firstArchetypeIndex),
 				m_FirstIterationIndex(firstIterationIndex),
 				m_EntitiesCount(entitiesCount)
-			{
-			}
+			{ }
 
-			~BatchIterator() {}
+			~BatchIterator() { }
 
 			inline bool IsValid()const noexcept
 			{

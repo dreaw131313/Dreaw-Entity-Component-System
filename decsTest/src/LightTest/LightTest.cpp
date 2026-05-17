@@ -36,7 +36,7 @@ public:
 	float X = 0;
 	float Y = 0;
 
-	int i[100];
+	//int i[100];
 
 public:
 	Position()
@@ -56,7 +56,7 @@ public:
 struct TestComponent
 {
 public:
-	int table[100];
+	int table[15];
 
 };
 
@@ -116,8 +116,8 @@ void Test::Run()
 	std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
 	std::cout << "/////////////////////////////////////" << "\n";
 
-	//IterationTest();
-	PerformanceTest();
+	IterationTest();
+	//PerformanceTest();
 	//IterationTest();
 
 	//QueryManagerTest();
@@ -239,8 +239,15 @@ void Test::IterationTest()
 		PrintLine("ForEachArchetype");
 		query.ForEachArchetype(forEachArchetypeFunc);
 
+
 		PrintLine("ForEach");
 		query.ForEach(testFunc);
+
+		PrintLine("Copy query");
+		auto copyQuery = query;
+		copyQuery.ForEach(testFunc);
+
+
 		PrintLine("ForEach With Entity");
 		query.ForEach(testFuncWithEntity);
 		PrintLine("ForEachBackward");
@@ -354,8 +361,8 @@ void Test::ComponentCreationTest()
 
 void Test::PerformanceTest()
 {
-	const uint32_t testCount = 100;
-	const uint32_t entityCount = 1000;
+	const uint32_t testCount = 1;
+	const uint32_t entityCount = 262144;
 
 	decs::light::ContainerConfig config{
 		.EntityChunkSize = 10000,
@@ -391,34 +398,42 @@ void Test::PerformanceTest()
 		{
 			MeasureTimer timer(true);
 			{
-				entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
+				/*entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
 				{
 
-				});
+				});*/
 
-				/*for (size_t i = 0; i < entityCount; i++)
-				{
-					auto e = container.CreateEntity();
-					e.AddTag<float>();
-					e.AddTag<int>();
-					e.SetFilter<int>(1);
-					e.SetFilter<bool>(false);
-					e.AddComponent<Position>();
-					e.AddComponent<TestComponent>();
-				}*/
+				//for (size_t i = 0; i < entityCount; i++)
+				//{
+				//	auto e = container.CreateEntity();
+				//	/*e.AddTag<float>();
+				//	e.AddTag<int>();
+				//	e.SetFilter<int>(1);
+				//	e.SetFilter<bool>(false);*/
+				//	e.AddComponent<Position>();
+				//	e.AddComponent<TestComponent>();
+				//}
 
-				/*for (uint32_t i = 0; i < entityCount; i++)
+				for (uint32_t i = 0; i < entityCount; i++)
 				{
-					container.CreateEntity(comps, tags, filters, [] (Position& pos, TestComponent& test)
+					/*container.CreateEntity(comps, tags, filters, [] (Position& pos, TestComponent& test)
 					{
 
-					});
-				}*/
+					});*/
+					/*container.CreateEntity(comps, [] (Position& pos, TestComponent& test)
+					{
+
+					});*/
+				}
 
 				/*container.CreateEntities(comps, tags, filters, entityCount, [] (Position& pos, TestComponent& test)
 				{
 
 				});*/
+				container.CreateEntities(comps, entityCount, [] (Position& pos, TestComponent& test)
+				{
+
+				});
 			}
 			sum += timer.ElapsedAsMilisecond();
 

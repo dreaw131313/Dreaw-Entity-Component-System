@@ -16,6 +16,26 @@ namespace decs::light
 
 		virtual ~IQuery() = default;
 
+		IQuery(const IQuery&)
+		{
+
+		}
+
+		IQuery& operator=(const IQuery&)
+		{
+			return *this;
+		}
+
+		IQuery(IQuery&& other) noexcept
+		{
+
+		}
+
+		IQuery& operator=(IQuery&&) noexcept
+		{
+			return *this;
+		}
+
 	private:
 		QueryManager* m_ParentManager = nullptr;
 		size_t m_IndexInParentManager = std::numeric_limits<size_t>::max();
@@ -36,10 +56,30 @@ namespace decs::light
 	{
 		friend class QueryManager;
 	public:
-		virtual ~IMultiQuery()
+		IMultiQuery() = default;
+
+		virtual ~IMultiQuery() = default;
+
+		IMultiQuery(const IMultiQuery&)
 		{
 
 		}
+
+		IMultiQuery& operator=(const IMultiQuery&)
+		{
+			return *this;
+		}
+
+		IMultiQuery(IMultiQuery&& other) noexcept
+		{
+
+		}
+
+		IMultiQuery& operator=(IMultiQuery&&) noexcept
+		{
+			return *this;
+		}
+
 
 		virtual bool AddContainer(Container* container, bool bIsEnabled = true) = 0;
 		virtual bool RemoveContainer(Container* container) = 0;
