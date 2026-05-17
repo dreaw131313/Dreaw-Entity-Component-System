@@ -181,38 +181,6 @@ void Test::IterationTest()
 		// container.CreateEntity(componetns, initFunc);
 	}
 
-	/*{
-	Entity e = container.CreateEntity();
-	e.AddTag<FloatTag>();
-	e.AddTag<IntTag>();
-	e.AddTag<BoolTag>();
-
-	e.AddComponent<TestComponent>();
-	e.AddComponent<Renderer>();
-	e.AddComponent<Position>();
-
-	e.RemoveComponent<Renderer>();
-	e.RemoveTag<BoolTag>();
-
-	e.HasTag<FloatTag>();
-	e.HasComponent<Position>();
-	e.GetComponent<TestComponent>();
-
-	container.Spawn(e, 9);
-	}*/
-
-	/*{
-	decs::LightComponentTypeGroup<TestComponent, Renderer, Position> comps{};
-	decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
-
-	auto entityInit = [](const Entity& e, TestComponent& component, Renderer& renderer, Position& position)
-	{
-	PrintLine("Only entity created!");
-	};
-
-	Entity newEntity = container.CreateEntity(comps, tags, entityInit);
-	}*/
-
 	uint32_t counter = 0;
 	auto testFunc = [&] (const TestComponent& test)
 	{
