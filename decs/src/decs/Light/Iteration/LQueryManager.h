@@ -80,7 +80,6 @@ namespace decs::light
 			return *this;
 		}
 
-
 		virtual bool AddContainer(Container* container, bool bIsEnabled = true) = 0;
 		virtual bool RemoveContainer(Container* container) = 0;
 		virtual void SetContainerEnabled(Container* container, bool isEnabled) = 0;
