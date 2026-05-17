@@ -6,6 +6,7 @@
 #include "decs/Core/check_cast.h"
 #include "decs/Core/TChunkedVector.h"
 #include "decs/Light/Component/PackedLightComponentContainer.h"
+#include "decs/Light/Component/ComponentContext.h"
 #include "decs/Light/Filter/LFilter.h"
 #include "decs/Light/LEntityData.h"
 
@@ -122,6 +123,7 @@ namespace decs::light
 	{
 	public:
 		IPackedLightComponentContainer* m_PackedContainer = nullptr;
+		IComponentContext* m_ComponentContext = nullptr;
 		TypeID m_TypeID = std::numeric_limits<TypeID>::max();
 
 	public:
@@ -351,6 +353,17 @@ namespace decs::light
 		inline uint32_t FindTypeIndex() const
 		{
 			return FindTypeIndex(Type<T>::ID());
+		}
+				
+		ArchetypeTypeData GetArchetypeTypeData(TypeID typeID)
+		{
+			uint32_t typeIdx = FindTypeIndex(typeID);
+			if (typeIdx < static_cast<uint32_t>(m_TypeData.size()))
+			{
+				return m_TypeData[typeIdx];
+			}
+
+			return {};
 		}
 
 		inline bool HasTag(TypeID tagType) const

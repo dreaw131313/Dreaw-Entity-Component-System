@@ -255,7 +255,6 @@ namespace decs::light
 		const Archetype& prefabArchetype,
 		const Entity& spawnedEntity,
 		Archetype& spawnArchetype
-
 	)
 	{
 		const uint32_t prefabIndexInArchetype = prefabEntityData.m_IndexInArchetype;

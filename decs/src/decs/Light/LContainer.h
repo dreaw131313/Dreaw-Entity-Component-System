@@ -102,7 +102,7 @@ namespace decs::light
 				return;
 			}
 
-			if constexpr (sizeof...(TagTypes) == 0 && sizeof...(ComponentTypes) == 0)
+			if constexpr (sizeof...(TagTypes) == 0 && sizeof...(ComponentTypes) == 0 && sizeof...(FiltersData) == 0)
 			{
 				for (uint32_t i = 0; i < entityCount; i++)
 				{
@@ -192,7 +192,7 @@ namespace decs::light
 			InitFunc&& initFunc
 		)
 		{
-			if constexpr (sizeof...(TagTypes) == 0 && sizeof...(ComponentTypes) == 0)
+			if constexpr (sizeof...(TagTypes) == 0 && sizeof...(ComponentTypes) == 0 && sizeof...(FiltersData) == 0)
 			{
 				if (Entity e = CreateEntity())
 				{
