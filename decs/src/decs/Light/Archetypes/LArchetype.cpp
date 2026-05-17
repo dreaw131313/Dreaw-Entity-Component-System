@@ -242,20 +242,12 @@ namespace decs::light
 
 	void Archetype::AddTypeData_WithoutCheck(
 		TypeID typeID,
-		IPackedLightComponentContainer* packedContainer
+		IComponentContext* componentContext
 	)
 	{
 		const uint32_t typeIndex = static_cast<uint32_t>(m_TypeData.size());
 		m_TypeIDsIndexes[typeID] = typeIndex;
-		if (packedContainer == nullptr)
-		{
-			// tag data
-			m_TypeData.emplace_back(typeID, nullptr);
-		}
-		else
-		{
-			m_TypeData.emplace_back(typeID, packedContainer);
-		}
+		m_TypeData.emplace_back(typeID, componentContext);
 	}
 
 	void Archetype::AddEntityData(EntityData* entityData)
@@ -360,7 +352,11 @@ namespace decs::light
 		}
 	}
 
-	void Archetype::InitEmptyFromOther(const Archetype& other, FilterManager& filterManager)
+	void Archetype::InitEmptyFromOther(
+		const Archetype& other,
+		ComponentContextManager& componentContextManager,
+		FilterManager& filterManager
+	)
 	{
 		uint32_t componentsCount = other.GetComponentTagCount();
 		m_TypeData.reserve(componentsCount);
@@ -382,7 +378,7 @@ namespace decs::light
 			{
 				AddTypeData_WithoutCheck(
 					otherTypeData.m_TypeID,
-					otherTypeData.m_PackedContainer->CloneEmpty()
+					componentContextManager.GetOrCreateContext(otherTypeData.m_ComponentContext)
 				);
 			}
 		}

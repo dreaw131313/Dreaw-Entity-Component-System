@@ -1,9 +1,9 @@
 #pragma once
 #include <memory>
 
-#include "decs/Core/TChunkedVector.h"
 #include "decs/Core/ChunkAllocator.h"
-#include "decs/Light/Component/PackedLightComponentContainer.h"
+#include "decs/Light/Component/LPackedComponentContainer.h"
+#include "decs/Light/Component/LComponentContext.h"
 #include "decs/Light/Filter/LFilter.h"
 
 #include "LArchetype.h"
@@ -324,6 +324,7 @@ namespace decs::light
 	public:
 		ArchetypesMap(
 			FilterManager& filterManager,
+			ComponentContextManager& componentContextManager,
 			QueryManager& queryManger,
 			uint64_t archetypesVectorChunkSize,
 			uint64_t archetypeGroupsVectorChunkSize
@@ -389,6 +390,7 @@ namespace decs::light
 
 	private:
 		FilterManager& m_FilterManager;
+		ComponentContextManager& m_ComponentContextManager;
 		QueryManager& m_QueryManager;
 
 		ArchetypeAllocator m_ArchetypeAllocator;
@@ -434,7 +436,7 @@ namespace decs::light
 
 		// CREATING ARCHETYPES
 	private:
-		template<light_component_or_filter_concept TComponent>
+		template<light_component_concept TComponent>
 		Archetype* CreateSingleComponentArchetype()
 		{
 			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<TComponent>::ID();
@@ -445,15 +447,15 @@ namespace decs::light
 				return archetype;
 			}
 			archetype = m_ArchetypeAllocator.CreateArchetype();
-			archetype->AddTypeData_WithoutCheck(componentTypeID, new PackedLightComponentContainer<TComponent>());
+			archetype->AddTypeData_WithoutCheck(componentTypeID, m_ComponentContextManager.GetOrCreateContext<TComponent>());
 			AddArchetypeToCorrectContainers(*archetype);
 			return archetype;
 		}
 
-		template<light_component_or_filter_concept T>
+		template<light_component_concept ComponentType>
 		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype)
 		{
-			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::ID();
+			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<ComponentType>::ID();
 			auto edge = toArchetype.GetEdge(addedComponentTypeID);
 
 			if (edge.IsValid() && edge.m_EdgeType == EArchetypeEdgeType::Add)
@@ -468,13 +470,13 @@ namespace decs::light
 			}
 
 			Archetype* newArchetype = m_ArchetypeAllocator.CreateArchetype();
-			AddTypeDataAfterAddComponent(toArchetype, *newArchetype, addedComponentTypeID, new PackedLightComponentContainer<T>());
+			AddTypeDataAfterAddComponent(toArchetype, *newArchetype, addedComponentTypeID, m_ComponentContextManager.GetOrCreateContext<ComponentType>());
 			AddArchetypeToCorrectContainers(*newArchetype);
 
 			return newArchetype;
 		}
 
-		Archetype* CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IPackedLightComponentContainer* packedContainer);
+		Archetype* CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext);
 
 		Archetype* GetArchetypeAfterRemoveComponent(const Archetype& fromArchetype, TypeID removedComponentTypeID);
 
@@ -486,7 +488,7 @@ namespace decs::light
 
 		void AddTypeDataAfterRemoveComponent(const Archetype& fromArchetype, Archetype& toArchetype, TypeID compType);
 
-		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, IPackedLightComponentContainer* packedContainer);
+		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext);
 
 		void AddTypeDataAfterRemoveFilter(const Archetype& fromArchetype, Archetype& toArchetype, IFilterContainerBase* filterContainer);
 

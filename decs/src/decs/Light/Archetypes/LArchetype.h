@@ -4,9 +4,8 @@
 #include "decs/Core/trait.h"
 #include "decs/Core/Hash.h"
 #include "decs/Core/check_cast.h"
-#include "decs/Core/TChunkedVector.h"
-#include "decs/Light/Component/PackedLightComponentContainer.h"
-#include "decs/Light/Component/ComponentContext.h"
+#include "decs/Light/Component/LPackedComponentContainer.h"
+#include "decs/Light/Component/LComponentContext.h"
 #include "decs/Light/Filter/LFilter.h"
 #include "decs/Light/LEntityData.h"
 
@@ -122,8 +121,8 @@ namespace decs::light
 	struct ArchetypeTypeData
 	{
 	public:
-		IPackedLightComponentContainer* m_PackedContainer = nullptr;
 		IComponentContext* m_ComponentContext = nullptr;
+		IPackedLightComponentContainer* m_PackedContainer = nullptr;
 		TypeID m_TypeID = std::numeric_limits<TypeID>::max();
 
 	public:
@@ -134,16 +133,18 @@ namespace decs::light
 
 		ArchetypeTypeData(
 			TypeID typeID,
-			IPackedLightComponentContainer* packedContainer
+			IComponentContext* componentContext
 		):
-			m_PackedContainer(packedContainer), m_TypeID(typeID)
+			m_ComponentContext(componentContext),
+			m_PackedContainer(componentContext != nullptr ? componentContext->CreatePackedContainer() : nullptr),
+			m_TypeID(typeID)
 		{
 
 		}
 
 		inline bool IsTag() const
 		{
-			return m_PackedContainer == nullptr;
+			return m_ComponentContext == nullptr;
 		}
 	};
 
@@ -354,8 +355,8 @@ namespace decs::light
 		{
 			return FindTypeIndex(Type<T>::ID());
 		}
-				
-		ArchetypeTypeData GetArchetypeTypeData(TypeID typeID)
+
+		ArchetypeTypeData GetTypeData(TypeID typeID)
 		{
 			uint32_t typeIdx = FindTypeIndex(typeID);
 			if (typeIdx < static_cast<uint32_t>(m_TypeData.size()))
@@ -575,7 +576,7 @@ namespace decs::light
 
 		void AddTypeData_WithoutCheck(
 			TypeID typeID,
-			IPackedLightComponentContainer* packedContainer
+			IComponentContext* componentContext
 		);
 
 		void AddEntityData(EntityData* entityData);
@@ -590,7 +591,11 @@ namespace decs::light
 
 		void Reset();
 
-		void InitEmptyFromOther(const Archetype& other, FilterManager& filterManager);
+		void InitEmptyFromOther(
+			const Archetype& other,
+			ComponentContextManager& componentContextManager,
+			FilterManager& filterManager
+		);
 
 		void ShrinkToFit();
 

@@ -6,6 +6,8 @@
 #include "decs/Core/trait.h"
 #include "decs/Core/check_cast.h"
 
+#include "LPackedComponentContainer.h"
+
 namespace decs::light
 {
 	class Entity;
@@ -79,18 +81,26 @@ namespace decs::light
 	public:
 		virtual ~IComponentContext() = default;
 
+		virtual TypeID GetComponentTypeID() const noexcept = 0;
+
 		virtual IComponentContext* CreateMatchingContext() const = 0;
 
-		template<light_component_concept ComponentType>
-		void InvoketCreateObserver(const Entity& entity, ComponentType& component);
+		virtual IPackedLightComponentContainer* CreatePackedContainer() const = 0;
+
+		virtual void InvokeOnCreateObserver(const Entity& entity, void* compPtr) = 0;
+
+		virtual void InvokeOnDestroyObserver(const Entity& entity, void* compPtr) = 0;
 
 		template<light_component_concept ComponentType>
-		void InvoketDestroyObserver(const Entity& entity, ComponentType& component);
+		void InvokeOnCreateObserver(const Entity& entity, ComponentType& component);
+
+		template<light_component_concept ComponentType>
+		void InvokeOnDestroyObserver(const Entity& entity, ComponentType& component);
 
 	};
 
 	template<light_component_concept ComponentType>
-	class TComponentContext
+	class TComponentContext : public IComponentContext
 	{
 	public:
 		using ObserverFunction = ComponentObserverFunction<ComponentType>;
@@ -104,9 +114,19 @@ namespace decs::light
 
 		}
 
+		inline TypeID GetComponentTypeID() const noexcept override
+		{
+			return Type<ComponentType>::ID();
+		}
+
 		IComponentContext* CreateMatchingContext() const override
 		{
-			return new TComponentContext<ComponentType>()
+			return new TComponentContext<ComponentType>();
+		}
+
+		IPackedLightComponentContainer* CreatePackedContainer() const override
+		{
+			return new PackedLightComponentContainer<ComponentType>();
 		}
 
 		inline void InvokeOnCreate(const Entity& entity, ComponentType& component)
@@ -118,10 +138,21 @@ namespace decs::light
 		{
 			m_OnDestroyFunction.Invoke(entity, component);
 		}
+
+		void InvokeOnCreateObserver(const Entity& entity, void* compPtr) override
+		{
+			m_OnCreateFunction.Invoke(entity, *static_cast<ComponentType*>(compPtr));
+		}
+
+		void InvokeOnDestroyObserver(const Entity& entity, void* compPtr) override
+		{
+			m_OnDestroyFunction.Invoke(entity, *static_cast<ComponentType*>(compPtr));
+		}
+
 	};
 
 	template<light_component_concept ComponentType>
-	void IComponentContext::InvoketCreateObserver(const Entity& entity, ComponentType& component)
+	void IComponentContext::InvokeOnCreateObserver(const Entity& entity, ComponentType& component)
 	{
 		using ContextType = TComponentContext<ComponentType>;
 		ContextType* componentCtx = check_cast<ContextType*>(this);
@@ -129,7 +160,7 @@ namespace decs::light
 	}
 
 	template<light_component_concept ComponentType>
-	void IComponentContext::InvoketDestroyObserver(const Entity& entity, ComponentType& component)
+	void IComponentContext::InvokeOnDestroyObserver(const Entity& entity, ComponentType& component)
 	{
 		using ContextType = TComponentContext<ComponentType>;
 		ContextType* componentCtx = check_cast<ContextType*>(this);
@@ -142,7 +173,7 @@ namespace decs::light
 		~ComponentContextManager();
 
 		template<light_component_concept ComponentType>
-		inline TComponentContext<ComponentType>* GeOrCreatetContext()
+		inline TComponentContext<ComponentType>* GetOrCreateContext()
 		{
 			auto& context = m_Contexts[Type<pure_type_t<ComponentType>>::ID()];
 			if (context == nullptr)
@@ -150,10 +181,10 @@ namespace decs::light
 				context = new TComponentContext<ComponentType>();
 			}
 
-			return context;
+			return ::decs::check_cast<TComponentContext<ComponentType>*>(context);
 		}
 
-		IComponentContext* GetOrCreateContext(TypeID componentTypeID, const IComponentContext* referenceContext);
+		IComponentContext* GetOrCreateContext(const IComponentContext* referenceContext);
 
 	private:
 		ecsMap<TypeID, IComponentContext*> m_Contexts{};

@@ -9,15 +9,17 @@ namespace decs::light
 	Container::Container():
 		m_EntityManager(m_DefaultEntitiesChunkSize),
 		m_QueryManager(this),
-		m_ArchetypesMap(m_FilterManager, m_QueryManager, 100, 100)
+		m_ArchetypesMap(m_FilterManager, m_ComponentContextManager, m_QueryManager, 100, 100)
 	{
+
 	}
 
 	Container::Container(const ContainerConfig& config):
 		m_EntityManager(config.EntityChunkSize),
 		m_QueryManager(this),
-		m_ArchetypesMap(m_FilterManager, m_QueryManager, config.ArchetypeChunkSize, 100)
+		m_ArchetypesMap(m_FilterManager, m_ComponentContextManager, m_QueryManager, config.ArchetypeChunkSize, 100)
 	{
+
 	}
 
 	Container::~Container()
@@ -36,7 +38,7 @@ namespace decs::light
 	void Container::ReturnOwnedEntitiesToEntityManager_Internal()
 	{
 		ContainerIterator iterator = {};
-		iterator.Foreach(*this, [this](const Entity& entity)
+		iterator.Foreach(*this, [this] (const Entity& entity)
 		{
 			m_EntityManager.ForceDestroyEntity(entity.m_EntityData);
 		});
@@ -299,6 +301,12 @@ namespace decs::light
 		{
 			return false;
 		}
+
+		// observers callback
+		//{
+		//	void* componentPtr = oldArchetypeTypeData.m_PackedContainer->GetComponentBasePtr(indexInOldArchetype);
+		//	oldArchetypeTypeData.m_ComponentContext->InvokeOnDestroyObserver(entity, componentPtr);
+		//}
 
 		Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
 			*entityData.m_Archetype,

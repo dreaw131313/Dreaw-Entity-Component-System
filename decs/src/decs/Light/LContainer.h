@@ -4,6 +4,7 @@
 #include "LEntityManager.h"
 #include "Filter/LFilter.h"
 #include "Iteration/LQueryManager.h"
+#include "Component/LComponentContext.h"
 
 namespace decs::light
 {
@@ -307,10 +308,16 @@ namespace decs::light
 
 	#pragma region COMPONENTS:
 	private:
+		ComponentContextManager m_ComponentContextManager{};
+
+	private:
 		template<light_component_concept TComponent, typename ...Args>
 		TComponent* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
-			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<TComponent>::ID();
+			using PureComponentType = pure_type_t<TComponent>;
+			using PackedContainerType = PackedLightComponentContainer<PureComponentType>;
+
+			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<PureComponentType>::ID();
 
 			auto currentComponent = GetComponent<TComponent>(entityData);
 			if (currentComponent != nullptr)
@@ -322,8 +329,10 @@ namespace decs::light
 			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
 			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype);
-			PackedLightComponentContainer<TComponent>* packedContainer = newArchetype->GetTypePackedContainer<drop_const_t<TComponent>>();
-			TComponent* componentPtr = &packedContainer->EmplaceBack(std::forward<Args>(args)...);
+			ArchetypeTypeData newComponentTypeData = newArchetype->GetTypeData(componentTypeID);
+
+			PackedContainerType* packedContainer = ::decs::check_cast<PackedContainerType*>(newComponentTypeData.m_PackedContainer);
+			PureComponentType* componentPtr = &packedContainer->EmplaceBack(std::forward<Args>(args)...);
 
 			// Adding entity to archetype
 			if (oldArchetype != nullptr)
@@ -334,6 +343,11 @@ namespace decs::light
 			{
 				RemoveFromEmptyEntities(entityData);
 				newArchetype->AddEntityData(&entityData);
+			}
+
+			// Invoke observer
+			{
+				//newComponentTypeData.m_ComponentContext->InvokeOnCreateObserver<PureComponentType>(entity, componentPtr);
 			}
 
 			return componentPtr;

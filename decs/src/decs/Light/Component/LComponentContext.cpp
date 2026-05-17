@@ -1,6 +1,4 @@
-#include "ComponentContext.h"
-
-
+#include "LComponentContext.h"
 
 namespace decs::light
 {
@@ -12,9 +10,10 @@ namespace decs::light
 		}
 	}
 
-	IComponentContext* ComponentContextManager::GetOrCreateContext(TypeID componentTypeID, const IComponentContext* referenceContext)
+	IComponentContext* ComponentContextManager::GetOrCreateContext(const IComponentContext* referenceContext)
 	{
-		auto& ctx = m_Contexts[componentTypeID];
+		TypeID typeID = referenceContext->GetComponentTypeID();
+		auto& ctx = m_Contexts[typeID];
 		if (ctx == nullptr)
 		{
 			ctx = referenceContext->CreateMatchingContext();
