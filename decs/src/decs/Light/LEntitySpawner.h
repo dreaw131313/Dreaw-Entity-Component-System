@@ -90,22 +90,9 @@ namespace decs::light
 				return {};
 			}
 
-			if (Entity entity = m_Container->CreateEntityInArchetype(*m_Archetype))
+			if (Entity entity = m_Container->CreateEntityInArchetypeWithoutObservers(*m_Archetype))
 			{
-				const size_t entityIndex = entity.m_EntityData->IndexInArchetype();
-				if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
-				{
-					func(
-						entity,
-						std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(m_ComponentsPackedContainers)->GetAsRef(entityIndex)...
-					);
-				}
-				else
-				{
-					func(std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(m_ComponentsPackedContainers)->GetAsRef(entityIndex)...);
-				}
-
-				return entity;
+				InitializeEntity(entity, func);
 			}
 
 			return {};
@@ -122,20 +109,9 @@ namespace decs::light
 
 			for (size_t i = 0; i < entityCount; i++)
 			{
-				if (Entity entity = m_Container->CreateEntityInArchetype(*m_Archetype))
+				if (Entity entity = m_Container->CreateEntityInArchetypeWithoutObservers(*m_Archetype))
 				{
-					const size_t entityIndex = entity.m_EntityData->IndexInArchetype();
-					if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
-					{
-						func(
-							entity,
-							std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(m_ComponentsPackedContainers)->GetAsRef(entityIndex)...
-						);
-					}
-					else
-					{
-						func(std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(m_ComponentsPackedContainers)->GetAsRef(entityIndex)...);
-					}
+					InitializeEntity(entity, func);
 				}
 			}
 		}
@@ -143,7 +119,7 @@ namespace decs::light
 	private:
 		Container* m_Container = nullptr;
 		Archetype* m_Archetype = nullptr;
-		std::tuple<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*...> m_ComponentsPackedContainers{};
+		std::tuple<TArchetypeTypeData<ComponentTypes>...> m_TypeDataTuple{};
 		LightComponentTypeGroup<ComponentTypes...> m_ComponentsTypeGroup{};
 		TagTypeGroup<TagTypes...> m_TagsTypeGroup{};
 		FilterTupleType m_FiltersTuple{};
@@ -152,7 +128,7 @@ namespace decs::light
 		{
 			m_Container = nullptr;
 			m_Archetype = nullptr;
-			m_ComponentsPackedContainers = {};
+			m_TypeDataTuple = {};
 		}
 
 		void FetchArchetype()
@@ -170,8 +146,34 @@ namespace decs::light
 				return;
 			}
 
-			m_ComponentsPackedContainers = { m_Archetype->GetTypePackedContainer<drop_const_t<ComponentTypes>>()... };
+			m_TypeDataTuple = { m_Archetype->GetComponentTypeContextAndContainer<ComponentTypes>()... };
 		}
 
+		template<typename InitFunc>
+			requires light_query_callable<InitFunc, ComponentTypes...>
+		void InitializeEntity(Entity& entity, InitFunc&& func)
+		{
+			auto entityData = entity.GetEntityData();
+			const size_t entityIndex = entity.m_EntityData->IndexInArchetype();
+			std::tuple<pure_type_t<ComponentTypes>*...> createdComponents{ std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(m_TypeDataTuple).m_PackedContainer->GetAsPtr(entityIndex)... };
+
+			entityData->LockOperations();
+			{
+				(std::get<TArchetypeTypeData<ComponentTypes>>(m_TypeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+			}
+			entityData->UnlockOperations();
+
+			if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
+			{
+				func(
+					entity,
+					*std::get<pure_type_t<ComponentTypes>*>(createdComponents)...
+				);
+			}
+			else
+			{
+				func(*std::get<pure_type_t<ComponentTypes>*>(createdComponents)...);
+			}
+		}
 	};
 }

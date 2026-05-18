@@ -117,11 +117,11 @@ void Test::Run()
 	std::cout << "/////////////////////////////////////" << "\n";
 
 	//IterationTest();
-	//EntityCreatePerformanceTest();
+	EntityCreatePerformanceTest();
 	//QueryManagerTest();
 	//FilterTest();
 	//RemovingArchetypesTest();
-	ObserversTest();
+	//ObserversTest();
 }
 
 void Test::IterationTest()
@@ -328,8 +328,10 @@ void Test::ComponentCreationTest()
 
 void Test::EntityCreatePerformanceTest()
 {
+	size_t entityCounter = 0;
+
 	const uint32_t testCount = 1;
-	const uint32_t entityCount = 1000;
+	const uint32_t entityCount = 130000;
 
 	decs::light::ContainerConfig config{
 		.EntityChunkSize = 10000,
@@ -340,6 +342,10 @@ void Test::EntityCreatePerformanceTest()
 	double finalEntityAvarage = 0;
 
 	decs::light::Container container{ config };
+	container.AddComponentCreateObserver<Position>([&] (const Entity& entity, Position& pos)
+	{
+		entityCounter+= 1 +entityCounter % entityCount;
+	});
 
 
 	decs::LightComponentTypeGroup<Position, TestComponent> comps{};
@@ -365,10 +371,10 @@ void Test::EntityCreatePerformanceTest()
 		{
 			MeasureTimer timer(true);
 			{
-				/*entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
+				entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
 				{
 
-				});*/
+				});
 
 				/*for (size_t i = 0; i < entityCount; i++)
 				{
@@ -393,10 +399,10 @@ void Test::EntityCreatePerformanceTest()
 				//	});*/
 				//}
 
-				container.CreateEntities(comps, tags, filters, entityCount, [] (Position& pos, TestComponent& test)
+				/*container.CreateEntities(comps, tags, filters, entityCount, [] (Position& pos, TestComponent& test)
 				{
 
-				});
+				});*/
 				/*container.CreateEntities(comps, entityCount, [] (Position& pos, TestComponent& test)
 				{
 
@@ -433,7 +439,7 @@ void Test::EntityCreatePerformanceTest()
 
 	std::cout << "Final avarage " << entityCount << " entity creation time " << finalEntitiesCreationTime << " ms\n";
 	std::cout << "Final avarage single entity creation time " << finalSingleEntityCreationTime * 1000. << " us (" << finalSingleEntityCreationTime << "ms)\n";
-
+	std::cout << entityCounter << "\n";
 }
 
 void Test::FilterTest()

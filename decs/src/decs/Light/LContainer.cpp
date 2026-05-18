@@ -74,6 +74,18 @@ namespace decs::light
 		return {};
 	}
 
+	Entity Container::CreateEntityInArchetypeWithoutObservers(Archetype& archetype)
+	{
+		if (Entity entity = CreateEntityRaw())
+		{
+			archetype.AddEntityDataAndDefaultComponents(entity.m_EntityData);
+
+			return entity;
+		}
+
+		return {};
+	}
+
 	bool Container::DestroyEntityInternal(const Entity& entity, bool bInvokeObservers)
 	{
 		if (entity.GetContainer() == this)

@@ -282,6 +282,8 @@ namespace decs::light
 		/// <returns>New entity index in archetype</returns>
 		Entity CreateEntityInArchetype(Archetype& archetype);
 
+		Entity CreateEntityInArchetypeWithoutObservers(Archetype& archetype);
+
 		bool DestroyEntityInternal(const Entity& entity, bool bInvokeObservers);
 
 		EntityData* GetEntityData(const Entity& entity) const;
