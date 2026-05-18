@@ -13,7 +13,7 @@ namespace Light
 
 		void ComponentCreationTest();
 
-		void PerformanceTest();
+		void EntityCreatePerformanceTest();
 
 		void FilterTest();
 

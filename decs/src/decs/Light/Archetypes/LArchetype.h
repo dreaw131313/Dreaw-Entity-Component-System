@@ -148,6 +148,32 @@ namespace decs::light
 		}
 	};
 
+	template<light_component_concept ComponentType>
+	struct TArchetypeTypeData
+	{
+	public:
+		using ContextType = TComponentContext<pure_type_t<ComponentType>>;
+		using ContainerType = PackedLightComponentContainer<pure_type_t<ComponentType>>;
+	public:
+		ContextType* m_ComponentContext = nullptr;
+		ContainerType* m_PackedContainer = nullptr;
+
+	public:
+		TArchetypeTypeData() = default;
+
+		TArchetypeTypeData(const ArchetypeTypeData& data):
+			m_ComponentContext(::decs::check_cast<ContextType*>(data.m_ComponentContext)),
+			m_PackedContainer(::decs::check_cast<ContainerType*>(data.m_PackedContainer))
+		{
+
+		}
+
+		inline operator bool() const noexcept
+		{
+			return m_ComponentContext != nullptr && m_PackedContainer != nullptr;
+		}
+	};
+
 	struct ArchetypeEdge
 	{
 	public:
@@ -250,6 +276,7 @@ public:
 
 namespace decs::light
 {
+
 	class Archetype final
 	{
 		friend class light::Container;
@@ -558,10 +585,10 @@ namespace decs::light
 		bool ContainComponentOrTagOrFilterType(TypeID typeID) const noexcept;
 
 	private:
-		template<typename TComponentType>
-		PackedLightComponentContainer<TComponentType>* GetTypePackedContainer() const
+		template<typename ComponentType>
+		PackedLightComponentContainer<ComponentType>* GetTypePackedContainer() const
 		{
-			uint32_t compIdx = FindTypeIndex<TComponentType>();
+			uint32_t compIdx = FindTypeIndex<ComponentType>();
 			if (compIdx == std::numeric_limits<uint32_t>::max())
 			{
 				return nullptr;
@@ -569,7 +596,21 @@ namespace decs::light
 
 			auto& typeData = m_TypeData[compIdx];
 
-			return ::decs::check_cast<PackedLightComponentContainer<TComponentType>*>(typeData.m_PackedContainer);
+			return ::decs::check_cast<PackedLightComponentContainer<ComponentType>*>(typeData.m_PackedContainer);
+		}
+
+		template<light_component_concept ComponentType>
+		TArchetypeTypeData<ComponentType> GetComponentTypeContextAndContainer() const
+		{
+			using PureComponentType = pure_type_t<ComponentType>;
+
+			uint32_t compIdx = FindTypeIndex<PureComponentType>();
+			if (compIdx == std::numeric_limits<uint32_t>::max())
+			{
+				return {};
+			}
+
+			return TArchetypeTypeData<PureComponentType>(m_TypeData[compIdx]);
 		}
 
 		void ClearEntityDataAndComponents();
@@ -582,6 +623,8 @@ namespace decs::light
 		void AddEntityData(EntityData* entityData);
 
 		bool AddEntityDataAndDefaultComponents(EntityData* entityData);
+
+		void InvokeCreateObserversOnEntity(size_t entityIndex);
 
 		void RemoveSwapBackEntityData(size_t index);
 

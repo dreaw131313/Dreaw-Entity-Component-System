@@ -117,7 +117,7 @@ namespace decs::light
 
 				if (spawnArchetype != nullptr)
 				{
-					std::tuple<PackedLightComponentContainer<pure_type_t<ComponentTypes>>*...> packedContainerTyple = { spawnArchetype->GetTypePackedContainer<drop_const_t<ComponentTypes>>()... };
+					std::tuple<TArchetypeTypeData<ComponentTypes>...>  typeDataTuple{ spawnArchetype->GetComponentTypeContextAndContainer<ComponentTypes>()... };
 
 					for (uint32_t i = 0; i < entityCount; i++)
 					{
@@ -126,10 +126,16 @@ namespace decs::light
 							EntityData* entityData = GetEntityData(entity);
 							spawnArchetype->AddEntityData(entityData);
 
-							std::tuple<drop_const_t<ComponentTypes>*...> createdComponents = {
-								&std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(packedContainerTyple)->EmplaceBack<>()
+							std::tuple<pure_type_t<ComponentTypes>*...> createdComponents = {
+								&std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_PackedContainer->EmplaceBack<>()
 								...
 							};
+
+							entityData->LockOperations();
+							{
+								(std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+							}
+							entityData->UnlockOperations();
 
 							if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
 							{
@@ -207,18 +213,23 @@ namespace decs::light
 
 				if (spawnArchetype != nullptr)
 				{
-					std::tuple<PackedLightComponentContainer<pure_type_t<ComponentTypes>>*...> packedContainerTyple = { spawnArchetype->GetTypePackedContainer<drop_const_t<ComponentTypes>>()... };
+					std::tuple<TArchetypeTypeData<ComponentTypes>...>  typeDataTuple{ spawnArchetype->GetComponentTypeContextAndContainer<ComponentTypes>()... };
 
 					if (Entity entity = CreateEntityRaw())
 					{
-
 						EntityData* entityData = GetEntityData(entity);
 						spawnArchetype->AddEntityData(entityData);
 
-						std::tuple<drop_const_t<ComponentTypes>*...> createdComponents = {
-							&std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(packedContainerTyple)->EmplaceBack<>()
+						std::tuple<pure_type_t<ComponentTypes>*...> createdComponents = {
+							&std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_PackedContainer->EmplaceBack<>()
 							...
 						};
+
+						entityData->LockOperations();
+						{
+							(std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+						}
+						entityData->UnlockOperations();
 
 						if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
 						{
@@ -360,6 +371,11 @@ namespace decs::light
 		template<light_component_concept TComponent, typename ...Args>
 		TComponent* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
+			if (entityData.OperationsLocked())
+			{
+				return nullptr;
+			}
+
 			using PureComponentType = pure_type_t<TComponent>;
 			using PackedContainerType = PackedLightComponentContainer<PureComponentType>;
 
@@ -375,10 +391,9 @@ namespace decs::light
 			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
 			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype);
-			ArchetypeTypeData newComponentTypeData = newArchetype->GetTypeData(componentTypeID);
+			TArchetypeTypeData<PureComponentType> newTypeData = newArchetype->GetComponentTypeContextAndContainer<PureComponentType>();
 
-			PackedContainerType* packedContainer = ::decs::check_cast<PackedContainerType*>(newComponentTypeData.m_PackedContainer);
-			PureComponentType* componentPtr = &packedContainer->EmplaceBack(std::forward<Args>(args)...);
+			PureComponentType* componentPtr = &newTypeData.m_PackedContainer->EmplaceBack(std::forward<Args>(args)...);
 
 			// Adding entity to archetype
 			if (oldArchetype != nullptr)
@@ -392,9 +407,11 @@ namespace decs::light
 			}
 
 			// Invoke observer
+			entityData.LockOperations();
 			{
-				//newComponentTypeData.m_ComponentContext->InvokeOnCreateObserver<PureComponentType>(entity, componentPtr);
+				newTypeData.m_ComponentContext->InvokeOnCreate(entity, *componentPtr);
 			}
+			entityData.UnlockOperations();
 
 			return componentPtr;
 		}
@@ -486,6 +503,11 @@ namespace decs::light
 		template<filter_concept FilterType>
 		bool SetFilter(EntityData& entityData, const filter_data_t<FilterType>& filter)
 		{
+			if (entityData.OperationsLocked())
+			{
+				return false;
+			}
+
 			TYPE_ID_CONSTEXPR TypeID filterTypeID = Type<FilterType>::ID();
 
 			Archetype* oldArchetype = entityData.m_Archetype;
@@ -617,7 +639,9 @@ namespace decs::light
 		bool AddTag(EntityData& entityData)
 		{
 			Archetype* oldArchetype = entityData.m_Archetype;
-			if (oldArchetype != nullptr && oldArchetype->HasTag<TagType>())
+			if (entityData.OperationsLocked()
+				|| (oldArchetype != nullptr && oldArchetype->HasTag<TagType>())
+				)
 			{
 				return true;
 			}

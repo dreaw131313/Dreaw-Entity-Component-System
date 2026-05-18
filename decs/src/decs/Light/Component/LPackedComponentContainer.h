@@ -18,23 +18,23 @@ namespace decs::light
 
 		virtual void ShrinkToFit() = 0;
 
-		virtual uint64_t Capacity() = 0;
+		virtual size_t Capacity() = 0;
 
-		virtual uint64_t Size() = 0;
+		virtual size_t Size() = 0;
 
-		virtual void Reserve(uint64_t newCapacity) = 0;
+		virtual void Reserve(size_t newCapacity) = 0;
 
 		/// <summary>
 		/// 
 		/// </summary>
 		/// <returns>Component size in bytes.</returns>
-		virtual uint64_t GetComponentSize() const = 0;
+		virtual size_t GetComponentSize() const = 0;
 
-		virtual void* GetComponentBasePtr(uint64_t index) = 0;
+		virtual void* GetComponentBasePtr(size_t index) = 0;
 
 		virtual void* GetBackComponentBasePtr() = 0;
 
-		virtual void RemoveSwapBack(uint64_t index) = 0;
+		virtual void RemoveSwapBack(size_t index) = 0;
 
 		virtual void PushBack(void* componentPtr) = 0;
 
@@ -63,7 +63,7 @@ namespace decs::light
 
 		~PackedLightComponentContainer() = default;
 
-		inline uint64_t GetComponentSize() const override
+		inline size_t GetComponentSize() const override
 		{
 			return sizeof(TComponent);
 		}
@@ -86,22 +86,22 @@ namespace decs::light
 			m_Data.shrink_to_fit();
 		}
 
-		inline uint64_t Capacity() override
+		inline size_t Capacity() override
 		{
 			return m_Data.capacity();
 		}
 
-		inline uint64_t Size() override
+		inline size_t Size() override
 		{
 			return m_Data.size();
 		}
 
-		inline void Reserve(uint64_t newCapacity) override
+		inline void Reserve(size_t newCapacity) override
 		{
 			m_Data.reserve(newCapacity);
 		}
 
-		inline void* GetComponentBasePtr(uint64_t index) override
+		inline void* GetComponentBasePtr(size_t index) override
 		{
 			return &m_Data[index];
 		}
@@ -112,9 +112,9 @@ namespace decs::light
 			return &m_Data.back();
 		}
 
-		inline void RemoveSwapBack(uint64_t index) override
+		inline void RemoveSwapBack(size_t index) override
 		{
-			uint64_t dataSize = m_Data.size();
+			size_t dataSize = m_Data.size();
 			if (dataSize > 0)
 			{
 				if (index < (dataSize - 1))

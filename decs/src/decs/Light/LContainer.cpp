@@ -66,6 +66,7 @@ namespace decs::light
 		if (Entity entity = CreateEntityRaw())
 		{
 			archetype.AddEntityDataAndDefaultComponents(entity.m_EntityData);
+			archetype.InvokeCreateObserversOnEntity(entity.m_EntityData->m_IndexInArchetype);
 
 			return entity;
 		}
@@ -82,9 +83,23 @@ namespace decs::light
 
 			Archetype* currentArchetype = entityData.m_Archetype;
 
+			entityData.LockOperations();
 			if (currentArchetype != nullptr)
 			{
 				const uint32_t indexInArchetype = entityData.m_IndexInArchetype;
+
+				for (auto& archetypeTypeData : currentArchetype->GetComponentAndTagRecords())
+				{
+					if (archetypeTypeData.IsTag())
+					{
+						continue;
+					}
+					archetypeTypeData.m_ComponentContext->InvokeOnDestroyObserver(
+						entity, 
+						archetypeTypeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype)
+					);
+				}
+
 				currentArchetype->RemoveSwapBackEntity(indexInArchetype);
 			}
 			else
@@ -283,6 +298,7 @@ namespace decs::light
 		}
 
 		// invoke observers:
+		entityData->LockOperations();
 		{
 			for (uint32_t i = 0; i < typeCount; i++)
 			{
@@ -293,11 +309,12 @@ namespace decs::light
 				}
 
 				typeData.m_ComponentContext->InvokeOnCreateObserver(
-					spawnedEntity, 
+					spawnedEntity,
 					typeData.m_PackedContainer->GetBackComponentBasePtr()
-					);
+				);
 			}
 		}
+		entityData->UnlockOperations();
 	}
 
 	bool Container::RemoveComponent(const Entity& entity, TypeID componentTypeID)
@@ -305,7 +322,7 @@ namespace decs::light
 		if (entity.GetContainer() != this) return false;
 
 		EntityData& entityData = *entity.GetEntityData();
-		if (entityData.m_Archetype == nullptr) return false;
+		if (entityData.OperationsLocked() || entityData.m_Archetype == nullptr) return false;
 
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
 		if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
@@ -320,10 +337,12 @@ namespace decs::light
 		}
 
 		// observers callback
-		//{
-		//	void* componentPtr = oldArchetypeTypeData.m_PackedContainer->GetComponentBasePtr(indexInOldArchetype);
-		//	oldArchetypeTypeData.m_ComponentContext->InvokeOnDestroyObserver(entity, componentPtr);
-		//}
+		entityData.LockOperations();
+		{
+			void* componentPtr = oldArchetypeTypeData.m_PackedContainer->GetComponentBasePtr(indexInOldArchetype);
+			oldArchetypeTypeData.m_ComponentContext->InvokeOnDestroyObserver(entity, componentPtr);
+		}
+		entityData.UnlockOperations();
 
 		Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
 			*entityData.m_Archetype,
@@ -357,11 +376,12 @@ namespace decs::light
 
 	bool Container::RemoveFilter(EntityData& entityData, TypeID filterTypeID)
 	{
-		Archetype* oldArchetype = entityData.m_Archetype;
-		if (oldArchetype == nullptr)
+		if (entityData.OperationsLocked() || entityData.m_Archetype == nullptr)
 		{
 			return false;
 		}
+
+		Archetype* oldArchetype = entityData.m_Archetype;
 		const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
 		Archetype* newArchetype = this->GetArchetypeAfterRemoveFilter(oldArchetype, filterTypeID);
@@ -397,7 +417,7 @@ namespace decs::light
 
 	bool Container::RemoveTag(EntityData& entityData, TypeID tagType)
 	{
-		if (entityData.m_Container != this || entityData.m_Archetype == nullptr)
+		if (entityData.OperationsLocked() || entityData.m_Container != this || entityData.m_Archetype == nullptr)
 		{
 			return false;
 		}

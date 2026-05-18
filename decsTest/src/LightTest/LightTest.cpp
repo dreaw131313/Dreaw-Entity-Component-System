@@ -56,7 +56,7 @@ public:
 struct TestComponent
 {
 public:
-	int table[15];
+	int table[50];
 
 };
 
@@ -117,7 +117,7 @@ void Test::Run()
 	std::cout << "/////////////////////////////////////" << "\n";
 
 	//IterationTest();
-	//PerformanceTest();
+	//EntityCreatePerformanceTest();
 	//QueryManagerTest();
 	//FilterTest();
 	//RemovingArchetypesTest();
@@ -326,10 +326,10 @@ void Test::ComponentCreationTest()
 	Entity e2 = container.Spawn(e);
 }
 
-void Test::PerformanceTest()
+void Test::EntityCreatePerformanceTest()
 {
 	const uint32_t testCount = 1;
-	const uint32_t entityCount = 16384;
+	const uint32_t entityCount = 1000;
 
 	decs::light::ContainerConfig config{
 		.EntityChunkSize = 10000,
@@ -365,10 +365,10 @@ void Test::PerformanceTest()
 		{
 			MeasureTimer timer(true);
 			{
-				entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
+				/*entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
 				{
 
-				});
+				});*/
 
 				/*for (size_t i = 0; i < entityCount; i++)
 				{
@@ -381,22 +381,22 @@ void Test::PerformanceTest()
 					e.AddComponent<TestComponent>();
 				}*/
 
-				for (uint32_t i = 0; i < entityCount; i++)
+				//for (uint32_t i = 0; i < entityCount; i++)
+				//{
+				//	/*container.CreateEntity(comps, tags, filters, [] (Position& pos, TestComponent& test)
+				//	{
+
+				//	});*/
+				//	/*container.CreateEntity(comps, [] (Position& pos, TestComponent& test)
+				//	{
+
+				//	});*/
+				//}
+
+				container.CreateEntities(comps, tags, filters, entityCount, [] (Position& pos, TestComponent& test)
 				{
-					/*container.CreateEntity(comps, tags, filters, [] (Position& pos, TestComponent& test)
-					{
 
-					});*/
-					/*container.CreateEntity(comps, [] (Position& pos, TestComponent& test)
-					{
-
-					});*/
-				}
-
-				/*container.CreateEntities(comps, tags, filters, entityCount, [] (Position& pos, TestComponent& test)
-				{
-
-				});*/
+				});
 				/*container.CreateEntities(comps, entityCount, [] (Position& pos, TestComponent& test)
 				{
 
@@ -585,18 +585,58 @@ void Test::ObserversTest()
 {
 	decs::light::Container container{};
 
-	uint32_t createObserverID = container.AddComponentCreateObserver<Position>([] (const Entity& entity, Position& pos)
+	container.AddComponentCreateObserver<Position>([] (const Entity& entity, Position& pos)
 	{
 		PrintLine("Position create observer");
 	});
+	container.AddComponentCreateObserver<Position>([] (const Entity& entity, Position& pos)
+	{
+		PrintLine("Second Position create observer");
+	});
 
-	uint32_t destroyObserverID = container.AddComponentDestroyObserver<Position>([] (const Entity& entity, Position pos)
+	container.AddComponentDestroyObserver<Position>([] (const Entity& entity, Position pos)
 	{
 		PrintLine("Position destroy observer");
 	});
 
-	container.RemoveComponentCreateObserver<Position>(createObserverID);
-	container.RemoveComponentDestroyObserver<Position>(destroyObserverID);
+
+	// 1
+	{
+		Entity e = container.CreateEntity();
+		e.AddComponent<Position>();
+		container.Spawn(e, 2);
+
+	}
+	//2
+	{
+		decs::LightComponentTypeGroup<Position> componentsTypeGroup{};
+
+		Entity e = container.CreateEntity(componentsTypeGroup, [] (Entity e, Position& pos)
+		{
+		});
+		e.RemoveComponent<Position>();
+	}
+
+	//3
+	{
+		Entity e = container.CreateEntity();
+		e.AddComponent<Position>();
+
+		e.Destroy();
+	}
+
+	//4
+	{
+		decs::light::EntitySpawner<decs::LightComponentTypeGroup<Position>> spawner{};
+		spawner.SetContainer(&container);
+
+		auto e = spawner.Spawn([] (auto) { 
+		
+		});
+
+		e.Destroy();
+	}
+
 }
 
 END_NAMESPACE

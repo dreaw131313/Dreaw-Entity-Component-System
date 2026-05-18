@@ -1,6 +1,7 @@
 #pragma once
 #include "LArchetype.h"
 
+#include "decs/Light/LEntity.h"
 #include <algorithm>
 
 namespace decs::light
@@ -281,6 +282,31 @@ namespace decs::light
 
 		return true;
 	}
+
+	void Archetype::InvokeCreateObserversOnEntity(size_t entityIndex)
+	{
+		if (entityIndex>= m_Entities.Size())
+		{
+			return;
+		}
+
+		auto entityData = m_Entities.Get(entityIndex);
+		Entity e(entityData);
+		entityData->LockOperations();
+		{
+			for (auto& typeData : m_TypeData)
+			{
+				if (typeData.IsTag())
+				{
+					continue;
+				}
+				typeData.m_ComponentContext->InvokeOnCreateObserver(e, typeData.m_PackedContainer->GetComponentBasePtr(entityIndex));
+			}
+		}
+		entityData->UnlockOperations();
+	}
+
+
 
 	void Archetype::RemoveSwapBackEntityData(size_t index)
 	{

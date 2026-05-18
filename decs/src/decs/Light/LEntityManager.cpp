@@ -33,8 +33,7 @@ namespace decs::light
 			EntityData* entityData = std::move(m_FreeEntities.back());
 			m_FreeEntities.pop_back();
 
-			entityData->m_Container = &container;
-			entityData->m_bIsAlive = true;
+			entityData->OnCreateEntityByEntityManager(container);
 
 			return entityData;
 		}
