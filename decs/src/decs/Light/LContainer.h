@@ -330,14 +330,14 @@ namespace decs::light
 		/// <returns>id for removing function observer</returns>
 		template<light_component_concept ComponentType, typename Func>
 			requires light_component_observer_func<Func, ComponentType>
-		uint32_t AddComponentCreateObserver(Func&& func)
+		ObserverID AddComponentCreateObserver(Func&& func)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
 			return context->m_OnCreateFunction.AddFunction(func);
 		}
 
 		template<light_component_concept ComponentType>
-		bool RemoveComponentCreateObserver(uint32_t id)
+		bool RemoveComponentCreateObserver(ObserverID id)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
 			return context->m_OnCreateFunction.RemoveFunction(id);
@@ -352,14 +352,14 @@ namespace decs::light
 		/// <returns>id for removing function observer</returns>
 		template<light_component_concept ComponentType, typename Func>
 			requires light_component_observer_func<Func, ComponentType>
-		uint32_t AddComponentDestroyObserver(Func&& func)
+		ObserverID AddComponentDestroyObserver(Func&& func)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
 			return context->m_OnDestroyFunction.AddFunction(func);
 		}
 
 		template<light_component_concept ComponentType>
-		bool RemoveComponentDestroyObserver(uint32_t id)
+		bool RemoveComponentDestroyObserver(ObserverID id)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
 			return context->m_OnDestroyFunction.RemoveFunction(id);

@@ -12,32 +12,42 @@ namespace decs::light
 {
 	class Entity;
 
+	struct ObserverID final
+	{
+		template<light_component_concept>
+		friend class ComponentObserverFunction;
+
+	private:
+		size_t m_Value = std::numeric_limits<size_t>::max();
+	};
+
 	template<light_component_concept ComponentType>
 	class ComponentObserverFunction
 	{
 		using ObserverFunctionType = void(const Entity&, ComponentType&);
 		using FunctionType = std::function<ObserverFunctionType>;
-		using IDType = uint32_t;
+
+	public:
 
 		struct ItemRecord
 		{
 		public:
 			FunctionType m_Function{};
-			IDType m_ID = std::numeric_limits<IDType>::max();
+			ObserverID m_ID{};
 		};
 
 	public:
 		template<typename Func>
-		uint32_t AddFunction(Func&& func)
+		ObserverID AddFunction(Func&& func)
 		{
-			IDType id = GenerateID();
+			ObserverID id = GenerateID();
 
 			m_Functions.push_back({ FunctionType(func), id });
 
 			return id;
 		}
 
-		bool RemoveFunction(IDType id)
+		bool RemoveFunction(ObserverID id)
 		{
 			for (size_t i = 0; i < m_Functions.size(); i++)
 			{
@@ -62,13 +72,16 @@ namespace decs::light
 
 	private:
 		std::vector<ItemRecord> m_Functions{};
-		IDType m_IDGenerator = 0;
+		size_t m_IDGenerator = 0;
 
 	private:
-		IDType GenerateID()
+		ObserverID GenerateID()
 		{
-			IDType newID = m_IDGenerator;
+			ObserverID newID{};
+			newID.m_Value = m_IDGenerator;
+
 			m_IDGenerator++;
+
 			return newID;
 		}
 	};

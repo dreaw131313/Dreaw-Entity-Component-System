@@ -331,7 +331,7 @@ void Test::EntityCreatePerformanceTest()
 	size_t entityCounter = 0;
 
 	const uint32_t testCount = 1;
-	const uint32_t entityCount = 130000;
+	const uint32_t entityCount = 262144;
 
 	decs::light::ContainerConfig config{
 		.EntityChunkSize = 10000,
@@ -342,11 +342,6 @@ void Test::EntityCreatePerformanceTest()
 	double finalEntityAvarage = 0;
 
 	decs::light::Container container{ config };
-	container.AddComponentCreateObserver<Position>([&] (const Entity& entity, Position& pos)
-	{
-		entityCounter+= 1 +entityCounter % entityCount;
-	});
-
 
 	decs::LightComponentTypeGroup<Position, TestComponent> comps{};
 	decs::TagTypeGroup<float, int> tags{};
@@ -371,12 +366,12 @@ void Test::EntityCreatePerformanceTest()
 		{
 			MeasureTimer timer(true);
 			{
-				entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
+				/*entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
 				{
 
-				});
+				});*/
 
-				/*for (size_t i = 0; i < entityCount; i++)
+				for (size_t i = 0; i < entityCount; i++)
 				{
 					auto e = container.CreateEntity();
 					e.AddTag<float>();
@@ -385,7 +380,7 @@ void Test::EntityCreatePerformanceTest()
 					e.SetFilter<bool>(false);
 					e.AddComponent<Position>();
 					e.AddComponent<TestComponent>();
-				}*/
+				}
 
 				//for (uint32_t i = 0; i < entityCount; i++)
 				//{
@@ -591,16 +586,12 @@ void Test::ObserversTest()
 {
 	decs::light::Container container{};
 
-	container.AddComponentCreateObserver<Position>([] (const Entity& entity, Position& pos)
+	decs::light::ObserverID createID = container.AddComponentCreateObserver<Position>([] (const Entity& entity, Position& pos)
 	{
 		PrintLine("Position create observer");
 	});
-	container.AddComponentCreateObserver<Position>([] (const Entity& entity, Position& pos)
-	{
-		PrintLine("Second Position create observer");
-	});
 
-	container.AddComponentDestroyObserver<Position>([] (const Entity& entity, Position pos)
+	decs::light::ObserverID destroyID = container.AddComponentDestroyObserver<Position>([] (const Entity& entity, Position pos)
 	{
 		PrintLine("Position destroy observer");
 	});
@@ -636,8 +627,9 @@ void Test::ObserversTest()
 		decs::light::EntitySpawner<decs::LightComponentTypeGroup<Position>> spawner{};
 		spawner.SetContainer(&container);
 
-		auto e = spawner.Spawn([] (auto) { 
-		
+		auto e = spawner.Spawn([] (auto)
+		{
+
 		});
 
 		e.Destroy();
