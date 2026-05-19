@@ -585,10 +585,12 @@ namespace decs::light
 		bool ContainComponentOrTagOrFilterType(TypeID typeID) const noexcept;
 
 	private:
-		template<typename ComponentType>
-		PackedLightComponentContainer<ComponentType>* GetTypePackedContainer() const
+		template<light_component_concept ComponentType>
+		PackedLightComponentContainer<pure_type_t<ComponentType>>* GetTypePackedContainer() const
 		{
-			uint32_t compIdx = FindTypeIndex<ComponentType>();
+			using PureComponentType = pure_type_t<ComponentType>;
+
+			uint32_t compIdx = FindTypeIndex<PureComponentType>();
 			if (compIdx == std::numeric_limits<uint32_t>::max())
 			{
 				return nullptr;
@@ -596,7 +598,7 @@ namespace decs::light
 
 			auto& typeData = m_TypeData[compIdx];
 
-			return ::decs::check_cast<PackedLightComponentContainer<ComponentType>*>(typeData.m_PackedContainer);
+			return ::decs::check_cast<PackedLightComponentContainer<PureComponentType>*>(typeData.m_PackedContainer);
 		}
 
 		template<light_component_concept ComponentType>

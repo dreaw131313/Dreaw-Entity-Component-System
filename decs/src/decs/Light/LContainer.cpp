@@ -61,6 +61,15 @@ namespace decs::light
 		return false;
 	}
 
+	bool Container::DestroyEntity_NoObservers(const Entity& entity)
+	{
+		if (entity.IsValid())
+		{
+			return DestroyEntityInternal(entity, false);
+		}
+		return false;
+	}
+
 	Entity Container::CreateEntityInArchetype(Archetype& archetype)
 	{
 		if (Entity entity = CreateEntityRaw())
@@ -100,16 +109,19 @@ namespace decs::light
 			{
 				const uint32_t indexInArchetype = entityData.m_IndexInArchetype;
 
-				for (auto& archetypeTypeData : currentArchetype->GetComponentAndTagRecords())
+				if (bInvokeObservers)
 				{
-					if (archetypeTypeData.IsTag())
+					for (auto& archetypeTypeData : currentArchetype->GetComponentAndTagRecords())
 					{
-						continue;
+						if (archetypeTypeData.IsTag())
+						{
+							continue;
+						}
+						archetypeTypeData.m_ComponentContext->InvokeOnDestroyObserver(
+							entity,
+							archetypeTypeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype)
+						);
 					}
-					archetypeTypeData.m_ComponentContext->InvokeOnDestroyObserver(
-						entity, 
-						archetypeTypeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype)
-					);
 				}
 
 				currentArchetype->RemoveSwapBackEntity(indexInArchetype);
@@ -329,7 +341,7 @@ namespace decs::light
 		entityData->UnlockOperations();
 	}
 
-	bool Container::RemoveComponent(const Entity& entity, TypeID componentTypeID)
+	bool Container::RemoveComponent_Impl(const Entity& entity, TypeID componentTypeID, bool bInvokeObservers)
 	{
 		if (entity.GetContainer() != this) return false;
 
@@ -349,12 +361,15 @@ namespace decs::light
 		}
 
 		// observers callback
-		entityData.LockOperations();
+		if (bInvokeObservers)
 		{
-			void* componentPtr = oldArchetypeTypeData.m_PackedContainer->GetComponentBasePtr(indexInOldArchetype);
-			oldArchetypeTypeData.m_ComponentContext->InvokeOnDestroyObserver(entity, componentPtr);
+			entityData.LockOperations();
+			{
+				void* componentPtr = oldArchetypeTypeData.m_PackedContainer->GetComponentBasePtr(indexInOldArchetype);
+				oldArchetypeTypeData.m_ComponentContext->InvokeOnDestroyObserver(entity, componentPtr);
+			}
+			entityData.UnlockOperations();
 		}
-		entityData.UnlockOperations();
 
 		Archetype* newArchetype = m_ArchetypesMap.GetArchetypeAfterRemoveComponent(
 			*entityData.m_Archetype,

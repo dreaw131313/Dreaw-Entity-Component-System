@@ -71,11 +71,14 @@ namespace decs::light
 
 		bool DestroyEntity(const Entity& entity);
 
+		bool DestroyEntity_NoObservers(const Entity& entity);
+
 		[[nodiscard]] inline uint64_t GetEmptyEntitiesCount() const
 		{
 			return m_EmptyEntities.size();
 		}
 
+	private:
 		/// <summary>
 		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in LightComponentTypeGroup parameter.
 		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
@@ -88,9 +91,9 @@ namespace decs::light
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
+		template<bool InvokeObservers, typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
 			requires light_query_callable<InitFunc, ComponentTypes...>
-		void CreateEntities(
+		void CreateEntities_Impl(
 			const LightComponentTypeGroup<ComponentTypes...>& components,
 			const TagTypeGroup<TagTypes...>& tags,
 			const std::tuple<FiltersData...>& filtersTupleData,
@@ -131,11 +134,14 @@ namespace decs::light
 								...
 							};
 
-							entityData->LockOperations();
+							if constexpr (InvokeObservers)
 							{
-								(std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+								entityData->LockOperations();
+								{
+									(std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+								}
+								entityData->UnlockOperations();
 							}
-							entityData->UnlockOperations();
 
 							if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
 							{
@@ -149,6 +155,20 @@ namespace decs::light
 					}
 				}
 			}
+		}
+
+	public:
+		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
+			requires light_query_callable<InitFunc, ComponentTypes...>
+		inline void CreateEntities(
+			const LightComponentTypeGroup<ComponentTypes...>& components,
+			const TagTypeGroup<TagTypes...>& tags,
+			const std::tuple<FiltersData...>& filtersTupleData,
+			uint32_t entityCount,
+			InitFunc&& initFunc
+		)
+		{
+			CreateEntities_Impl<true>(components, tags, filtersTupleData, entityCount, initFunc);
 		}
 
 		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes>
@@ -177,22 +197,24 @@ namespace decs::light
 			CreateEntities(components, tags, filtersTuple, entityCount, initFunc);
 		}
 
-		/// <summary>
-		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in LightComponentTypeGroup parameter.
-		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
-		/// </summary>
-		/// <typeparam name="InitFunc"></typeparam>
-		/// <typeparam name="...ComponentTypes"></typeparam>
-		/// <typeparam name="...TagTypes"></typeparam>
-		/// <param name="components"></param>
-		/// <param name="tags"></param>
-		/// <param name="entityCount"></param>
-		/// <param name="bIsActive"></param>
-		/// <param name="initFunc"></param>
-		/// <returns></returns>
-		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
+
+	private:
+	/// <summary>
+	/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in LightComponentTypeGroup parameter.
+	/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
+	/// </summary>
+	/// <typeparam name="InitFunc"></typeparam>
+	/// <typeparam name="...ComponentTypes"></typeparam>
+	/// <typeparam name="...TagTypes"></typeparam>
+	/// <param name="components"></param>
+	/// <param name="tags"></param>
+	/// <param name="entityCount"></param>
+	/// <param name="bIsActive"></param>
+	/// <param name="initFunc"></param>
+	/// <returns></returns>
+		template<bool InvokeObservers, typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
 			requires light_query_callable<InitFunc, ComponentTypes...>
-		Entity CreateEntity(
+		Entity CreateEntity_Impl(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
 			const std::tuple<FiltersData...>& filtersTupleData,
@@ -225,11 +247,14 @@ namespace decs::light
 							...
 						};
 
-						entityData->LockOperations();
+						if constexpr (InvokeObservers)
 						{
-							(std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+							entityData->LockOperations();
+							{
+								(std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+							}
+							entityData->UnlockOperations();
 						}
-						entityData->UnlockOperations();
 
 						if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
 						{
@@ -246,6 +271,19 @@ namespace decs::light
 			}
 
 			return Entity();
+		}
+
+	public:
+		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
+			requires light_query_callable<InitFunc, ComponentTypes...>
+		Entity CreateEntity(
+			const LightComponentTypeGroup<ComponentTypes...> components,
+			const TagTypeGroup<TagTypes...> tags,
+			const std::tuple<FiltersData...>& filtersTupleData,
+			InitFunc&& initFunc
+		)
+		{
+			return CreateEntity_Impl<true>(components, tags, filtersTupleData, initFunc);
 		}
 
 		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes>
@@ -365,13 +403,12 @@ namespace decs::light
 			return context->m_OnDestroyFunction.RemoveFunction(id);
 		}
 
-
 	private:
 		ComponentContextManager m_ComponentContextManager{};
 
 	private:
-		template<light_component_concept TComponent, typename ...Args>
-		TComponent* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
+		template<bool InvokeObserver, light_component_concept TComponent, typename ...Args>
+		TComponent* AddComponent_Impl(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			if (entityData.OperationsLocked())
 			{
@@ -409,56 +446,73 @@ namespace decs::light
 			}
 
 			// Invoke observer
-			entityData.LockOperations();
+			if constexpr (InvokeObserver)
 			{
-				newTypeData.m_ComponentContext->InvokeOnCreate(entity, *componentPtr);
+				entityData.LockOperations();
+				{
+					newTypeData.m_ComponentContext->InvokeOnCreate(entity, *componentPtr);
+				}
+				entityData.UnlockOperations();
 			}
-			entityData.UnlockOperations();
 
 			return componentPtr;
 		}
 
-		template<light_component_concept TComponent>
+		template<light_component_concept ComponentType, typename ...Args>
+		inline ComponentType* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
+		{
+			return AddComponent_Impl<true, ComponentType, Args...>(entity, entityData, std::forward<Args>(args)...);
+		}
+
+		template<light_component_concept ComponentType, typename ...Args>
+		inline ComponentType* AddComponent_NoObserver(const Entity& entity, EntityData& entityData, Args&&... args)
+		{
+			return AddComponent_Impl<false, ComponentType, Args...>(entity, entityData, std::forward<Args>(args)...);
+		}
+
+		bool RemoveComponent_Impl(const Entity& entity, TypeID componentTypeID, bool bInvokeObservers);
+
+		inline bool RemoveComponent(const Entity& entity, TypeID componentTypeID)
+		{
+			return RemoveComponent_Impl(entity, componentTypeID, true);
+		}
+
+		template<light_component_concept ComponentType>
 		bool RemoveComponent(const Entity& entity)
 		{
-			return RemoveComponent(entity, Type<TComponent>::ID());
+			return RemoveComponent_Impl(entity, Type<pure_type_t<ComponentType>>::ID(), true);
 		}
 
-		bool RemoveComponent(const Entity& entity, TypeID componentTypeID);
+		inline bool RemoveComponent_NoObserver(const Entity& entity, TypeID componentTypeID)
+		{
+			return RemoveComponent_Impl(entity, componentTypeID, false);
+		}
+
+		template<light_component_concept ComponentType>
+		bool RemoveComponent_NoObserver(const Entity& entity)
+		{
+			return RemoveComponent_Impl(entity, Type<pure_type_t<ComponentType>>::ID(), false);
+		}
+
+		inline bool HasComponentInternal(EntityData& entityData, TypeID typeID) const
+		{
+			return entityData.m_Archetype != nullptr && entityData.m_Archetype->HasComponentType(typeID);
+		}
 
 		template<light_component_concept TComponent>
-		TComponent* GetComponent(EntityData& entityData) const
+		inline bool HasComponent(EntityData& entityData) const
+		{
+			return HasComponentInternal(entityData, Type<pure_type_t<TComponent>>::ID());
+		}
+
+		template<light_component_concept ComponentType>
+		ComponentType* GetComponent(EntityData& entityData) const
 		{
 			if (entityData.m_Archetype != nullptr)
 			{
-				uint32_t findTypeIndex = entityData.m_Archetype->FindTypeIndex<TComponent>();
-				if (findTypeIndex != std::numeric_limits<uint32_t>::max())
-				{
-					PackedLightComponentContainer<TComponent>* container = ::decs::check_cast<PackedLightComponentContainer<TComponent>*>(entityData.m_Archetype->m_TypeData[findTypeIndex].m_PackedContainer);
-					return container->GetAsPtr(entityData.m_IndexInArchetype);
-				}
+				return GetComponentFromArchetypeAtIndex<ComponentType>(*entityData.m_Archetype, entityData.m_IndexInArchetype);
 			}
 			return nullptr;
-		}
-
-		bool HasComponentInternal(EntityData& entityData, TypeID typeID) const
-		{
-			if (entityData.m_Archetype != nullptr)
-			{
-				return entityData.m_Archetype->HasComponentType(typeID);
-			}
-			return false;
-		}
-
-		template<light_component_concept TComponent>
-		bool HasComponent(EntityData& entityData) const
-		{
-			if constexpr (is_tag_v<TComponent>)
-			{
-				return false;
-			}
-
-			return HasComponentInternal(entityData, Type<pure_type_t<TComponent>>::ID());
 		}
 
 		template<light_component_concept... ComponentTypes>
@@ -473,14 +527,10 @@ namespace decs::light
 		}
 
 		template<light_component_concept ComponentType>
-		ComponentType* GetComponentFromArchetypeAtIndex(Archetype& archetype, size_t index) const
+		inline ComponentType* GetComponentFromArchetypeAtIndex(Archetype& archetype, size_t index) const
 		{
 			PackedLightComponentContainer<ComponentType>* container = archetype.GetTypePackedContainer<ComponentType>();
-			if (container != nullptr)
-			{
-				return container->GetAsPtr(index);
-			}
-			return nullptr;
+			return container != nullptr ? container->GetAsPtr(index) : nullptr;
 		}
 
 	#pragma endregion
@@ -726,11 +776,20 @@ namespace decs::light
 		{
 			Archetype* spawnArchetype = nullptr;
 
-			((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<tag_type_t<TagTypes>>::ID())), ...);
+			if constexpr (sizeof...(TagTypes) > 0)
+			{
+				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<tag_type_t<TagTypes>>::ID())), ...);
+			}
 
-			((spawnArchetype = GetArchetypeAfterSetFilter<filter_type_t<pure_type_t<FiltersData>>>(spawnArchetype, std::get<FiltersData>(filtersDataTuple))), ...);
+			if constexpr (sizeof...(FiltersData) > 0)
+			{
+				((spawnArchetype = GetArchetypeAfterSetFilter<filter_type_t<pure_type_t<FiltersData>>>(spawnArchetype, std::get<FiltersData>(filtersDataTuple))), ...);
+			}
 
-			((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
+			if constexpr (sizeof...(ComponentTypes) > 0)
+			{
+				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
+			}
 
 			return spawnArchetype;
 		}

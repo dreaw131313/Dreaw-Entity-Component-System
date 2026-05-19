@@ -331,7 +331,7 @@ void Test::EntityCreatePerformanceTest()
 	size_t entityCounter = 0;
 
 	const uint32_t testCount = 1;
-	const uint32_t entityCount = 262144;
+	const uint32_t entityCount = 65536;
 
 	decs::light::ContainerConfig config{
 		.EntityChunkSize = 10000,
@@ -347,7 +347,7 @@ void Test::EntityCreatePerformanceTest()
 	decs::TagTypeGroup<float, int> tags{};
 	std::tuple<int, bool> filters{ 1, false };
 
-	decs::light::EntitySpawner<decltype(comps), decltype(tags), decltype(filters)> entitySpawner{ &container };
+	decs::light::EntitySpawner<decltype(comps)/*, decltype(tags), decltype(filters)*/> entitySpawner{ &container };
 
 	/*MeasureTimer reserveSpaceTimer(true);
 	{
@@ -366,12 +366,12 @@ void Test::EntityCreatePerformanceTest()
 		{
 			MeasureTimer timer(true);
 			{
-				/*entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
+				entitySpawner.Spawn_NoObservers(entityCount, [] (Position& pos, TestComponent& test)
 				{
 
-				});*/
+				});
 
-				for (size_t i = 0; i < entityCount; i++)
+				/*for (size_t i = 0; i < entityCount; i++)
 				{
 					auto e = container.CreateEntity();
 					e.AddTag<float>();
@@ -380,7 +380,7 @@ void Test::EntityCreatePerformanceTest()
 					e.SetFilter<bool>(false);
 					e.AddComponent<Position>();
 					e.AddComponent<TestComponent>();
-				}
+				}*/
 
 				//for (uint32_t i = 0; i < entityCount; i++)
 				//{
