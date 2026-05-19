@@ -211,7 +211,7 @@ namespace decs::light
 		}
 
 		/// <summary>
-		/// Sets component only if entity contain component, and invokes on set callbakc
+		/// Sets component only if entity has component, and invokes OnSetObserver
 		/// </summary>
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <param name="componentData"></param>
@@ -227,7 +227,7 @@ namespace decs::light
 		}
 
 		/// <summary>
-		/// Sets component only if entity contain component
+		/// Sets component only if entity has component
 		/// </summary>
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <param name="componentData"></param>
