@@ -549,7 +549,7 @@ namespace decs::light
 		}
 
 		/// <summary>
-		/// Sets component for entity only if entity has this component.
+		/// Sets component for entity only if entity has this component. If componnet == currentComponent, then it will return true but will not invoke callbacks
 		/// </summary>
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <param name="component"></param>
@@ -567,6 +567,12 @@ namespace decs::light
 			if (!typeData)
 			{
 				return false;
+			}
+
+			ComponentType& currentComponent = typeData.m_PackedContainer->GetAsRef(entityData.m_IndexInArchetype);
+			if (currentComponent == component)
+			{
+				return true;
 			}
 
 			typeData.m_PackedContainer->Set(entityData.m_IndexInArchetype, component);
@@ -589,13 +595,13 @@ namespace decs::light
 		template<light_component_concept ComponentType>
 		bool SetComponent(EntityData& entityData, const ComponentType& component)
 		{
-			return SetComponent_Impl<true>(entityData, component);
+			return SetComponent_Impl<true, pure_type_t<ComponentType>>(entityData, component);
 		}
 
 		template<light_component_concept ComponentType>
 		bool SetComponent_NoObserver(EntityData& entityData, const ComponentType& component)
 		{
-			return SetComponent_Impl<false>(entityData, component);
+			return SetComponent_Impl<false, pure_type_t<ComponentType>>(entityData, component);
 		}
 
 	#pragma endregion

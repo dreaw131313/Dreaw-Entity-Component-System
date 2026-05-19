@@ -45,10 +45,12 @@ public:
 	Position(float x, float y): X(x), Y(y)
 	{ }
 
+	bool operator ==(const Position&) const noexcept = default;
+
 	void TestFunc(int& i)
 	{
 		PrintLine("Is working");
-		//i += 1;
+		i += 1;
 	}
 
 };
@@ -648,13 +650,15 @@ void Test::SettingComponents()
 	});
 
 	decs::light::Entity e = container.CreateEntity();
-	e.SetComponent<Position>(Position());
+	e.SetComponent(Position());
 
-	e.AddComponent<Position>();
+	e.AddComponent<Position>(1.f, 1.f);
 
-	e.SetComponent<Position>(Position());
+	e.SetComponent(Position(1.f, 1.f));
+	e.SetComponent(Position(1.f, 2.f));
 
-	e.SetComponent_NoObserver<Position>(Position());
+	e.SetComponent_NoObserver(Position(3.f, 3.f));
+
 }
 
 END_NAMESPACE
