@@ -120,6 +120,7 @@ namespace decs::light
 
 		ObserverFunction m_OnCreateFunction{};
 		ObserverFunction m_OnDestroyFunction{};
+		ObserverFunction m_OnSetFunction{};
 
 	public:
 		TComponentContext()
@@ -150,6 +151,11 @@ namespace decs::light
 		inline void InvokeOnDestroy(const Entity& entity, ComponentType& component)
 		{
 			m_OnDestroyFunction.Invoke(entity, component);
+		}
+
+		inline void InvokeOnSet(const Entity& entity, ComponentType& component)
+		{
+			m_OnSetFunction.Invoke(entity, component);
 		}
 
 		void InvokeOnCreateObserver(const Entity& entity, void* compPtr) override

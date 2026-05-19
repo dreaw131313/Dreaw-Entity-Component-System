@@ -22,6 +22,8 @@ namespace Light
 		void RemovingArchetypesTest();
 
 		void ObserversTest();
+
+		void SettingComponents();
 	};
 
 }

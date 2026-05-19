@@ -602,7 +602,7 @@ namespace decs::light
 		}
 
 		template<light_component_concept ComponentType>
-		TArchetypeTypeData<ComponentType> GetComponentTypeContextAndContainer() const
+		TArchetypeTypeData<ComponentType> GetComponentTypeData() const
 		{
 			using PureComponentType = pure_type_t<ComponentType>;
 

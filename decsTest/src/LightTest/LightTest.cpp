@@ -117,11 +117,12 @@ void Test::Run()
 	std::cout << "/////////////////////////////////////" << "\n";
 
 	//IterationTest();
-	EntityCreatePerformanceTest();
+	//EntityCreatePerformanceTest();
 	//QueryManagerTest();
 	//FilterTest();
 	//RemovingArchetypesTest();
 	//ObserversTest();
+	SettingComponents();
 }
 
 void Test::IterationTest()
@@ -635,6 +636,25 @@ void Test::ObserversTest()
 		e.Destroy();
 	}
 
+}
+
+void Test::SettingComponents()
+{
+	decs::light::Container container{};
+
+	container.AddComponentSetObserver<Position>([] (const decs::light::Entity& entity, Position& pos)
+	{
+		PrintLine("Position setted!");
+	});
+
+	decs::light::Entity e = container.CreateEntity();
+	e.SetComponent<Position>(Position());
+
+	e.AddComponent<Position>();
+
+	e.SetComponent<Position>(Position());
+
+	e.SetComponent_NoObserver<Position>(Position());
 }
 
 END_NAMESPACE

@@ -48,15 +48,13 @@ namespace decs::light
 		virtual void PushBackDefault() = 0;
 	};
 
-	template<typename TComponent>
+	template<typename ComponentType>
 	class PackedLightComponentContainer final : public IPackedLightComponentContainer
 	{
-		static_assert(!is_const_v<TComponent> && "Component must not be const!");
-
 		friend class Container;
 		friend class Archetype;
 	private:
-		std::vector<TComponent> m_Data{};
+		std::vector<ComponentType> m_Data{};
 
 	public:
 		PackedLightComponentContainer() = default;
@@ -65,7 +63,7 @@ namespace decs::light
 
 		inline size_t GetComponentSize() const override
 		{
-			return sizeof(TComponent);
+			return sizeof(ComponentType);
 		}
 
 		inline void PopBack() override
@@ -127,33 +125,38 @@ namespace decs::light
 
 		inline void PushBack(void* componentPtr) override
 		{
-			m_Data.emplace_back(*static_cast<TComponent*>(componentPtr));
+			m_Data.emplace_back(*static_cast<ComponentType*>(componentPtr));
 		}
 
 		inline void MoveBack(void* componentPtr) override
 		{
-			m_Data.emplace_back(std::move(*static_cast<TComponent*>(componentPtr)));
+			m_Data.emplace_back(std::move(*static_cast<ComponentType*>(componentPtr)));
 		}
 
-		inline TComponent& GetAsRef(size_t index)
+		inline ComponentType& GetAsRef(size_t index)
 		{
 			return m_Data[index];
 		}
 
-		inline TComponent* GetAsPtr(size_t index)
+		inline ComponentType* GetAsPtr(size_t index)
 		{
 			return &m_Data[index];
 		}
 
+		inline void Set(size_t index, const ComponentType& component)
+		{
+			m_Data[index] = component;
+		}
+
 		template<typename... Args>
-		inline TComponent& EmplaceBack(Args&&...args)
+		inline ComponentType& EmplaceBack(Args&&...args)
 		{
 			return m_Data.emplace_back(std::forward<Args>(args)...);
 		}
 
 		inline IPackedLightComponentContainer* CloneEmpty() const override
 		{
-			return new PackedLightComponentContainer<TComponent>();
+			return new PackedLightComponentContainer<ComponentType>();
 		}
 
 		inline void PushBackDefault() override
@@ -161,7 +164,7 @@ namespace decs::light
 			m_Data.emplace_back();
 		}
 
-		inline std::span<TComponent> GetAsSpan()
+		inline std::span<ComponentType> GetAsSpan()
 		{
 			return { m_Data };
 		}

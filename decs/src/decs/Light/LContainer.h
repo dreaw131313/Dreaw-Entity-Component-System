@@ -120,7 +120,7 @@ namespace decs::light
 
 				if (spawnArchetype != nullptr)
 				{
-					std::tuple<TArchetypeTypeData<ComponentTypes>...>  typeDataTuple{ spawnArchetype->GetComponentTypeContextAndContainer<ComponentTypes>()... };
+					std::tuple<TArchetypeTypeData<ComponentTypes>...>  typeDataTuple{ spawnArchetype->GetComponentTypeData<ComponentTypes>()... };
 
 					for (uint32_t i = 0; i < entityCount; i++)
 					{
@@ -235,7 +235,7 @@ namespace decs::light
 
 				if (spawnArchetype != nullptr)
 				{
-					std::tuple<TArchetypeTypeData<ComponentTypes>...>  typeDataTuple{ spawnArchetype->GetComponentTypeContextAndContainer<ComponentTypes>()... };
+					std::tuple<TArchetypeTypeData<ComponentTypes>...>  typeDataTuple{ spawnArchetype->GetComponentTypeData<ComponentTypes>()... };
 
 					if (Entity entity = CreateEntityRaw())
 					{
@@ -403,6 +403,21 @@ namespace decs::light
 			return context->m_OnDestroyFunction.RemoveFunction(id);
 		}
 
+		template<light_component_concept ComponentType, typename Func>
+			requires light_component_observer_func<Func, ComponentType>
+		ObserverID AddComponentSetObserver(Func&& func)
+		{
+			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
+			return context->m_OnSetFunction.AddFunction(func);
+		}
+
+		template<light_component_concept ComponentType>
+		bool RemoveComponentSetObserver(ObserverID id)
+		{
+			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
+			return context->m_OnSetFunction.RemoveFunction(id);
+		}
+
 	private:
 		ComponentContextManager m_ComponentContextManager{};
 
@@ -430,7 +445,7 @@ namespace decs::light
 			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
 			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype);
-			TArchetypeTypeData<PureComponentType> newTypeData = newArchetype->GetComponentTypeContextAndContainer<PureComponentType>();
+			TArchetypeTypeData<PureComponentType> newTypeData = newArchetype->GetComponentTypeData<PureComponentType>();
 
 			PureComponentType* componentPtr = &newTypeData.m_PackedContainer->EmplaceBack(std::forward<Args>(args)...);
 
@@ -499,10 +514,10 @@ namespace decs::light
 			return entityData.m_Archetype != nullptr && entityData.m_Archetype->HasComponentType(typeID);
 		}
 
-		template<light_component_concept TComponent>
+		template<light_component_concept ComponentType>
 		inline bool HasComponent(EntityData& entityData) const
 		{
-			return HasComponentInternal(entityData, Type<pure_type_t<TComponent>>::ID());
+			return HasComponentInternal(entityData, Type<pure_type_t<ComponentType>>::ID());
 		}
 
 		template<light_component_concept ComponentType>
@@ -531,6 +546,56 @@ namespace decs::light
 		{
 			PackedLightComponentContainer<ComponentType>* container = archetype.GetTypePackedContainer<ComponentType>();
 			return container != nullptr ? container->GetAsPtr(index) : nullptr;
+		}
+
+		/// <summary>
+		/// Sets component for entity only if entity has this component.
+		/// </summary>
+		/// <typeparam name="ComponentType"></typeparam>
+		/// <param name="component"></param>
+		/// <returns>true if entity has component of type ComponentType, else false</returns>
+		template<bool InvokeObserver, light_component_concept ComponentType>
+		bool SetComponent_Impl(EntityData& entityData, const ComponentType& component)
+		{
+			if (entityData.m_Container != this || entityData.m_Archetype == nullptr)
+			{
+				return false;
+			}
+
+			using PureCompoenentType = pure_type_t<ComponentType>;
+			TArchetypeTypeData<PureCompoenentType> typeData = entityData.m_Archetype->GetComponentTypeData<PureCompoenentType>();
+			if (!typeData)
+			{
+				return false;
+			}
+
+			typeData.m_PackedContainer->Set(entityData.m_IndexInArchetype, component);
+
+			if constexpr (InvokeObserver)
+			{
+				entityData.LockOperations();
+				{
+					typeData.m_ComponentContext->InvokeOnSet(
+						Entity(&entityData),
+						typeData.m_PackedContainer->GetAsRef(entityData.m_IndexInArchetype)
+					);
+				}
+				entityData.UnlockOperations();
+			}
+
+			return true;
+		}
+
+		template<light_component_concept ComponentType>
+		bool SetComponent(EntityData& entityData, const ComponentType& component)
+		{
+			return SetComponent_Impl<true>(entityData, component);
+		}
+
+		template<light_component_concept ComponentType>
+		bool SetComponent_NoObserver(EntityData& entityData, const ComponentType& component)
+		{
+			return SetComponent_Impl<false>(entityData, component);
 		}
 
 	#pragma endregion

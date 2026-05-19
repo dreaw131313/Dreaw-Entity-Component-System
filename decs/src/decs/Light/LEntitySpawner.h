@@ -139,7 +139,7 @@ namespace decs::light
 				return;
 			}
 
-			m_TypeDataTuple = { m_Archetype->GetComponentTypeContextAndContainer<ComponentTypes>()... };
+			m_TypeDataTuple = { m_Archetype->GetComponentTypeData<ComponentTypes>()... };
 		}
 
 		template<bool InvokeObservers, typename InitFunc>
