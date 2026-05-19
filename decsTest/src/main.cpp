@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "Test/NormalTest.h"
 #include "LightTest/LightTest.h"
 

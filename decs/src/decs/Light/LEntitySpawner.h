@@ -83,67 +83,36 @@ namespace decs::light
 
 		template<typename InitFunc>
 			requires light_query_callable<InitFunc, ComponentTypes...>
-		Entity Spawn(InitFunc&& func)
+		inline Entity Spawn(InitFunc&& func)
 		{
-			if (!IsValid())
-			{
-				return {};
-			}
-
-			if (Entity entity = m_Container->CreateEntityInArchetype(*m_Archetype))
-			{
-				const size_t entityIndex = entity.m_EntityData->IndexInArchetype();
-				if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
-				{
-					func(
-						entity,
-						std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(m_ComponentsPackedContainers)->GetAsRef(entityIndex)...
-					);
-				}
-				else
-				{
-					func(std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(m_ComponentsPackedContainers)->GetAsRef(entityIndex)...);
-				}
-
-				return entity;
-			}
-
-			return {};
+			return Spawn_Impl<true>(func);
 		}
 
 		template<typename InitFunc>
 			requires light_query_callable<InitFunc, ComponentTypes...>
-		void Spawn(size_t entityCount, InitFunc&& func)
+		inline void Spawn(size_t entityCount, InitFunc&& func)
 		{
-			if (!IsValid() || entityCount == 0)
-			{
-				return;
-			}
+			return Spawn_Impl<true>(entityCount, func);
+		}
 
-			for (size_t i = 0; i < entityCount; i++)
-			{
-				if (Entity entity = m_Container->CreateEntityInArchetype(*m_Archetype))
-				{
-					const size_t entityIndex = entity.m_EntityData->IndexInArchetype();
-					if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
-					{
-						func(
-							entity,
-							std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(m_ComponentsPackedContainers)->GetAsRef(entityIndex)...
-						);
-					}
-					else
-					{
-						func(std::get<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*>(m_ComponentsPackedContainers)->GetAsRef(entityIndex)...);
-					}
-				}
-			}
+		template<typename InitFunc>
+			requires light_query_callable<InitFunc, ComponentTypes...>
+		inline Entity Spawn_NoObservers(InitFunc&& func)
+		{
+			return Spawn_Impl<false>(func);
+		}
+
+		template<typename InitFunc>
+			requires light_query_callable<InitFunc, ComponentTypes...>
+		inline void Spawn_NoObservers(size_t entityCount, InitFunc&& func)
+		{
+			return Spawn_Impl<false>(entityCount, func);
 		}
 
 	private:
 		Container* m_Container = nullptr;
 		Archetype* m_Archetype = nullptr;
-		std::tuple<PackedLightComponentContainer<drop_const_t<ComponentTypes>>*...> m_ComponentsPackedContainers{};
+		std::tuple<TArchetypeTypeData<ComponentTypes>...> m_TypeDataTuple{};
 		LightComponentTypeGroup<ComponentTypes...> m_ComponentsTypeGroup{};
 		TagTypeGroup<TagTypes...> m_TagsTypeGroup{};
 		FilterTupleType m_FiltersTuple{};
@@ -152,7 +121,7 @@ namespace decs::light
 		{
 			m_Container = nullptr;
 			m_Archetype = nullptr;
-			m_ComponentsPackedContainers = {};
+			m_TypeDataTuple = {};
 		}
 
 		void FetchArchetype()
@@ -170,8 +139,72 @@ namespace decs::light
 				return;
 			}
 
-			m_ComponentsPackedContainers = { m_Archetype->GetTypePackedContainer<drop_const_t<ComponentTypes>>()... };
+			m_TypeDataTuple = { m_Archetype->GetComponentTypeData<ComponentTypes>()... };
 		}
 
+		template<bool InvokeObservers, typename InitFunc>
+			requires light_query_callable<InitFunc, ComponentTypes...>
+		void InitializeEntity(Entity& entity, InitFunc&& func)
+		{
+			auto entityData = entity.GetEntityData();
+			const size_t entityIndex = entity.m_EntityData->IndexInArchetype();
+			std::tuple<pure_type_t<ComponentTypes>*...> createdComponents{ std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(m_TypeDataTuple).m_PackedContainer->GetAsPtr(entityIndex)... };
+
+			if constexpr (InvokeObservers)
+			{
+				entityData->LockOperations();
+				{
+					(std::get<TArchetypeTypeData<ComponentTypes>>(m_TypeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+				}
+				entityData->UnlockOperations();
+			}
+
+			if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
+			{
+				func(
+					entity,
+					*std::get<pure_type_t<ComponentTypes>*>(createdComponents)...
+				);
+			}
+			else
+			{
+				func(*std::get<pure_type_t<ComponentTypes>*>(createdComponents)...);
+			}
+		}
+
+		template<bool InvokeObservers, typename InitFunc>
+			requires light_query_callable<InitFunc, ComponentTypes...>
+		Entity Spawn_Impl(InitFunc&& func)
+		{
+			if (!IsValid())
+			{
+				return {};
+			}
+
+			if (Entity entity = m_Container->CreateEntityInArchetypeWithoutObservers(*m_Archetype))
+			{
+				InitializeEntity<InvokeObservers>(entity, func);
+			}
+
+			return {};
+		}
+
+		template<bool InvokeObservers, typename InitFunc>
+			requires light_query_callable<InitFunc, ComponentTypes...>
+		void Spawn_Impl(size_t entityCount, InitFunc&& func)
+		{
+			if (!IsValid() || entityCount == 0)
+			{
+				return;
+			}
+
+			for (size_t i = 0; i < entityCount; i++)
+			{
+				if (Entity entity = m_Container->CreateEntityInArchetypeWithoutObservers(*m_Archetype))
+				{
+					InitializeEntity<InvokeObservers>(entity, func);
+				}
+			}
+		}
 	};
 }

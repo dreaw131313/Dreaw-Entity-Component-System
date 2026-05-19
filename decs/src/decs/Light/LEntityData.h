@@ -24,6 +24,7 @@ namespace decs::light
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
 		EntityVersion m_Version = 1;
 		bool m_bIsAlive = true;
+		bool m_bOperationLocked = false;
 
 	public:
 		EntityData() = delete;
@@ -34,13 +35,10 @@ namespace decs::light
 
 		EntityData(EntityID id):
 			m_ID(id)
-		{
-		}
+		{ }
 
 		~EntityData()
-		{
-		}
-
+		{ }
 
 		inline EntityVersion GetVersion() const
 		{
@@ -74,14 +72,25 @@ namespace decs::light
 			return static_cast<size_t>(m_IndexInArchetype);
 		}
 
-	private:
-		inline void OnDestroyByEntityManager()
+		inline bool OperationsLocked() const noexcept
 		{
-			m_Container = nullptr;
-			m_Archetype = nullptr;
-			m_Version += 1;
-			m_bIsAlive = false;
+			return m_bOperationLocked;
 		}
+
+		inline void LockOperations()
+		{
+			m_bOperationLocked = true;
+		}
+
+		inline void UnlockOperations()
+		{
+			m_bOperationLocked = false;
+		}
+
+	private:
+		void OnDestroyByEntityManager();
+
+		void OnCreateEntityByEntityManager(Container& container);
 	};
 
 }

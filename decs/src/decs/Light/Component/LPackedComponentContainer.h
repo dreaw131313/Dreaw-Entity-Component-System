@@ -18,21 +18,23 @@ namespace decs::light
 
 		virtual void ShrinkToFit() = 0;
 
-		virtual uint64_t Capacity() = 0;
+		virtual size_t Capacity() = 0;
 
-		virtual uint64_t Size() = 0;
+		virtual size_t Size() = 0;
 
-		virtual void Reserve(uint64_t newCapacity) = 0;
+		virtual void Reserve(size_t newCapacity) = 0;
 
 		/// <summary>
 		/// 
 		/// </summary>
 		/// <returns>Component size in bytes.</returns>
-		virtual uint64_t GetComponentSize() const = 0;
+		virtual size_t GetComponentSize() const = 0;
 
-		virtual void* GetComponentBasePtr(uint64_t index) = 0;
+		virtual void* GetComponentBasePtr(size_t index) = 0;
 
-		virtual void RemoveSwapBack(uint64_t index) = 0;
+		virtual void* GetBackComponentBasePtr() = 0;
+
+		virtual void RemoveSwapBack(size_t index) = 0;
 
 		virtual void PushBack(void* componentPtr) = 0;
 
@@ -46,24 +48,22 @@ namespace decs::light
 		virtual void PushBackDefault() = 0;
 	};
 
-	template<typename TComponent>
+	template<typename ComponentType>
 	class PackedLightComponentContainer final : public IPackedLightComponentContainer
 	{
-		static_assert(!is_const_v<TComponent> && "Component must not be const!");
-
 		friend class Container;
 		friend class Archetype;
 	private:
-		std::vector<TComponent> m_Data{};
+		std::vector<ComponentType> m_Data{};
 
 	public:
 		PackedLightComponentContainer() = default;
 
 		~PackedLightComponentContainer() = default;
 
-		inline uint64_t GetComponentSize() const override
+		inline size_t GetComponentSize() const override
 		{
-			return sizeof(TComponent);
+			return sizeof(ComponentType);
 		}
 
 		inline void PopBack() override
@@ -84,29 +84,35 @@ namespace decs::light
 			m_Data.shrink_to_fit();
 		}
 
-		inline uint64_t Capacity() override
+		inline size_t Capacity() override
 		{
 			return m_Data.capacity();
 		}
 
-		inline uint64_t Size() override
+		inline size_t Size() override
 		{
 			return m_Data.size();
 		}
 
-		inline void Reserve(uint64_t newCapacity) override
+		inline void Reserve(size_t newCapacity) override
 		{
 			m_Data.reserve(newCapacity);
 		}
 
-		inline void* GetComponentBasePtr(uint64_t index) override
+		inline void* GetComponentBasePtr(size_t index) override
 		{
 			return &m_Data[index];
 		}
 
-		inline void RemoveSwapBack(uint64_t index) override
+		inline void* GetBackComponentBasePtr() override
 		{
-			uint64_t dataSize = m_Data.size();
+			DECS_ASSERT(!m_Data.empty(), "m_Data must not be empty!");
+			return &m_Data.back();
+		}
+
+		inline void RemoveSwapBack(size_t index) override
+		{
+			size_t dataSize = m_Data.size();
 			if (dataSize > 0)
 			{
 				if (index < (dataSize - 1))
@@ -119,33 +125,38 @@ namespace decs::light
 
 		inline void PushBack(void* componentPtr) override
 		{
-			m_Data.emplace_back(*static_cast<TComponent*>(componentPtr));
+			m_Data.emplace_back(*static_cast<ComponentType*>(componentPtr));
 		}
 
 		inline void MoveBack(void* componentPtr) override
 		{
-			m_Data.emplace_back(std::move(*static_cast<TComponent*>(componentPtr)));
+			m_Data.emplace_back(std::move(*static_cast<ComponentType*>(componentPtr)));
 		}
 
-		inline TComponent& GetAsRef(size_t index)
+		inline ComponentType& GetAsRef(size_t index)
 		{
 			return m_Data[index];
 		}
 
-		inline TComponent* GetAsPtr(size_t index)
+		inline ComponentType* GetAsPtr(size_t index)
 		{
 			return &m_Data[index];
 		}
 
+		inline void Set(size_t index, const ComponentType& component)
+		{
+			m_Data[index] = component;
+		}
+
 		template<typename... Args>
-		inline TComponent& EmplaceBack(Args&&...args)
+		inline ComponentType& EmplaceBack(Args&&...args)
 		{
 			return m_Data.emplace_back(std::forward<Args>(args)...);
 		}
 
 		inline IPackedLightComponentContainer* CloneEmpty() const override
 		{
-			return new PackedLightComponentContainer<TComponent>();
+			return new PackedLightComponentContainer<ComponentType>();
 		}
 
 		inline void PushBackDefault() override
@@ -153,7 +164,7 @@ namespace decs::light
 			m_Data.emplace_back();
 		}
 
-		inline std::span<TComponent> GetAsSpan()
+		inline std::span<ComponentType> GetAsSpan()
 		{
 			return { m_Data };
 		}

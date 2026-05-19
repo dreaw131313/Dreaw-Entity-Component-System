@@ -102,6 +102,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\Light\Component\LComponentContext.h" />
     <ClInclude Include="src\decs\Light\Archetypes\LArchetypeAllocator.h" />
     <ClInclude Include="src\decs\Light\Iteration\LQueryManager.h" />
     <ClInclude Include="src\decs\Light\Filter\LFilter.h" />
@@ -109,7 +110,7 @@
     <ClInclude Include="src\decs\Core\check_cast.h" />
     <ClInclude Include="src\decs\Light\Archetypes\LArchetype.h" />
     <ClInclude Include="src\decs\Light\Archetypes\LArchetypesMap.h" />
-    <ClInclude Include="src\decs\Light\Component\PackedLightComponentContainer.h" />
+    <ClInclude Include="src\decs\Light\Component\LPackedComponentContainer.h" />
     <ClInclude Include="src\decs\Light\LContainer.h" />
     <ClInclude Include="src\decs\Light\LEntity.h" />
     <ClInclude Include="src\decs\Light\LEntityData.h" />
@@ -152,6 +153,7 @@
     <ClInclude Include="src\decs\Normal\Utils\ContainerSerializerComplex.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\decs\Light\Component\LComponentContext.cpp" />
     <ClCompile Include="src\decs\Light\Archetypes\LArchetypeAllocator.cpp" />
     <ClCompile Include="src\decs\Light\Iteration\LQueryManager.cpp" />
     <ClCompile Include="src\decs\Light\Archetypes\LArchetype.cpp" />

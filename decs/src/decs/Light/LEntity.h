@@ -72,15 +72,19 @@ namespace decs::light
 			return nullptr;
 		}
 
-		inline bool Destroy() const
+		[[nodiscard]] inline const Archetype* GetArchetype() const
 		{
 			if (IsValid())
 			{
-				GetContainer_Internal()->DestroyEntityInternal(*this, true);
-				Invalidate_WithoutLifeTimeData();
-				return true;
+				return m_EntityData->m_Archetype;
 			}
-			return false;
+
+			return nullptr;
+		}
+
+		[[nodiscard]] inline EntityVersion GetVersion() const
+		{
+			return m_Version;
 		}
 
 		[[nodiscard]] inline uint32_t GetComponentTagCount() const
@@ -92,12 +96,36 @@ namespace decs::light
 			return 0;
 		}
 
-		template<light_component_concept TComponent>
-		[[nodiscard]] inline TComponent* GetComponent() const
+		inline bool Destroy() const
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->GetComponent<drop_const_t<TComponent>>(*GetEntityData());
+				GetContainer_Internal()->DestroyEntityInternal(*this, true);
+				Invalidate();
+				return true;
+			}
+			return false;
+		}
+
+		inline bool Destroy_NoObserver() const
+		{
+			if (IsValid())
+			{
+				GetContainer_Internal()->DestroyEntityInternal(*this, false);
+				Invalidate();
+				return true;
+			}
+			return false;
+		}
+
+	#pragma region COMPONENTS:
+
+		template<light_component_concept ComponentType>
+		[[nodiscard]] inline ComponentType* GetComponent() const
+		{
+			if (IsValid())
+			{
+				return GetContainer_Internal()->GetComponent<drop_const_t<ComponentType>>(*GetEntityData());
 			}
 
 			return nullptr;
@@ -108,41 +136,54 @@ namespace decs::light
 		{
 			if (IsValid())
 			{
-				return GetContainer()->GetComponents<ComponentTypes...>(*m_EntityData);
+				return GetContainer()->GetComponents<pure_type_t<ComponentTypes>...>(*m_EntityData);
 			}
 			return { static_cast<ComponentTypes*>(nullptr) ... };
 		}
 
-		template<light_component_concept TComponent>
+		template<light_component_concept ComponentType>
 		[[nodiscard]] inline bool HasComponent() const
 		{
-			return IsValid() && GetContainer_Internal()->HasComponent<drop_const_t<TComponent>>(*GetEntityData());
+			return IsValid() && GetContainer_Internal()->HasComponent<pure_type_t<ComponentType>>(*GetEntityData());
 		}
 
-		template<light_component_concept TComponent>
-		inline bool TryGetComponent(TComponent*& component) const
+		template<light_component_concept ComponentType>
+		inline bool TryGetComponent(ComponentType*& component) const
 		{
 			if (IsValid())
-				component = GetContainer_Internal()->GetComponent<drop_const_t<TComponent>>(*GetEntityData());
+				component = GetContainer_Internal()->GetComponent<pure_type_t<ComponentType>>(*GetEntityData());
 			else
 				component = nullptr;
 
 			return component != nullptr;
 		}
 
-		template<light_component_concept TComponent, typename... Args>
-		inline typename TComponent* AddComponent(Args&&... args) const
+		template<light_component_concept ComponentType, typename... Args>
+		inline typename ComponentType* AddComponent(Args&&... args) const
 		{
 			if (IsValid())
-				return GetContainer_Internal()->AddComponent<drop_const_t<TComponent>>(*this, *GetEntityData(), std::forward<Args>(args)...);
+			{
+				return GetContainer_Internal()->AddComponent<pure_type_t<ComponentType>>(*this, *GetEntityData(), std::forward<Args>(args)...);
+			}
 
 			return nullptr;
 		}
 
-		template<light_component_concept TComponent>
+		template<light_component_concept ComponentType, typename... Args>
+		inline typename ComponentType* AddComponent_NoObserver(Args&&... args) const
+		{
+			if (IsValid())
+			{
+				return GetContainer_Internal()->AddComponent_NoObserver<pure_type_t<ComponentType>>(*this, *GetEntityData(), std::forward<Args>(args)...);
+			}
+
+			return nullptr;
+		}
+
+		template<light_component_concept ComponentType>
 		inline bool RemoveComponent() const
 		{
-			return IsValid() && GetContainer_Internal()->RemoveComponent<drop_const_t<TComponent>>(*this);
+			return IsValid() && GetContainer_Internal()->RemoveComponent<pure_type_t<ComponentType>>(*this);
 		}
 
 		inline bool RemoveComponent(TypeID componentTypeID) const
@@ -150,20 +191,58 @@ namespace decs::light
 			return IsValid() && GetContainer_Internal()->RemoveComponent(*this, componentTypeID);
 		}
 
-		[[nodiscard]] inline EntityVersion GetVersion() const
+		template<light_component_concept ComponentType>
+		inline bool RemoveComponent_NoObserver() const
 		{
-			return m_Version;
-		}
-
-		[[nodiscard]] inline const Archetype* GetArchetype() const
-		{
-			if (IsValid())
+			if (IsValid() )
 			{
-				return m_EntityData->m_Archetype;
+				return GetContainer_Internal()->RemoveComponent_NoObserver<pure_type_t<ComponentType>>(*this);
 			}
-
-			return nullptr;
+			return false;
 		}
+
+		inline bool RemoveComponent_NoObserver(TypeID componentTypeID) const
+		{
+			if (IsValid() )
+			{
+				return GetContainer_Internal()->RemoveComponent_NoObserver(*this, componentTypeID);
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Sets component only if entity contain component, and invokes on set callbakc
+		/// </summary>
+		/// <typeparam name="ComponentType"></typeparam>
+		/// <param name="componentData"></param>
+		/// <returns>true if entity has component else false</returns>
+		template<light_component_concept ComponentType>
+		inline bool SetComponent(const ComponentType& componentData)
+		{
+			if (IsValid() )
+			{
+				return GetContainer_Internal()->SetComponent<pure_type_t<ComponentType>>(*m_EntityData, componentData);
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Sets component only if entity contain component
+		/// </summary>
+		/// <typeparam name="ComponentType"></typeparam>
+		/// <param name="componentData"></param>
+		/// <returns>true if entity has component else false</returns>
+		template<light_component_concept ComponentType>
+		inline bool SetComponent_NoObserver(const ComponentType& componentData)
+		{
+			if (IsValid() )
+			{
+				return GetContainer_Internal()->SetComponent_NoObserver<pure_type_t<ComponentType>>(*m_EntityData, componentData);
+			}
+			return false;
+		}
+
+	#pragma endregion
 
 	#pragma region TAGS:
 	public:
@@ -356,7 +435,7 @@ namespace decs::light
 		mutable EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
 
 	private:
-		inline void Invalidate_WithoutLifeTimeData() const
+		inline void Invalidate() const
 		{
 			m_EntityData = nullptr;
 			m_Version = std::numeric_limits<EntityVersion>::max();

@@ -7,11 +7,13 @@ namespace decs::light
 {
 	ArchetypesMap::ArchetypesMap(
 		FilterManager& filterManager,
+		ComponentContextManager& componentContextManager,
 		QueryManager& queryManger,
 		uint64_t archetypesVectorChunkSize,
 		uint64_t archetypeGroupsVectorChunkSize
 	):
 		m_FilterManager(filterManager),
+		m_ComponentContextManager(componentContextManager),
 		m_ArchetypeAllocator(filterManager, static_cast<uint32_t>(archetypesVectorChunkSize)),
 		m_QueryManager(queryManger),
 		m_ArchetypesGroupsByOneTypeAllocator(static_cast<uint32_t>(archetypeGroupsVectorChunkSize))
@@ -219,7 +221,7 @@ namespace decs::light
 		if (archetype == nullptr)
 		{
 			archetype = m_ArchetypeAllocator.CreateArchetype();
-			archetype->InitEmptyFromOther(fromArchetype, m_FilterManager);
+			archetype->InitEmptyFromOther(fromArchetype, m_ComponentContextManager, m_FilterManager);
 			AddArchetypeToCorrectContainers(*archetype);
 		}
 
@@ -248,7 +250,7 @@ namespace decs::light
 		}
 	}
 
-	Archetype* ArchetypesMap::CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IPackedLightComponentContainer* packedContainer)
+	Archetype* ArchetypesMap::CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext)
 	{
 		//auto& edge = toArchetype.m_AddEdges[addedComponentTypeID];
 		auto edge = toArchetype.GetEdge(componentTypeID);
@@ -271,7 +273,7 @@ namespace decs::light
 		}
 
 		Archetype* newArchetype = m_ArchetypeAllocator.CreateArchetype();
-		AddTypeDataAfterAddComponent(toArchetype, *newArchetype, componentTypeID, packedContainer);
+		AddTypeDataAfterAddComponent(toArchetype, *newArchetype, componentTypeID, componentContext);
 
 		AddArchetypeToCorrectContainers(*newArchetype);
 
@@ -341,7 +343,7 @@ namespace decs::light
 			{
 				toArchetype.AddTypeData_WithoutCheck(
 					fromArchetypeData.m_TypeID,
-					fromArchetypeData.m_PackedContainer != nullptr ? fromArchetypeData.m_PackedContainer->CloneEmpty() : nullptr
+					fromArchetypeData.m_ComponentContext
 				);
 			}
 		}
@@ -352,7 +354,7 @@ namespace decs::light
 		}
 	}
 
-	void ArchetypesMap::AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, IPackedLightComponentContainer* packedContainer)
+	void ArchetypesMap::AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext)
 	{
 		bool isNewComponentTypeAdded = false;
 
@@ -365,13 +367,13 @@ namespace decs::light
 				isNewComponentTypeAdded = true;
 				toArchetype.AddTypeData_WithoutCheck(
 					componentTypeID,
-					packedContainer
+					componentContext
 				);
 			}
 
 			toArchetype.AddTypeData_WithoutCheck(
 				baseTypeData.m_TypeID,
-				baseTypeData.m_PackedContainer != nullptr ? baseTypeData.m_PackedContainer->CloneEmpty() : nullptr
+				baseTypeData.m_ComponentContext
 			);
 		}
 
@@ -379,7 +381,7 @@ namespace decs::light
 		{
 			toArchetype.AddTypeData_WithoutCheck(
 				componentTypeID,
-				packedContainer
+				componentContext
 			);
 		}
 
@@ -398,7 +400,7 @@ namespace decs::light
 		{
 			toArchetype.AddTypeData_WithoutCheck(
 				baseTypeRecord.m_TypeID,
-				baseTypeRecord.m_PackedContainer != nullptr ? baseTypeRecord.m_PackedContainer->CloneEmpty() : nullptr
+				baseTypeRecord.m_ComponentContext
 			);
 		}
 
@@ -419,7 +421,7 @@ namespace decs::light
 		{
 			toArchetype.AddTypeData_WithoutCheck(
 				baseTypeRecord.m_TypeID,
-				baseTypeRecord.m_PackedContainer != nullptr ? baseTypeRecord.m_PackedContainer->CloneEmpty() : nullptr
+				baseTypeRecord.m_ComponentContext
 			);
 		}
 

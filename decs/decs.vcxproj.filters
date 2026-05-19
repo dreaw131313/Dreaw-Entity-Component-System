@@ -51,7 +51,7 @@
     <ClInclude Include="src\decs\Light\Archetypes\LArchetypesMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Light\Component\PackedLightComponentContainer.h">
+    <ClInclude Include="src\decs\Light\Component\LPackedComponentContainer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\decs\Light\Iteration\LContainerIterator.h">
@@ -159,6 +159,9 @@
     <ClInclude Include="src\decs\Light\Archetypes\LArchetypeAllocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\decs\Light\Component\LComponentContext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\decs\decs.cpp">
@@ -204,6 +207,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\decs\Light\Archetypes\LArchetypeAllocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\decs\Light\Component\LComponentContext.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
