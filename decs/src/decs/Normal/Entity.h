@@ -8,7 +8,7 @@
 
 namespace decs
 {
-	class Entity final
+	struct Entity final
 	{
 		template<TComponentConcept ...>
 		friend class Query;

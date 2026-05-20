@@ -79,8 +79,8 @@ namespace decs
 		uint32_t m_Data = 0;
 	};
 
-	class EntityData;
-	class Entity;
+	struct EntityData;
+	struct Entity;
 	class IStableComponentContainer;
 	template<typename TComponentType>
 	class StableComponentContainer;
@@ -89,7 +89,7 @@ namespace decs
 	{
 		template<typename T>
 		friend class TComponentChunk;
-		friend class EntityComponent;
+		friend struct EntityComponent;
 
 	private:
 		uint64_t m_IndexInAllocator = std::numeric_limits<uint32_t>::max();
@@ -109,7 +109,7 @@ namespace decs
 		}
 	};
 
-	class EntityComponent
+	struct EntityComponent
 	{
 		friend class Container;
 		template<typename>

@@ -9,7 +9,7 @@
 
 namespace decs
 {
-	class Entity;
+	struct Entity;
 	class Container;
 
 	class IComponentContext

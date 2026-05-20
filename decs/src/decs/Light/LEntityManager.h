@@ -6,7 +6,7 @@
 
 namespace decs::light
 {
-	class EntityManager
+	struct EntityManager final
 	{
 	public:
 		EntityManager();

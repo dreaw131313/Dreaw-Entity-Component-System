@@ -102,6 +102,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\Core\ObserverFunction.h" />
     <ClInclude Include="src\decs\Light\Component\LComponentContext.h" />
     <ClInclude Include="src\decs\Light\Archetypes\LArchetypeAllocator.h" />
     <ClInclude Include="src\decs\Light\Iteration\LQueryManager.h" />

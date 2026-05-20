@@ -12,7 +12,7 @@
 
 namespace decs
 {
-	class Entity;
+	struct Entity;
 	class SpawnEntityCallback;
 
 	struct ContainerConfig
@@ -31,7 +31,7 @@ namespace decs
 		friend class MultiQuery;
 		template<TComponentConcept...>
 		friend class IterationContainerContext;
-		friend class Entity;
+		friend struct Entity;
 		template<typename>
 		friend class ContainerSerializer;
 		friend class ContainerSerializerComplex;

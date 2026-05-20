@@ -3,7 +3,7 @@
 
 namespace decs
 {
-	class Entity;
+	struct Entity;
 
 	class CreateEntityObserver
 	{

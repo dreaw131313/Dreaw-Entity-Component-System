@@ -163,10 +163,10 @@ namespace decs
 	using pure_type_t = std::remove_cvref_t<T>;
 
 	class Archetype;
-	class Entity;
+	struct Entity;
 	namespace light
 	{
-		class Entity;
+		struct Entity;
 	}
 
 	template<typename Func>

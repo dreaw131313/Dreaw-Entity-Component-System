@@ -123,8 +123,8 @@ void Test::Run()
 	//QueryManagerTest();
 	//FilterTest();
 	//RemovingArchetypesTest();
-	//ObserversTest();
-	SettingComponents();
+	ObserversTest();
+	//SettingComponents();
 }
 
 void Test::IterationTest()
@@ -589,16 +589,35 @@ void Test::ObserversTest()
 {
 	decs::light::Container container{};
 
-	decs::light::ObserverID createID = container.AddComponentCreateObserver<Position>([] (const Entity& entity, Position& pos)
+	container.AddComponentCreateObserver<Position>([] (const Entity& entity, Position& pos)
 	{
 		PrintLine("Position create observer");
 	});
 
-	decs::light::ObserverID destroyID = container.AddComponentDestroyObserver<Position>([] (const Entity& entity, Position pos)
+	container.AddComponentDestroyObserver<Position>([] (const Entity& entity, Position pos)
 	{
 		PrintLine("Position destroy observer");
 	});
 
+	container.AddComponentSetObserver<Position>([] (const Entity& entity, Position pos)
+	{
+		PrintLine("Position set observer");
+	});
+
+	container.AddFilterAddObserver<TestEntityFilter>([] (const Entity& entity, const TestEntityFilter& pos)
+	{
+		PrintLine("TestEntityFilter add observer");
+	});
+
+	container.AddFilterRemoveObserver<TestEntityFilter>([] (const Entity& entity, const TestEntityFilter pos)
+	{
+		PrintLine("TestEntityFilter remove observer");
+	});
+
+	container.AddFilterChangeObserver<TestEntityFilter>([] (const Entity& entity, TestEntityFilter oldValue, TestEntityFilter newValue)
+	{
+		PrintLine("TestEntityFilter change observer");
+	});
 
 	// 1
 	{

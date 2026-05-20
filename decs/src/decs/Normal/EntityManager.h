@@ -7,7 +7,7 @@
 
 namespace decs
 {
-	class EntityManager
+	struct EntityManager
 	{
 	public:
 		EntityManager();

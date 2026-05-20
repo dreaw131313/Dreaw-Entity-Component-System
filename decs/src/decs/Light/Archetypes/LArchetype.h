@@ -15,7 +15,7 @@
 
 namespace decs::light
 {
-	class Entity;
+	struct Entity;
 	class Archetype;
 	class ArchetypeAllocator;
 	struct ArchetypeHasher;
@@ -281,8 +281,8 @@ namespace decs::light
 	{
 		friend class light::Container;
 		friend class light::ContainerIterator;
-		friend class light::EntityData;
-		friend class light::EntityManager;
+		friend struct light::EntityData;
+		friend struct light::EntityManager;
 		friend class light::ArchetypesMap;
 		friend class light::ArchetypesMap;
 		friend class light::ArchetypeAllocator;

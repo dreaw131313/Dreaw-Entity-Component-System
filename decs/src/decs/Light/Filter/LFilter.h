@@ -4,15 +4,16 @@
 #include "decs/Core/check_cast.h"
 #include "decs/Core/trait.h"
 #include "decs/Core/Type.h"
+#include "decs/Core/ObserverFunction.h"
 #include "decs/Core/RefCounterHandle.h"
 #include "decs/Core/TChunkedVector.h"
-
-#include <iostream>
 
 namespace decs::light
 {
 	class IFilterTypeManager;
 	class FilterManager;
+
+	struct Entity;
 
 	class IFilterContainerBase
 	{
@@ -121,6 +122,7 @@ namespace decs::light
 		{
 			return { &m_Data , 1 };
 		}
+
 	};
 
 	template<filter_concept FilterType>
@@ -176,6 +178,12 @@ namespace decs::light
 		virtual void Clear() = 0;
 
 		virtual bool RemoveContainer(IFilterContainerBase* container) = 0;
+
+		virtual void InvokeOnAddObserver(const Entity& entity, const IFilterContainerBase* filterConteinerPtr) = 0;
+
+		virtual void InvokeOnRemoveObserver(const Entity& entity, const IFilterContainerBase* filterConteinerPtr) = 0;
+
+		virtual void InvokeOnChangeObserver(const Entity& entity, const IFilterContainerBase* oldConteinerPtr, const IFilterContainerBase* newConteinerPtr) = 0;
 	};
 
 	template<filter_concept FilterType>
@@ -186,6 +194,14 @@ namespace decs::light
 		using FilterEntryKeyType = FilterEntryKey<FilterType>;
 
 		using FilterDataType = FilterType::DataType;
+
+		using ObserverFunction = TObserverFunction<void(const Entity&, const FilterDataType&)>;
+		using ChangeFilterObserverFunction = TObserverFunction<void(const Entity&, const FilterDataType&, const FilterDataType&)>;
+
+	public:
+		ObserverFunction m_OnAddObserver{};
+		ObserverFunction m_OnRemoveObserver{};
+		ChangeFilterObserverFunction m_OnSetObserver{};
 
 	public:
 		void Clear() override
@@ -256,6 +272,40 @@ namespace decs::light
 			return RemoveContainer(::decs::check_cast<FilterContainerType*>(container));
 		}
 
+		void InvokeOnAddObserver(const Entity& entity, const IFilterContainerBase* filterContainerPtr) override
+		{
+			m_OnAddObserver.Invoke(entity, ::decs::check_cast<const FilterContainerType*>(filterContainerPtr)->m_Data);
+		}
+
+		void InvokeOnRemoveObserver(const Entity& entity, const  IFilterContainerBase* filterContainerPtr) override
+		{
+			m_OnRemoveObserver.Invoke(entity, ::decs::check_cast<const FilterContainerType*>(filterContainerPtr)->m_Data);
+		}
+
+		void InvokeOnChangeObserver(const Entity& entity, const IFilterContainerBase* oldContainerPtr, const IFilterContainerBase* newContainerPtr) override
+		{
+			m_OnSetObserver.Invoke(
+				entity, 
+				::decs::check_cast<const FilterContainerType*>(oldContainerPtr)->m_Data,
+				::decs::check_cast<const FilterContainerType*>(newContainerPtr)->m_Data
+			);
+		}
+
+		void InvokeOnAddObserver(const Entity& entity, const FilterContainerType& filterContainerPtr)
+		{
+			m_OnAddObserver.Invoke(entity, filterContainerPtr.m_Data);
+		}
+
+		void InvokeOnRemoveObserver(const Entity& entity, const FilterContainerType& filterContainerPtr)
+		{
+			m_OnRemoveObserver.Invoke(entity, filterContainerPtr.m_Data);
+		}
+
+		void InvokeOnSetObserver(const Entity& entity, const FilterContainerType& oldContainerPtr, const FilterContainerType& newContainerPtr)
+		{
+			m_OnSetObserver.Invoke(entity, oldContainerPtr.m_Data, newContainerPtr.m_Data);
+		}
+
 	private:
 		TChunkedVector<FilterContainerType> m_Allocator{ 20 };
 		std::vector<FilterContainerType*> m_FreeList{};
@@ -305,15 +355,21 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		FilterContainer<FilterType>* GetOrCreateFilter(const FilterType::DataType& filter)
+		FilterTypeManager<FilterType>* GetOrCreateFilterTypeManager()
 		{
 			IFilterTypeManager*& filterTypeMangerBase = m_FilterTypes[Type<FilterType>::ID()];
 			if (filterTypeMangerBase == nullptr)
 			{
-				filterTypeMangerBase = new FilterTypeManager<FilterType>();
+				FilterTypeManager<FilterType>* filterTypeManager = new FilterTypeManager<FilterType>();
+				filterTypeMangerBase = filterTypeManager;
 			}
+			return ::decs::check_cast<FilterTypeManager<FilterType>*>(filterTypeMangerBase);
+		}
 
-			FilterTypeManager<FilterType>* filterTypeManager = check_cast<FilterTypeManager<FilterType>*>(filterTypeMangerBase);
+		template<filter_concept FilterType>
+		FilterContainer<FilterType>* GetOrCreateFilter(const FilterType::DataType& filter)
+		{
+			FilterTypeManager<FilterType>* filterTypeManager = GetOrCreateFilterTypeManager<FilterType>();
 			return filterTypeManager->GetOrAddContainer(filter);
 		}
 

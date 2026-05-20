@@ -4,12 +4,12 @@
 
 namespace decs::light
 {
-	class EntityData;
-	class EntityManager;
+	struct EntityData;
+	struct EntityManager;
 	class Archetype;
 	class ArchetypesMap;
 	class Container;
-	class Entity;
+	struct Entity;
 	class Iteration;
 	template<light_component_or_filter_concept... ComponentsTypes>
 	class Query;

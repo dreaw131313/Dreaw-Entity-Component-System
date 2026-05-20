@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include "Archetypes/LArchetypesMap.h"
 #include "LEntityManager.h"
 #include "Filter/LFilter.h"
@@ -8,7 +9,7 @@
 
 namespace decs::light
 {
-	class Entity;
+	struct Entity;
 	template<typename, typename, typename>
 	struct EntitySpawner;
 
@@ -28,7 +29,7 @@ namespace decs::light
 		friend class light::MultiQuery;
 		template<light_component_or_filter_concept...>
 		friend class light::IterationContainerContext;
-		friend class light::Entity;
+		friend struct light::Entity;
 		friend class light::ContainerIterator;
 
 		template<typename, typename, typename>
@@ -368,14 +369,14 @@ namespace decs::light
 		/// <returns>id for removing function observer</returns>
 		template<light_component_concept ComponentType, typename Func>
 			requires light_component_observer_func<Func, ComponentType>
-		ObserverID AddComponentCreateObserver(Func&& func)
+		ObserverFunctionID AddComponentCreateObserver(Func&& func)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
 			return context->m_OnCreateFunction.AddFunction(func);
 		}
 
 		template<light_component_concept ComponentType>
-		bool RemoveComponentCreateObserver(ObserverID id)
+		bool RemoveComponentCreateObserver(ObserverFunctionID id)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
 			return context->m_OnCreateFunction.RemoveFunction(id);
@@ -390,14 +391,14 @@ namespace decs::light
 		/// <returns>id for removing function observer</returns>
 		template<light_component_concept ComponentType, typename Func>
 			requires light_component_observer_func<Func, ComponentType>
-		ObserverID AddComponentDestroyObserver(Func&& func)
+		ObserverFunctionID AddComponentDestroyObserver(Func&& func)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
 			return context->m_OnDestroyFunction.AddFunction(func);
 		}
 
 		template<light_component_concept ComponentType>
-		bool RemoveComponentDestroyObserver(ObserverID id)
+		bool RemoveComponentDestroyObserver(ObserverFunctionID id)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
 			return context->m_OnDestroyFunction.RemoveFunction(id);
@@ -405,14 +406,14 @@ namespace decs::light
 
 		template<light_component_concept ComponentType, typename Func>
 			requires light_component_observer_func<Func, ComponentType>
-		ObserverID AddComponentSetObserver(Func&& func)
+		ObserverFunctionID AddComponentSetObserver(Func&& func)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
 			return context->m_OnSetFunction.AddFunction(func);
 		}
 
 		template<light_component_concept ComponentType>
-		bool RemoveComponentSetObserver(ObserverID id)
+		bool RemoveComponentSetObserver(ObserverFunctionID id)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
 			return context->m_OnSetFunction.RemoveFunction(id);
@@ -607,9 +608,55 @@ namespace decs::light
 	#pragma endregion
 
 	#pragma region FILTERS
+	public:
+		template<typename Filter, typename Func>
+		ObserverFunctionID AddFilterAddObserver(Func&& func)
+		{
+			using FilterType = filter_type_t<Filter>;
+			FilterTypeManager<FilterType>* filterTypeManager = m_FilterManager.GetOrCreateFilterTypeManager<FilterType>();
+			return filterTypeManager->m_OnAddObserver.AddFunction(func);
+		}
+		template<typename Filter, typename Func>
+		bool RemoveFilterAddObserver(ObserverFunctionID id)
+		{
+			using FilterType = filter_type_t<Filter>;
+			FilterTypeManager<FilterType>* filterTypeManager = m_FilterManager.GetOrCreateFilterTypeManager<FilterType>();
+			return filterTypeManager->m_OnAddObserver.RemoveFunction(id);
+		}
+
+		template<typename Filter, typename Func>
+		ObserverFunctionID AddFilterRemoveObserver(Func&& func)
+		{
+			using FilterType = filter_type_t<Filter>;
+			FilterTypeManager<FilterType>* filterTypeManager = m_FilterManager.GetOrCreateFilterTypeManager<FilterType>();
+			return filterTypeManager->m_OnRemoveObserver.AddFunction(func);
+		}
+		template<typename Filter, typename Func>
+		bool RemoveFilterRemoveObserver(ObserverFunctionID id)
+		{
+			using FilterType = filter_type_t<Filter>;
+			FilterTypeManager<FilterType>* filterTypeManager = m_FilterManager.GetOrCreateFilterTypeManager<FilterType>();
+			return filterTypeManager->m_OnRemoveObserver.RemoveFunction(id);
+		}
+
+		template<typename Filter, typename Func>
+		ObserverFunctionID AddFilterChangeObserver(Func&& func)
+		{
+			using FilterType = filter_type_t<Filter>;
+			FilterTypeManager<FilterType>* filterTypeManager = m_FilterManager.GetOrCreateFilterTypeManager<FilterType>();
+			return filterTypeManager->m_OnSetObserver.AddFunction(func);
+		}
+		template<typename Filter, typename Func>
+		bool RemoveFilterChangeObserver(ObserverFunctionID id)
+		{
+			using FilterType = filter_type_t<Filter>;
+			FilterTypeManager<FilterType>* filterTypeManager = m_FilterManager.GetOrCreateFilterTypeManager<FilterType>();
+			return filterTypeManager->m_OnSetObserver.RemoveFunction(id);
+		}
+
 	private:
 		template<filter_concept FilterType>
-		Archetype* GetArchetypeAfterSetFilter(Archetype* toArchetype, const filter_data_t<FilterType>& filterData)
+		Archetype* GetArchetypeAfterAddFilter(Archetype* toArchetype, const filter_data_t<FilterType>& filterData)
 		{
 			if (toArchetype == nullptr)
 			{
@@ -636,7 +683,7 @@ namespace decs::light
 			Archetype* oldArchetype = entityData.m_Archetype;
 			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
-			Archetype* newArchetype = this->GetArchetypeAfterSetFilter<FilterType>(oldArchetype, filter);
+			Archetype* newArchetype = this->GetArchetypeAfterAddFilter<FilterType>(oldArchetype, filter);
 			if (newArchetype == oldArchetype)
 			{
 				return true;
@@ -854,7 +901,7 @@ namespace decs::light
 
 			if constexpr (sizeof...(FiltersData) > 0)
 			{
-				((spawnArchetype = GetArchetypeAfterSetFilter<filter_type_t<pure_type_t<FiltersData>>>(spawnArchetype, std::get<FiltersData>(filtersDataTuple))), ...);
+				((spawnArchetype = GetArchetypeAfterAddFilter<filter_type_t<pure_type_t<FiltersData>>>(spawnArchetype, std::get<FiltersData>(filtersDataTuple))), ...);
 			}
 
 			if constexpr (sizeof...(ComponentTypes) > 0)

@@ -14,7 +14,7 @@
 
 namespace decs
 {
-	class Entity;
+	struct Entity;
 	class Archetype;
 
 	struct ArchetypeEntityRecord
@@ -284,8 +284,8 @@ namespace decs
 	{
 		friend class Container;
 		friend class ContainerIterator;
-		friend class EntityData;
-		friend class EntityManager;
+		friend struct EntityData;
+		friend struct EntityManager;
 		friend class ArchetypesMap;
 		template<typename>
 		friend class ContainerSerializer;

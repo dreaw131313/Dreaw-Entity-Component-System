@@ -3,7 +3,7 @@
 
 namespace decs::light
 {
-	class Entity final
+	struct Entity final
 	{
 		friend class light::Container;
 		friend class light::ContainerIterator;

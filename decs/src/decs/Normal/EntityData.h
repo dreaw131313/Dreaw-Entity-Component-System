@@ -37,14 +37,14 @@ namespace decs
 		std::atomic<bool> m_bIsContainerAlive = true;
 	};
 
-	class EntityData final
+	struct EntityData final
 	{
 		friend class ArchetypeEntityDataStorage;
 		friend class Archetype;
-		friend class EntityManager;
+		friend struct EntityManager;
 		friend class Container;
-		friend class Entity;
-		friend class EntityManager;
+		friend struct Entity;
+		friend struct EntityManager;
 
 	private:
 		Archetype* m_Archetype = nullptr;

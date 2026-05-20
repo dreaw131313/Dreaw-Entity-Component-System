@@ -1,90 +1,16 @@
 #pragma once
 
-#include <vector>
-#include <functional>
-
 #include "decs/Core/trait.h"
 #include "decs/Core/check_cast.h"
+#include "decs/Core/ObserverFunction.h"
 
 #include "LPackedComponentContainer.h"
 
+
 namespace decs::light
 {
-	class Entity;
+	struct Entity;
 
-	struct ObserverID final
-	{
-		template<light_component_concept>
-		friend class ComponentObserverFunction;
-
-	private:
-		size_t m_Value = std::numeric_limits<size_t>::max();
-	};
-
-	template<light_component_concept ComponentType>
-	class ComponentObserverFunction
-	{
-		using ObserverFunctionType = void(const Entity&, ComponentType&);
-		using FunctionType = std::function<ObserverFunctionType>;
-
-	public:
-
-		struct ItemRecord
-		{
-		public:
-			FunctionType m_Function{};
-			ObserverID m_ID{};
-		};
-
-	public:
-		template<typename Func>
-		ObserverID AddFunction(Func&& func)
-		{
-			ObserverID id = GenerateID();
-
-			m_Functions.push_back({ FunctionType(func), id });
-
-			return id;
-		}
-
-		bool RemoveFunction(ObserverID id)
-		{
-			for (size_t i = 0; i < m_Functions.size(); i++)
-			{
-				ItemRecord& item = m_Functions[i];
-				if (item.m_ID == id)
-				{
-					m_Functions.erase(m_Functions.begin() + i);
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		void Invoke(const Entity& entity, ComponentType& component)
-		{
-			for (ItemRecord& record : m_Functions)
-			{
-				record.m_Function(entity, component);
-			}
-		}
-
-	private:
-		std::vector<ItemRecord> m_Functions{};
-		size_t m_IDGenerator = 0;
-
-	private:
-		ObserverID GenerateID()
-		{
-			ObserverID newID{};
-			newID.m_Value = m_IDGenerator;
-
-			m_IDGenerator++;
-
-			return newID;
-		}
-	};
 
 	template<light_component_concept>
 	class TComponentContext;
@@ -116,7 +42,7 @@ namespace decs::light
 	class TComponentContext : public IComponentContext
 	{
 	public:
-		using ObserverFunction = ComponentObserverFunction<ComponentType>;
+		using ObserverFunction = ::decs::TObserverFunction<void(const Entity&, ComponentType&)>;
 
 		ObserverFunction m_OnCreateFunction{};
 		ObserverFunction m_OnDestroyFunction{};
