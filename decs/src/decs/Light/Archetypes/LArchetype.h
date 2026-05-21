@@ -198,20 +198,60 @@ namespace decs::light
 		}
 	};
 
-	struct ArchetypeFilterRecord
+	struct ArchetypeFilterData
 	{
 	public:
+		IFilterTypeManager* m_FilterTypeManager = nullptr;
 		IFilterContainerBase* m_FilterContainer = nullptr;
 		TypeID m_FilterTypeID = InvalidTypeID;
 
 	public:
-		ArchetypeFilterRecord() = default;
+		ArchetypeFilterData() = default;
 
-		ArchetypeFilterRecord(IFilterContainerBase* filterContainer):
+		ArchetypeFilterData(IFilterTypeManager* filterTypeManager, IFilterContainerBase* filterContainer):
+			m_FilterTypeManager(filterTypeManager),
 			m_FilterContainer(filterContainer),
 			m_FilterTypeID(filterContainer != nullptr ? filterContainer->GetFilterTypeID() : InvalidTypeID)
 		{
 
+		}
+
+		inline operator bool() const noexcept
+		{
+			return m_FilterTypeManager != nullptr && m_FilterContainer != nullptr;
+		}
+	};
+
+	template<filter_concept FilterType>
+	struct TArchetypeFilterData
+	{
+	public:
+		using FilterContainerType = FilterContainer<FilterType>;
+		using FilterManagerType = FilterTypeManager<FilterType>;
+
+		FilterContainerType* m_FilterContainer = nullptr;
+		FilterManagerType* m_FilterTypeManager = nullptr;
+
+	public:
+		TArchetypeFilterData() = default;
+
+		TArchetypeFilterData(const ArchetypeFilterData& filterData):
+			m_FilterContainer(::decs::check_cast<FilterContainerType*>(filterData.m_FilterContainer)),
+			m_FilterTypeManager(::decs::check_cast<FilterManagerType*>(filterData.m_FilterTypeManager))
+		{
+
+		}
+
+		TArchetypeFilterData(FilterManagerType* filterTypeManager, FilterContainerType* filterContainer):
+			m_FilterContainer(filterContainer),
+			m_FilterTypeManager(filterTypeManager)
+		{
+
+		}
+
+		inline operator bool() const noexcept
+		{
+			return m_FilterTypeManager != nullptr && m_FilterContainer != nullptr;
 		}
 	};
 
@@ -305,7 +345,7 @@ namespace decs::light
 
 		ArchetypeEntityList m_Entities{};
 		std::vector<ArchetypeTypeData> m_TypeData{};
-		std::vector<ArchetypeFilterRecord> m_Filters{};
+		std::vector<ArchetypeFilterData> m_Filters{};
 
 		size_t m_CreatedIndexInAllocator = std::numeric_limits<size_t>::max();
 		uint32_t m_Version = 0;
@@ -510,7 +550,7 @@ namespace decs::light
 			return m_Filters.size();
 		}
 
-		std::span<const ArchetypeFilterRecord> GetFilters() const noexcept
+		std::span<const ArchetypeFilterData> GetFilters() const noexcept
 		{
 			return m_Filters;
 		}
@@ -522,7 +562,7 @@ namespace decs::light
 			return  std::find_if(
 				m_Filters.begin(),
 				m_Filters.end(),
-				[&] (const ArchetypeFilterRecord& record)
+				[&] (const ArchetypeFilterData& record)
 			{
 				return filter == record.m_FilterContainer;
 			}
@@ -534,7 +574,7 @@ namespace decs::light
 			return  std::find_if(
 				m_Filters.begin(),
 				m_Filters.end(),
-				[&] (const ArchetypeFilterRecord& record)
+				[&] (const ArchetypeFilterData& record)
 			{
 				return filterTypeID == record.m_FilterTypeID;
 			}
@@ -556,28 +596,29 @@ namespace decs::light
 			return std::numeric_limits<size_t>::max();
 		}
 
-		IFilterContainerBase* GetFilterContainer(TypeID filterID) const
+		ArchetypeFilterData GetFilterData(TypeID filterID) const
 		{
 			for (auto& filterRecord : m_Filters)
 			{
 				if (filterRecord.m_FilterTypeID == filterID)
 				{
-					return filterRecord.m_FilterContainer;
+					return filterRecord;
 				}
 			}
-			return nullptr;
+			return {};
 		}
 
 		template<filter_concept FilterType>
-		FilterContainer<FilterType>* GetFilterContainer() const
+		TArchetypeFilterData<FilterType> GetFilterData() const
 		{
-			return check_cast<FilterContainer<FilterType>*>(GetFilterContainer(Type<FilterType>::ID()));
+			return TArchetypeFilterData<FilterType>(GetFilterData(Type<FilterType>::ID()));
 		}
 
-	private:
-		void AddFilter_WithoutCheckout(IFilterContainerBase* filter);
 
-		void AddFilterInCorrectPlace(IFilterContainerBase& filter);
+	private:
+		void AddFilter_WithoutCheckout(IFilterTypeManager* typeManager, IFilterContainerBase* filterContainer);
+
+		void AddFilterInCorrectPlace(IFilterTypeManager& typeManager, IFilterContainerBase& filterContainer);
 
 	#pragma endregion
 

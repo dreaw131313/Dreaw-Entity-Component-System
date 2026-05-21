@@ -312,6 +312,33 @@ namespace decs::light
 		EArchetypesGroupType m_GroupType = EArchetypesGroupType::ComponentOrTagType;
 	};
 
+	template<filter_concept FilterType>
+	struct TGetArchetypeWithFilterResult
+	{
+	public:
+		using FilterContainerType = FilterContainer<FilterType>;
+		using FilterManagerType = FilterTypeManager<FilterType>;
+
+		FilterContainerType* m_FilterContainer = nullptr;
+		FilterManagerType* m_FilterTypeManager = nullptr;
+		Archetype* m_Archetype = nullptr;
+
+	public:
+		TGetArchetypeWithFilterResult() = default;
+
+		TGetArchetypeWithFilterResult(
+			FilterManagerType* filterTypeManager,
+			FilterContainerType* filterContainer,
+			Archetype* archetype
+		):
+			m_FilterTypeManager(filterTypeManager),
+			m_FilterContainer(filterContainer),
+			m_Archetype(archetype)
+		{
+
+		}
+	};
+
 	class ArchetypesMap
 	{
 		friend class Container;
@@ -492,7 +519,7 @@ namespace decs::light
 
 		void AddTypeDataAfterRemoveFilter(const Archetype& fromArchetype, Archetype& toArchetype, IFilterContainerBase* filterContainer);
 
-		void AddTypeDataAfterAddFilter(const Archetype& baseArchetype, Archetype& toArchetype, IFilterContainerBase* filterContainer);
+		void AddTypeDataAfterAddFilter(const Archetype& baseArchetype, Archetype& toArchetype, IFilterTypeManager* filterTypeManager, IFilterContainerBase* filterContainer);
 
 		// FITLER ARCHETYPES:
 		Archetype* GetSingleFilterArchetype(IFilterContainerBase* filterContainer)
@@ -502,65 +529,65 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		Archetype* GetOrCreateSingleFilterArchetype(const FilterType::DataType & filter)
+		TGetArchetypeWithFilterResult<FilterType> GetOrCreateSingleFilterArchetype(const FilterType::DataType& filter)
 		{
-			IFilterContainerBase* filterContainer = m_FilterManager.GetOrCreateFilter<FilterType>(filter);
-			Archetype* archetype = GetSingleFilterArchetype(filterContainer);
-			if (archetype != nullptr)
+			TFilterGetResult<FilterType> filterResult = m_FilterManager.GetOrCreateFilter<FilterType>(filter);
+			Archetype* archetype = GetSingleFilterArchetype(filterResult.m_FilterContainer);
+			if (archetype == nullptr)
 			{
-				return archetype;
+				archetype = m_ArchetypeAllocator.CreateArchetype();
+				archetype->AddFilter_WithoutCheckout(filterResult.m_FilterTypeManager, filterResult.m_FilterContainer);
+				AddArchetypeToCorrectContainers(*archetype);
 			}
 
-			archetype = m_ArchetypeAllocator.CreateArchetype();
-			archetype->AddFilter_WithoutCheckout(filterContainer);
-			AddArchetypeToCorrectContainers(*archetype);
-			return archetype;
+			return TGetArchetypeWithFilterResult<FilterType>(filterResult.m_FilterTypeManager, filterResult.m_FilterContainer, archetype);
 		}
 
 		template<filter_concept FilterType>
-		Archetype* GetOrCreateArchetypeAfterSetFilter(const Archetype& toArchetype, const FilterType::DataType& filter)
+		TGetArchetypeWithFilterResult<FilterType> GetOrCreateArchetypeAfterSetFilter(Archetype& toArchetype, const FilterType::DataType& filter)
 		{
-			FilterContainer<FilterType>* archetypeFilter = toArchetype.GetFilterContainer<FilterType>();
-			if (archetypeFilter != nullptr)
 			{
-				if (archetypeFilter->m_Data == filter)
+				TArchetypeFilterData<FilterType> archetypeFilterData = toArchetype.GetFilterData<FilterType>();
+				if (archetypeFilterData)
 				{
-					// return same container so we can drop const
-					return const_cast<Archetype*>(&toArchetype);
-				}
+					if (archetypeFilterData.m_FilterContainer->m_Data == filter)
+					{
+						return TGetArchetypeWithFilterResult<FilterType>(archetypeFilterData.m_FilterTypeManager, archetypeFilterData.m_FilterContainer, &toArchetype);
+					}
 
-				Archetype* archetypeWithoutFilter = GetOrCreateArchetypeAfterRemoveFilter<FilterType>(toArchetype);
-				if (archetypeWithoutFilter == nullptr)
-				{
-					return GetOrCreateSingleFilterArchetype<FilterType>(filter);
-				}
-				else
-				{
-					return GetOrCreateArchetypeAfterSetFilter<FilterType>(*archetypeWithoutFilter, filter);
+					Archetype* archetypeWithoutFilter = GetOrCreateArchetypeAfterRemoveFilter<FilterType>(toArchetype);
+					if (archetypeWithoutFilter == nullptr)
+					{
+						return GetOrCreateSingleFilterArchetype<FilterType>(filter);
+					}
+					else
+					{
+						return GetOrCreateArchetypeAfterSetFilter<FilterType>(*archetypeWithoutFilter, filter);
+					}
 				}
 			}
 
-			auto newFilterContainer = m_FilterManager.GetOrCreateFilter<FilterType>(filter);
+			TFilterGetResult<FilterType> filterResult = m_FilterManager.GetOrCreateFilter<FilterType>(filter);
 
-			auto edge = toArchetype.GetEdge(ArchetypeDataKey(newFilterContainer));
+			auto edge = toArchetype.GetEdge(ArchetypeDataKey(filterResult.m_FilterContainer));
 			if (edge.IsValid())
 			{
 				DECS_ASSERT(edge.m_EdgeType == EArchetypeEdgeType::Add, "It must be add edge!");
 
-				return edge.m_Archetype;
+				return TGetArchetypeWithFilterResult<FilterType>(filterResult.m_FilterTypeManager, filterResult.m_FilterContainer, edge.m_Archetype);
 			}
 
 			Archetype* newArchetype = m_ArchetypeAllocator.CreateArchetype();
-			AddTypeDataAfterAddFilter(toArchetype, *newArchetype, newFilterContainer);
+			AddTypeDataAfterAddFilter(toArchetype, *newArchetype, filterResult.m_FilterTypeManager, filterResult.m_FilterContainer);
 			AddArchetypeToCorrectContainers(*newArchetype);
 
-			return newArchetype;
+			return TGetArchetypeWithFilterResult<FilterType>(filterResult.m_FilterTypeManager, filterResult.m_FilterContainer, newArchetype);
 		}
 
-		Archetype* GetOrCreateArchetypeAfterRemoveFilter(const Archetype& fromArchetype, TypeID filterTypeID);
+		Archetype* GetOrCreateArchetypeAfterRemoveFilter(Archetype& fromArchetype, TypeID filterTypeID);
 
 		template<filter_concept FilterType>
-		Archetype* GetOrCreateArchetypeAfterRemoveFilter(const Archetype& fromArchetype)
+		Archetype* GetOrCreateArchetypeAfterRemoveFilter(Archetype& fromArchetype)
 		{
 			return GetOrCreateArchetypeAfterRemoveFilter(fromArchetype, Type<FilterType>::ID());
 		}
@@ -610,7 +637,7 @@ namespace decs::light
 		template<typename T>
 		bool CompareFilterTypeData(const Archetype& archetype) const
 		{
-			FilterContainer<T>* filterContainer = archetype.GetFilterContainer<T>();
+			FilterContainer<T>* filterContainer = archetype.GetFilterData<T>();
 			if (filterContainer == nullptr)
 			{
 				return false;

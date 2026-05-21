@@ -251,7 +251,7 @@ namespace decs::light
 		{
 			if constexpr (query_data_container<T>::is_filter)
 			{
-				return m_Archetype->GetFilterContainer<filter_type_t<T>>();
+				return m_Archetype->GetFilterData<filter_type_t<T>>().m_FilterContainer;
 			}
 			else
 			{

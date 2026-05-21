@@ -46,6 +46,8 @@ namespace decs::light
 
 		virtual IFilterTypeManager* CreateFilterTypeManager() const = 0;
 
+		virtual void* GetFilterDataPtr() = 0;
+
 	private:
 		uint32_t m_UseCount = 0;
 	};
@@ -107,6 +109,11 @@ namespace decs::light
 		}
 
 		IFilterTypeManager* CreateFilterTypeManager() const override;
+
+		virtual void* GetFilterDataPtr() override
+		{
+			return &m_Data;
+		}
 
 		inline const FilterDataType& GetAsRef(size_t) const
 		{
@@ -179,11 +186,11 @@ namespace decs::light
 
 		virtual bool RemoveContainer(IFilterContainerBase* container) = 0;
 
-		virtual void InvokeOnAddObserver(const Entity& entity, const IFilterContainerBase* filterConteinerPtr) = 0;
+		virtual void InvokeOnAddObserver(const Entity& entity, const void* filterData) = 0;
 
-		virtual void InvokeOnRemoveObserver(const Entity& entity, const IFilterContainerBase* filterConteinerPtr) = 0;
+		virtual void InvokeOnRemoveObserver(const Entity& entity, const void* filterData) = 0;
 
-		virtual void InvokeOnChangeObserver(const Entity& entity, const IFilterContainerBase* oldConteinerPtr, const IFilterContainerBase* newConteinerPtr) = 0;
+		virtual void InvokeOnChangeObserver(const Entity& entity, const void* oldFilterData, const void* newFilterData) = 0;
 	};
 
 	template<filter_concept FilterType>
@@ -272,38 +279,38 @@ namespace decs::light
 			return RemoveContainer(::decs::check_cast<FilterContainerType*>(container));
 		}
 
-		void InvokeOnAddObserver(const Entity& entity, const IFilterContainerBase* filterContainerPtr) override
+		void InvokeOnAddObserver(const Entity& entity, const void* filterData) override
 		{
-			m_OnAddObserver.Invoke(entity, ::decs::check_cast<const FilterContainerType*>(filterContainerPtr)->m_Data);
+			m_OnAddObserver.Invoke(entity, *static_cast<const FilterDataType*>(filterData));
 		}
 
-		void InvokeOnRemoveObserver(const Entity& entity, const  IFilterContainerBase* filterContainerPtr) override
+		void InvokeOnRemoveObserver(const Entity& entity, const void* filterData) override
 		{
-			m_OnRemoveObserver.Invoke(entity, ::decs::check_cast<const FilterContainerType*>(filterContainerPtr)->m_Data);
+			m_OnRemoveObserver.Invoke(entity, *static_cast<const FilterDataType*>(filterData));
 		}
 
-		void InvokeOnChangeObserver(const Entity& entity, const IFilterContainerBase* oldContainerPtr, const IFilterContainerBase* newContainerPtr) override
+		void InvokeOnChangeObserver(const Entity& entity, const void* oldFilterData, const void* newFilterData) override
 		{
 			m_OnSetObserver.Invoke(
-				entity, 
-				::decs::check_cast<const FilterContainerType*>(oldContainerPtr)->m_Data,
-				::decs::check_cast<const FilterContainerType*>(newContainerPtr)->m_Data
+				entity,
+				*static_cast<const FilterDataType*>(oldFilterData),
+				*static_cast<const FilterDataType*>(newFilterData)
 			);
 		}
 
-		void InvokeOnAddObserver(const Entity& entity, const FilterContainerType& filterContainerPtr)
+		void InvokeOnAddObserver(const Entity& entity, const FilterDataType& filterData)
 		{
-			m_OnAddObserver.Invoke(entity, filterContainerPtr.m_Data);
+			m_OnAddObserver.Invoke(entity, filterData);
 		}
 
-		void InvokeOnRemoveObserver(const Entity& entity, const FilterContainerType& filterContainerPtr)
+		void InvokeOnRemoveObserver(const Entity& entity, const FilterDataType& filterData)
 		{
-			m_OnRemoveObserver.Invoke(entity, filterContainerPtr.m_Data);
+			m_OnRemoveObserver.Invoke(entity, filterData);
 		}
 
-		void InvokeOnSetObserver(const Entity& entity, const FilterContainerType& oldContainerPtr, const FilterContainerType& newContainerPtr)
+		void InvokeOnSetObserver(const Entity& entity, const FilterDataType& oldFilterData, const FilterDataType& newFilterData)
 		{
-			m_OnSetObserver.Invoke(entity, oldContainerPtr.m_Data, newContainerPtr.m_Data);
+			m_OnSetObserver.Invoke(entity, oldFilterData, newFilterData);
 		}
 
 	private:
@@ -337,6 +344,47 @@ namespace decs::light
 		return new FilterTypeManager<FilterType>();
 	}
 
+	struct FilterGetResult
+	{
+	public:
+		IFilterTypeManager* m_FilterTypeManager = nullptr;
+		IFilterContainerBase* m_FilterContainer = nullptr;
+
+	public:
+		FilterGetResult() = default;
+
+		FilterGetResult(
+			IFilterTypeManager* filterTypeManager,
+			IFilterContainerBase* filterContainer
+		):
+			m_FilterTypeManager(filterTypeManager),
+			m_FilterContainer(filterContainer)
+		{
+
+		}
+	};
+
+	template<filter_concept FilterType>
+	struct TFilterGetResult
+	{
+	public:
+		FilterTypeManager<FilterType>* m_FilterTypeManager = nullptr;
+		FilterContainer<FilterType>* m_FilterContainer = nullptr;
+
+	public:
+		TFilterGetResult() = default;
+
+		TFilterGetResult(
+			FilterTypeManager<FilterType>* filterTypeManager,
+			FilterContainer<FilterType>* filterContainer
+		):
+			m_FilterTypeManager(filterTypeManager),
+			m_FilterContainer(filterContainer)
+		{
+
+		}
+	};
+
 	class FilterManager
 	{
 	public:
@@ -367,25 +415,30 @@ namespace decs::light
 		}
 
 		template<filter_concept FilterType>
-		FilterContainer<FilterType>* GetOrCreateFilter(const FilterType::DataType& filter)
+		TFilterGetResult<FilterType> GetOrCreateFilter(const FilterType::DataType& filter)
 		{
 			FilterTypeManager<FilterType>* filterTypeManager = GetOrCreateFilterTypeManager<FilterType>();
-			return filterTypeManager->GetOrAddContainer(filter);
+
+			return TFilterGetResult<FilterType>(filterTypeManager, filterTypeManager->GetOrAddContainer(filter));
 		}
 
 		template<filter_concept FilterType>
-		IFilterContainerBase* GetFilterWithoutIncrementRefCount(const FilterType::DataType& filter) const
+		TFilterGetResult<FilterType> GetFilterWithoutIncrementRefCount(const FilterType::DataType& filter) const
 		{
 			auto filterManagerIt = m_FilterTypes.find(Type<FilterType>::ID());
 			if (filterManagerIt == m_FilterTypes.end())
 			{
-				return nullptr;
+				return {};
 			}
 
-			return check_cast<const FilterTypeManager<FilterType>*>(filterManagerIt->second)->GetContainer(filter);
+			auto filterTypeManager = ::decs::check_cast<FilterTypeManager<FilterType>*>(filterManagerIt->second);
+			return TFilterGetResult<FilterType>(
+				filterTypeManager,
+				filterTypeManager->GetContainer(filter)
+			);
 		}
 
-		IFilterContainerBase* GetMatchingFilter(const IFilterContainerBase& other)
+		FilterGetResult GetMatchingFilter(const IFilterContainerBase& other)
 		{
 			const TypeID filterTypeID = other.GetFilterTypeID();
 
@@ -395,7 +448,10 @@ namespace decs::light
 				filterTypeMangerBase = other.CreateFilterTypeManager();
 			}
 
-			return filterTypeMangerBase->CreateMatchingFilterContainer(other);
+			return FilterGetResult(
+				filterTypeMangerBase,
+				filterTypeMangerBase->CreateMatchingFilterContainer(other)
+			);
 		}
 
 		template<filter_concept FilterType>

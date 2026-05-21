@@ -350,7 +350,10 @@ namespace decs::light
 
 		for (auto& baseFilterRecord : fromArchetype.GetFilters())
 		{
-			toArchetype.AddFilter_WithoutCheckout(baseFilterRecord.m_FilterContainer);
+			toArchetype.AddFilter_WithoutCheckout(
+				baseFilterRecord.m_FilterTypeManager,
+				baseFilterRecord.m_FilterContainer
+			);
 		}
 	}
 
@@ -387,7 +390,10 @@ namespace decs::light
 
 		for (auto& baseFilterRecord : baseArchetype.GetFilters())
 		{
-			toArchetype.AddFilter_WithoutCheckout(baseFilterRecord.m_FilterContainer);
+			toArchetype.AddFilter_WithoutCheckout(
+				baseFilterRecord.m_FilterTypeManager,
+				baseFilterRecord.m_FilterContainer
+			);
 		}
 
 	}
@@ -408,12 +414,15 @@ namespace decs::light
 		{
 			if (filterContainer != baseFilterRecord.m_FilterContainer)
 			{
-				toArchetype.AddFilter_WithoutCheckout(baseFilterRecord.m_FilterContainer);
+				toArchetype.AddFilter_WithoutCheckout(
+					baseFilterRecord.m_FilterTypeManager,
+					baseFilterRecord.m_FilterContainer
+				);
 			}
 		}
 	}
 
-	void ArchetypesMap::AddTypeDataAfterAddFilter(const Archetype& baseArchetype, Archetype& toArchetype, IFilterContainerBase* filterContainer)
+	void ArchetypesMap::AddTypeDataAfterAddFilter(const Archetype& baseArchetype, Archetype& toArchetype, IFilterTypeManager* filterTypeManager, IFilterContainerBase* filterContainer)
 	{
 		DECS_ASSERT(filterContainer != nullptr, "Filter must not be nullptr!");
 
@@ -432,22 +441,25 @@ namespace decs::light
 		{
 			if (!bisNewFilterAdded && filterContainer->GetFilterTypeID() < baseFilterRecord.m_FilterTypeID)
 			{
-				toArchetype.AddFilter_WithoutCheckout(filterContainer);
+				toArchetype.AddFilter_WithoutCheckout(filterTypeManager, filterContainer);
 				bisNewFilterAdded = true;
 			}
-			toArchetype.AddFilter_WithoutCheckout(baseFilterRecord.m_FilterContainer);
+			toArchetype.AddFilter_WithoutCheckout(
+				baseFilterRecord.m_FilterTypeManager,
+				baseFilterRecord.m_FilterContainer
+			);
 		}
 
 		if (!bisNewFilterAdded)
 		{
-			toArchetype.AddFilter_WithoutCheckout(filterContainer);
+			toArchetype.AddFilter_WithoutCheckout(filterTypeManager, filterContainer);
 		}
 	}
 
-	Archetype* ArchetypesMap::GetOrCreateArchetypeAfterRemoveFilter(const Archetype& fromArchetype, TypeID filterTypeID)
+	Archetype* ArchetypesMap::GetOrCreateArchetypeAfterRemoveFilter(Archetype& fromArchetype, TypeID filterTypeID)
 	{
-		IFilterContainerBase* archetypeFilter = fromArchetype.GetFilterContainer(filterTypeID);
-		DECS_ASSERT(archetypeFilter != nullptr, "fromArchetype must have this filter type to remove it from!");
+		ArchetypeFilterData archetypeFilterData = fromArchetype.GetFilterData(filterTypeID);
+		DECS_ASSERT(archetypeFilterData, "fromArchetype must have this filter type to remove it from!");
 
 		if (fromArchetype.GetComponentTagFilterCount() == 1)
 		{
@@ -455,7 +467,7 @@ namespace decs::light
 			return nullptr;
 		}
 
-		auto edge = fromArchetype.GetEdge(ArchetypeDataKey(archetypeFilter));
+		auto edge = fromArchetype.GetEdge(ArchetypeDataKey(archetypeFilterData.m_FilterContainer));
 		if (edge.IsValid())
 		{
 			DECS_ASSERT(edge.m_EdgeType == EArchetypeEdgeType::Remove, "It must be remove edge!");
@@ -464,7 +476,7 @@ namespace decs::light
 		}
 
 		Archetype* newArchetype = m_ArchetypeAllocator.CreateArchetype();
-		AddTypeDataAfterRemoveFilter(fromArchetype, *newArchetype, archetypeFilter);
+		AddTypeDataAfterRemoveFilter(fromArchetype, *newArchetype, archetypeFilterData.m_FilterContainer);
 		AddArchetypeToCorrectContainers(*newArchetype);
 
 		return newArchetype;

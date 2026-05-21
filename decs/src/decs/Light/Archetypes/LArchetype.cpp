@@ -7,8 +7,7 @@
 namespace decs::light
 {
 	Archetype::Archetype()
-	{
-	}
+	{ }
 
 	Archetype::~Archetype()
 	{
@@ -196,18 +195,18 @@ namespace decs::light
 		return result;
 	}
 
-	void Archetype::AddFilter_WithoutCheckout(IFilterContainerBase* filter)
+	void Archetype::AddFilter_WithoutCheckout(IFilterTypeManager* typeManager, IFilterContainerBase* filterContainer)
 	{
-		if (filter == nullptr)
+		if (typeManager == nullptr || filterContainer == nullptr)
 		{
 			return;
 		}
 
-		m_Filters.emplace_back(filter);
-		filter->IncrementRefCount();
+		m_Filters.emplace_back(typeManager, filterContainer);
+		filterContainer->IncrementRefCount();
 	}
 
-	void Archetype::AddFilterInCorrectPlace(IFilterContainerBase& filterContainer)
+	void Archetype::AddFilterInCorrectPlace(IFilterTypeManager& typeManager, IFilterContainerBase& filterContainer)
 	{
 		filterContainer.IncrementRefCount();
 		for (size_t idx = 0; idx < m_Filters.size(); idx++)
@@ -215,12 +214,12 @@ namespace decs::light
 			auto& filterRecord = m_Filters[idx];
 			if (filterContainer.GetFilterTypeID() < filterRecord.m_FilterTypeID)
 			{
-				m_Filters.insert(m_Filters.begin() + idx, ArchetypeFilterRecord(&filterContainer));
+				m_Filters.insert(m_Filters.begin() + idx, ArchetypeFilterData(&typeManager, &filterContainer));
 				return;
 			}
 		}
 
-		m_Filters.push_back(ArchetypeFilterRecord(&filterContainer));
+		m_Filters.push_back(ArchetypeFilterData(&typeManager, &filterContainer));
 	}
 
 	bool Archetype::ContainComponentOrTagOrFilterType(TypeID typeID) const noexcept
@@ -285,7 +284,7 @@ namespace decs::light
 
 	void Archetype::InvokeCreateObserversOnEntity(size_t entityIndex)
 	{
-		if (entityIndex>= m_Entities.Size())
+		if (entityIndex >= m_Entities.Size())
 		{
 			return;
 		}
@@ -414,7 +413,8 @@ namespace decs::light
 			m_Filters.reserve(other.m_Filters.size());
 			for (auto& otherFilter : other.m_Filters)
 			{
-				AddFilter_WithoutCheckout(filterManager.GetMatchingFilter(*otherFilter.m_FilterContainer));
+				auto filterResult = filterManager.GetMatchingFilter(*otherFilter.m_FilterContainer);
+				AddFilter_WithoutCheckout(filterResult.m_FilterTypeManager, filterResult.m_FilterContainer);
 			}
 		}
 	}

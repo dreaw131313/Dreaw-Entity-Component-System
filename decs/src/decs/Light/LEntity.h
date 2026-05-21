@@ -341,11 +341,39 @@ namespace decs::light
 	#pragma region FILTERS:
 	public:
 		template<typename FilterType>
+		bool AddFilter(const filter_data_t<FilterType>& filterData) const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->AddFilter<filter_type_t<FilterType>>(*this, *m_EntityData, filterData);
+			}
+			return false;
+		}
+		template<typename FilterType>
+		bool AddFilter_NoObserver(const filter_data_t<FilterType>& filterData) const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->AddFilter_NoObserver<filter_type_t<FilterType>>(*this, *m_EntityData, filterData);
+			}
+			return false;
+		}
+
+		template<typename FilterType>
 		bool SetFilter(const filter_data_t<FilterType>& filterData) const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->SetFilter<filter_type_t<FilterType>>(*m_EntityData, filterData);
+				return GetContainer()->SetFilter<filter_type_t<FilterType>>(*this, *m_EntityData, filterData);
+			}
+			return false;
+		}
+		template<typename FilterType>
+		bool SetFilter_NoObserver(const filter_data_t<FilterType>& filterData) const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->SetFilter_NoObserver<filter_type_t<FilterType>>(*this, *m_EntityData, filterData);
 			}
 			return false;
 		}
@@ -375,7 +403,7 @@ namespace decs::light
 		}
 
 		template<typename FilterType>
-		[[nodiscard]] const FilterType* GetFilter() const
+		[[nodiscard]] const filter_data_t<FilterType>* GetFilter() const
 		{
 			if (IsValid())
 			{

@@ -77,16 +77,17 @@ public:
 public:
 	TestEntityFilter()
 	{
-		PrintLine("TestEntityFilter::TestEntityFilter");
+
 	}
 
 	TestEntityFilter(int data):
 		Data(data)
-	{ }
+	{ 
+	}
 
 	~TestEntityFilter()
 	{
-		PrintLine("TestEntityFilter::~TestEntityFilter");
+
 	}
 
 
@@ -450,14 +451,15 @@ void Test::FilterTest()
 	decs::TagTypeGroup<float, int> group{};
 
 	Entity e = container.CreateEntity();
-	e.SetFilter<TestEntityFilter>(TestEntityFilter(1));
-	e.SetFilter<float>(1.f);
+
+
 	e.AddComponent<float>(14.0f);
 	e.AddComponent<double>(21.);
 	e.AddTag<FloatTag>();
+	e.RemoveFilter<TestEntityFilter>();
 
-	bool hasFilters = e.HasFilters<float, decs::filter<TestEntityFilter>>();
-	DECS_ASSERT(hasFilters, "Must be true");
+	e.AddFilter<TestEntityFilter>(TestEntityFilter(1));
+	e.AddFilter<float>(1.f);
 
 	{
 		decs::LightComponentTypeGroup<Position, TestComponent> comps{};
@@ -613,50 +615,22 @@ void Test::ObserversTest()
 	{
 		PrintLine("TestEntityFilter remove observer");
 	});
-
 	container.AddFilterChangeObserver<TestEntityFilter>([] (const Entity& entity, TestEntityFilter oldValue, TestEntityFilter newValue)
 	{
 		PrintLine("TestEntityFilter change observer");
 	});
 
-	// 1
-	{
-		Entity e = container.CreateEntity();
-		e.AddComponent<Position>();
-		container.Spawn(e, 2);
 
-	}
-	//2
-	{
-		decs::LightComponentTypeGroup<Position> componentsTypeGroup{};
+	Entity e = container.CreateEntity();
+	e.AddComponent<Position>(Position(0,0));
+	e.SetComponent(Position(1,1));
+	e.RemoveComponent<Position>();
 
-		Entity e = container.CreateEntity(componentsTypeGroup, [] (Entity e, Position& pos)
-		{
-		});
-		e.RemoveComponent<Position>();
-	}
+	e.AddFilter<TestEntityFilter>(TestEntityFilter(1));
+	e.SetFilter<TestEntityFilter>(TestEntityFilter(2));
+	e.RemoveFilter<TestEntityFilter>();
 
-	//3
-	{
-		Entity e = container.CreateEntity();
-		e.AddComponent<Position>();
-
-		e.Destroy();
-	}
-
-	//4
-	{
-		decs::light::EntitySpawner<decs::LightComponentTypeGroup<Position>> spawner{};
-		spawner.SetContainer(&container);
-
-		auto e = spawner.Spawn([] (auto)
-		{
-
-		});
-
-		e.Destroy();
-	}
-
+	e.Destroy();
 }
 
 void Test::SettingComponents()

@@ -445,7 +445,7 @@ namespace decs::light
 			Archetype* oldArchetype = entityData.m_Archetype;
 			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
 
-			Archetype* newArchetype = GetArchetypeAfterAddComponent<TComponent>(entityData.m_Archetype);
+			Archetype* newArchetype = GetArchetypeAfterAddComponent<PureComponentType>(entityData.m_Archetype);
 			TArchetypeTypeData<PureComponentType> newTypeData = newArchetype->GetComponentTypeData<PureComponentType>();
 
 			PureComponentType* componentPtr = &newTypeData.m_PackedContainer->EmplaceBack(std::forward<Args>(args)...);
@@ -656,7 +656,7 @@ namespace decs::light
 
 	private:
 		template<filter_concept FilterType>
-		Archetype* GetArchetypeAfterAddFilter(Archetype* toArchetype, const filter_data_t<FilterType>& filterData)
+		TGetArchetypeWithFilterResult<FilterType> GetArchetypeAfterAddFilter(Archetype* toArchetype, const filter_data_t<FilterType>& filterData)
 		{
 			if (toArchetype == nullptr)
 			{
@@ -670,8 +670,8 @@ namespace decs::light
 
 		Archetype* GetArchetypeAfterRemoveFilter(Archetype* fromArchetype, TypeID filterID);
 
-		template<filter_concept FilterType>
-		bool SetFilter(EntityData& entityData, const filter_data_t<FilterType>& filter)
+		template<bool InvokeObserver, filter_concept FilterType>
+		bool AddFilter_Impl(const Entity& entity, EntityData& entityData, const filter_data_t<FilterType>& filter)
 		{
 			if (entityData.OperationsLocked())
 			{
@@ -681,37 +681,136 @@ namespace decs::light
 			TYPE_ID_CONSTEXPR TypeID filterTypeID = Type<FilterType>::ID();
 
 			Archetype* oldArchetype = entityData.m_Archetype;
-			const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
+			if (oldArchetype != nullptr && oldArchetype->HasFilterWithType(filterTypeID))
+			{
+				return false;
+			}
 
-			Archetype* newArchetype = this->GetArchetypeAfterAddFilter<FilterType>(oldArchetype, filter);
-			if (newArchetype == oldArchetype)
+			TGetArchetypeWithFilterResult<FilterType> newArchetypeData = this->GetArchetypeAfterAddFilter<FilterType>(oldArchetype, filter);
+			if (newArchetypeData.m_Archetype == oldArchetype)
 			{
 				return true;
 			}
 
 			if (oldArchetype != nullptr)
 			{
-				Archetype::MoveEntiyAfterFilterChange(*oldArchetype, *newArchetype, indexInOldArchetype);
+				const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
+				Archetype::MoveEntiyAfterFilterChange(*oldArchetype, *newArchetypeData.m_Archetype, indexInOldArchetype);
 			}
 			else
 			{
 				RemoveFromEmptyEntities(entityData);
-				newArchetype->AddEntityData(&entityData);
+				newArchetypeData.m_Archetype->AddEntityData(&entityData);
+			}
+
+			if constexpr (InvokeObserver)
+			{
+				entityData.LockOperations();
+				{
+					newArchetypeData.m_FilterTypeManager->InvokeOnAddObserver(entity, newArchetypeData.m_FilterContainer->m_Data);
+				}
+				entityData.UnlockOperations();
 			}
 
 			return true;
 		}
 
-		bool RemoveFilter(EntityData& entityData, TypeID filterTypeID);
+		template<filter_concept FilterType>
+		bool AddFilter(const Entity& entity, EntityData& entityData, const filter_data_t<FilterType>& filter)
+		{
+			return AddFilter_Impl<true, FilterType>(entity, entityData, filter);
+		}
+
+		template<filter_concept FilterType>
+		bool AddFilter_NoObserver(const Entity& entity, EntityData& entityData, const filter_data_t<FilterType>& filter)
+		{
+			return AddFilter_Impl<false, FilterType>(entity, entityData, filter);
+		}
+
+		template<bool InvokeObserver, filter_concept FilterType>
+		bool SetFilter_Impl(const Entity& entity, EntityData& entityData, const filter_data_t<FilterType>& filter)
+		{
+			if (entityData.OperationsLocked())
+			{
+				return false;
+			}
+
+			TYPE_ID_CONSTEXPR TypeID filterTypeID = Type<FilterType>::ID();
+
+			Archetype* oldArchetype = entityData.m_Archetype;
+			TArchetypeFilterData<FilterType> oldFilterData = oldArchetype->GetFilterData<FilterType>();
+			if (!oldFilterData)
+			{
+				return false;
+			}
+
+			TGetArchetypeWithFilterResult<FilterType> newArchetypeData = this->GetArchetypeAfterAddFilter<FilterType>(oldArchetype, filter);
+			if (newArchetypeData.m_Archetype == oldArchetype)
+			{
+				return true;
+			}
+
+			if (oldArchetype != nullptr)
+			{
+				const uint32_t indexInOldArchetype = entityData.m_IndexInArchetype;
+				Archetype::MoveEntiyAfterFilterChange(*oldArchetype, *newArchetypeData.m_Archetype, indexInOldArchetype);
+			}
+			else
+			{
+				RemoveFromEmptyEntities(entityData);
+				newArchetypeData.m_Archetype->AddEntityData(&entityData);
+			}
+
+			if constexpr (InvokeObserver)
+			{
+				entityData.LockOperations();
+				{
+					oldFilterData.m_FilterTypeManager->InvokeOnSetObserver(entity, oldFilterData.m_FilterContainer->m_Data, newArchetypeData.m_FilterContainer->m_Data);
+				}
+				entityData.UnlockOperations();
+			}
+
+			return true;
+		}
+
+		template<filter_concept FilterType>
+		bool SetFilter(const Entity& entity, EntityData& entityData, const filter_data_t<FilterType>& filter)
+		{
+			return SetFilter_Impl<true, FilterType>(entity, entityData, filter);
+		}
+
+		template<filter_concept FilterType>
+		bool SetFilter_NoObserver(const Entity& entity, EntityData& entityData, const filter_data_t<FilterType>& filter)
+		{
+			return SetFilter_Impl<false>(entity, entityData, filter);
+		}
+
+		bool RemoveFilter_Impl(EntityData& entityData, TypeID filterTypeID, bool bInvokeObserver);
 
 		template<filter_concept FilterType>
 		bool RemoveFilter(EntityData& entityData)
 		{
-			return RemoveFilter(entityData, Type<FilterType>::ID());
+			return RemoveFilter_Impl(entityData, Type<FilterType>::ID(), true);
 		}
 
 		template<filter_concept FilterType>
-		const FilterType* GetFilter(EntityData& entityData)
+		bool RemoveFilter_NoObserver(EntityData& entityData)
+		{
+			return RemoveFilter_Impl(entityData, Type<FilterType>::ID(), false);
+		}
+
+		bool RemoveFilter(EntityData& entityData, TypeID filterTypeID)
+		{
+			return RemoveFilter_Impl(entityData, filterTypeID, true);
+		}
+
+		bool RemoveFilter_NoObserver(EntityData& entityData, TypeID filterTypeID)
+		{
+			return RemoveFilter_Impl(entityData, filterTypeID, false);
+		}
+
+		template<filter_concept FilterType>
+		const filter_data_t<FilterType>* GetFilter(EntityData& entityData)
 		{
 			if (entityData.m_Archetype == nullptr
 				|| entityData.m_Archetype->GetFilters().size() == 0
@@ -720,13 +819,13 @@ namespace decs::light
 				return nullptr;
 			}
 
-			FilterContainer<FilterType>* filterContainer = entityData.m_Archetype->GetFilterContainer<FilterType>();
-			if (filterContainer == nullptr)
+			TArchetypeFilterData<FilterType> filterData = entityData.m_Archetype->GetFilterData<FilterType>();
+			if (!filterData )
 			{
 				return nullptr;
 			}
 
-			return &filterContainer->m_Data;
+			return &filterData.m_FilterContainer->m_Data;
 		}
 
 		bool HasFilter(const EntityData& entityData, TypeID filterID);
@@ -747,7 +846,7 @@ namespace decs::light
 				return false;
 			}
 
-			FilterContainer<FilterType>* filterContainer = entityData.m_Archetype->GetFilterContainer<FilterType>();
+			FilterContainer<FilterType>* filterContainer = entityData.m_Archetype->GetFilterData<FilterType>();
 			if (filterContainer == nullptr)
 			{
 				return false;
@@ -901,7 +1000,7 @@ namespace decs::light
 
 			if constexpr (sizeof...(FiltersData) > 0)
 			{
-				((spawnArchetype = GetArchetypeAfterAddFilter<filter_type_t<pure_type_t<FiltersData>>>(spawnArchetype, std::get<FiltersData>(filtersDataTuple))), ...);
+				((spawnArchetype = GetArchetypeAfterAddFilter<filter_type_t<pure_type_t<FiltersData>>>(spawnArchetype, std::get<FiltersData>(filtersDataTuple)).m_Archetype), ...);
 			}
 
 			if constexpr (sizeof...(ComponentTypes) > 0)
