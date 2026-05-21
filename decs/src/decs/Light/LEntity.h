@@ -379,7 +379,6 @@ namespace decs::light
 		}
 
 		/// <summary>
-		/// 
 		/// </summary>
 		/// <param name="filterTypeID">must be type id obtained by Type<filter<T>::ID()</param>
 		/// <returns></returns>
@@ -398,6 +397,29 @@ namespace decs::light
 			if (IsValid())
 			{
 				return GetContainer()->RemoveFilter<filter_type_t<FilterType>>(*m_EntityData);
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// </summary>
+		/// <param name="filterTypeID">must be type id obtained by Type<filter<T>::ID()</param>
+		/// <returns></returns>
+		bool RemoveFilter_NoObserver(TypeID filterTypeID) const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->RemoveFilter_NoObserver(*m_EntityData, filterTypeID);
+			}
+			return false;
+		}
+
+		template<typename FilterType>
+		bool RemoveFilter_NoObserver() const
+		{
+			if (IsValid())
+			{
+				return GetContainer()->RemoveFilter_NoObserver<filter_type_t<FilterType>>(*m_EntityData);
 			}
 			return false;
 		}

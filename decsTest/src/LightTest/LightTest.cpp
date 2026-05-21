@@ -630,6 +630,10 @@ void Test::ObserversTest()
 	e.SetFilter<TestEntityFilter>(TestEntityFilter(2));
 	e.RemoveFilter<TestEntityFilter>();
 
+	e.AddFilter_NoObserver<TestEntityFilter>(TestEntityFilter(1));
+	e.SetFilter_NoObserver<TestEntityFilter>(TestEntityFilter(2));
+	e.RemoveFilter_NoObserver<TestEntityFilter>();
+
 	e.Destroy();
 }
 

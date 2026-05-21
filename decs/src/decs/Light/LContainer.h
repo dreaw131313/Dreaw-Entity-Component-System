@@ -782,7 +782,7 @@ namespace decs::light
 		template<filter_concept FilterType>
 		bool SetFilter_NoObserver(const Entity& entity, EntityData& entityData, const filter_data_t<FilterType>& filter)
 		{
-			return SetFilter_Impl<false>(entity, entityData, filter);
+			return SetFilter_Impl<false, FilterType>(entity, entityData, filter);
 		}
 
 		bool RemoveFilter_Impl(EntityData& entityData, TypeID filterTypeID, bool bInvokeObserver);
