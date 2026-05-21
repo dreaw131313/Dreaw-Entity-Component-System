@@ -155,6 +155,11 @@ namespace decs::light
 				entityData->LockOperations();
 				{
 					(std::get<TArchetypeTypeData<ComponentTypes>>(m_TypeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+
+					for (auto& filterData : m_Archetype->GetFilters())
+					{
+						filterData.m_FilterTypeManager->InvokeOnAddObserver(entity, filterData.m_FilterContainer->GetFilterDataPtr());
+					}
 				}
 				entityData->UnlockOperations();
 			}

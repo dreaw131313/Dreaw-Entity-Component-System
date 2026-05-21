@@ -140,6 +140,11 @@ namespace decs::light
 								entityData->LockOperations();
 								{
 									(std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+
+									for (auto& filterData : spawnArchetype->GetFilters())
+									{
+										filterData.m_FilterTypeManager->InvokeOnAddObserver(entity, filterData.m_FilterContainer->GetFilterDataPtr());
+									}
 								}
 								entityData->UnlockOperations();
 							}
@@ -253,8 +258,14 @@ namespace decs::light
 							entityData->LockOperations();
 							{
 								(std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+
+								for (auto& filterData : spawnArchetype->GetFilters())
+								{
+									filterData.m_FilterTypeManager->InvokeOnAddObserver(entity, filterData.m_FilterContainer->GetFilterDataPtr());
+								}
 							}
 							entityData->UnlockOperations();
+
 						}
 
 						if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
@@ -820,7 +831,7 @@ namespace decs::light
 			}
 
 			TArchetypeFilterData<FilterType> filterData = entityData.m_Archetype->GetFilterData<FilterType>();
-			if (!filterData )
+			if (!filterData)
 			{
 				return nullptr;
 			}

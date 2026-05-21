@@ -120,11 +120,11 @@ void Test::Run()
 	std::cout << "/////////////////////////////////////" << "\n";
 
 	//IterationTest();
-	//EntityCreatePerformanceTest();
+	EntityCreatePerformanceTest();
 	//QueryManagerTest();
 	//FilterTest();
 	//RemovingArchetypesTest();
-	ObserversTest();
+	//ObserversTest();
 	//SettingComponents();
 }
 
@@ -334,8 +334,8 @@ void Test::EntityCreatePerformanceTest()
 {
 	size_t entityCounter = 0;
 
-	const uint32_t testCount = 1;
-	const uint32_t entityCount = 65536;
+	const uint32_t testCount = 4;
+	const uint32_t entityCount = 65536*4;
 
 	decs::light::ContainerConfig config{
 		.EntityChunkSize = 10000,
@@ -351,7 +351,8 @@ void Test::EntityCreatePerformanceTest()
 	decs::TagTypeGroup<float, int> tags{};
 	std::tuple<int, bool> filters{ 1, false };
 
-	decs::light::EntitySpawner<decltype(comps)/*, decltype(tags), decltype(filters)*/> entitySpawner{ &container };
+	decs::light::EntitySpawner<decltype(comps), decltype(tags), decltype(filters)> entitySpawner{ &container };
+	entitySpawner.SetFilters(filters);
 
 	/*MeasureTimer reserveSpaceTimer(true);
 	{
@@ -370,7 +371,7 @@ void Test::EntityCreatePerformanceTest()
 		{
 			MeasureTimer timer(true);
 			{
-				entitySpawner.Spawn_NoObservers(entityCount, [] (Position& pos, TestComponent& test)
+				entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
 				{
 
 				});
@@ -380,18 +381,18 @@ void Test::EntityCreatePerformanceTest()
 					auto e = container.CreateEntity();
 					e.AddTag<float>();
 					e.AddTag<int>();
-					e.SetFilter<int>(1);
-					e.SetFilter<bool>(false);
+					e.AddFilter<int>(1);
+					e.AddFilter<bool>(false);
 					e.AddComponent<Position>();
 					e.AddComponent<TestComponent>();
 				}*/
 
 				//for (uint32_t i = 0; i < entityCount; i++)
 				//{
-				//	/*container.CreateEntity(comps, tags, filters, [] (Position& pos, TestComponent& test)
-				//	{
+				//	//container.CreateEntity(comps,/* tags, filters,*/ [] (Position& pos, TestComponent& test)
+				//	//{
 
-				//	});*/
+				//	//});
 				//	/*container.CreateEntity(comps, [] (Position& pos, TestComponent& test)
 				//	{
 

@@ -342,7 +342,7 @@ namespace decs::light
 
 			for (auto& filterData : spawnArchetype.GetFilters())
 			{
-				filterData.m_FilterTypeManager->InvokeOnRemoveObserver(spawnedEntity, filterData.m_FilterContainer->GetFilterDataPtr());
+				filterData.m_FilterTypeManager->InvokeOnAddObserver(spawnedEntity, filterData.m_FilterContainer->GetFilterDataPtr());
 			}
 		}
 		entityData->UnlockOperations();

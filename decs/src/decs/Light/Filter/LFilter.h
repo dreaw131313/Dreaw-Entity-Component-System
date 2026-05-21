@@ -46,7 +46,7 @@ namespace decs::light
 
 		virtual IFilterTypeManager* CreateFilterTypeManager() const = 0;
 
-		virtual void* GetFilterDataPtr() = 0;
+		virtual const void* GetFilterDataPtr() const = 0;
 
 	private:
 		uint32_t m_UseCount = 0;
@@ -110,7 +110,7 @@ namespace decs::light
 
 		IFilterTypeManager* CreateFilterTypeManager() const override;
 
-		virtual void* GetFilterDataPtr() override
+		const void* GetFilterDataPtr() const override
 		{
 			return &m_Data;
 		}
