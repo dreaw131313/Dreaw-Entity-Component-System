@@ -194,7 +194,7 @@ namespace decs::light
 		template<light_component_concept ComponentType>
 		inline bool RemoveComponent_NoObserver() const
 		{
-			if (IsValid() )
+			if (IsValid())
 			{
 				return GetContainer_Internal()->RemoveComponent_NoObserver<pure_type_t<ComponentType>>(*this);
 			}
@@ -203,7 +203,7 @@ namespace decs::light
 
 		inline bool RemoveComponent_NoObserver(TypeID componentTypeID) const
 		{
-			if (IsValid() )
+			if (IsValid())
 			{
 				return GetContainer_Internal()->RemoveComponent_NoObserver(*this, componentTypeID);
 			}
@@ -219,7 +219,7 @@ namespace decs::light
 		template<light_component_concept ComponentType>
 		inline bool SetComponent(const ComponentType& componentData)
 		{
-			if (IsValid() )
+			if (IsValid())
 			{
 				return GetContainer_Internal()->SetComponent<pure_type_t<ComponentType>>(*m_EntityData, componentData);
 			}
@@ -235,7 +235,7 @@ namespace decs::light
 		template<light_component_concept ComponentType>
 		inline bool SetComponent_NoObserver(const ComponentType& componentData)
 		{
-			if (IsValid() )
+			if (IsValid())
 			{
 				return GetContainer_Internal()->SetComponent_NoObserver<pure_type_t<ComponentType>>(*m_EntityData, componentData);
 			}

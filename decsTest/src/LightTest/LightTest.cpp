@@ -82,8 +82,7 @@ public:
 
 	TestEntityFilter(int data):
 		Data(data)
-	{ 
-	}
+	{ }
 
 	~TestEntityFilter()
 	{
@@ -105,22 +104,14 @@ STD_HASH(Light::TestEntityFilter)
 BEGIN_NAMESPACE(Light)
 
 
-
-using Entity = decs::light::Entity;
-using ECSContainer = decs::light::Container;
-template<decs::light_component_or_filter_concept... TComps>
-using Query = decs::light::Query<TComps...>;
-template<decs::light_component_or_filter_concept... TComps>
-using MultiQuery = decs::light::MultiQuery<TComps...>;
-
 void Test::Run()
 {
 	std::cout << "/////////////////////////////////////" << "\n";
 	std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
 	std::cout << "/////////////////////////////////////" << "\n";
 
-	//IterationTest();
-	EntityCreatePerformanceTest();
+	IterationTest();
+	//EntityCreatePerformanceTest();
 	//QueryManagerTest();
 	//FilterTest();
 	//RemovingArchetypesTest();
@@ -144,22 +135,7 @@ void Test::IterationTest()
 		.ArchetypeChunkSize = 200,
 	};
 
-	ECSContainer container = { containerConfig };
-
-	/*{
-	Entity prefab = container.CreateEntity();
-
-	prefab.AddComponent<TestComponent>();
-	prefab.AddComponent<Renderer>();
-	prefab.AddTag<FloatTag>();
-	prefab.AddTag<IntTag>();
-	prefab.AddTag<BoolTag>();
-	prefab.AddComponent<Position>(10.f, 10.f);
-
-	prefab.AddComponent<float>();
-
-	container.Spawn(prefab, 9);
-	}*/
+	decs::light::Container container = { containerConfig };
 
 	{
 		using ComponentTypeGroup = decs::LightComponentTypeGroup<TestComponent, Renderer, Position>;
@@ -167,14 +143,15 @@ void Test::IterationTest()
 
 		ComponentTypeGroup componetns{};
 		TagTypeGroup tags{};
+		std::tuple<TestEntityFilter> filters{};
 
-		auto initFunc = [] (const Entity& e, TestComponent& component, Renderer& renderer, Position& position)
+		auto initFunc = [] (const decs::light::Entity & e, TestComponent& component, Renderer& renderer, Position& position)
 		{
 			PrintLine("Init from entity spawner!");
 		};
 
 
-		decs::light::EntitySpawner<ComponentTypeGroup, TagTypeGroup> spawner{ &container };
+		decs::light::EntitySpawner<ComponentTypeGroup, TagTypeGroup, decltype(filters)> spawner{ &container ,filters };
 		spawner.Spawn(10, initFunc);
 
 		decs::light::EntitySpawner<ComponentTypeGroup> spawner2{ &container };
@@ -185,16 +162,16 @@ void Test::IterationTest()
 	}
 
 	uint32_t counter = 0;
-	auto testFunc = [&] (const TestComponent& test)
+	auto testFunc = [&] (const TestComponent& test, const TestEntityFilter& filter)
 	{
 		PrintLine("Test func!");
 	};
-	auto testFuncWithEntity = [&] (const Entity& entity, const TestComponent& test)
+	auto testFuncWithEntity = [&] (const decs::light::Entity& entity, const TestComponent& test, const TestEntityFilter& filter)
 	{
 		PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
 	};
 
-	auto forEachArchetypeFunc = [] (std::span<const TestComponent> components)
+	auto forEachArchetypeFunc = [] (std::span<const TestComponent> components, std::span<const TestEntityFilter> filter)
 	{
 		PrintLine(std::format("{0} component count", components.size()));
 	};
@@ -202,7 +179,7 @@ void Test::IterationTest()
 	if (true)
 	{
 
-		using QueryType = Query<const TestComponent>;
+		using QueryType = decs::light::Query<const TestComponent, decs::filter<TestEntityFilter>>;
 		QueryType query(&container);
 		//query.With< Renderer, Position, FloatTag, IntTag, BoolTag>();
 
@@ -210,14 +187,12 @@ void Test::IterationTest()
 		PrintLine("ForEachArchetype");
 		query.ForEachArchetype(forEachArchetypeFunc);
 
-
 		PrintLine("ForEach");
 		query.ForEach(testFunc);
 
 		PrintLine("Copy query");
 		auto copyQuery = query;
 		copyQuery.ForEach(testFunc);
-
 
 		PrintLine("ForEach With Entity");
 		query.ForEach(testFuncWithEntity);
@@ -251,7 +226,7 @@ void Test::IterationTest()
 
 		auto st = t;
 
-		using QueryType = MultiQuery<const TestComponent>;
+		using QueryType = decs::light::MultiQuery<const TestComponent, decs::filter<TestEntityFilter>>;
 		QueryType query{};
 		query.AddContainer(&container);
 
@@ -296,7 +271,7 @@ void Test::IterationTest()
 	}
 
 	{
-		using EntityQuery = Query<>;
+		using EntityQuery = decs::light::Query<>;
 
 		EntityQuery query{ &container };
 		query.Without<Position>();
@@ -306,7 +281,7 @@ void Test::IterationTest()
 			PrintLine("Empty query iteration");
 		});
 
-		query.ForEach([] (const Entity& e)
+		query.ForEach([] (const decs::light::Entity& e)
 		{
 			PrintLine("Empty query iteration with entity");
 		});
@@ -320,14 +295,14 @@ void Test::ComponentCreationTest()
 		.ArchetypeChunkSize = 200,
 	};
 
-	ECSContainer container = { containerConfig };
+	decs::light::Container container = { containerConfig };
 
-	Entity e = container.CreateEntity();
+	decs::light::Entity e = container.CreateEntity();
 	e.AddComponent<TestComponent>();
 	e.AddComponent<float>();
 	e.AddComponent<double>();
 
-	Entity e2 = container.Spawn(e);
+	decs::light::Entity e2 = container.Spawn(e);
 }
 
 void Test::EntityCreatePerformanceTest()
@@ -335,7 +310,7 @@ void Test::EntityCreatePerformanceTest()
 	size_t entityCounter = 0;
 
 	const uint32_t testCount = 4;
-	const uint32_t entityCount = 65536*4;
+	const uint32_t entityCount = 65536 * 4;
 
 	decs::light::ContainerConfig config{
 		.EntityChunkSize = 10000,
@@ -353,13 +328,6 @@ void Test::EntityCreatePerformanceTest()
 
 	decs::light::EntitySpawner<decltype(comps), decltype(tags), decltype(filters)> entitySpawner{ &container };
 	entitySpawner.SetFilters(filters);
-
-	/*MeasureTimer reserveSpaceTimer(true);
-	{
-		entitySpawner.ReserveSpaceInArchetype(entityCount);
-	}
-	double reserveSpaceTime = reserveSpaceTimer.ElapsedAsMilisecond();
-	PrintLine(std::format("Rerve space time: {0} ms", reserveSpaceTime));*/
 
 	size_t testCounter = 0;
 
@@ -446,12 +414,12 @@ void Test::FilterTest()
 {
 	using FloatTag = decs::tag<float>;
 
-	ECSContainer container{};
+	decs::light::Container container{};
 
 
 	decs::TagTypeGroup<float, int> group{};
 
-	Entity e = container.CreateEntity();
+	decs::light::Entity e = container.CreateEntity();
 
 
 	e.AddComponent<float>(14.0f);
@@ -486,7 +454,7 @@ void Test::FilterTest()
 	auto e2 = container.Spawn(e);
 	e2.SetFilter<TestEntityFilter>(2);
 
-	Query<decs::filter<TestEntityFilter>> queryWithFilter(&container);
+	decs::light::Query<decs::filter<TestEntityFilter>> queryWithFilter(&container);
 
 	queryWithFilter.ForEach([] (const TestEntityFilter& filter)
 	{
@@ -497,11 +465,11 @@ void Test::FilterTest()
 
 void Light::Test::QueryManagerTest()
 {
-	std::unique_ptr<ECSContainer> container = std::make_unique<ECSContainer>();;
+	std::unique_ptr<decs::light::Container> container = std::make_unique<decs::light::Container>();;
 
 	{
-		Query<TestComponent> query{ container.get() };
-		MultiQuery<TestComponent> multiQuery{};
+		decs::light::Query<TestComponent> query{ container.get() };
+		decs::light::MultiQuery<TestComponent> multiQuery{};
 		multiQuery.AddContainer(container.get());
 
 		auto testFunc = [] (TestComponent& component)
@@ -520,7 +488,7 @@ void Light::Test::QueryManagerTest()
 
 		callQueriesForEach();
 
-		Entity e = container->CreateEntity();
+		decs::light::Entity e = container->CreateEntity();
 		e.AddComponent<float>();
 		e.AddComponent<TestComponent>();
 
@@ -534,7 +502,7 @@ void Light::Test::QueryManagerTest()
 
 void Test::RemovingArchetypesTest()
 {
-	ECSContainer ecs{};
+	decs::light::Container ecs{};
 
 	decs::light::ArchetypeDestroyState state{};
 	decs::light::ArchetypeDestroyConfig config{
@@ -558,8 +526,8 @@ void Test::RemovingArchetypesTest()
 		e.AddTag<float>();
 		e.AddTag<decs::tag<int>>();
 
-		e.HasTag<float>();
-		e.HasTag<decs::tag<float>>();
+		bool bHasTag1 = e.HasTag<float>();
+		bool bHasTag2 = e.HasTag<decs::tag<float>>();
 
 		if (e.HasTags<float, decs::tag<int>, bool>())
 		{
@@ -592,39 +560,36 @@ void Test::ObserversTest()
 {
 	decs::light::Container container{};
 
-	container.AddComponentCreateObserver<Position>([] (const Entity& entity, Position& pos)
+	container.AddComponentCreateObserver<Position>([] (const decs::light::Entity& entity, Position& pos)
 	{
 		PrintLine("Position create observer");
 	});
-
-	container.AddComponentDestroyObserver<Position>([] (const Entity& entity, Position pos)
+	container.AddComponentDestroyObserver<Position>([] (const decs::light::Entity& entity, Position pos)
 	{
 		PrintLine("Position destroy observer");
 	});
-
-	container.AddComponentSetObserver<Position>([] (const Entity& entity, Position pos)
+	container.AddComponentSetObserver<Position>([] (const decs::light::Entity& entity, Position pos)
 	{
 		PrintLine("Position set observer");
 	});
 
-	container.AddFilterAddObserver<TestEntityFilter>([] (const Entity& entity, const TestEntityFilter& pos)
+	container.AddFilterAddObserver<TestEntityFilter>([] (const decs::light::Entity& entity, const TestEntityFilter& pos)
 	{
 		PrintLine("TestEntityFilter add observer");
 	});
-
-	container.AddFilterRemoveObserver<TestEntityFilter>([] (const Entity& entity, const TestEntityFilter pos)
+	container.AddFilterRemoveObserver<TestEntityFilter>([] (const decs::light::Entity& entity, const TestEntityFilter pos)
 	{
 		PrintLine("TestEntityFilter remove observer");
 	});
-	container.AddFilterChangeObserver<TestEntityFilter>([] (const Entity& entity, TestEntityFilter oldValue, TestEntityFilter newValue)
+	container.AddFilterChangeObserver<TestEntityFilter>([] (const decs::light::Entity& entity, TestEntityFilter oldValue, TestEntityFilter newValue)
 	{
 		PrintLine("TestEntityFilter change observer");
 	});
 
 
-	Entity e = container.CreateEntity();
-	e.AddComponent<Position>(Position(0,0));
-	e.SetComponent(Position(1,1));
+	decs::light::Entity e = container.CreateEntity();
+	e.AddComponent<Position>(Position(0, 0));
+	e.SetComponent(Position(1, 1));
 	e.RemoveComponent<Position>();
 
 	e.AddFilter<TestEntityFilter>(TestEntityFilter(1));
