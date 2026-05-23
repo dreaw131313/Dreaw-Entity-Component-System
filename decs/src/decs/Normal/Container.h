@@ -147,10 +147,19 @@ namespace decs
 
 			if constexpr (sizeof...(TagTypes) == 0 && sizeof...(ComponentTypes) == 0)
 			{
-				for (uint32_t i = 0; i < entityCount; i++)
+				if constexpr (InvokeObservers)
 				{
-					Entity e = CreateEntity(bIsActive);
-					initFunc(e);
+					for (uint32_t i = 0; i < entityCount; i++)
+					{
+						initFunc(CreateEntity(bIsActive));
+					}
+				}
+				else
+				{
+					for (uint32_t i = 0; i < entityCount; i++)
+					{
+						initFunc(CreateEntity_NoObserver(bIsActive));
+					}
 				}
 			}
 			else
@@ -167,14 +176,15 @@ namespace decs
 
 				std::tuple<TArchetypeTypeData<pure_type_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<pure_type_t<ComponentTypes>>()... };
 
-				auto addComponentType = [&] <typename T>(EntityData& entityData) ->T
+				auto addComponentType = [&] <typename T>(EntityData * entityData) -> pure_type_t<T>*
 				{
 					using PureType = pure_type_t<T>;
 
-					TArchetypeTypeData<PureType> archetypeData = std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(typeDataTuple);
-					T* comp = archetypeData.m_StableContainer->Create();
+					const TArchetypeTypeData<PureType>& archetypeData = std::get<TArchetypeTypeData<PureType>>(typeDataTuple);
+					PureType* comp = archetypeData.m_StableContainer->Create();
 					archetypeData.m_PackedContainer->PushBack(comp);
-					comp->OnPreCreate(&entityData)
+					comp->OnPreCreate(entityData);
+					return comp;
 				};
 
 				auto invokeComponentObservers = [&]<typename T>(
@@ -190,6 +200,8 @@ namespace decs
 					}
 				};
 
+				//std::tuple<pure_type_t<ComponentTypes>*...> createdComponents{};
+
 				for (uint32_t i = 0; i < entityCount; i++)
 				{
 					if (Entity entity = CreateEntityRaw(bIsActive))
@@ -197,9 +209,7 @@ namespace decs
 						EntityData* entityData = GetEntityData(entity);
 						spawnArchetype->AddEntityData(entityData);
 
-						std::tuple<pure_type_t<ComponentTypes>*...> createdComponents = { std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(typeDataTuple).m_StableContainer->Create()... };
-						(std::get<pure_type_t<ComponentTypes>*>(createdComponents)->OnPreCreate(entityData), ...);
-						(std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(typeDataTuple).m_PackedContainer->PushBack(std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+						std::tuple<pure_type_t<ComponentTypes>*...>createdComponents = { addComponentType.operator() < ComponentTypes > (entityData)... };
 
 						if constexpr (InvokeObservers)
 						{
@@ -213,7 +223,8 @@ namespace decs
 								entity,
 								std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(typeDataTuple),
 								std::get<pure_type_t<ComponentTypes>*>(createdComponents)
-								), ...);
+								), ...
+							);
 						}
 
 						if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)

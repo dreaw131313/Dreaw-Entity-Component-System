@@ -245,11 +245,27 @@ namespace decs
 	struct TArchetypeTypeData
 	{
 	public:
+		using PackedContainerType = PackedStableComponentContainer<ComponentType>;
+		using StableContainerType = StableComponentContainer<ComponentType>;
+		using ComponentContextType = ComponentContext<ComponentType>;
+
+	public:
 		PackedStableComponentContainer<ComponentType>* m_PackedContainer = nullptr;
 		StableComponentContainer<ComponentType>* m_StableContainer = nullptr;
 		ComponentContext<ComponentType>* m_ComponentContext = nullptr;
 
 	public:
+		TArchetypeTypeData() = default;
+
+		TArchetypeTypeData(const ArchetypeTypeData& data):
+			m_PackedContainer(::decs::check_cast<PackedContainerType*>(data.m_PackedContainer)),
+			m_StableContainer(::decs::check_cast<StableContainerType*>(data.m_StableContainer)),
+			m_ComponentContext(::decs::check_cast<ComponentContextType*>(data.m_ComponentContext))
+		{
+
+		}
+
+
 		inline bool IsTag() const
 		{
 			return m_PackedContainer != nullptr;
@@ -540,13 +556,7 @@ namespace decs
 				return {};
 			}
 
-			auto& typeData = m_TypeData[compIdx];
-
-			return TArchetypeTypeData<TComponentType>{
-				.m_PackedContainer = decs::check_cast<PackedStableComponentContainer<TComponentType>*>(typeData.m_PackedContainer),
-					.m_StableContainer = decs::check_cast<StableComponentContainer<TComponentType>*>(typeData.m_StableContainer),
-					.m_ComponentContext = decs::check_cast<ComponentContext<TComponentType>*>(typeData.m_ComponentContext),
-			};
+			return TArchetypeTypeData<TComponentType>(m_TypeData[compIdx]);
 		}
 
 		void ClearEntityDataAndComponents();
