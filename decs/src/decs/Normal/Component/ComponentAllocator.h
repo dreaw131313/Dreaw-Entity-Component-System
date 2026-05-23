@@ -65,12 +65,12 @@ namespace decs
 			const uint64_t internalDataOffset = Memory::Align(componentsSize, alignof(InternalComponentData));
 			const uint64_t internalDataSize = m_Capacity * sizeof(InternalComponentData);
 
-			m_MemoryBlockSize = componentsSize + internalDataSize;
+			m_MemoryBlockSize = Memory::Align(internalDataOffset + internalDataSize, alignment);
 
 			m_MemoryBlock = static_cast<std::byte*>(operator new(m_MemoryBlockSize, static_cast<std::align_val_t>(alignment)));
 
 			m_Components = reinterpret_cast<T*>(m_MemoryBlock);
-			m_InternalData = reinterpret_cast<InternalComponentData*>(m_MemoryBlock + componentsSize);
+			m_InternalData = reinterpret_cast<InternalComponentData*>(m_MemoryBlock + internalDataOffset);
 
 			std::uninitialized_default_construct_n(m_InternalData, m_Capacity);
 		}
@@ -87,7 +87,6 @@ namespace decs
 			}
 
 			std::destroy_n(m_InternalData, m_Capacity);
-
 			operator delete(m_MemoryBlock, m_MemoryBlockSize, static_cast<std::align_val_t>(alignof(T)));
 		}
 

@@ -164,11 +164,7 @@ namespace decs
 			}
 			else
 			{
-				Archetype* spawnArchetype = nullptr;
-
-				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<::decs::tag_type_t<TagTypes>>::ID())), ...);
-				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
-
+				Archetype* spawnArchetype = GetArchetypeWithComponentsTags(components, tags);
 				if (spawnArchetype == nullptr)
 				{
 					return;
@@ -293,6 +289,74 @@ namespace decs
 
 
 	private:
+
+		template<ComponentConcept T, ComponentConcept... ComponentTypes>
+		inline void CreateEntity_Impl_AddCompoenent(
+			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
+			EntityData& entityData
+		)
+		{
+			using PureType = pure_type_t<T>;
+
+			const TArchetypeTypeData<PureType>& archetypeData = std::get<TArchetypeTypeData<PureType>>(archetypesData);
+			PureType* comp = archetypeData.m_StableContainer->Create();
+			archetypeData.m_PackedContainer->PushBack(comp);
+			static_cast<EntityComponent*>(comp)->OnPreCreate(entityData);
+			return comp;
+		}
+
+		template<ComponentConcept T, ComponentConcept... ComponentTypes>
+		inline void CreateEntity_Impl_InvokeComponentObservers(
+			const Entity& entity,
+			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
+			T* component
+		)
+		{
+			using PureType = pure_type_t<T>;
+
+			const TArchetypeTypeData<PureType>& archetypeData = std::get<TArchetypeTypeData<PureType>>(archetypesData);
+			archetypeData.m_ComponentContext->InvokeOnCreateComponent(component, entity);
+			if (IsEntityActive(entity))
+			{
+				archetypeData.m_ComponentContext->InvokeOnEnableComponent(component, entity);
+			}
+		};
+
+		template<bool InvokeObservers, typename InitFunc, ComponentConcept... ComponentTypes>
+		inline void CreateEntity_Impl_Initialization(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			Archetype& entityArchetype,
+			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
+			const Entity& entity,
+			EntityData& entityData,
+			InitFunc&& initFunc
+		)
+		{
+			entityArchetype.AddEntityData(entityData);
+
+			std::tuple<pure_type_t<ComponentTypes>*...>createdComponents = { CreateEntity_Impl_AddCompoenent<ComponentTypes>(archetypesData, entityData)... };
+
+			if constexpr (InvokeObservers)
+			{
+				InvokeEntityCreateObserver_Internal(entity);
+				if (entityData.IsActive())
+				{
+					InvokeEntityEnableObserver_Internal(entity);
+				}
+
+				(CreateEntity_Impl_InvokeComponentObservers<pure_type_t<ComponentTypes>>(entity, archetypesData, std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+			}
+
+			if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
+			{
+				initFunc(entity, *std::get<ComponentTypes*>(createdComponents)...);
+			}
+			else
+			{
+				initFunc(*std::get<ComponentTypes*>(createdComponents)...);
+			}
+		}
+
 		/// <summary>
 		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in ComponentTypeGroup parameter.
 		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
@@ -308,7 +372,7 @@ namespace decs
 		/// <returns></returns>
 		template<bool InvokeObservers, typename InitFunc, ComponentConcept... ComponentTypes, typename... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
-		Entity CreateEntity(
+		Entity CreateEntity_Impl(
 			const ComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
 			bool bIsActive,
@@ -341,14 +405,10 @@ namespace decs
 			}
 			else
 			{
-				Archetype* spawnArchetype = nullptr;
-
-				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
-				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
-
+				Archetype* spawnArchetype = GetArchetypeWithComponentsTags(components, tags);
 				if (spawnArchetype == nullptr)
 				{
-					return {};
+					return;
 				}
 
 				std::tuple<TArchetypeTypeData<drop_const_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<drop_const_t<ComponentTypes>>()... };
@@ -866,21 +926,6 @@ namespace decs
 
 	#pragma region TAGS:
 	private:
-		Archetype* GetArchetypeAfterAddTag(Archetype* toArchetype, TypeID tagID)
-		{
-			if (toArchetype == nullptr)
-			{
-				return m_ArchetypesMap.CreateSingleTagArchetype(tagID);
-			}
-
-			return m_ArchetypesMap.GetArchetypeAfterAddTag(*toArchetype, tagID);
-		}
-
-		Archetype* GetArchetypeAfterRemoveTag(Archetype& fromArchetype, TypeID tagID)
-		{
-			return m_ArchetypesMap.GetArchetypeAfterRemoveTag(fromArchetype, tagID);
-		}
-
 		inline bool HasTag(const EntityData& entityData, TypeID tagType)
 		{
 			if (!entityData.IsAlive() || entityData.m_Archetype == nullptr)
@@ -1039,6 +1084,36 @@ namespace decs
 			}
 
 			return entityNewArchetype;
+		}
+
+		Archetype* GetArchetypeAfterAddTag(Archetype* toArchetype, TypeID tagID)
+		{
+			if (toArchetype == nullptr)
+			{
+				return m_ArchetypesMap.CreateSingleTagArchetype(tagID);
+			}
+
+			return m_ArchetypesMap.GetArchetypeAfterAddTag(*toArchetype, tagID);
+		}
+
+		Archetype* GetArchetypeAfterRemoveTag(Archetype& fromArchetype, TypeID tagID)
+		{
+			return m_ArchetypesMap.GetArchetypeAfterRemoveTag(fromArchetype, tagID);
+		}
+
+
+		template<ComponentConcept... ComponentTypes, typename... TagTypes>
+		Archetype* GetArchetypeWithComponentsTags(
+			const ComponentTypeGroup<ComponentTypes...>& components,
+			const TagTypeGroup<TagTypes...>& tags
+		)
+		{
+			Archetype* spawnArchetype = nullptr;
+
+			((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<tag_type_t<TagTypes>>::ID())), ...);
+			((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
+
+			return spawnArchetype;
 		}
 
 	#pragma endregion
@@ -1226,13 +1301,6 @@ namespace decs
 	#pragma endregion
 
 	#pragma region DELAYED DESTROY:
-	public:
-		/// <summary>
-		/// This function clean all entites which was destroyed. It do not invoke any callback observers it only cleans records in archetypes.
-		/// </summary>
-		/// <param name="maxEntitiesToDestroy"></param>
-		void PerformDelayedDestroy(uint64_t maxEntitiesToDestroy = 0);
-
 	private:
 		struct DelayedEntityToDestroy
 		{

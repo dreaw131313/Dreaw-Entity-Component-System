@@ -1205,9 +1205,6 @@ namespace decs
 		}
 	}
 
-	void Container::PerformDelayedDestroy(uint64_t maxEntitiesToDestroy)
-	{ }
-
 	void Container::PerformDelayedDestruction()
 	{
 		RemoveArchetypesRecordsDelayedToRemove();
