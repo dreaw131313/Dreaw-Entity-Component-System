@@ -104,8 +104,8 @@ namespace Normal
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
 
-		//QueryIterationTest();
-		PerformanceTest();
+		QueryIterationTest();
+		//PerformanceTest();
 	}
 
 	void Test::QueryIterationTest()
@@ -131,23 +131,6 @@ namespace Normal
 
 			decs::Container container = { containerConfig };
 			observerManager.FillContainerObservers(container);
-
-			/*container.Spawn(prefab, true);
-			container.Spawn(prefab, 9, true);*/
-
-			{
-				auto e = container.CreateEntity();
-				e.AddComponent_NoObserver<TestComponent>();
-				e.AddComponent_NoObserver<Position>();
-
-				e.AddTag<float>();
-				e.HasTags<float, decs::tag<int>>();
-				e.HasTag<decs::tag<int>>();
-
-				auto [pos, test, hevyDataComp] = e.GetComponents<Position, TestComponent, HeavyDataComponent>();
-
-				container.InvokeEntitesOnCreateListeners();
-			}
 
 			{
 				decs::ComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
@@ -377,10 +360,10 @@ namespace Normal
 					{
 
 					});*/
-					container.CreateEntities(comps,tags, entityCount, true, [] (Position& pos, TestComponent& test)
+					/*container.CreateEntities(comps,tags, entityCount, true, [] (Position& pos, TestComponent& test)
 					{
 					
-					});
+					});*/
 
 					/*container.CreateEntities(comps, entityCount, [] (Position& pos, TestComponent& test)
 					{

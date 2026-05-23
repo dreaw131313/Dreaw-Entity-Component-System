@@ -118,6 +118,74 @@ namespace decs
 		}
 
 	private:
+
+		template<ComponentConcept T, ComponentConcept... ComponentTypes>
+		inline pure_type_t<T>* CreateEntity_Impl_AddCompoenent(
+			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
+			EntityData& entityData
+		)
+		{
+			using PureType = pure_type_t<T>;
+
+			const TArchetypeTypeData<PureType>& archetypeData = std::get<TArchetypeTypeData<PureType>>(archetypesData);
+			PureType* comp = archetypeData.m_StableContainer->Create();
+			archetypeData.m_PackedContainer->PushBack(comp);
+			static_cast<EntityComponent*>(comp)->OnPreCreate(&entityData);
+			return comp;
+		}
+
+		template<ComponentConcept T, ComponentConcept... ComponentTypes>
+		inline void CreateEntity_Impl_InvokeComponentObservers(
+			const Entity& entity,
+			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
+			T* component
+		)
+		{
+			using PureType = pure_type_t<T>;
+
+			const TArchetypeTypeData<PureType>& archetypeData = std::get<TArchetypeTypeData<PureType>>(archetypesData);
+			archetypeData.m_ComponentContext->InvokeOnCreateComponent(component, entity);
+			if (IsEntityActive(entity))
+			{
+				archetypeData.m_ComponentContext->InvokeOnEnableComponent(component, entity);
+			}
+		};
+
+		template<bool InvokeObservers, typename InitFunc, ComponentConcept... ComponentTypes>
+		inline void CreateEntity_Impl_Initialization(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			Archetype& entityArchetype,
+			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
+			const Entity& entity,
+			EntityData& entityData,
+			InitFunc&& initFunc
+		)
+		{
+			entityArchetype.AddEntityData(&entityData);
+
+			std::tuple<pure_type_t<ComponentTypes>*...>createdComponents = { CreateEntity_Impl_AddCompoenent<ComponentTypes>(archetypesData, entityData)... };
+
+			if constexpr (InvokeObservers)
+			{
+				InvokeEntityCreateObserver_Internal(entity);
+				if (entityData.IsActive())
+				{
+					InvokeEntityEnableObserver_Internal(entity);
+				}
+
+				(CreateEntity_Impl_InvokeComponentObservers<pure_type_t<ComponentTypes>>(entity, archetypesData, std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+			}
+
+			if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
+			{
+				initFunc(entity, *std::get<ComponentTypes*>(createdComponents)...);
+			}
+			else
+			{
+				initFunc(*std::get<ComponentTypes*>(createdComponents)...);
+			}
+		}
+
 		/// <summary>
 		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in ComponentTypeGroup parameter.
 		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
@@ -164,71 +232,20 @@ namespace decs
 			}
 			else
 			{
-				Archetype* spawnArchetype = GetArchetypeWithComponentsTags(components, tags);
-				if (spawnArchetype == nullptr)
+				Archetype* archetype = GetArchetypeWithComponentsTags(components, tags);
+				if (archetype == nullptr)
 				{
 					return;
 				}
 
-				std::tuple<TArchetypeTypeData<pure_type_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<pure_type_t<ComponentTypes>>()... };
-
-				auto addComponentType = [&] <typename T>(EntityData * entityData) -> pure_type_t<T>*
-				{
-					using PureType = pure_type_t<T>;
-
-					const TArchetypeTypeData<PureType>& archetypeData = std::get<TArchetypeTypeData<PureType>>(typeDataTuple);
-					PureType* comp = archetypeData.m_StableContainer->Create();
-					archetypeData.m_PackedContainer->PushBack(comp);
-					comp->OnPreCreate(entityData);
-					return comp;
-				};
-
-				auto invokeComponentObservers = [&]<typename T>(
-					const Entity & entity,
-					const TArchetypeTypeData<pure_type_t<T>>&typeData,
-					pure_type_t<T>*component
-					)
-				{
-					typeData.m_ComponentContext->InvokeOnCreateComponent(component, entity);
-					if (IsEntityActive(entity))
-					{
-						typeData.m_ComponentContext->InvokeOnEnableComponent(component, entity);
-					}
-				};
+				std::tuple<TArchetypeTypeData<pure_type_t<ComponentTypes>>...> componentTypesDataTuple = { archetype->GetTypeData<pure_type_t<ComponentTypes>>()... };
 
 				for (uint32_t i = 0; i < entityCount; i++)
 				{
 					if (Entity entity = CreateEntityRaw(bIsActive))
 					{
 						EntityData* entityData = GetEntityData(entity);
-						spawnArchetype->AddEntityData(entityData);
-
-						std::tuple<pure_type_t<ComponentTypes>*...>createdComponents = { addComponentType.operator() < ComponentTypes > (entityData)... };
-
-						if constexpr (InvokeObservers)
-						{
-							InvokeEntityCreateObserver_Internal(entity);
-							if (bIsActive)
-							{
-								InvokeEntityEnableObserver_Internal(entity);
-							}
-
-							(invokeComponentObservers.operator () < pure_type_t<ComponentTypes> > (
-								entity,
-								std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(typeDataTuple),
-								std::get<pure_type_t<ComponentTypes>*>(createdComponents)
-								), ...
-							);
-						}
-
-						if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
-						{
-							initFunc(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)...);
-						}
-						else
-						{
-							initFunc(*std::get<pure_type_t<ComponentTypes>*>(createdComponents)...);
-						}
+						CreateEntity_Impl_Initialization<InvokeObservers>(components, *archetype, componentTypesDataTuple, entity, *entityData, initFunc);
 					}
 				}
 			}
@@ -290,73 +307,6 @@ namespace decs
 
 	private:
 
-		template<ComponentConcept T, ComponentConcept... ComponentTypes>
-		inline void CreateEntity_Impl_AddCompoenent(
-			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
-			EntityData& entityData
-		)
-		{
-			using PureType = pure_type_t<T>;
-
-			const TArchetypeTypeData<PureType>& archetypeData = std::get<TArchetypeTypeData<PureType>>(archetypesData);
-			PureType* comp = archetypeData.m_StableContainer->Create();
-			archetypeData.m_PackedContainer->PushBack(comp);
-			static_cast<EntityComponent*>(comp)->OnPreCreate(entityData);
-			return comp;
-		}
-
-		template<ComponentConcept T, ComponentConcept... ComponentTypes>
-		inline void CreateEntity_Impl_InvokeComponentObservers(
-			const Entity& entity,
-			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
-			T* component
-		)
-		{
-			using PureType = pure_type_t<T>;
-
-			const TArchetypeTypeData<PureType>& archetypeData = std::get<TArchetypeTypeData<PureType>>(archetypesData);
-			archetypeData.m_ComponentContext->InvokeOnCreateComponent(component, entity);
-			if (IsEntityActive(entity))
-			{
-				archetypeData.m_ComponentContext->InvokeOnEnableComponent(component, entity);
-			}
-		};
-
-		template<bool InvokeObservers, typename InitFunc, ComponentConcept... ComponentTypes>
-		inline void CreateEntity_Impl_Initialization(
-			const ComponentTypeGroup<ComponentTypes...> components,
-			Archetype& entityArchetype,
-			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
-			const Entity& entity,
-			EntityData& entityData,
-			InitFunc&& initFunc
-		)
-		{
-			entityArchetype.AddEntityData(entityData);
-
-			std::tuple<pure_type_t<ComponentTypes>*...>createdComponents = { CreateEntity_Impl_AddCompoenent<ComponentTypes>(archetypesData, entityData)... };
-
-			if constexpr (InvokeObservers)
-			{
-				InvokeEntityCreateObserver_Internal(entity);
-				if (entityData.IsActive())
-				{
-					InvokeEntityEnableObserver_Internal(entity);
-				}
-
-				(CreateEntity_Impl_InvokeComponentObservers<pure_type_t<ComponentTypes>>(entity, archetypesData, std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
-			}
-
-			if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
-			{
-				initFunc(entity, *std::get<ComponentTypes*>(createdComponents)...);
-			}
-			else
-			{
-				initFunc(*std::get<ComponentTypes*>(createdComponents)...);
-			}
-		}
-
 		/// <summary>
 		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in ComponentTypeGroup parameter.
 		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
@@ -403,73 +353,20 @@ namespace decs
 					}
 				}
 			}
-			else
+
+			Archetype* archetype = GetArchetypeWithComponentsTags(components, tags);
+			if (archetype == nullptr)
 			{
-				Archetype* spawnArchetype = GetArchetypeWithComponentsTags(components, tags);
-				if (spawnArchetype == nullptr)
-				{
-					return;
-				}
+				return;
+			}
 
-				std::tuple<TArchetypeTypeData<drop_const_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<drop_const_t<ComponentTypes>>()... };
+			std::tuple<TArchetypeTypeData<pure_type_t<ComponentTypes>>...> componentTypesDataTuple = { archetype->GetTypeData<pure_type_t<ComponentTypes>>()... };
 
-				auto addComponentType = [&] <typename T>(EntityData * entityData) -> pure_type_t<T>*
-				{
-					using PureType = pure_type_t<T>;
-
-					const TArchetypeTypeData<PureType>& archetypeData = std::get<TArchetypeTypeData<PureType>>(typeDataTuple);
-					PureType* comp = archetypeData.m_StableContainer->Create();
-					archetypeData.m_PackedContainer->PushBack(comp);
-					comp->OnPreCreate(entityData);
-					return comp;
-				};
-
-				auto invokeComponentObservers = [&]<typename T>(
-					const Entity & entity,
-					const TArchetypeTypeData<drop_const_t<T>>&typeData,
-					drop_const_t<T>*component
-					)
-				{
-					typeData.m_ComponentContext->InvokeOnCreateComponent(component, entity);
-					if (IsEntityActive(entity))
-					{
-						typeData.m_ComponentContext->InvokeOnEnableComponent(component, entity);
-					}
-				};
-
-				if (Entity entity = CreateEntityRaw(bIsActive))
-				{
-					EntityData* entityData = GetEntityData(entity);
-					spawnArchetype->AddEntityData(entityData);
-
-					std::tuple<pure_type_t<ComponentTypes>*...>createdComponents = { addComponentType.operator() < ComponentTypes > (entityData)... };
-
-					if constexpr (InvokeObservers)
-					{
-						InvokeEntityCreateObserver_Internal(entity);
-						if (bIsActive)
-						{
-							InvokeEntityEnableObserver_Internal(entity);
-						}
-
-						(invokeComponentObservers.operator () < drop_const_t<ComponentTypes> > (
-							entity,
-							std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple),
-							std::get<drop_const_t<ComponentTypes>*>(createdComponents)
-							), ...);
-					}
-
-					if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
-					{
-						initFunc(entity, *std::get<ComponentTypes*>(createdComponents)...);
-					}
-					else
-					{
-						initFunc(*std::get<ComponentTypes*>(createdComponents)...);
-					}
-
-					return entity;
-				}
+			if (Entity entity = CreateEntityRaw(bIsActive))
+			{
+				EntityData* entityData = GetEntityData(entity);
+				CreateEntity_Impl_Initialization<InvokeObservers>(components, *archetype, componentTypesDataTuple, entity, *entityData, initFunc);
+				return entity;
 			}
 
 			return Entity();
