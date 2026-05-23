@@ -11,7 +11,7 @@ namespace Normal
 	private:
 		void QueryIterationTest();
 
-		void PerformanceTest();
+		void EntityCreatePerformanceTest();
 	};
 
 }

@@ -749,7 +749,7 @@ namespace decs::light
 
 			for (uint64_t i = filter.GetMinComponentFilterCount(); i <= maxComponentCountsInGroup; i++)
 			{
-				std::span<Archetype*> archetypes = group->GetArchetypesWithComponentTagFilterCount(i);
+				std::span<const Archetype* const> archetypes = group->GetArchetypesWithComponentTagFilterCount(i);
 				for (auto archetype : archetypes)
 				{
 					TryAddArchetype(*archetype, filter);

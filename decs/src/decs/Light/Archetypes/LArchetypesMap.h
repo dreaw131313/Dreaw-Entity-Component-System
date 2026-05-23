@@ -84,7 +84,7 @@ namespace decs::light
 		bool m_bDestroyOnlyArchetypesWithFilters = true;
 	};
 
-	struct ArchetypeGroup : public ChunkAllocatorResource
+	struct ArchetypeGroup
 	{
 	public:
 		std::vector<Archetype*> Archetypes;
@@ -92,9 +92,9 @@ namespace decs::light
 	public:
 		ArchetypeGroup() = default;
 
-		inline uint32_t GetArchetypeCount() const noexcept
+		inline size_t GetArchetypeCount() const noexcept
 		{
-			return static_cast<uint32_t>(Archetypes.size());
+			return Archetypes.size();
 		}
 	};
 
@@ -108,25 +108,14 @@ namespace decs::light
 	class ArchetypesGroupByOneType : public ChunkAllocatorResource
 	{
 	public:
-		ArchetypesGroupByOneType(
-			TChunkAllocator<ArchetypeGroup>& archetypeGroupAllocator,
-			TypeID id,
-			EArchetypesGroupType groupType
-		):
-			m_ArchetypeGroupAllocator(archetypeGroupAllocator),
+		ArchetypesGroupByOneType(TypeID id, EArchetypesGroupType groupType):
 			m_MainTypeID(id),
 			m_GroupType(groupType)
 		{
 
 		}
 
-		~ArchetypesGroupByOneType()
-		{
-			for (auto group : m_Groups)
-			{
-				m_ArchetypeGroupAllocator.Destroy(group);
-			}
-		}
+		~ArchetypesGroupByOneType() = default;
 
 		EArchetypesGroupType GetGroupType() const noexcept
 		{
@@ -199,11 +188,7 @@ namespace decs::light
 			}
 
 			auto& archetypeGroup = m_Groups[componentTagFilterCount - 1];
-			if (archetypeGroup == nullptr)
-			{
-				archetypeGroup = m_ArchetypeGroupAllocator.Create();
-			}
-			archetypeGroup->Archetypes.push_back(archetype);
+			archetypeGroup.Archetypes.push_back(archetype);
 		}
 
 		void RemoveArchetype(Archetype* archetype)
@@ -220,7 +205,7 @@ namespace decs::light
 				return;
 			}
 
-			auto& archetypes = m_Groups[componentTagFilterCount - 1]->Archetypes;
+			auto& archetypes = m_Groups[componentTagFilterCount - 1].Archetypes;
 			for (size_t idx = 0; idx < archetypes.size(); idx++)
 			{
 				if (archetypes[idx] == archetype)
@@ -241,19 +226,15 @@ namespace decs::light
 			}
 		}
 
-		std::span<Archetype*> GetArchetypesWithComponentTagFilterCount(uint64_t componentsCount) const
+		std::span<const Archetype* const> GetArchetypesWithComponentTagFilterCount(uint64_t componentsCount) const
 		{
 			uint64_t groupIndex = componentsCount - 1;
 			if (groupIndex >= m_Groups.size())
 			{
 				return {};
 			}
-			auto group = m_Groups[groupIndex];
-			if (group == nullptr)
-			{
-				return {};
-			}
-			return group->Archetypes;
+
+			return m_Groups[groupIndex].Archetypes;
 		}
 
 		const ArchetypeGroup* GetGroupWithComponentTagFilterCount(uint64_t componentsCount) const
@@ -263,7 +244,7 @@ namespace decs::light
 			{
 				return nullptr;
 			}
-			return m_Groups[groupIndex];
+			return &m_Groups[groupIndex];
 		}
 
 		inline Archetype* GetSingleComponentArchetype() const
@@ -273,12 +254,8 @@ namespace decs::light
 				return nullptr;
 			}
 
-			auto group = m_Groups.front();
-			if (group == nullptr || group->Archetypes.empty())
-			{
-				return nullptr;
-			}
-			return group->Archetypes.front();
+			auto& group = m_Groups.front();
+			return group.Archetypes.empty() ? nullptr : group.Archetypes.front();
 		}
 
 		template<typename Callable>
@@ -287,23 +264,16 @@ namespace decs::light
 			uint64_t archetypesGroupCount = m_Groups.size();
 			for (uint64_t groupIdx = 0; groupIdx < archetypesGroupCount; groupIdx++)
 			{
-				auto group = m_Groups[groupIdx];
-				if (group != nullptr)
+				auto& group = m_Groups[groupIdx];
+				for (auto& archetype : group.Archetypes)
 				{
-					auto& groupArchetypes = group->Archetypes;
-					uint64_t archetypeCount = groupArchetypes.size();
-					for (uint64_t archIdx = 0; archIdx < archetypeCount; archIdx++)
-					{
-						auto archetype = groupArchetypes[archIdx];
-						func(archetype);
-					}
+					func(archetype);
 				}
 			}
 		}
 
 	private:
-		TChunkAllocator<ArchetypeGroup>& m_ArchetypeGroupAllocator;
-		std::vector<ArchetypeGroup*> m_Groups{};
+		std::vector<ArchetypeGroup> m_Groups{};
 		size_t m_ArchetypesCount = 0;
 
 		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
@@ -421,7 +391,6 @@ namespace decs::light
 		QueryManager& m_QueryManager;
 
 		ArchetypeAllocator m_ArchetypeAllocator;
-		TChunkAllocator<ArchetypeGroup> m_ArchetypesGroupsAllocator{ 100 };
 		TChunkAllocator<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };
 
 		ecsMap<ArchetypeDataKey, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};

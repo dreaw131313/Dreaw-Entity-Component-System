@@ -638,7 +638,10 @@ namespace decs
 
 	private:
 
-		inline bool ContainArchetype(Archetype* arch) const { return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end(); }
+		inline bool ContainArchetype(const Archetype* arch) const
+		{
+			return m_ContainedArchetypes.find(arch) != m_ContainedArchetypes.end();
+		}
 
 		ArchetypesGroupByOneType* GetBestArchetypesGroup(const TypeGroup<ComponentsTypes...>& includes)
 		{
@@ -664,7 +667,7 @@ namespace decs
 			return bestGroup;
 		}
 
-		void TryAddArchetypeFromGroup(Archetype& archetype, const QueryFilterConfigType& filter)
+		void TryAddArchetypeFromGroup(const Archetype& archetype, const QueryFilterConfigType& filter)
 		{
 			if (!ContainArchetype(&archetype) && archetype.GetComponentAndTagCount())
 			{
@@ -733,7 +736,7 @@ namespace decs
 
 			for (uint64_t i = filter.GetMinComponentsCount(); i <= maxComponentCountsInGroup; i++)
 			{
-				std::span<Archetype*> archetypes = group->GetArchetypesWithTypeCount(i);
+				std::span<const Archetype* const> archetypes = group->GetArchetypesWithTypeCount(i);
 				for (auto archetype : archetypes)
 				{
 					TryAddArchetypeFromGroup(*archetype, filter);

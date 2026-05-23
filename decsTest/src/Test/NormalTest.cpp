@@ -105,7 +105,7 @@ namespace Normal
 		std::cout << "///////////////////////////////////////////" << "\n";
 
 		QueryIterationTest();
-		//PerformanceTest();
+		EntityCreatePerformanceTest();
 	}
 
 	void Test::QueryIterationTest()
@@ -304,12 +304,12 @@ namespace Normal
 		}
 	}
 
-	void Test::PerformanceTest()
+	void Test::EntityCreatePerformanceTest()
 	{
 		size_t entityCounter = 0;
 
-		const uint32_t testCount = 1;
-		const uint32_t entityCount = 65536;
+		const uint32_t testCount = 10;
+		const uint32_t entityCount = 2000;
 
 		decs::ContainerConfig config{
 			.EntityChunkSize = 10000,
@@ -360,10 +360,10 @@ namespace Normal
 					{
 
 					});*/
-					/*container.CreateEntities(comps,tags, entityCount, true, [] (Position& pos, TestComponent& test)
+					container.CreateEntities(comps, tags, entityCount, true, [] (Position& pos, TestComponent& test)
 					{
-					
-					});*/
+
+					});
 
 					/*container.CreateEntities(comps, entityCount, [] (Position& pos, TestComponent& test)
 					{

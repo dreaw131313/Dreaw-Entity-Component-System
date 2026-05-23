@@ -825,7 +825,7 @@ namespace decs
 		{
 			m_ComponentContextManager.IterateOverComponentContexts([&] (IComponentContext* componentContext)
 			{
-				TypeID componentTypeID = componentContext->GetComponentTypeID();
+				const TypeID componentTypeID = componentContext->GetComponentTypeID();
 
 				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&] (Archetype* archetype)
 				{

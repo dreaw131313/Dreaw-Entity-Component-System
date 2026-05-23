@@ -110,8 +110,8 @@ void Test::Run()
 	std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
 	std::cout << "/////////////////////////////////////" << "\n";
 
-	IterationTest();
-	//EntityCreatePerformanceTest();
+	//IterationTest();
+	EntityCreatePerformanceTest();
 	//QueryManagerTest();
 	//FilterTest();
 	//RemovingArchetypesTest();
@@ -145,7 +145,7 @@ void Test::IterationTest()
 		TagTypeGroup tags{};
 		std::tuple<TestEntityFilter> filters{};
 
-		auto initFunc = [] (const decs::light::Entity & e, TestComponent& component, Renderer& renderer, Position& position)
+		auto initFunc = [] (const decs::light::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
 		{
 			PrintLine("Init from entity spawner!");
 		};
@@ -310,7 +310,7 @@ void Test::EntityCreatePerformanceTest()
 	size_t entityCounter = 0;
 
 	const uint32_t testCount = 4;
-	const uint32_t entityCount = 65536 * 4;
+	const uint32_t entityCount = 65536;
 
 	decs::light::ContainerConfig config{
 		.EntityChunkSize = 10000,
@@ -339,10 +339,10 @@ void Test::EntityCreatePerformanceTest()
 		{
 			MeasureTimer timer(true);
 			{
-				entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
+				/*entitySpawner.Spawn(entityCount, [] (Position& pos, TestComponent& test)
 				{
 
-				});
+				});*/
 
 				/*for (size_t i = 0; i < entityCount; i++)
 				{
@@ -367,10 +367,16 @@ void Test::EntityCreatePerformanceTest()
 				//	});*/
 				//}
 
+				container.CreateEntities(comps, tags, entityCount, [] (Position& pos, TestComponent& test)
+				{
+
+				});
+
 				/*container.CreateEntities(comps, tags, filters, entityCount, [] (Position& pos, TestComponent& test)
 				{
 
 				});*/
+
 				/*container.CreateEntities(comps, entityCount, [] (Position& pos, TestComponent& test)
 				{
 

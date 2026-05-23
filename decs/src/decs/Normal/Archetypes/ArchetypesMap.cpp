@@ -22,11 +22,7 @@ namespace decs
 		}
 
 		auto& archetypeGroup = m_Groups[componentAndTagCount - 1];
-		if (archetypeGroup == nullptr)
-		{
-			archetypeGroup = &m_ArchetypeGroupAllocator.EmplaceBack();
-		}
-		archetypeGroup->Archetypes.push_back(archetype);
+		archetypeGroup.Archetypes.push_back(archetype);
 	}
 
 	ArchetypesMap::ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize):
@@ -125,7 +121,7 @@ namespace decs
 			if (currentAddTypeGroup != nullptr && currentAddTypeGroup->GetArchetypeCount() < bestAddTypeArchetypeCount)
 			{
 				bestAddTypeGroup = currentAddTypeGroup;
-				bestAddTypeArchetypeCount = currentAddTypeGroup->GetArchetypeCount();
+				bestAddTypeArchetypeCount = static_cast<uint32_t>(currentAddTypeGroup->GetArchetypeCount());
 			}
 
 			if (typeCount > 1)

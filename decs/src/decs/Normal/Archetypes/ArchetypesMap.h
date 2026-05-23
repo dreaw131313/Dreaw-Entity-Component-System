@@ -68,20 +68,16 @@ namespace decs
 	public:
 		ArchetypeGroup() = default;
 
-		inline uint32_t GetArchetypeCount() const noexcept
+		inline size_t GetArchetypeCount() const noexcept
 		{
-			return static_cast<uint32_t>(Archetypes.size());
+			return Archetypes.size();
 		}
 	};
 
 	class ArchetypesGroupByOneType
 	{
 	public:
-		ArchetypesGroupByOneType(
-			TChunkedVector<ArchetypeGroup>& archetypeGroupAllocator,
-			TypeID mainTypeID
-		):
-			m_ArchetypeGroupAllocator(archetypeGroupAllocator),
+		ArchetypesGroupByOneType(TypeID mainTypeID):
 			m_MainTypeID(mainTypeID)
 		{
 
@@ -109,19 +105,15 @@ namespace decs
 
 		void AddArchetype(Archetype* archetype);
 
-		std::span<Archetype*> GetArchetypesWithTypeCount(uint64_t componentsCount) const
+		std::span<const Archetype* const> GetArchetypesWithTypeCount(uint64_t componentsCount) const
 		{
 			uint64_t groupIndex = componentsCount - 1;
 			if (groupIndex >= m_Groups.size())
 			{
 				return {};
 			}
-			auto group = m_Groups[groupIndex];
-			if (group == nullptr)
-			{
-				return {};
-			}
-			return group->Archetypes;
+			auto& group = m_Groups[groupIndex];
+			return group.Archetypes;
 		}
 
 		const ArchetypeGroup* GetGroupWithTypeCount(uint64_t componentsCount) const
@@ -131,7 +123,7 @@ namespace decs
 			{
 				return nullptr;
 			}
-			return m_Groups[groupIndex];
+			return &m_Groups[groupIndex];
 		}
 
 		inline Archetype* GetSingleComponentArchetype() const
@@ -141,12 +133,8 @@ namespace decs
 				return nullptr;
 			}
 
-			auto group = m_Groups.front();
-			if (group == nullptr || group->Archetypes.empty())
-			{
-				return nullptr;
-			}
-			return group->Archetypes.front();
+			auto& group = m_Groups.front();
+			return group.Archetypes.empty() ? nullptr : group.Archetypes.front();
 		}
 
 		template<typename Callable>
@@ -155,25 +143,18 @@ namespace decs
 			uint64_t archetypesGroupCount = m_Groups.size();
 			for (uint64_t groupIdx = 0; groupIdx < archetypesGroupCount; groupIdx++)
 			{
-				auto group = m_Groups[groupIdx];
-				if (group != nullptr)
+				auto& group = m_Groups[groupIdx];
+				for (auto& archetype : group.Archetypes)
 				{
-					auto& groupArchetypes = group->Archetypes;
-					uint64_t archetypeCount = groupArchetypes.size();
-					for (uint64_t archIdx = 0; archIdx < archetypeCount; archIdx++)
-					{
-						auto archetype = groupArchetypes[archIdx];
-						func(archetype);
-					}
+					func(archetype);
 				}
 			}
 		}
 
 	private:
-		TChunkedVector<ArchetypeGroup>& m_ArchetypeGroupAllocator;
 		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
 		Archetype* m_MainTypeArchetype = nullptr;
-		std::vector<ArchetypeGroup*> m_Groups;
+		std::vector<ArchetypeGroup> m_Groups;
 		uint64_t m_ArchetypesCount = 0;
 	};
 
@@ -235,7 +216,7 @@ namespace decs
 			auto it = m_ArchetypesGroupedByOneType.find(Type<TComponent>::ID());
 			if (it != m_ArchetypesGroupedByOneType.end())
 			{
-				it->second->IterateOverAllArchetypes([](Archetype* arch)
+				it->second->IterateOverAllArchetypes([] (Archetype* arch)
 				{
 					arch->UpdateOrderOfComponentContexts();
 				});
@@ -247,7 +228,7 @@ namespace decs
 			auto it = m_ArchetypesGroupedByOneType.find(typeID);
 			if (it != m_ArchetypesGroupedByOneType.end())
 			{
-				it->second->IterateOverAllArchetypes([](Archetype* arch)
+				it->second->IterateOverAllArchetypes([] (Archetype* arch)
 				{
 					arch->UpdateOrderOfComponentContexts();
 				});
@@ -288,7 +269,6 @@ namespace decs
 		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
 
 		TChunkedVector<Archetype> m_Archetypes{ 100 };
-		TChunkedVector<ArchetypeGroup> m_ArchetypesGroupsAllocator{ 100 };
 		TChunkedVector<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };
 
 		uint32_t m_MaxComponentTagFilterCount = 0;
@@ -320,7 +300,7 @@ namespace decs
 			ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
 			if (group == nullptr)
 			{
-				group = &m_ArchetypesGroupsByOneTypeAllocator.EmplaceBack(m_ArchetypesGroupsAllocator, id);
+				group = &m_ArchetypesGroupsByOneTypeAllocator.EmplaceBack(id);
 			}
 			return group;
 		}

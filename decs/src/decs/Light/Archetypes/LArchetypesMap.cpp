@@ -181,7 +181,7 @@ namespace decs::light
 		ArchetypesGroupByOneType*& group = m_ArchetypesGroupedByOneType[id];
 		if (group == nullptr)
 		{
-			group = m_ArchetypesGroupsByOneTypeAllocator.Create(m_ArchetypesGroupsAllocator, id.m_TypeID, groupType);
+			group = m_ArchetypesGroupsByOneTypeAllocator.Create(id.m_TypeID, groupType);
 		}
 		return group;
 	}
