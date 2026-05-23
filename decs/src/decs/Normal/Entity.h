@@ -466,15 +466,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				if constexpr (tag_concept<TagType>)
-				{
-					return GetContainer()->HasTag<TagType>(*m_EntityData);
-				}
-				else
-				{
-					return GetContainer()->HasTag<tag<TagType>>(*m_EntityData);
-				}
-
+				return GetContainer()->HasTag<::decs::tag_type_t<TagType>>(*m_EntityData);
 			}
 			return false;
 		}
@@ -494,14 +486,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				if constexpr (tag_concept<TagType>)
-				{
-					return GetContainer()->AddTag<TagType>(*m_EntityData);
-				}
-				else
-				{
-					return GetContainer()->AddTag<tag<TagType>>(*m_EntityData);
-				}
+				return GetContainer()->AddTag<::decs::tag_type_t<TagType>>(*m_EntityData);
 			}
 			return false;
 		}
@@ -525,14 +510,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				if constexpr (tag_concept<TagType>)
-				{
-					return GetContainer()->RemoveTag<TagType>(*m_EntityData);
-				}
-				else
-				{
-					return GetContainer()->RemoveTag<tag<TagType>>(*m_EntityData);
-				}
+				return GetContainer()->RemoveTag<::decs::tag_type_t<TagType>>(*m_EntityData);
 			}
 			return false;
 		}

@@ -3,8 +3,8 @@
 
 int main()
 {
-	Light::Test{}.Run();
-	//Normal::Test{}.Run();
+	//Light::Test{}.Run();
+	Normal::Test{}.Run();
 
 	return 0;
 }

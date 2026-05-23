@@ -117,6 +117,7 @@ namespace decs
 			return m_EmptyEntities.size();
 		}
 
+	private:
 		/// <summary>
 		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in ComponentTypeGroup parameter.
 		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
@@ -129,7 +130,7 @@ namespace decs
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<typename InitFunc, TComponentConcept... ComponentTypes, tag_concept... TagTypes>
+		template<bool InvokeObservers, typename InitFunc, TComponentConcept... ComponentTypes, typename... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -156,61 +157,90 @@ namespace decs
 			{
 				Archetype* spawnArchetype = nullptr;
 
-				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
+				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<::decs::tag_type_t<TagTypes>>::ID())), ...);
 				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
 
-				if (spawnArchetype != nullptr)
+				if (spawnArchetype == nullptr)
 				{
-					std::tuple<TArchetypeTypeData<drop_const_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<drop_const_t<ComponentTypes>>()... };
+					return;
+				}
 
-					auto invokeComponentObservers = [&]<typename T>(
-						const Entity & entity,
-						const TArchetypeTypeData<drop_const_t<T>>&typeData,
-						drop_const_t<T>*component
-						)
+				std::tuple<TArchetypeTypeData<pure_type_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<pure_type_t<ComponentTypes>>()... };
+
+				auto addComponentType = [&] <typename T>(EntityData& entityData) ->T
+				{
+					using PureType = pure_type_t<T>;
+
+					TArchetypeTypeData<PureType> archetypeData = std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(typeDataTuple);
+					T* comp = archetypeData.m_StableContainer->Create();
+					archetypeData.m_PackedContainer->PushBack(comp);
+					comp->OnPreCreate(&entityData)
+				};
+
+				auto invokeComponentObservers = [&]<typename T>(
+					const Entity & entity,
+					const TArchetypeTypeData<pure_type_t<T>>&typeData,
+					pure_type_t<T>*component
+					)
+				{
+					typeData.m_ComponentContext->InvokeOnCreateComponent(component, entity);
+					if (IsEntityActive(entity))
 					{
-						typeData.m_ComponentContext->InvokeOnCreateComponent(component, entity);
-						if (IsEntityActive(entity))
-						{
-							typeData.m_ComponentContext->InvokeOnEnableComponent(component, entity);
-						}
-					};
+						typeData.m_ComponentContext->InvokeOnEnableComponent(component, entity);
+					}
+				};
 
-					for (uint32_t i = 0; i < entityCount; i++)
+				for (uint32_t i = 0; i < entityCount; i++)
+				{
+					if (Entity entity = CreateEntityRaw(bIsActive))
 					{
-						if (Entity entity = CreateEntityRaw(bIsActive))
+						EntityData* entityData = GetEntityData(entity);
+						spawnArchetype->AddEntityData(entityData);
+
+						std::tuple<pure_type_t<ComponentTypes>*...> createdComponents = { std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(typeDataTuple).m_StableContainer->Create()... };
+						(std::get<pure_type_t<ComponentTypes>*>(createdComponents)->OnPreCreate(entityData), ...);
+						(std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(typeDataTuple).m_PackedContainer->PushBack(std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+
+						if constexpr (InvokeObservers)
 						{
-							EntityData* entityData = GetEntityData(entity);
-							spawnArchetype->AddEntityData(entityData);
-
-							std::tuple<drop_const_t<ComponentTypes>*...> createdComponents = { std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple).m_StableContainer->Create()... };
-							(std::get<drop_const_t<ComponentTypes>*>(createdComponents)->OnPreCreate(entityData), ...);
-							(std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple).m_PackedContainer->PushBack(std::get<drop_const_t<ComponentTypes>*>(createdComponents)), ...);
-
 							InvokeEntityCreateObserver_Internal(entity);
 							if (bIsActive)
 							{
 								InvokeEntityEnableObserver_Internal(entity);
 							}
 
-							(invokeComponentObservers.operator () < drop_const_t<ComponentTypes> > (
+							(invokeComponentObservers.operator () < pure_type_t<ComponentTypes> > (
 								entity,
-								std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple),
-								std::get<drop_const_t<ComponentTypes>*>(createdComponents)
+								std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(typeDataTuple),
+								std::get<pure_type_t<ComponentTypes>*>(createdComponents)
 								), ...);
+						}
 
-							if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
-							{
-								initFunc(entity, *std::get<ComponentTypes*>(createdComponents)...);
-							}
-							else
-							{
-								initFunc(*std::get<ComponentTypes*>(createdComponents)...);
-							}
+						if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
+						{
+							initFunc(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)...);
+						}
+						else
+						{
+							initFunc(*std::get<pure_type_t<ComponentTypes>*>(createdComponents)...);
 						}
 					}
 				}
 			}
+		}
+
+	public:
+		template<typename InitFunc, TComponentConcept... ComponentTypes, typename... TagTypes>
+			requires query_callable<InitFunc, ComponentTypes...>
+		inline void CreateEntities(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			const TagTypeGroup<TagTypes...> tags,
+			uint32_t entityCount,
+			bool bIsActive,
+			InitFunc&& initFunc
+		)
+		{
+			CreateEntities<true>(components, tags, entityCount, bIsActive, initFunc);
 		}
 
 		template<typename InitFunc, TComponentConcept... ComponentTypes>
@@ -223,7 +253,33 @@ namespace decs
 		)
 		{
 			constexpr const TagTypeGroup<> emptyTagTypeGroup{};
-			CreateEntities(components, emptyTagTypeGroup, entityCount, bIsActive, initFunc);
+			CreateEntities<true>(components, emptyTagTypeGroup, entityCount, bIsActive, initFunc);
+		}
+
+		template<typename InitFunc, TComponentConcept... ComponentTypes, typename... TagTypes>
+			requires query_callable<InitFunc, ComponentTypes...>
+		inline void CreateEntities_NoObservers(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			const TagTypeGroup<TagTypes...> tags,
+			uint32_t entityCount,
+			bool bIsActive,
+			InitFunc&& initFunc
+		)
+		{
+			CreateEntities<false>(components, tags, entityCount, bIsActive, initFunc);
+		}
+
+		template<typename InitFunc, TComponentConcept... ComponentTypes>
+			requires query_callable<InitFunc, ComponentTypes...>
+		inline void CreateEntities_NoObservers(
+			const ComponentTypeGroup<ComponentTypes...> components,
+			uint32_t entityCount,
+			bool bIsActive,
+			InitFunc&& initFunc
+		)
+		{
+			constexpr const TagTypeGroup<> emptyTagTypeGroup{};
+			CreateEntities<false>(components, emptyTagTypeGroup, entityCount, bIsActive, initFunc);
 		}
 
 		/// <summary>
@@ -1127,8 +1183,7 @@ namespace decs
 			BoolSwitch(bool& boolToSwitch):
 				m_Bool(boolToSwitch),
 				m_FinalValue(!boolToSwitch)
-			{
-			}
+			{ }
 
 			BoolSwitch(bool& boolToSwitch, const bool& startValue):
 				m_Bool(boolToSwitch),
@@ -1251,91 +1306,6 @@ namespace decs
 		{
 			constexpr const TagTypeGroup<> emptyTagTypeGroup{};
 			return CreateEntity_NoObserver(components, emptyTagTypeGroup, bIsActive, initFunc);
-		}
-
-
-		/// <summary>
-		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in ComponentTypeGroup parameter.
-		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
-		/// </summary>
-		/// <typeparam name="InitFunc"></typeparam>
-		/// <typeparam name="...ComponentTypes"></typeparam>
-		/// <typeparam name="...TagTypes"></typeparam>
-		/// <param name="components"></param>
-		/// <param name="tags"></param>
-		/// <param name="bIsActive"></param>
-		/// <param name="initFunc"></param>
-		/// <returns></returns>
-		template<typename InitFunc, TComponentConcept... ComponentTypes, tag_concept... TagTypes>
-			requires query_callable<InitFunc, ComponentTypes...>
-		void CreateEntities_NoObserver(
-			const ComponentTypeGroup<ComponentTypes...> components,
-			const TagTypeGroup<TagTypes...> tags,
-			uint32_t entityCount,
-			bool bIsActive,
-			InitFunc&& initFunc
-		)
-		{
-			if (entityCount == 0 || !m_CanCreateEntities)
-			{
-				return;
-			}
-
-			if constexpr (sizeof...(TagTypes) == 0 && sizeof...(ComponentTypes) == 0)
-			{
-				for (uint32_t i = 0; i < entityCount; i++)
-				{
-					Entity e = CreateEntity_NoObserver(bIsActive);
-					initFunc(e);
-				}
-			}
-			else
-			{
-				Archetype* spawnArchetype = nullptr;
-
-				((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<TagTypes>::ID())), ...);
-				((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
-
-				if (spawnArchetype != nullptr)
-				{
-					std::tuple<TArchetypeTypeData<drop_const_t<ComponentTypes>>...> typeDataTuple = { spawnArchetype->GetTypeData<drop_const_t<ComponentTypes>>()... };
-
-					for (uint32_t i = 0; i < entityCount; i++)
-					{
-						if (Entity entity = CreateEntityRaw(bIsActive))
-						{
-							EntityData* entityData = GetEntityData(entity);
-							spawnArchetype->AddEntityData(entityData);
-
-							std::tuple<drop_const_t<ComponentTypes>*...> createdComponents = { std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple).m_StableContainer->Create()... };
-							(std::get<drop_const_t<ComponentTypes>*>(createdComponents)->OnPreCreate(entityData), ...);
-							(std::get<TArchetypeTypeData<drop_const_t<ComponentTypes>>>(typeDataTuple).m_PackedContainer->PushBack(std::get<drop_const_t<ComponentTypes>*>(createdComponents)), ...);
-
-							if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
-							{
-								initFunc(entity, *std::get<ComponentTypes*>(createdComponents)...);
-							}
-							else
-							{
-								initFunc(*std::get<ComponentTypes*>(createdComponents)...);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		template<typename InitFunc, TComponentConcept... ComponentTypes>
-			requires query_callable<InitFunc, ComponentTypes...>
-		inline void CreateEntities_NoObserver(
-			const ComponentTypeGroup<ComponentTypes...> components,
-			uint32_t entityCount,
-			bool bIsActive,
-			InitFunc&& initFunc
-		)
-		{
-			constexpr const TagTypeGroup<> tags{};
-			return CreateEntities_NoObserver(components, tags, entityCount, bIsActive, initFunc);
 		}
 
 		bool DestroyEntity_NoObserver(const Entity& entity);

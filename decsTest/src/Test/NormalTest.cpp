@@ -25,12 +25,10 @@ namespace Normal
 
 	public:
 		Position()
-		{
-		}
+		{ }
 
 		Position(float x, float y): X(x), Y(y)
-		{
-		}
+		{ }
 
 		void TestFunc(int& i)
 		{
@@ -106,7 +104,8 @@ namespace Normal
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
 
-		QueryIterationTest();
+		//QueryIterationTest();
+		PerformanceTest();
 	}
 
 	void Test::QueryIterationTest()
@@ -154,7 +153,7 @@ namespace Normal
 				decs::ComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
 				decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
 
-				auto initFunc = [](const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
+				auto initFunc = [] (const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
 				{
 					PrintLine("Init from helepr create entity func!");
 				};
@@ -175,11 +174,11 @@ namespace Normal
 			}*/
 
 			uint32_t counter = 0;
-			auto testFunc = [&](const TestComponent& test)
+			auto testFunc = [&] (const TestComponent& test)
 			{
 				PrintLine("Test func!");
 			};
-			auto testFuncWithEntity = [&](const decs::Entity& entity, const TestComponent& test)
+			auto testFuncWithEntity = [&] (const decs::Entity& entity, const TestComponent& test)
 			{
 				PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
 			};
@@ -307,12 +306,12 @@ namespace Normal
 				EntityQuery query{};
 				query.AddContainer(&container, true);
 
-				query.ForEach([]()
+				query.ForEach([] ()
 				{
 					PrintLine("Empty query iteration");
 				});
 
-				query.ForEach([](const decs::Entity& e)
+				query.ForEach([] (const decs::Entity& e)
 				{
 					PrintLine("Empty query iteration with entity");
 				});
@@ -324,8 +323,10 @@ namespace Normal
 
 	void Test::PerformanceTest()
 	{
+		size_t entityCounter = 0;
+
 		const uint32_t testCount = 1;
-		const uint32_t entityCount = 16384;
+		const uint32_t entityCount = 65536;
 
 		decs::ContainerConfig config{
 			.EntityChunkSize = 10000,
@@ -334,19 +335,57 @@ namespace Normal
 		};
 
 		double finalAvarage = 0;
+		double finalEntityAvarage = 0;
 
 		decs::Container container{ config };
+
 		decs::ComponentTypeGroup<Position, TestComponent> comps{};
+		decs::TagTypeGroup<float, int> tags{};
 
-		auto perfTest = [&]()
+		size_t testCounter = 0;
+
+		auto perfTest = [&] ()
 		{
-			double sum = 0;
 
+			double sum = 0;
 			for (uint32_t testIdx = 0; testIdx < testCount; testIdx++)
 			{
 				MeasureTimer timer(true);
 				{
-					container.CreateEntities_NoObserver(comps, entityCount, true, [](Position&, TestComponent&) {});
+					/*for (size_t i = 0; i < entityCount; i++)
+					{
+						auto e = container.CreateEntity();
+						e.AddTag<float>();
+						e.AddTag<int>();
+						e.AddComponent<Position>();
+						e.AddComponent<TestComponent>();
+					}*/
+
+					//for (uint32_t i = 0; i < entityCount; i++)
+					//{
+					//	//container.CreateEntity(comps,/* tags, filters,*/ [] (Position& pos, TestComponent& test)
+					//	//{
+
+					//	//});
+					//	/*container.CreateEntity(comps, [] (Position& pos, TestComponent& test)
+					//	{
+
+					//	});*/
+					//}
+
+					container.CreateEntities_NoObservers(comps,tags, entityCount, true, [] (Position& pos, TestComponent& test)
+					{
+					
+					});
+					//container.CreateEntities(comps,tags, entityCount, true, [] (Position& pos, TestComponent& test)
+					//{
+					//
+					//});
+
+					/*container.CreateEntities(comps, entityCount, [] (Position& pos, TestComponent& test)
+					{
+
+					});*/
 				}
 				sum += timer.ElapsedAsMilisecond();
 
@@ -354,9 +393,17 @@ namespace Normal
 			}
 
 			double avarage = sum / testCount;
+			double entityAvarageTime = avarage / entityCount;
 
-			finalAvarage += avarage;
-			std::cout << "Creating " << entityCount << " entities -> " << avarage << " ms\n";
+			std::cout << "Creating " << entityCount << " entities -> " << avarage << " ms (entity avarage time " << entityAvarageTime * 1000. << "us)\n";
+
+			if (testCounter > 0)
+			{
+				finalAvarage += avarage;
+				finalEntityAvarage += entityAvarageTime;
+			}
+			testCounter++;
+
 		};
 
 		uint32_t finalTestCount = 100;
@@ -365,16 +412,12 @@ namespace Normal
 			perfTest();
 		}
 
-		std::cout << "Final avarage time " << finalAvarage / finalTestCount << " ms\n";
+		double validTestCount = (finalTestCount - 1.);
+		double finalEntitiesCreationTime = finalAvarage / validTestCount;
+		double finalSingleEntityCreationTime = finalEntityAvarage / validTestCount;
 
-		finalAvarage = 0;
-		for (uint32_t i = 0; i < finalTestCount; i++)
-		{
-			perfTest();
-		}
-
-		std::cout << "Final avarage time " << finalAvarage / finalTestCount << " ms\n";
-
-
+		std::cout << "Final avarage " << entityCount << " entity creation time " << finalEntitiesCreationTime << " ms\n";
+		std::cout << "Final avarage single entity creation time " << finalSingleEntityCreationTime * 1000. << " us (" << finalSingleEntityCreationTime << "ms)\n";
+		std::cout << entityCounter << "\n";
 	}
 }

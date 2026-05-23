@@ -463,7 +463,7 @@ void Test::FilterTest()
 
 }
 
-void Light::Test::QueryManagerTest()
+void Test::QueryManagerTest()
 {
 	std::unique_ptr<decs::light::Container> container = std::make_unique<decs::light::Container>();;
 
