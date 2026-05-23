@@ -21,7 +21,7 @@ namespace decs
 
 	};
 
-	template<TComponentConcept TComponent, typename SerializerData>
+	template<ComponentConcept TComponent, typename SerializerData>
 	class ComponentSerializer : ComponentSerializerBase<SerializerData>
 	{
 		template<typename>

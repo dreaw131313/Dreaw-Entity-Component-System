@@ -16,7 +16,7 @@ namespace decs
 		virtual void SetContainerEnabled(Container* container, bool isEnabled) = 0;
 	};
 
-	template<TComponentConcept... ComponentsTypes>
+	template<ComponentConcept... ComponentsTypes>
 	class MultiQuery : public IMultiQuery
 	{
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "MultiQuery must not use tags in as ComponentTypes!");

@@ -29,7 +29,7 @@ namespace decs
 			DestroyComponentsContexts();
 		}
 
-		template<TComponentConcept TComponent>
+		template<ComponentConcept TComponent>
 		ComponentContext<TComponent>* GetOrCreateComponentContext()
 		{
 			TYPE_ID_CONSTEXPR TypeID id = Type<TComponent>::ID();
@@ -102,7 +102,7 @@ namespace decs
 			return false;
 		}
 
-		template<TComponentConcept TComponent>
+		template<ComponentConcept TComponent>
 		bool SetComponentOrder(int order)
 		{
 			GetOrCreateComponentContext<TComponent>();
@@ -168,7 +168,7 @@ namespace decs
 			return true;
 		}
 
-		template<TComponentConcept TComponentType>
+		template<ComponentConcept TComponentType>
 		bool SetComponentChunkSize(uint32_t chunkSize)
 		{
 			return SetComponentChunkSize(Type<TComponentType>::ID(), chunkSize);
@@ -195,7 +195,7 @@ namespace decs
 			}
 		}
 
-		template<TComponentConcept TComponentType>
+		template<ComponentConcept TComponentType>
 		uint64_t GetComponentChunkSize()
 		{
 			return GetComponentChunkSize(Type<TComponentType>::ID());

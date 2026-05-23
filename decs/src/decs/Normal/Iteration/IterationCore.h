@@ -38,7 +38,7 @@ namespace decs
 		}
 	};
 
-	template<TComponentConcept... ComponentsTypes>
+	template<ComponentConcept... ComponentsTypes>
 	struct QueryFiltersConfig
 	{
 	public:
@@ -143,7 +143,7 @@ namespace decs
 		std::vector<TypeID> m_WithAll{};
 	};
 
-	template<TComponentConcept... ComponentsTypes>
+	template<ComponentConcept... ComponentsTypes>
 	class IterationArchetypeContext
 	{
 	public:
@@ -503,7 +503,7 @@ namespace decs
 	};
 
 
-	template<TComponentConcept... ComponentsTypes>
+	template<ComponentConcept... ComponentsTypes>
 	class IterationContainerContext
 	{
 	public:

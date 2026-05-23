@@ -293,12 +293,12 @@ namespace decs
 	};
 
 	template<typename TComponentType>
-	concept TComponentConcept = std::derived_from<TComponentType, EntityComponent>;
+	concept ComponentConcept = std::derived_from<TComponentType, EntityComponent>;
 
 	template<typename T>
-	concept TComponentOrTagConcept = TComponentConcept<T> || tag_concept<T>;
+	concept TComponentOrTagConcept = ComponentConcept<T> || tag_concept<T>;
 
-	template<TComponentConcept... Types>
+	template<ComponentConcept... Types>
 	class ComponentTypeGroup
 	{
 	public:

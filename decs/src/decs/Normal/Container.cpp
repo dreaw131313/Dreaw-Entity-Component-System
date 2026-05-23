@@ -64,7 +64,7 @@ namespace decs
 	void Container::ReturnOwnedEntitiesToEntityManager_Internal()
 	{
 		ContainerIterator iterator = {};
-		iterator.Foreach(*this, [this](const decs::Entity& entity)
+		iterator.Foreach(*this, [this] (const decs::Entity& entity)
 		{
 			m_EntityManager.ForceDestroyEntity(entity.m_EntityData);
 		});
@@ -121,7 +121,10 @@ namespace decs
 
 			if (m_PerformDelayedDestruction)
 			{
-				if (entityData.IsDelayedToDestruction()) { return false; }
+				if (entityData.IsDelayedToDestruction())
+				{
+					return false;
+				}
 				AddEntityToDelayedDestroy(entity, bInvokeObservers);
 				return true;
 			}
@@ -626,7 +629,7 @@ namespace decs
 		}
 	}
 
-	bool Container::RemoveComponent(const Entity& entity, TypeID componentTypeID)
+	bool Container::RemoveComponent_Impl(const Entity& entity, TypeID componentTypeID, bool bInvokeObservers)
 	{
 		if (!m_CanRemoveComponents)
 		{
@@ -657,10 +660,7 @@ namespace decs
 			return false;
 		}
 
-		Archetype* newArchetype = m_ArchetypesMap.GetOrCreateArchetypeAfterRemoveComponent(
-			*entityData.m_Archetype,
-			componentTypeID
-		);
+		Archetype* newArchetype = m_ArchetypesMap.GetOrCreateArchetypeAfterRemoveComponent(*entityData.m_Archetype, componentTypeID);
 
 		if (newArchetype != nullptr)
 		{
@@ -681,23 +681,19 @@ namespace decs
 		}
 
 		// Invoking remove observers:
+		if (bInvokeObservers)
 		{
 			auto componentContext = oldArchetypeTypeData.m_ComponentContext;
 			componentContext->InvokeOnDisableComponent(componentPtr, entity);
 			componentContext->InvokeOnDestroyComponent(componentPtr, entity);
+		}
 
+		if (!m_PerformDelayedDestruction)
+		{
 			oldArchetypeTypeData.m_StableContainer->Destroy(componentPtr);
 		}
 
 		return true;
-	}
-
-	void Container::InvokeComponentDestroyObservers(IComponentContext& compCtx, EntityComponent& comp, EntityData& entityData)
-	{
-		Entity e(entityData);
-
-		compCtx.InvokeOnDisableComponent(&comp, e);
-		compCtx.InvokeOnDestroyComponent(&comp, e);
 	}
 
 	EntityComponent* Container::GetComponentAtIndex_ObserversOrder(EntityData& entityData, uint32_t componentIndex)
@@ -799,7 +795,7 @@ namespace decs
 				}
 			}
 
-			m_ArchetypesMap.IterateOverArchetypes([&](Archetype* archetype)
+			m_ArchetypesMap.IterateOverArchetypes([&] (Archetype* archetype)
 			{
 				if (archetype->EntityCount() == 0)
 				{
@@ -827,11 +823,11 @@ namespace decs
 
 		// invoking components creation observers
 		{
-			m_ComponentContextManager.IterateOverComponentContexts([&](IComponentContext* componentContext)
+			m_ComponentContextManager.IterateOverComponentContexts([&] (IComponentContext* componentContext)
 			{
 				TypeID componentTypeID = componentContext->GetComponentTypeID();
 
-				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&](Archetype* archetype)
+				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&] (Archetype* archetype)
 				{
 					const uint64_t entitiesCountToInvokeCallbacks = archetype->EntityCount();
 					if (entitiesCountToInvokeCallbacks == 0)
@@ -888,11 +884,11 @@ namespace decs
 		// invoking components creation observers
 		{
 			Entity entity = {};
-			m_ComponentContextManager.IterateOverComponentContextsForDestryObservers([&](IComponentContext* componentContext)
+			m_ComponentContextManager.IterateOverComponentContextsForDestryObservers([&] (IComponentContext* componentContext)
 			{
 				TypeID componentTypeID = componentContext->GetComponentTypeID();
 
-				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&](Archetype* archetype)
+				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&] (Archetype* archetype)
 				{
 					const uint64_t entityCount = archetype->EntityCount();
 					if (entityCount == 0)
@@ -932,7 +928,7 @@ namespace decs
 		if (bMarkEntitiesDead)
 		{
 			ContainerIterator iterator = {};
-			iterator.Foreach(*this, [&](const decs::Entity& entity)
+			iterator.Foreach(*this, [&] (const decs::Entity& entity)
 			{
 				if (entity.IsActive())
 				{
@@ -945,7 +941,7 @@ namespace decs
 		else
 		{
 			ContainerIterator iterator = {};
-			iterator.Foreach(*this, [&](const decs::Entity& entity)
+			iterator.Foreach(*this, [&] (const decs::Entity& entity)
 			{
 				if (entity.IsActive())
 				{
@@ -1210,8 +1206,7 @@ namespace decs
 	}
 
 	void Container::PerformDelayedDestroy(uint64_t maxEntitiesToDestroy)
-	{
-	}
+	{ }
 
 	void Container::PerformDelayedDestruction()
 	{
@@ -1419,59 +1414,6 @@ namespace decs
 		{
 			entity.GetEntityData()->SetActiveState(bIsActive);
 		}
-	}
-
-	bool Container::RemoveComponent_NoObserver(const Entity& entity, TypeID componentTypeID)
-	{
-		if (entity.GetContainer() != this) return false;
-
-		EntityData& entityData = *entity.GetEntityData();
-		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
-
-		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
-		if (compIdxInArch == std::numeric_limits<uint32_t>::max()) return false;
-
-		Archetype* oldArchetype = entityData.m_Archetype;
-		uint64_t entityIndexInOldArchetype = entityData.m_IndexInArchetype;
-
-		ArchetypeTypeData& archetypeTypeData = oldArchetype->m_TypeData[compIdxInArch];
-		if (archetypeTypeData.IsTag())
-		{
-			return false;
-		}
-
-		auto& packedContainer = archetypeTypeData.m_PackedContainer;
-
-		auto componentPtr = packedContainer->GetComponentBasePtr(entityIndexInOldArchetype);
-		if (componentPtr->GetDependecyCount() > 0)
-		{
-			return false;
-		}
-
-		Archetype* newArchetype = m_ArchetypesMap.GetOrCreateArchetypeAfterRemoveComponent(
-			*entityData.m_Archetype,
-			componentTypeID
-		);
-
-		if (newArchetype != nullptr)
-		{
-			Archetype::MoveEntityAfterRemoveComponentWithoutDestroyingFromSource(*oldArchetype, *newArchetype, entityIndexInOldArchetype, componentTypeID);
-		}
-		else
-		{
-			AddToEmptyEntities(entityData);
-		}
-
-		if (m_PerformDelayedDestruction)
-		{
-			AddArchetypeRecordToDelayedRemove(oldArchetype, static_cast<uint32_t>(entityIndexInOldArchetype), true, componentTypeID);
-		}
-		else
-		{
-			oldArchetype->RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(entityIndexInOldArchetype, componentTypeID);
-		}
-
-		return true;
 	}
 
 	void Container::SetEntityActiveOverride_NoObserver(const Entity& entity, bool bIsActiveOverride)

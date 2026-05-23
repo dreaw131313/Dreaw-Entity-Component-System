@@ -352,14 +352,14 @@ namespace Normal
 			{
 				MeasureTimer timer(true);
 				{
-					/*for (size_t i = 0; i < entityCount; i++)
+					for (size_t i = 0; i < entityCount; i++)
 					{
 						auto e = container.CreateEntity();
 						e.AddTag<float>();
 						e.AddTag<int>();
-						e.AddComponent<Position>();
-						e.AddComponent<TestComponent>();
-					}*/
+						e.AddComponent_NoObserver<Position>();
+						e.AddComponent_NoObserver<TestComponent>();
+					}
 
 					//for (uint32_t i = 0; i < entityCount; i++)
 					//{
@@ -367,16 +367,16 @@ namespace Normal
 					//	//{
 
 					//	//});
-					//	/*container.CreateEntity(comps, [] (Position& pos, TestComponent& test)
+					//	container.CreateEntity(comps, true, [] (Position& pos, TestComponent& test)
 					//	{
 
-					//	});*/
+					//	});
 					//}
 
-					container.CreateEntities_NoObservers(comps,tags, entityCount, true, [] (Position& pos, TestComponent& test)
+					/*container.CreateEntities_NoObservers(comps,tags, entityCount, true, [] (Position& pos, TestComponent& test)
 					{
-					
-					});
+
+					});*/
 					//container.CreateEntities(comps,tags, entityCount, true, [] (Position& pos, TestComponent& test)
 					//{
 					//

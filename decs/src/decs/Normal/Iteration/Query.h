@@ -4,7 +4,7 @@
 
 namespace decs
 {
-	template<TComponentConcept... ComponentsTypes>
+	template<ComponentConcept... ComponentsTypes>
 	class Query
 	{
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "Query must not use tags in as ComponentTypes!");
@@ -358,7 +358,7 @@ namespace decs
 		{
 			using QueryType = Query<ComponentsTypes...>;
 
-			template<TComponentConcept... Types>
+			template<ComponentConcept... Types>
 			friend class Query;
 		public:
 			BatchIterator() {}

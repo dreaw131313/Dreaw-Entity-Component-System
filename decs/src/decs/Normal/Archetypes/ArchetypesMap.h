@@ -184,9 +184,9 @@ namespace decs
 		template<typename>
 		friend class ContainerSerializer;
 		friend class ContainerSerializerComplex;
-		template<TComponentConcept...>
+		template<ComponentConcept...>
 		friend class Query;
-		template<TComponentConcept...>
+		template<ComponentConcept...>
 		friend class IterationContainerContext;
 
 	public:
@@ -229,7 +229,7 @@ namespace decs
 
 		void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state);
 
-		template<TComponentConcept TComponent>
+		template<ComponentConcept TComponent>
 		void UpdateOrderInAllArchetypesWithComponentType()
 		{
 			auto it = m_ArchetypesGroupedByOneType.find(Type<TComponent>::ID());
@@ -309,7 +309,7 @@ namespace decs
 			return it != m_ArchetypesGroupedByOneType.end() ? it->second->GetMainTypeArchetype() : nullptr;
 		}
 
-		template<TComponentConcept TComponent>
+		template<ComponentConcept TComponent>
 		Archetype* GetSingleComponentArchetype() const
 		{
 			return GetSingleComponentArchetype(Type<TComponent>::ID());
@@ -357,7 +357,7 @@ namespace decs
 	private:
 		Archetype* CreateSingleComponentArchetype(TypeID componentTypeID, IComponentContext* componentContext);
 
-		template<TComponentConcept T>
+		template<ComponentConcept T>
 		inline Archetype* GetArchetypeAfterAddComponent(Archetype& toArchetype)
 		{
 			TYPE_ID_CONSTEXPR TypeID addedComponentTypeID = Type<T>::ID();

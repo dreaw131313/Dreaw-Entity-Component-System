@@ -307,16 +307,16 @@ namespace decs
 		friend class ContainerSerializer;
 		friend class ContainerSerializerComplex;
 
-		template<TComponentConcept...>
+		template<ComponentConcept...>
 		friend class Query;
-		template<TComponentConcept...>
+		template<ComponentConcept...>
 		friend class MultiQuery;
-		template<TComponentConcept... ComponentsTypes>
+		template<ComponentConcept... ComponentsTypes>
 		friend class IterationArchetypeContext;
-		template<TComponentConcept...>
+		template<ComponentConcept...>
 		friend class IterationContainerContext;
 
-		template<TComponentConcept...>
+		template<ComponentConcept...>
 		friend class BatchIterator;
 
 	private:
@@ -463,7 +463,7 @@ namespace decs
 			return true;
 		}
 
-		template<TComponentConcept... ComponentTypes, tag_concept... TagTypes>
+		template<ComponentConcept... ComponentTypes, tag_concept... TagTypes>
 		bool IsArchetypeWithComponentsAndTags_Exactly(
 			const ComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags
@@ -547,16 +547,16 @@ namespace decs
 			return typeData.m_PackedContainer;
 		}
 
-		template<typename TComponentType>
-		TArchetypeTypeData<TComponentType> GetTypeData() const
+		template<ComponentConcept ComponentType>
+		TArchetypeTypeData<pure_type_t<ComponentType>> GetTypeData() const
 		{
-			uint32_t compIdx = FindTypeIndex<TComponentType>();
+			uint32_t compIdx = FindTypeIndex<pure_type_t<ComponentType>>();
 			if (compIdx == std::numeric_limits<uint32_t>::max())
 			{
 				return {};
 			}
 
-			return TArchetypeTypeData<TComponentType>(m_TypeData[compIdx]);
+			return TArchetypeTypeData<pure_type_t<ComponentType>>(m_TypeData[compIdx]);
 		}
 
 		void ClearEntityDataAndComponents();
@@ -614,7 +614,7 @@ namespace decs
 	private:
 		void AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType);
 
-		template<TComponentConcept TComponent>
+		template<ComponentConcept TComponent>
 		ArchetypeEdge GetEdge() const
 		{
 			auto it = m_Edges.find(Type<TComponent>::ID());
