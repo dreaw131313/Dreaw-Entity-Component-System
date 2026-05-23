@@ -294,14 +294,14 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				GetContainer_Internal()->GetComponentsDynamic<drop_const_t<TComponent>>(*GetEntityData(), components);
+				GetContainer_Internal()->GetComponentsDynamic<pure_type_t<TComponent>>(*GetEntityData(), components);
 			}
 		}
 
 		template<ComponentConcept TComponent>
 		[[nodiscard]] inline bool HasComponent() const
 		{
-			return IsValid() && GetContainer_Internal()->HasComponent<drop_const_t<TComponent>>(*GetEntityData());
+			return IsValid() && GetContainer_Internal()->HasComponent<pure_type_t<TComponent>>(*GetEntityData());
 		}
 
 		template<ComponentConcept TComponent>
@@ -309,7 +309,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				component = GetContainer_Internal()->GetComponent<drop_const_t<TComponent>>(*GetEntityData());
+				component = GetContainer_Internal()->GetComponent<pure_type_t<TComponent>>(*GetEntityData());
 			}
 			else
 			{
@@ -324,7 +324,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->AddComponent<drop_const_t<TComponent>>(*this, *GetEntityData(), std::forward<Args>(args)...);
+				return GetContainer_Internal()->AddComponent<pure_type_t<TComponent>>(*this, *GetEntityData(), std::forward<Args>(args)...);
 			}
 
 			return nullptr;
@@ -333,7 +333,7 @@ namespace decs
 		template<ComponentConcept TComponent>
 		inline bool RemoveComponent() const
 		{
-			return IsValid() && GetContainer_Internal()->RemoveComponent<drop_const_t<TComponent>>(*this);
+			return IsValid() && GetContainer_Internal()->RemoveComponent<pure_type_t<TComponent>>(*this);
 		}
 
 		inline bool RemoveComponent(TypeID componentTypeID) const
@@ -423,7 +423,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				GetContainer()->SetEntityActiveOverride_NoObserver(*this, bIsActiveOverride);
+				GetContainer_Internal()->SetEntityActiveOverride_NoObserver(*this, bIsActiveOverride);
 			}
 		}
 
@@ -431,7 +431,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				GetContainer()->SetEntityDisabledOverrideCount_NoObserver(*this, disabledOverrideCount);
+				GetContainer_Internal()->SetEntityDisabledOverrideCount_NoObserver(*this, disabledOverrideCount);
 			}
 		}
 
@@ -439,7 +439,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				GetContainer()->ResetDisabledOverrideCount_NoObserver(*this);
+				GetContainer_Internal()->ResetDisabledOverrideCount_NoObserver(*this);
 			}
 		}
 
@@ -456,7 +456,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->HasTag(*m_EntityData, tagType);
+				return GetContainer_Internal()->HasTag(*m_EntityData, tagType);
 			}
 			return false;
 		}
@@ -466,7 +466,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->HasTag<::decs::tag_type_t<TagType>>(*m_EntityData);
+				return GetContainer_Internal()->HasTag<::decs::tag_type_t<TagType>>(*m_EntityData);
 			}
 			return false;
 		}
@@ -476,7 +476,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->HasTags<tag_type_t<TagType>...>(*m_EntityData);
+				return GetContainer_Internal()->HasTags<tag_type_t<TagType>...>(*m_EntityData);
 			}
 			return false;
 		}
@@ -486,7 +486,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->AddTag<::decs::tag_type_t<TagType>>(*m_EntityData);
+				return GetContainer_Internal()->AddTag<::decs::tag_type_t<TagType>>(*m_EntityData);
 			}
 			return false;
 		}
@@ -500,7 +500,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->RemoveTag(*m_EntityData, tagType);
+				return GetContainer_Internal()->RemoveTag(*m_EntityData, tagType);
 			}
 			return false;
 		}
@@ -510,7 +510,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->RemoveTag<::decs::tag_type_t<TagType>>(*m_EntityData);
+				return GetContainer_Internal()->RemoveTag<::decs::tag_type_t<TagType>>(*m_EntityData);
 			}
 			return false;
 		}
