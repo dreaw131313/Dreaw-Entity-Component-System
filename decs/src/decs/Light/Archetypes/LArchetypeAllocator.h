@@ -51,8 +51,8 @@ namespace decs::light
 	private:
 		FilterManager& m_FilterManager;
 		TChunkedVector<Archetype> m_Archetypes{ 100 };
-		std::vector<Archetype*> m_Created{};
-		std::vector<Archetype*> m_FreeList{};
+		ecsVector<Archetype*> m_Created{};
+		ecsVector<Archetype*> m_FreeList{};
 
 	private:
 		void OnDestroyArchetype(Archetype& archetype);

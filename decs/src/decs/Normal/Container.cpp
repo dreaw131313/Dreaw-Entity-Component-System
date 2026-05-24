@@ -450,7 +450,7 @@ namespace decs
 		return true;
 	}
 
-	bool Container::Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, uint64_t spawnCount, bool areActive)
+	bool Container::Spawn(const Entity& prefab, ecsVector<Entity>& spawnedEntities, uint64_t spawnCount, bool areActive)
 	{
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
@@ -1364,7 +1364,7 @@ namespace decs
 		return true;
 	}
 
-	bool Container::Spawn_NoObserver(const Entity& prefab, std::vector<Entity>& spawnedEntities, uint64_t spawnCount, bool bAreActive)
+	bool Container::Spawn_NoObserver(const Entity& prefab, ecsVector<Entity>& spawnedEntities, uint64_t spawnCount, bool bAreActive)
 	{
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 

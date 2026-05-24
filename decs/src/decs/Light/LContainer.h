@@ -59,7 +59,7 @@ namespace decs::light
 
 	#pragma region ENTITIES:
 	private:
-		std::vector<EntityData*> m_EmptyEntities = {};
+		ecsVector<EntityData*> m_EmptyEntities = {};
 		EntityManager m_EntityManager{};
 
 	public:
@@ -355,7 +355,7 @@ namespace decs::light
 
 		bool Spawn(const Entity& prefab, uint64_t spawnCount);
 
-		bool Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, uint64_t spawnCount);
+		bool Spawn(const Entity& prefab, ecsVector<Entity>& spawnedEntities, uint64_t spawnCount);
 
 	private:
 		Archetype* GetArchetypeForSpawn(const EntityData& prefabEntityData);

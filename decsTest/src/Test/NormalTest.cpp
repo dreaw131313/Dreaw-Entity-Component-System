@@ -196,7 +196,7 @@ namespace Normal
 
 				if (false)
 				{
-					std::vector<QueryType::BatchIterator> iterators{};
+					decs::ecsVector<QueryType::BatchIterator> iterators{};
 					query.CreateBatchIterators(iterators, 10, 3);
 
 					PrintLine("BatchIterator::ForEach");
@@ -257,7 +257,7 @@ namespace Normal
 
 				if (false)
 				{
-					std::vector<QueryType::BatchIterator> iterators{};
+					decs::ecsVector<QueryType::BatchIterator> iterators{};
 					query.CreateBatchIteratorsWithMaxNumberPerBatch(iterators, 7);
 
 					PrintLine("BatchIterator::ForEach");

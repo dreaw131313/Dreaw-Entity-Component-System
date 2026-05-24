@@ -92,7 +92,7 @@ namespace decs
 
 	#pragma region ENTITIES:
 	private:
-		std::vector<EntityData*> m_EmptyEntities = {};
+		ecsVector<EntityData*> m_EmptyEntities = {};
 		EntityManager m_EntityManager{};
 
 		TRefCountHandle<EnityLifeTimeData> m_LifeTimeData{};
@@ -499,7 +499,7 @@ namespace decs
 		struct SpawnData
 		{
 		public:
-			std::vector<SpawnComponentData> m_ComponentData;
+			ecsVector<SpawnComponentData> m_ComponentData;
 
 		public:
 			void Reserve(uint64_t size)
@@ -551,7 +551,7 @@ namespace decs
 
 		bool Spawn(
 			const Entity& prefab,
-			std::vector<Entity>& spawnedEntities,
+			ecsVector<Entity>& spawnedEntities,
 			uint64_t spawnCount,
 			bool areActive = true
 		);
@@ -749,7 +749,7 @@ namespace decs
 		EntityComponent* GetComponentAtIndex_ObserversOrder(EntityData& entityData, uint32_t componentIndex);
 
 		/// <summary>
-		/// Gets component by index in order of typeID. Uses std::vector where component and tags records data are placed. It can return nullptr if componentIndex is greater than component and tag count in archetype or where index points to tag instead of component.
+		/// Gets component by index in order of typeID. Uses ecsVector where component and tags records data are placed. It can return nullptr if componentIndex is greater than component and tag count in archetype or where index points to tag instead of component.
 		/// </summary>
 		/// <param name="entityData"></param>
 		/// <param name="componentIndex"></param>
@@ -782,7 +782,7 @@ namespace decs
 		}
 
 		template<ComponentConcept TComponent>
-		void GetComponentsDynamic(EntityData& entityData, std::vector<TComponent*>& outComponents)
+		void GetComponentsDynamic(EntityData& entityData, ecsVector<TComponent*>& outComponents)
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
 			{
@@ -1175,7 +1175,7 @@ namespace decs
 		void InvokeEntityCreateEnableObservers(const decs::Entity& entity);
 
 	private:
-		std::vector<EntityComponent*> m_ActivationChangeComponentPtrs = {};
+		ecsVector<EntityComponent*> m_ActivationChangeComponentPtrs = {};
 
 		CreateEntityObserver* m_CreateEntityObserver = nullptr;
 		DestroyEntityObserver* m_DestroyEntityObserver = nullptr;
@@ -1206,7 +1206,7 @@ namespace decs
 			bool bInvokeCallbacks = true;
 		};
 
-		std::vector<DelayedEntityToDestroy> m_DelayedEntitiesToDestroy;
+		ecsVector<DelayedEntityToDestroy> m_DelayedEntitiesToDestroy;
 
 		struct ArchetypeRecordDelayedDestroyData
 		{
@@ -1217,7 +1217,7 @@ namespace decs
 			bool bRemoveAfterRemoveComponent;
 		};
 
-		std::vector<ArchetypeRecordDelayedDestroyData> m_ArchetypesRecordsToDelayedRemove = {};
+		ecsVector<ArchetypeRecordDelayedDestroyData> m_ArchetypesRecordsToDelayedRemove = {};
 
 		bool m_PerformDelayedDestruction = false;
 
@@ -1303,7 +1303,7 @@ namespace decs
 
 		bool Spawn_NoObserver(
 			const Entity& prefab,
-			std::vector<Entity>& spawnedEntities,
+			ecsVector<Entity>& spawnedEntities,
 			uint64_t spawnCount,
 			bool bAreActive = true
 		);

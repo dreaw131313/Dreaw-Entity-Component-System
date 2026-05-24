@@ -247,7 +247,7 @@ namespace decs::light
 		return true;
 	}
 
-	bool Container::Spawn(const Entity& prefab, std::vector<Entity>& spawnedEntities, uint64_t spawnCount)
+	bool Container::Spawn(const Entity& prefab, ecsVector<Entity>& spawnedEntities, uint64_t spawnCount)
 	{
 		if (spawnCount == 0 || prefab.IsNull()) return false;
 

@@ -86,7 +86,7 @@ namespace decs
 
 
 		private:
-			std::vector<uint32_t> m_FreeSpaces;
+			ecsVector<uint32_t> m_FreeSpaces;
 
 			std::byte* m_MemoryBlock = nullptr;
 			uint64_t m_MemoryBlockSize = 0;
@@ -427,9 +427,9 @@ namespace decs
 			}
 
 		private:
-			std::vector<ChunkType*> m_Chunks;
-			std::vector<ChunkType*> m_ChunksWithFreeSpace;
-			std::vector<ResourceRecord> m_ResourceRecords{};
+			ecsVector<ChunkType*> m_Chunks;
+			ecsVector<ChunkType*> m_ChunksWithFreeSpace;
+			ecsVector<ResourceRecord> m_ResourceRecords{};
 			ChunkType* m_CurrentChunk = nullptr;
 			uint32_t m_ChunkCapacity = 100;
 

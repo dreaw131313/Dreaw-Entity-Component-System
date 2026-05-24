@@ -50,17 +50,17 @@ namespace decs
 			return m_Includes;
 		}
 
-		const std::vector<TypeID>& GetWithoutTypes() const noexcept
+		const ecsVector<TypeID>& GetWithoutTypes() const noexcept
 		{
 			return m_Without;
 		}
 
-		const std::vector<TypeID>& GetWithAnyTypes() const noexcept
+		const ecsVector<TypeID>& GetWithAnyTypes() const noexcept
 		{
 			return 	m_WithAnyOf;
 		}
 
-		const std::vector<TypeID>& GetWithAllTypes() const noexcept
+		const ecsVector<TypeID>& GetWithAllTypes() const noexcept
 		{
 			return m_WithAll;
 		}
@@ -138,9 +138,9 @@ namespace decs
 
 	private:
 		TypeGroupType m_Includes = {};
-		std::vector<TypeID> m_Without{};
-		std::vector<TypeID> m_WithAnyOf{};
-		std::vector<TypeID> m_WithAll{};
+		ecsVector<TypeID> m_Without{};
+		ecsVector<TypeID> m_WithAnyOf{};
+		ecsVector<TypeID> m_WithAll{};
 	};
 
 	template<ComponentConcept... ComponentsTypes>
@@ -511,7 +511,7 @@ namespace decs
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 
 	public:
-		std::vector<ArchetypeContextType> m_ArchetypesContexts{};
+		ecsVector<ArchetypeContextType> m_ArchetypesContexts{};
 		ecsSet<const Archetype*> m_ContainedArchetypes{};
 		Container* m_Container = nullptr;
 		TRefCountHandle<EnityLifeTimeData> m_LifeTimeData{};
@@ -549,7 +549,7 @@ namespace decs
 			return m_Container;
 		}
 
-		const std::vector<ArchetypeContextType>& GetArchetypeContexts() const noexcept
+		const ecsVector<ArchetypeContextType>& GetArchetypeContexts() const noexcept
 		{
 			return m_ArchetypesContexts;
 		}

@@ -432,7 +432,7 @@ namespace decs::light
 
 	public:
 		void CreateBatchIterators(
-			std::vector<BatchIterator>& iterators,
+			ecsVector<BatchIterator>& iterators,
 			uint64_t desiredBatchesCount,
 			uint64_t minBatchSize
 		)

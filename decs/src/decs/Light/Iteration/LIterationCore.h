@@ -104,17 +104,17 @@ namespace decs::light
 			return m_Includes;
 		}
 
-		const std::vector<TypeID>& GetWithoutTypes() const noexcept
+		const ecsVector<TypeID>& GetWithoutTypes() const noexcept
 		{
 			return m_Without;
 		}
 
-		const std::vector<TypeID>& GetWithAnyTypes() const noexcept
+		const ecsVector<TypeID>& GetWithAnyTypes() const noexcept
 		{
 			return 	m_WithAnyOf;
 		}
 
-		const std::vector<TypeID>& GetWithAllTypes() const noexcept
+		const ecsVector<TypeID>& GetWithAllTypes() const noexcept
 		{
 			return m_WithAll;
 		}
@@ -202,9 +202,9 @@ namespace decs::light
 		}
 
 	private:
-		std::vector<TypeID> m_Without{};
-		std::vector<TypeID> m_WithAnyOf{};
-		std::vector<TypeID> m_WithAll{};
+		ecsVector<TypeID> m_Without{};
+		ecsVector<TypeID> m_WithAnyOf{};
+		ecsVector<TypeID> m_WithAll{};
 		TypeGroupType m_Includes = {};
 		IFilterDataTupleHandle m_FilterDataTuple{};
 	};
@@ -492,7 +492,7 @@ namespace decs::light
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 
 	public:
-		std::vector<ArchetypeContextType> m_ArchetypesContexts{};
+		ecsVector<ArchetypeContextType> m_ArchetypesContexts{};
 		ecsMap<const Archetype*, size_t> m_ArchetypeIndices{};
 		Container* m_Container = nullptr;
 		bool m_bIsEnabled = true;
@@ -530,7 +530,7 @@ namespace decs::light
 			return m_Container;
 		}
 
-		const std::vector<ArchetypeContextType>& GetArchetypeContexts() const noexcept
+		const ecsVector<ArchetypeContextType>& GetArchetypeContexts() const noexcept
 		{
 			return m_ArchetypesContexts;
 		}

@@ -31,11 +31,12 @@
 
 namespace decs
 {
+	template<typename T>
+	using ecsVector = std::vector<T>;
 	template<typename Key, typename Value>
 	using ecsMap = std::unordered_map<Key, Value>;
-
-	template<typename Key>
-	using ecsSet = std::unordered_set<Key>;
+	template<typename T>
+	using ecsSet = std::unordered_set<T>;
 
 	using EntityID = uint32_t;
 	using EntityVersion = uint32_t;

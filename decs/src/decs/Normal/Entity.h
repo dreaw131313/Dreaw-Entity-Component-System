@@ -223,7 +223,7 @@ namespace decs
 		}
 
 		/// <summary>
-		/// Gets component by index in order of typeID. Uses std::vector where component and tags records data are placed. It can return nullptr if componentIndex is greater than component and tag count in archetype or where index points to tag instead of component.
+		/// Gets component by index in order of typeID. Uses ecsVector where component and tags records data are placed. It can return nullptr if componentIndex is greater than component and tag count in archetype or where index points to tag instead of component.
 		/// </summary>
 		/// <param name="componentIndex"></param>
 		/// <returns>Components in type id order</returns>
@@ -290,7 +290,7 @@ namespace decs
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <param name="components"></param>
 		template<ComponentConcept TComponent>
-		inline void GetComponentsDynamic(std::vector<TComponent*>& components) const
+		inline void GetComponentsDynamic(ecsVector<TComponent*>& components) const
 		{
 			if (IsValid())
 			{
@@ -654,7 +654,7 @@ namespace decs
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <param name="components"></param>
 		template<ComponentConcept TComponent>
-		inline void GetComponentsDynamic(std::vector<TComponent*>& components) const
+		inline void GetComponentsDynamic(ecsVector<TComponent*>& components) const
 		{
 			m_Entity.GetComponentDynamic<TComponent>(components);
 		}

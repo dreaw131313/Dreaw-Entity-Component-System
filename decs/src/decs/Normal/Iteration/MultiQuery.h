@@ -367,7 +367,7 @@ namespace decs
 		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
 		QueryFilterConfigType m_FilterConfig{};
 
-		std::vector<ContainerContextType> m_ContainerContexts = {};
+		ecsVector<ContainerContextType> m_ContainerContexts = {};
 
 		bool m_IsDirty = true;
 
@@ -603,7 +603,7 @@ namespace decs
 
 	public:
 		void CreateBatchIterators(
-			std::vector<BatchIterator>& iterators,
+			ecsVector<BatchIterator>& iterators,
 			uint64_t desiredBatchesCount,
 			uint64_t minBatchSize
 		)
@@ -679,7 +679,7 @@ namespace decs
 		}
 
 		void CreateBatchIteratorsWithMaxNumberPerBatch(
-			std::vector<BatchIterator>& iterators,
+			ecsVector<BatchIterator>& iterators,
 			uint32_t maxBatchSize
 		)
 		{

@@ -76,12 +76,12 @@ namespace decs
 			return m_EntityData;
 		}
 
-		inline const std::vector<uint8_t>& GetFlagsVector() const noexcept
+		inline const ecsVector<uint8_t>& GetFlagsVector() const noexcept
 		{
 			return m_Flags;
 		}
 
-		inline const std::vector<EntityData*>& GetEntitiesVector() const noexcept
+		inline const ecsVector<EntityData*>& GetEntitiesVector() const noexcept
 		{
 			return m_EntityData;
 		}
@@ -203,8 +203,8 @@ namespace decs
 		}
 
 	private:
-		std::vector<EntityData*> m_EntityData{};
-		std::vector<uint8_t> m_Flags{};
+		ecsVector<EntityData*> m_EntityData{};
+		ecsVector<uint8_t> m_Flags{};
 	};
 
 	struct ArchetypeTypeData
@@ -324,7 +324,7 @@ namespace decs
 		ecsMap<TypeID, ArchetypeEdge> m_Edges{};
 
 		ArchetypeEntityDataStorage m_EntityStorage{};
-		std::vector<ArchetypeTypeData> m_TypeData{};
+		ecsVector<ArchetypeTypeData> m_TypeData{};
 
 		struct OrderData
 		{
@@ -333,7 +333,7 @@ namespace decs
 			uint32_t m_ComponentIndex = std::numeric_limits<uint32_t>::max();
 		};
 
-		std::vector<OrderData> m_ComponentContextsInOrder{};
+		ecsVector<OrderData> m_ComponentContextsInOrder{};
 
 	public:
 		Archetype();
@@ -434,7 +434,7 @@ namespace decs
 		/// </summary>
 		/// <param name="types"></param>
 		/// <returns></returns>
-		bool HasTypes_Exactly(const std::vector<TypeID>& types) const;
+		bool HasTypes_Exactly(const ecsVector<TypeID>& types) const;
 
 		/// <summary>
 		/// if group.Size() is different thant archetype type count returns false.

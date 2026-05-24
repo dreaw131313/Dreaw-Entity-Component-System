@@ -18,7 +18,7 @@ namespace decs
 			uint64_t archetypesChunks = archetypesVector.ChunkCount();
 
 			decs::Entity entityBuffer = {};
-			//std::vector<TypeID> entityTagsIDs{};
+			//ecsVector<TypeID> entityTagsIDs{};
 
 			for (uint32_t i = 0; i < container.m_EmptyEntities.size(); i++)
 			{
@@ -79,7 +79,7 @@ namespace decs
 		}
 
 	protected:
-		void FetchTagsTypeIDsFromArchetype(const Archetype& archetype, std::vector<TypeID>& entityTagsID)
+		void FetchTagsTypeIDsFromArchetype(const Archetype& archetype, ecsVector<TypeID>& entityTagsID)
 		{
 			entityTagsID.clear();
 			const uint32_t componentCount = archetype.GetComponentAndTagCount();

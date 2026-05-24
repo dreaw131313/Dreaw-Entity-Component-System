@@ -115,7 +115,7 @@ namespace decs::light
 		}
 
 	private:
-		std::vector<EntityData*> m_Entities{};
+		ecsVector<EntityData*> m_Entities{};
 	};
 
 	struct ArchetypeTypeData
@@ -344,8 +344,8 @@ namespace decs::light
 		ecsMap<ArchetypeDataKey, ArchetypeEdge> m_Edges{};
 
 		ArchetypeEntityList m_Entities{};
-		std::vector<ArchetypeTypeData> m_TypeData{};
-		std::vector<ArchetypeFilterData> m_Filters{};
+		ecsVector<ArchetypeTypeData> m_TypeData{};
+		ecsVector<ArchetypeFilterData> m_Filters{};
 
 		size_t m_CreatedIndexInAllocator = std::numeric_limits<size_t>::max();
 		uint32_t m_Version = 0;
@@ -465,7 +465,7 @@ namespace decs::light
 		/// </summary>
 		/// <param name="types"></param>
 		/// <returns></returns>
-		bool HasTypes_Exactly(const std::vector<TypeID>& types) const;
+		bool HasTypes_Exactly(const ecsVector<TypeID>& types) const;
 
 		/// <summary>
 		/// if group.Size() is different thant archetype type count returns false.

@@ -157,7 +157,7 @@ namespace decs
 		DisableEntityObserver* m_DisableEntityObserver = nullptr;
 
 		ecsMap<TypeID, ComponentObserversGroupSetterBase*> m_ComponentObserverGroupIndexes = {};
-		std::vector<ComponentObserversGroupSetterBase*> m_ComponentObserverGroups = {};
+		ecsVector<ComponentObserversGroupSetterBase*> m_ComponentObserverGroups = {};
 
 	private:
 		template<typename TComponent>

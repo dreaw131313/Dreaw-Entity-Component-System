@@ -116,10 +116,10 @@ namespace decs::light
 
 	private:
 		Container* m_ParentContainer = nullptr;
-		std::vector<IQuery*> m_Queries{};
+		ecsVector<IQuery*> m_Queries{};
 
 		ecsMap<IMultiQuery*, uint64_t> m_MultiQueryIndices{};
-		std::vector<IMultiQuery*> m_MultiQueries{};
+		ecsVector<IMultiQuery*> m_MultiQueries{};
 
 		bool m_bAcceptQueries = true;
 

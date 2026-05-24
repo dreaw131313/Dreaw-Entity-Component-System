@@ -38,7 +38,7 @@ namespace decs::light
 
 	private:
 		TChunkedVector<EntityData> m_EntityDatas{};
-		std::vector<EntityData*> m_FreeEntities{};
+		ecsVector<EntityData*> m_FreeEntities{};
 
 		uint32_t m_CreatedEntityCount = 0;
 

@@ -35,7 +35,7 @@ namespace decs
 	struct ArchetypeGroup
 	{
 	public:
-		std::vector<Archetype*> Archetypes;
+		ecsVector<Archetype*> Archetypes;
 
 	public:
 		ArchetypeGroup() = default;
@@ -126,7 +126,7 @@ namespace decs
 	private:
 		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
 		Archetype* m_MainTypeArchetype = nullptr;
-		std::vector<ArchetypeGroup> m_Groups;
+		ecsVector<ArchetypeGroup> m_Groups;
 		uint64_t m_ArchetypesCount = 0;
 	};
 

@@ -56,7 +56,7 @@ namespace decs
 		friend class Container;
 		friend class Archetype;
 	private:
-		std::vector<TComponent*> m_Data;
+		ecsVector<TComponent*> m_Data;
 
 	public:
 		PackedStableComponentContainer() = default;

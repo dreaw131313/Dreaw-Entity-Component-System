@@ -114,8 +114,8 @@ namespace decs
 
 		void Serialize(Container& container, SerializerData& serializerData)
 		{
-			std::vector<ComponentSerializationData> componentSerializersData;
-			std::vector<TagSerializationData> tagSerializersData;
+			ecsVector<ComponentSerializationData> componentSerializersData;
+			ecsVector<TagSerializationData> tagSerializersData;
 
 			auto& archetypesMap = container.m_ArchetypesMap;
 			auto& archetypesVector = container.m_ArchetypesMap.m_Archetypes;
@@ -215,7 +215,7 @@ namespace decs
 		ecsMap<TypeID, const TagSerializerBase<SerializerData>*> m_TagSerializers = {};
 
 	private:
-		void GetComponentSerializers(Archetype& archetype, std::vector<ComponentSerializationData>& serializers)
+		void GetComponentSerializers(Archetype& archetype, ecsVector<ComponentSerializationData>& serializers)
 		{
 			serializers.clear();
 
@@ -232,7 +232,7 @@ namespace decs
 				}
 			}
 		}
-		void GetTagSerializers(Archetype& archetype, std::vector<TagSerializationData>& serializers)
+		void GetTagSerializers(Archetype& archetype, ecsVector<TagSerializationData>& serializers)
 		{
 			serializers.clear();
 

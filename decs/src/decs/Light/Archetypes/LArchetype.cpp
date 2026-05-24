@@ -107,7 +107,7 @@ namespace decs::light
 		return true;
 	}
 
-	bool Archetype::HasTypes_Exactly(const std::vector<TypeID>& types) const
+	bool Archetype::HasTypes_Exactly(const ecsVector<TypeID>& types) const
 	{
 		const uint32_t componentAndTagCount = GetComponentTagCount();
 

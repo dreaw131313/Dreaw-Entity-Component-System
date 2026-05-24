@@ -70,7 +70,7 @@ namespace decs
 		}
 
 	private:
-		std::vector<ItemRecord> m_Functions{};
+		ecsVector<ItemRecord> m_Functions{};
 		size_t m_IDGenerator = 0;
 
 	private:

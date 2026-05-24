@@ -1,5 +1,5 @@
 #pragma once
-#include <vector>
+#include "decs/Core/Core.h"
 
 namespace decs
 {
@@ -368,7 +368,7 @@ namespace decs
 		inline uint64_t GetChunkSize(uint64_t index)const { return m_Chunks[index].m_Size; }
 
 	private:
-		std::vector<TChunk> m_Chunks;
+		ecsVector<TChunk> m_Chunks;
 		uint64_t m_ChunkCapacity = 100;
 		uint64_t m_ChunksCount = 0;
 

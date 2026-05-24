@@ -54,7 +54,7 @@ namespace decs::light
 		friend class Container;
 		friend class Archetype;
 	private:
-		std::vector<ComponentType> m_Data{};
+		ecsVector<ComponentType> m_Data{};
 
 	public:
 		PackedLightComponentContainer() = default;

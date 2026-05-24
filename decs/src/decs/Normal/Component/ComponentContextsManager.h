@@ -109,14 +109,14 @@ namespace decs
 			return SetComponentOrder(Type<TComponent>::ID(), order);
 		}
 
-		uint32_t SetComponentsOrder(const std::vector<std::pair<TypeID, int>>& componentOrders)
+		uint32_t SetComponentsOrder(const ecsVector<std::pair<TypeID, int>>& componentOrders)
 		{
 			uint32_t counter = 0;
 
 			return counter;
 		}
 
-		const std::vector<IComponentContext*>& GetComponentContextsInOrder() const
+		const ecsVector<IComponentContext*>& GetComponentContextsInOrder() const
 		{
 			return m_ComponentContextsInOrder;
 		}
@@ -218,7 +218,7 @@ namespace decs
 		}
 	private:
 		ecsMap<TypeID, ComponentContextRecord> m_Contexts = {};
-		std::vector<IComponentContext*> m_ComponentContextsInOrder = {};
+		ecsVector<IComponentContext*> m_ComponentContextsInOrder = {};
 
 		int64_t m_IterationIndex = std::numeric_limits<int64_t>::max();
 		uint32_t m_DefaultStableComponentChunkSize = 1000;

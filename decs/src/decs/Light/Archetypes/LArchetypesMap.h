@@ -59,7 +59,7 @@ namespace decs::light
 	struct ArchetypeGroup
 	{
 	public:
-		std::vector<Archetype*> Archetypes;
+		ecsVector<Archetype*> Archetypes;
 
 	public:
 		ArchetypeGroup() = default;
@@ -245,7 +245,7 @@ namespace decs::light
 		}
 
 	private:
-		std::vector<ArchetypeGroup> m_Groups{};
+		ecsVector<ArchetypeGroup> m_Groups{};
 		size_t m_ArchetypesCount = 0;
 
 		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
