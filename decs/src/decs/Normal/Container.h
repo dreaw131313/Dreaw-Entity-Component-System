@@ -937,9 +937,9 @@ namespace decs
 			m_ArchetypesMap.ShrinkArchetypesToFit();
 		}
 
-		inline void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state)
+		inline void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state, const ArchetypesShrinkToFitConfig& config)
 		{
-			m_ArchetypesMap.ShrinkArchetypesToFit(state);
+			m_ArchetypesMap.ShrinkArchetypesToFit(state, config);
 		}
 
 		inline uint64_t GetArchetypeCount() const
