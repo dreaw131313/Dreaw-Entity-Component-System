@@ -981,20 +981,6 @@ namespace decs::light
 			return m_ArchetypesMap.GetArchetypesCount();
 		}
 
-		template<light_component_concept... ComponentTypes, typename... TagTypes>
-		Archetype* GetArchetypeWithComponentsTags(
-			const LightComponentTypeGroup<ComponentTypes...>& components,
-			const TagTypeGroup<TagTypes...>& tags
-		)
-		{
-			Archetype* spawnArchetype = nullptr;
-
-			((spawnArchetype = GetArchetypeAfterAddTag(spawnArchetype, Type<tag_type_t<TagTypes>>::ID())), ...);
-			((spawnArchetype = GetArchetypeAfterAddComponent<ComponentTypes>(spawnArchetype)), ...);
-
-			return spawnArchetype;
-		}
-
 		template<light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
 		Archetype* GetArchetypeWithComponentsTagsFilters(
 			const LightComponentTypeGroup<ComponentTypes...>&,
