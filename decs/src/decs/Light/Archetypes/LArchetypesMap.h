@@ -16,7 +16,7 @@ namespace decs::light
 	template<filter_concept...>
 	class TFilterDataTuple;
 
-	class ArchetypesShringtoFitConfig
+	class ArchetypesShrinkToFitConfig
 	{
 	public:
 		size_t m_MaxArchetypeCountToCheck = 10;
@@ -332,7 +332,7 @@ namespace decs::light
 
 		void ShrinkArchetypesToFit();
 
-		void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state, const ArchetypesShringtoFitConfig& config);
+		void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state, const ArchetypesShrinkToFitConfig& config);
 
 		template<typename Callable>
 		void IterateOverArchetypesWithType(TypeID componentType, Callable&& func)

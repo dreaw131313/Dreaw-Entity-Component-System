@@ -37,7 +37,7 @@ namespace decs::light
 		});
 	}
 
-	void ArchetypesMap::ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state, const ArchetypesShringtoFitConfig& config)
+	void ArchetypesMap::ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state, const ArchetypesShrinkToFitConfig& config)
 	{
 		const std::span<Archetype* const > archetypes = m_ArchetypeAllocator.GetCreatedArchetypes();
 		size_t currentArchetypeIndex = state.m_LastArchetypeIndex;
