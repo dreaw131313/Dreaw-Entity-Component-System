@@ -16,55 +16,27 @@ namespace decs::light
 	template<filter_concept...>
 	class TFilterDataTuple;
 
+	class ArchetypesShringtoFitConfig
+	{
+	public:
+		size_t m_MaxArchetypeCountToCheck = 10;
+		size_t m_MaxArchetypesToShrink = 5;
+		/// <summary>
+		/// If archetype load factor is less or equal than this value then archetype will be shrinked
+		/// </summary>
+		float m_MinArchetypeLoadFactor = 0.5f;
+
+
+	};
+
 	class ArchetypesShrinkToFitState
 	{
 		friend class ArchetypesMap;
 	private:
-		enum class State
-		{
-			Started,
-			Ended
-		};
-
-	public:
-		ArchetypesShrinkToFitState()
-		{
-
-		}
-
-		ArchetypesShrinkToFitState(uint64_t archetypesToShrinkInOneCall, float maxArchetypeLoadFactor):
-			m_ArchetypesToShrinkInOneCall(archetypesToShrinkInOneCall),
-			m_MaxArchetypeLoadFactor(maxArchetypeLoadFactor)
-		{
-
-		}
-
-		void Reset()
-		{
-			m_State = State::Ended;
-			m_ArchetypesCountToShrink = 0;
-			m_CurretnArchetypeIndex = 0;
-		}
-
-		inline bool IsEnded()
-		{
-			return m_State == State::Ended;
-		}
+		ArchetypesShrinkToFitState() = default;
 
 	private:
-		State m_State = State::Ended;
-		uint64_t m_ArchetypesCountToShrink = 0;
-		uint64_t m_ArchetypesToShrinkInOneCall = 100;
-		uint64_t m_CurretnArchetypeIndex = 0;
-		float m_MaxArchetypeLoadFactor = 1.f;
-
-	private:
-		void Start(const uint64_t& archetypesToShrink)
-		{
-			m_State = State::Started;
-			m_ArchetypesCountToShrink = archetypesToShrink;
-			m_CurretnArchetypeIndex = 0;
-		}
+		size_t m_LastArchetypeIndex = 0;
 	};
 
 	struct ArchetypeDestroyState
@@ -360,7 +332,7 @@ namespace decs::light
 
 		void ShrinkArchetypesToFit();
 
-		void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state);
+		void ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state, const ArchetypesShringtoFitConfig& config);
 
 		template<typename Callable>
 		void IterateOverArchetypesWithType(TypeID componentType, Callable&& func)

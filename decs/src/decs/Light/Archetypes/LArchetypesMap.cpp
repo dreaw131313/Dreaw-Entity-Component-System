@@ -37,42 +37,38 @@ namespace decs::light
 		});
 	}
 
-	void ArchetypesMap::ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state)
+	void ArchetypesMap::ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state, const ArchetypesShringtoFitConfig& config)
 	{
-		/*if (GetArchetypesCount() == 0)
+		const std::span<Archetype* const > archetypes = m_ArchetypeAllocator.GetCreatedArchetypes();
+		size_t currentArchetypeIndex = state.m_LastArchetypeIndex;
+
+		if (currentArchetypeIndex >= archetypes.size())
 		{
-			return;
+			currentArchetypeIndex = 0;
 		}
 
-		if (state.m_State == ArchetypesShrinkToFitState::State::Ended)
+		size_t checkedArchetypeCount = 0;
+		size_t shrinkedArchetypeCount = 0;
+
+		auto keepShrinking = [&] () -> bool
 		{
-			state.Start(m_Archetypes.Size());
-		}
+			return checkedArchetypeCount < config.m_MaxArchetypeCountToCheck && shrinkedArchetypeCount < config.m_MaxArchetypesToShrink;
+		};
 
-		int archetypesToShrink = (int)state.m_ArchetypesToShrinkInOneCall;
-
-		for (uint64_t idx = state.m_CurretnArchetypeIndex; idx < state.m_ArchetypesCountToShrink; idx++)
+		while (keepShrinking())
 		{
-			state.m_CurretnArchetypeIndex += 1;
-			Archetype& archetype = m_Archetypes[idx];
+			Archetype* archetype = archetypes[currentArchetypeIndex];
+			currentArchetypeIndex = (currentArchetypeIndex + 1) % archetypes.size();
+			checkedArchetypeCount++;
 
-			float loadFactor = archetype.GetLoadFactor();
-			if (loadFactor <= state.m_MaxArchetypeLoadFactor)
+			if (archetype->GetLoadFactor() <= config.m_MinArchetypeLoadFactor)
 			{
-				archetype.ShrinkToFit();
-				archetypesToShrink--;
-			}
-
-			if (archetypesToShrink <= 0)
-			{
-				break;
+				archetype->ShrinkToFit();
+				shrinkedArchetypeCount++;
 			}
 		}
 
-		if (state.m_CurretnArchetypeIndex >= state.m_ArchetypesCountToShrink)
-		{
-			state.Reset();
-		}*/
+		state.m_LastArchetypeIndex = currentArchetypeIndex;
 	}
 
 	void ArchetypesMap::ClearEntityDataAndComponents()
