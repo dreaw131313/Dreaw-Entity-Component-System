@@ -3,35 +3,13 @@
 #include <memory>
 
 #include "decs/Core/Type.h"
+#include "decs/Core/ArchetypesCore.h"
 #include "decs/Normal/Component/ComponentContextsManager.h"
 
 #include "Archetype.h"
 
 namespace decs
 {
-	class ArchetypesShrinkToFitConfig
-	{
-	public:
-		size_t m_MaxArchetypeCountToCheck = 10;
-		size_t m_MaxArchetypesToShrink = 5;
-		/// <summary>
-		/// If archetype load factor is less or equal than this value then archetype will be shrinked
-		/// </summary>
-		float m_MinArchetypeLoadFactor = 0.5f;
-
-
-	};
-
-	class ArchetypesShrinkToFitState
-	{
-		friend class ArchetypesMap;
-	private:
-		ArchetypesShrinkToFitState() = default;
-
-	private:
-		size_t m_LastArchetypeIndex = 0;
-	};
-
 	struct ArchetypeGroup
 	{
 	public:

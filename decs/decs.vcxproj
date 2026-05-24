@@ -102,6 +102,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\Core\ArchetypesCore.h" />
     <ClInclude Include="src\decs\Core\ObserverFunction.h" />
     <ClInclude Include="src\decs\Core\Stats.h" />
     <ClInclude Include="src\decs\Light\Component\LComponentContext.h" />

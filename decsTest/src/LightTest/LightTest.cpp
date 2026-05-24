@@ -510,8 +510,8 @@ void Test::RemovingArchetypesTest()
 {
 	decs::light::Container ecs{};
 
-	decs::light::ArchetypeDestroyState state{};
-	decs::light::ArchetypeDestroyConfig config{
+	decs::ArchetypeDestroyState state{};
+	decs::ArchetypeDestroyConfig config{
 		.m_MaxArchetypesToCheck = 1000000,
 		.m_MaxArchetypesDestroy = 100000,
 		.m_bDestroyOnlyArchetypesWithFilters = true,
