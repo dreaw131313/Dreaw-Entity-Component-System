@@ -61,7 +61,7 @@ namespace decs
 		int m_ObserverOrder = 0;
 	};
 
-	template<typename TComponent>
+	template<typename ComponentType>
 	class ComponentContext : public IComponentContext
 	{
 		friend class Container;
@@ -80,7 +80,7 @@ namespace decs
 
 		inline TypeID GetComponentTypeID() const override
 		{
-			return Type<TComponent>::ID();
+			return Type<ComponentType>::ID();
 		}
 
 		inline bool HasCreateObserver() const override
@@ -95,7 +95,7 @@ namespace decs
 
 		IComponentContext* Clone(int observerOrder, uint32_t stableComponentChunkSize) override
 		{
-			return new ComponentContext<TComponent>(observerOrder, stableComponentChunkSize);
+			return new ComponentContext<ComponentType>(observerOrder, stableComponentChunkSize);
 		}
 
 		void InvokeOnCreateComponent(EntityComponent* component, const Entity& entity)override
@@ -105,7 +105,7 @@ namespace decs
 				component->SetCreated(true);
 				if (m_Observers.m_CreateObserver != nullptr)
 				{
-					m_Observers.m_CreateObserver->OnCreateComponent(*::decs::check_cast<TComponent*>(component), entity);
+					m_Observers.m_CreateObserver->OnCreateComponent(*::decs::check_cast<ComponentType*>(component), entity);
 				}
 			}
 		}
@@ -117,7 +117,7 @@ namespace decs
 				component->SetCreated(false);
 				if (m_Observers.m_DestroyObserver != nullptr)
 				{
-					m_Observers.m_DestroyObserver->OnDestroyComponent(*::decs::check_cast<TComponent*>(component), entity);
+					m_Observers.m_DestroyObserver->OnDestroyComponent(*::decs::check_cast<ComponentType*>(component), entity);
 				}
 			}
 		}
@@ -129,7 +129,7 @@ namespace decs
 				component->SetEnabled(true);
 				if (m_Observers.m_EnableObserver != nullptr)
 				{
-					m_Observers.m_EnableObserver->OnEnableComponent(*::decs::check_cast<TComponent*>(component), entity);
+					m_Observers.m_EnableObserver->OnEnableComponent(*::decs::check_cast<ComponentType*>(component), entity);
 				}
 			}
 		}
@@ -141,7 +141,7 @@ namespace decs
 				component->SetEnabled(false);
 				if (m_Observers.m_DisableObserver != nullptr)
 				{
-					m_Observers.m_DisableObserver->OnDisableComponent(*::decs::check_cast<TComponent*>(component), entity);
+					m_Observers.m_DisableObserver->OnDisableComponent(*::decs::check_cast<ComponentType*>(component), entity);
 				}
 			}
 		}
@@ -153,7 +153,7 @@ namespace decs
 
 		IPackedComponentContainer* CreatePackedContainer() const override
 		{
-			return new PackedStableComponentContainer<TComponent>();
+			return new PackedStableComponentContainer<ComponentType>();
 		}
 
 		virtual void ClearStableContainer() override
@@ -161,7 +161,7 @@ namespace decs
 			m_StableContainer.Clear();
 		}
 	private:
-		ComponentObserversGroup<TComponent> m_Observers = {};
-		StableComponentContainer<TComponent> m_StableContainer;
+		ComponentObserversGroup<ComponentType> m_Observers = {};
+		StableComponentContainer<ComponentType> m_StableContainer;
 	};
 }

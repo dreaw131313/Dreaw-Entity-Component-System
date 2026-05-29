@@ -38,7 +38,7 @@ namespace decs
 		}
 	};
 
-	template<ComponentConcept... ComponentsTypes>
+	template<component_concept... ComponentsTypes>
 	struct QueryFiltersConfig
 	{
 	public:
@@ -143,12 +143,12 @@ namespace decs
 		ecsVector<TypeID> m_WithAll{};
 	};
 
-	template<ComponentConcept... ComponentsTypes>
+	template<component_concept... ComponentsTypes>
 	class IterationArchetypeContext
 	{
 	public:
-		template<typename TComponent>
-		using TPackedContainer = PackedStableComponentContainer<drop_const_t<TComponent>>;
+		template<typename ComponentType>
+		using TPackedContainer = PackedStableComponentContainer<drop_const_t<ComponentType>>;
 		using ContainersTuple = std::tuple<TPackedContainer<drop_const_t<ComponentsTypes>>*...>;
 
 	public:
@@ -503,7 +503,7 @@ namespace decs
 	};
 
 
-	template<ComponentConcept... ComponentsTypes>
+	template<component_concept... ComponentsTypes>
 	class IterationContainerContext
 	{
 	public:

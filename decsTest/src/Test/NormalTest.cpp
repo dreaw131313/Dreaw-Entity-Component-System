@@ -21,7 +21,6 @@ namespace Normal
 		float X = 0;
 		float Y = 0;
 
-		int i[10];
 
 	public:
 		Position()
@@ -41,7 +40,7 @@ namespace Normal
 	struct TestComponent : public decs::EntityComponent
 	{
 	public:
-		int table[20];
+		int table[50];
 
 
 	};
@@ -104,7 +103,7 @@ namespace Normal
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
 
-		QueryIterationTest();
+		//QueryIterationTest();
 		EntityCreatePerformanceTest();
 	}
 
@@ -306,10 +305,8 @@ namespace Normal
 
 	void Test::EntityCreatePerformanceTest()
 	{
-		size_t entityCounter = 0;
-
-		const uint32_t testCount = 10;
-		const uint32_t entityCount = 2000;
+		const uint32_t testCount = 1;
+		const uint32_t entityCount = 65536;
 
 		decs::ContainerConfig config{
 			.EntityChunkSize = 10000,
@@ -401,6 +398,5 @@ namespace Normal
 
 		std::cout << "Final avarage " << entityCount << " entity creation time " << finalEntitiesCreationTime << " ms\n";
 		std::cout << "Final avarage single entity creation time " << finalSingleEntityCreationTime * 1000. << " us (" << finalSingleEntityCreationTime << "ms)\n";
-		std::cout << entityCounter << "\n";
 	}
 }

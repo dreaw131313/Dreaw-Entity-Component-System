@@ -434,20 +434,20 @@ namespace decs::light
 		ComponentContextManager m_ComponentContextManager{};
 
 	private:
-		template<bool InvokeObserver, light_component_concept TComponent, typename ...Args>
-		TComponent* AddComponent_Impl(const Entity& entity, EntityData& entityData, Args&&... args)
+		template<bool InvokeObserver, light_component_concept ComponentType, typename ...Args>
+		ComponentType* AddComponent_Impl(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			if (entityData.OperationsLocked())
 			{
 				return nullptr;
 			}
 
-			using PureComponentType = pure_type_t<TComponent>;
+			using PureComponentType = pure_type_t<ComponentType>;
 			using PackedContainerType = PackedLightComponentContainer<PureComponentType>;
 
 			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<PureComponentType>::ID();
 
-			auto currentComponent = GetComponent<TComponent>(entityData);
+			auto currentComponent = GetComponent<ComponentType>(entityData);
 			if (currentComponent != nullptr)
 			{
 				return currentComponent;
@@ -1009,19 +1009,19 @@ namespace decs::light
 		}
 
 	private:
-		template<typename TComponent>
+		template<typename ComponentType>
 		Archetype* GetArchetypeAfterAddComponent(Archetype* toArchetype)
 		{
-			TYPE_ID_CONSTEXPR const TypeID addedComponentTypeID = Type<TComponent>::ID();
+			TYPE_ID_CONSTEXPR const TypeID addedComponentTypeID = Type<ComponentType>::ID();
 
 			Archetype* entityNewArchetype = nullptr;
 			if (toArchetype == nullptr)
 			{
-				entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<TComponent>();
+				entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype<ComponentType>();
 			}
 			else
 			{
-				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<TComponent>(*toArchetype);
+				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<ComponentType>(*toArchetype);
 			}
 
 			return entityNewArchetype;

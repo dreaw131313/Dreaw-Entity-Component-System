@@ -48,15 +48,15 @@ namespace decs
 		inline virtual void PushBackFromBase(EntityComponent* componentBase) = 0;
 	};
 
-	template<typename TComponent>
+	template<typename ComponentType>
 	class PackedStableComponentContainer final : public IPackedComponentContainer
 	{
-		static_assert(!is_const_v<TComponent> && "Component must not be const!");
+		static_assert(!is_const_v<ComponentType> && "Component must not be const!");
 
 		friend class Container;
 		friend class Archetype;
 	private:
-		ecsVector<TComponent*> m_Data;
+		ecsVector<ComponentType*> m_Data;
 
 	public:
 		PackedStableComponentContainer() = default;
@@ -65,7 +65,7 @@ namespace decs
 
 		inline uint64_t GetComponentSize() const override
 		{
-			return sizeof(TComponent);
+			return sizeof(ComponentType);
 		}
 
 		inline void PopBack() override
@@ -121,20 +121,20 @@ namespace decs
 
 		inline void PushBackFromBase(EntityComponent* componentBase) override
 		{
-			m_Data.push_back(::decs::check_cast<TComponent*>(componentBase));
+			m_Data.push_back(::decs::check_cast<ComponentType*>(componentBase));
 		}
 
-		inline void PushBack(TComponent* component)
+		inline void PushBack(ComponentType* component)
 		{
 			m_Data.push_back(component);
 		}
 
-		inline TComponent& GetAsRef(uint64_t index)
+		inline ComponentType& GetAsRef(uint64_t index)
 		{
 			return *m_Data[index];
 		}
 
-		inline TComponent* GetAsPtr(uint64_t index)
+		inline ComponentType* GetAsPtr(uint64_t index)
 		{
 			return m_Data[index];
 		}

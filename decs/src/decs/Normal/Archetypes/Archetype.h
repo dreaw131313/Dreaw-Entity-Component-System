@@ -307,16 +307,16 @@ namespace decs
 		friend class ContainerSerializer;
 		friend class ContainerSerializerComplex;
 
-		template<ComponentConcept...>
+		template<component_concept...>
 		friend class Query;
-		template<ComponentConcept...>
+		template<component_concept...>
 		friend class MultiQuery;
-		template<ComponentConcept... ComponentsTypes>
+		template<component_concept... ComponentsTypes>
 		friend class IterationArchetypeContext;
-		template<ComponentConcept...>
+		template<component_concept...>
 		friend class IterationContainerContext;
 
-		template<ComponentConcept...>
+		template<component_concept...>
 		friend class BatchIterator;
 
 	private:
@@ -463,7 +463,7 @@ namespace decs
 			return true;
 		}
 
-		template<ComponentConcept... ComponentTypes, tag_concept... TagTypes>
+		template<component_concept... ComponentTypes, tag_concept... TagTypes>
 		bool IsArchetypeWithComponentsAndTags_Exactly(
 			const ComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags
@@ -547,7 +547,7 @@ namespace decs
 			return typeData.m_PackedContainer;
 		}
 
-		template<ComponentConcept ComponentType>
+		template<component_concept ComponentType>
 		TArchetypeTypeData<pure_type_t<ComponentType>> GetTypeData() const
 		{
 			uint32_t compIdx = FindTypeIndex<pure_type_t<ComponentType>>();
@@ -614,10 +614,10 @@ namespace decs
 	private:
 		void AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType);
 
-		template<ComponentConcept TComponent>
+		template<component_concept ComponentType>
 		ArchetypeEdge GetEdge() const
 		{
-			auto it = m_Edges.find(Type<TComponent>::ID());
+			auto it = m_Edges.find(Type<ComponentType>::ID());
 			if (it != m_Edges.end())
 			{
 				return it->second;

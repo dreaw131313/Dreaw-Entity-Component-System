@@ -1,6 +1,8 @@
 #pragma once
 #include "decs/Core/Core.h"
 
+#include "decs/Normal/Component/Component.h"
+
 namespace decs
 {
 	struct Entity;
@@ -41,7 +43,7 @@ namespace decs
 		virtual void OnDisableEntity(const Entity& entity) = 0;;
 	};
 
-	template<typename TComponent>
+	template<component_concept ComponentType>
 	class CreateComponentObserver
 	{
 	public:
@@ -52,45 +54,44 @@ namespace decs
 		/// </summary>
 		/// <param name="component"></param>
 		/// <param name="entity"></param>
-		virtual void OnCreateComponent(TComponent& component, const Entity& entity) = 0;
+		virtual void OnCreateComponent(ComponentType& component, const Entity& entity) = 0;
 	};
 
-	template<typename TComponent>
+	template<component_concept ComponentType>
 	class DestroyComponentObserver
 	{
 	public:
 		virtual ~DestroyComponentObserver() = default;
 
-		virtual void OnDestroyComponent(TComponent& component, const Entity& entity) = 0;
+		virtual void OnDestroyComponent(ComponentType& component, const Entity& entity) = 0;
 	};
 
-	template<typename TComponent>
+	template<component_concept ComponentType>
 	class EnableComponentObserver
 	{
 	public:
 		virtual ~EnableComponentObserver() = default;
 
-		virtual void OnEnableComponent(TComponent& component, const Entity& entity) = 0;
+		virtual void OnEnableComponent(ComponentType& component, const Entity& entity) = 0;
 	};
 
-	template<typename TComponent>
+	template<component_concept ComponentType>
 	class DisableComponentObserver
 	{
 	public:
 		virtual ~DisableComponentObserver() = default;
 
-		virtual void OnDisableComponent(TComponent& component, const Entity& entity) = 0;
+		virtual void OnDisableComponent(ComponentType& component, const Entity& entity) = 0;
 	};
 
-
-	template<typename TComponent>
+	template<component_concept ComponentType>
 	struct ComponentObserversGroup
 	{
 	public:
-		CreateComponentObserver<TComponent>* m_CreateObserver = nullptr;
-		DestroyComponentObserver<TComponent>* m_DestroyObserver = nullptr;
-		EnableComponentObserver<TComponent>* m_EnableObserver = nullptr;
-		DisableComponentObserver<TComponent>* m_DisableObserver = nullptr;
+		CreateComponentObserver<ComponentType>* m_CreateObserver = nullptr;
+		DestroyComponentObserver<ComponentType>* m_DestroyObserver = nullptr;
+		EnableComponentObserver<ComponentType>* m_EnableObserver = nullptr;
+		DisableComponentObserver<ComponentType>* m_DisableObserver = nullptr;
 	};
 
 }

@@ -25,11 +25,11 @@ namespace decs
 
 	class Container final : private NonCopyableNonMoveable
 	{
-		template<ComponentConcept ...Types>
+		template<component_concept ...Types>
 		friend class Query;
-		template<ComponentConcept ...Types>
+		template<component_concept ...Types>
 		friend class MultiQuery;
-		template<ComponentConcept...>
+		template<component_concept...>
 		friend class IterationContainerContext;
 		friend struct Entity;
 		template<typename>
@@ -119,7 +119,7 @@ namespace decs
 
 	private:
 
-		template<ComponentConcept T, ComponentConcept... ComponentTypes>
+		template<component_concept T, component_concept... ComponentTypes>
 		inline pure_type_t<T>* CreateEntity_Impl_AddCompoenent(
 			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
 			EntityData& entityData
@@ -134,7 +134,7 @@ namespace decs
 			return comp;
 		}
 
-		template<ComponentConcept T, ComponentConcept... ComponentTypes>
+		template<component_concept T, component_concept... ComponentTypes>
 		inline void CreateEntity_Impl_InvokeComponentObservers(
 			const Entity& entity,
 			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
@@ -151,7 +151,7 @@ namespace decs
 			}
 		};
 
-		template<bool InvokeObservers, typename InitFunc, ComponentConcept... ComponentTypes>
+		template<bool InvokeObservers, typename InitFunc, component_concept... ComponentTypes>
 		inline void CreateEntity_Impl_Initialization(
 			const ComponentTypeGroup<ComponentTypes...> components,
 			Archetype& entityArchetype,
@@ -198,7 +198,7 @@ namespace decs
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<bool InvokeObservers, typename InitFunc, ComponentConcept... ComponentTypes, typename... TagTypes>
+		template<bool InvokeObservers, typename InitFunc, component_concept... ComponentTypes, typename... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -252,7 +252,7 @@ namespace decs
 		}
 
 	public:
-		template<typename InitFunc, ComponentConcept... ComponentTypes, typename... TagTypes>
+		template<typename InitFunc, component_concept... ComponentTypes, typename... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		inline void CreateEntities(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -265,7 +265,7 @@ namespace decs
 			CreateEntities<true>(components, tags, entityCount, bIsActive, initFunc);
 		}
 
-		template<typename InitFunc, ComponentConcept... ComponentTypes>
+		template<typename InitFunc, component_concept... ComponentTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		inline void CreateEntities(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -278,7 +278,7 @@ namespace decs
 			CreateEntities<true>(components, emptyTagTypeGroup, entityCount, bIsActive, initFunc);
 		}
 
-		template<typename InitFunc, ComponentConcept... ComponentTypes, typename... TagTypes>
+		template<typename InitFunc, component_concept... ComponentTypes, typename... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		inline void CreateEntities_NoObservers(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -291,7 +291,7 @@ namespace decs
 			CreateEntities<false>(components, tags, entityCount, bIsActive, initFunc);
 		}
 
-		template<typename InitFunc, ComponentConcept... ComponentTypes>
+		template<typename InitFunc, component_concept... ComponentTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		inline void CreateEntities_NoObservers(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -320,7 +320,7 @@ namespace decs
 		/// <param name="bIsActive"></param>
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
-		template<bool InvokeObservers, typename InitFunc, ComponentConcept... ComponentTypes, typename... TagTypes>
+		template<bool InvokeObservers, typename InitFunc, component_concept... ComponentTypes, typename... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity_Impl(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -373,7 +373,7 @@ namespace decs
 		}
 
 	public:
-		template<typename InitFunc, ComponentConcept... ComponentTypes, typename... TagTypes>
+		template<typename InitFunc, component_concept... ComponentTypes, typename... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		inline Entity CreateEntity(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -385,7 +385,7 @@ namespace decs
 			return CreateEntity<true>(components, tags, bIsActive, initFunc);
 		}
 
-		template<typename InitFunc, ComponentConcept... ComponentTypes>
+		template<typename InitFunc, component_concept... ComponentTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		inline Entity CreateEntity(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -397,7 +397,7 @@ namespace decs
 			return CreateEntity<true>(components, emptyTagTypeGroup, bIsActive, initFunc);
 		}
 
-		template<typename InitFunc, ComponentConcept... ComponentTypes, typename... TagTypes>
+		template<typename InitFunc, component_concept... ComponentTypes, typename... TagTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		inline Entity CreateEntity_NoObservers(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -409,7 +409,7 @@ namespace decs
 			return CreateEntity<false>(components, tags, bIsActive, initFunc);
 		}
 
-		template<typename InitFunc, ComponentConcept... ComponentTypes>
+		template<typename InitFunc, component_concept... ComponentTypes>
 			requires query_callable<InitFunc, ComponentTypes...>
 		inline Entity CreateEntity_NoObservers(
 			const ComponentTypeGroup<ComponentTypes...> components,
@@ -586,7 +586,7 @@ namespace decs
 		);
 
 	private:
-		template<bool InvokeObservers, ComponentConcept ComponentType, typename ...Args>
+		template<bool InvokeObservers, component_concept ComponentType, typename ...Args>
 		ComponentType* AddComponent_Impl(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			if (!m_CanAddComponents || !entityData.IsValidToPerformComponentOperation())
@@ -642,13 +642,13 @@ namespace decs
 		}
 
 	public:
-		template<ComponentConcept ComponentType, typename ...Args>
+		template<component_concept ComponentType, typename ...Args>
 		inline ComponentType* AddComponent(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			return AddComponent_Impl<true, ComponentType, Args...>(entity, entityData, std::forward<Args>(args)...);
 		}
 
-		template<ComponentConcept ComponentType, typename ...Args>
+		template<component_concept ComponentType, typename ...Args>
 		inline ComponentType* AddComponent_NoObserver(const Entity& entity, EntityData& entityData, Args&&... args)
 		{
 			return AddComponent_Impl<false, ComponentType, Args...>(entity, entityData, std::forward<Args>(args)...);
@@ -658,7 +658,7 @@ namespace decs
 		bool RemoveComponent_Impl(const Entity& entity, TypeID componentTypeID, bool bInvokeObservers);
 
 	public:
-		template<ComponentConcept ComponentType>
+		template<component_concept ComponentType>
 		bool RemoveComponent(const Entity& entity)
 		{
 			return RemoveComponent_Impl(entity, Type<ComponentType>::ID(), true);
@@ -669,7 +669,7 @@ namespace decs
 			return RemoveComponent_Impl(entity, typeID, true);
 		}
 
-		template<ComponentConcept ComponentType>
+		template<component_concept ComponentType>
 		bool RemoveComponent_NoObserver(const Entity& entity)
 		{
 			return RemoveComponent_Impl(entity, Type<ComponentType>::ID(), false);
@@ -681,12 +681,12 @@ namespace decs
 		}
 
 	public:
-		template<ComponentConcept TComponent>
-		TComponent* GetComponentWithoutCheckingIsAlive(EntityData& entityData) const
+		template<component_concept ComponentType>
+		ComponentType* GetComponentWithoutCheckingIsAlive(EntityData& entityData) const
 		{
 			if (entityData.m_Archetype != nullptr)
 			{
-				PackedStableComponentContainer<TComponent>* packedContainer = entityData.m_Archetype->GetTypePackedContainer<TComponent>();
+				PackedStableComponentContainer<ComponentType>* packedContainer = entityData.m_Archetype->GetTypePackedContainer<ComponentType>();
 				if (packedContainer != nullptr)
 				{
 					return packedContainer->GetAsPtr(entityData.m_IndexInArchetype);
@@ -695,12 +695,12 @@ namespace decs
 			return nullptr;
 		}
 
-		template<ComponentConcept TComponent>
-		TComponent* GetComponent(EntityData& entityData) const
+		template<component_concept ComponentType>
+		ComponentType* GetComponent(EntityData& entityData) const
 		{
 			if (entityData.IsAlive())
 			{
-				return GetComponentWithoutCheckingIsAlive<TComponent>(entityData);
+				return GetComponentWithoutCheckingIsAlive<ComponentType>(entityData);
 			}
 			return nullptr;
 		}
@@ -756,8 +756,8 @@ namespace decs
 		/// <returns></returns>
 		EntityComponent* GetComponentAtIndex_TypeIDOrder(EntityData& entityData, uint32_t componentIndex);
 
-		template<ComponentConcept TComponent>
-		TComponent* GetComponentDynamic(EntityData& entityData)
+		template<component_concept ComponentType>
+		ComponentType* GetComponentDynamic(EntityData& entityData)
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
 			{
@@ -769,7 +769,7 @@ namespace decs
 					if (!typeData.IsTag())
 					{
 						auto componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
-						TComponent* casted = dynamic_cast<TComponent*>(componentPtr);
+						ComponentType* casted = dynamic_cast<ComponentType*>(componentPtr);
 						if (casted != nullptr)
 						{
 							return casted;
@@ -781,8 +781,8 @@ namespace decs
 			return nullptr;
 		}
 
-		template<ComponentConcept TComponent>
-		void GetComponentsDynamic(EntityData& entityData, ecsVector<TComponent*>& outComponents)
+		template<component_concept ComponentType>
+		void GetComponentsDynamic(EntityData& entityData, ecsVector<ComponentType*>& outComponents)
 		{
 			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
 			{
@@ -794,7 +794,7 @@ namespace decs
 					if (!typeData.IsTag())
 					{
 						auto componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
-						TComponent* casted = dynamic_cast<TComponent*>(componentPtr);
+						ComponentType* casted = dynamic_cast<ComponentType*>(componentPtr);
 						if (casted != nullptr)
 						{
 							outComponents.push_back(casted);
@@ -813,10 +813,10 @@ namespace decs
 			return false;
 		}
 
-		template<ComponentConcept TComponent>
+		template<component_concept ComponentType>
 		bool HasComponent(EntityData& entityData) const
 		{
-			return HasComponentInternal(entityData, Type<TComponent>::ID());
+			return HasComponentInternal(entityData, Type<ComponentType>::ID());
 		}
 
 	#pragma endregion
@@ -903,7 +903,7 @@ namespace decs
 
 	#pragma region STABLE COMPONENTS:
 	public:
-		template<ComponentConcept T>
+		template<component_concept T>
 		bool SetComponentChunkSize(uint32_t chunkSize)
 		{
 			return m_ComponentContextManager.SetComponentChunkSize<T>(chunkSize);
@@ -914,7 +914,7 @@ namespace decs
 			return m_ComponentContextManager.SetComponentChunkSize(typeID, chunkSize);
 		}
 
-		template<ComponentConcept T>
+		template<component_concept T>
 		uint64_t GetComponentChunkSize()
 		{
 			return m_ComponentContextManager.GetComponentChunkSize<T>();
@@ -948,10 +948,10 @@ namespace decs
 		}
 
 	private:
-		template<typename TComponent>
+		template<typename ComponentType>
 		Archetype* GetArchetypeAfterAddComponent(Archetype* toArchetype)
 		{
-			TYPE_ID_CONSTEXPR const TypeID addedComponentTypeID = Type<TComponent>::ID();
+			TYPE_ID_CONSTEXPR const TypeID addedComponentTypeID = Type<ComponentType>::ID();
 
 			Archetype* entityNewArchetype = nullptr;
 			if (toArchetype == nullptr)
@@ -959,7 +959,7 @@ namespace decs
 				entityNewArchetype = m_ArchetypesMap.GetSingleComponentArchetype(addedComponentTypeID);
 				if (entityNewArchetype == nullptr)
 				{
-					auto compCtx = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+					auto compCtx = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
 					entityNewArchetype = m_ArchetypesMap.CreateSingleComponentArchetype(
 						addedComponentTypeID,
 						compCtx
@@ -968,10 +968,10 @@ namespace decs
 			}
 			else
 			{
-				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<TComponent>(*toArchetype);
+				entityNewArchetype = m_ArchetypesMap.GetArchetypeAfterAddComponent<ComponentType>(*toArchetype);
 				if (entityNewArchetype == nullptr)
 				{
-					auto compCtx = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+					auto compCtx = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
 					entityNewArchetype = m_ArchetypesMap.CreateArchetypeAfterAddComponent(
 						*toArchetype,
 						addedComponentTypeID,
@@ -999,7 +999,7 @@ namespace decs
 		}
 
 
-		template<ComponentConcept... ComponentTypes, typename... TagTypes>
+		template<component_concept... ComponentTypes, typename... TagTypes>
 		Archetype* GetArchetypeWithComponentsTags(
 			const ComponentTypeGroup<ComponentTypes...>& components,
 			const TagTypeGroup<TagTypes...>& tags
@@ -1026,13 +1026,13 @@ namespace decs
 		/// </summary>
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <param name="order"></param>
-		template<ComponentConcept TComponent>
+		template<component_concept ComponentType>
 		void SetComponentOrder(int order)
 		{
-			if (m_ComponentContextManager.SetComponentOrder<TComponent>(order))
+			if (m_ComponentContextManager.SetComponentOrder<ComponentType>(order))
 			{
 				// sort order of observers in all archetypes that contain ComponentType
-				m_ArchetypesMap.UpdateOrderInAllArchetypesWithComponentType<TComponent>();
+				m_ArchetypesMap.UpdateOrderInAllArchetypesWithComponentType<ComponentType>();
 			}
 		}
 
@@ -1103,67 +1103,67 @@ namespace decs
 			m_DisableEntityObserver = disableEntityObserver;
 		}
 
-		template<ComponentConcept TComponent>
+		template<component_concept ComponentType>
 		void SetComponentObservers(
-			CreateComponentObserver<TComponent>* createObserver,
-			DestroyComponentObserver<TComponent>* destroyObserver,
-			EnableComponentObserver<TComponent>* enableObserver,
-			DisableComponentObserver<TComponent>* disableObserver
+			CreateComponentObserver<ComponentType>* createObserver,
+			DestroyComponentObserver<ComponentType>* destroyObserver,
+			EnableComponentObserver<ComponentType>* enableObserver,
+			DisableComponentObserver<ComponentType>* disableObserver
 		)
 		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
 			componentContext->m_Observers.m_CreateObserver = createObserver;
 			componentContext->m_Observers.m_DestroyObserver = destroyObserver;
 			componentContext->m_Observers.m_EnableObserver = enableObserver;
 			componentContext->m_Observers.m_DisableObserver = disableObserver;
 		}
 
-		template<ComponentConcept TComponent>
-		void SetCreateComponentObserver(CreateComponentObserver<TComponent>* createObserver)
+		template<component_concept ComponentType>
+		void SetCreateComponentObserver(CreateComponentObserver<ComponentType>* createObserver)
 		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
 			componentContext->m_Observers.m_CreateObserver = createObserver;
 		}
 
-		template<ComponentConcept TComponent>
-		void SetDestroyComponentObserver(DestroyComponentObserver<TComponent>* destroyObserver)
+		template<component_concept ComponentType>
+		void SetDestroyComponentObserver(DestroyComponentObserver<ComponentType>* destroyObserver)
 		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
 			componentContext->m_Observers.m_DestroyObserver = destroyObserver;
 		}
 
-		template<ComponentConcept TComponent>
+		template<component_concept ComponentType>
 		void SetCreateDestroyComponentObservers(
-			CreateComponentObserver<TComponent>* createObserver,
-			DestroyComponentObserver<TComponent>* destroyObserver
+			CreateComponentObserver<ComponentType>* createObserver,
+			DestroyComponentObserver<ComponentType>* destroyObserver
 		)
 		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
 			componentContext->m_Observers.m_CreateObserver = createObserver;
 			componentContext->m_Observers.m_DestroyObserver = destroyObserver;
 		}
 
-		template<ComponentConcept TComponent>
-		void SetEnableComponentObserver(EnableComponentObserver<TComponent>* enableObserver)
+		template<component_concept ComponentType>
+		void SetEnableComponentObserver(EnableComponentObserver<ComponentType>* enableObserver)
 		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
 			componentContext->m_Observers.m_EnableObserver = enableObserver;
 		}
 
-		template<ComponentConcept TComponent>
-		void SetDisableComponentObserver(DisableComponentObserver<TComponent>* disableObserver)
+		template<component_concept ComponentType>
+		void SetDisableComponentObserver(DisableComponentObserver<ComponentType>* disableObserver)
 		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
 			componentContext->m_Observers.m_DisableObserver = disableObserver;
 		}
 
-		template<ComponentConcept TComponent>
+		template<component_concept ComponentType>
 		void SetEnableDisableComponentObservers(
-			EnableComponentObserver<TComponent>* enableObserver,
-			DisableComponentObserver<TComponent>* disableObserver
+			EnableComponentObserver<ComponentType>* enableObserver,
+			DisableComponentObserver<ComponentType>* disableObserver
 		)
 		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<TComponent>();
+			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
 			componentContext->m_Observers.m_EnableObserver = enableObserver;
 			componentContext->m_Observers.m_DisableObserver = disableObserver;
 		}

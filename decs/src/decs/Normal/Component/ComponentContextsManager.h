@@ -29,15 +29,15 @@ namespace decs
 			DestroyComponentsContexts();
 		}
 
-		template<ComponentConcept TComponent>
-		ComponentContext<TComponent>* GetOrCreateComponentContext()
+		template<component_concept ComponentType>
+		ComponentContext<ComponentType>* GetOrCreateComponentContext()
 		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<TComponent>::ID();
+			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::ID();
 
 			auto& contextRecord = m_Contexts[id];
 			if (contextRecord.m_Context == nullptr)
 			{
-				ComponentContext<TComponent>* context = new ComponentContext<TComponent>(
+				ComponentContext<ComponentType>* context = new ComponentContext<ComponentType>(
 					contextRecord.m_Order,
 					contextRecord.m_StableComponentChunkSize >= 0 ? contextRecord.m_StableComponentChunkSize : m_DefaultStableComponentChunkSize
 				);
@@ -48,11 +48,11 @@ namespace decs
 			}
 			else
 			{
-				ComponentContext<TComponent>* containedContext = dynamic_cast<ComponentContext<TComponent>*>(contextRecord.m_Context);
+				ComponentContext<ComponentType>* containedContext = dynamic_cast<ComponentContext<ComponentType>*>(contextRecord.m_Context);
 
 				if (containedContext == nullptr)
 				{
-					std::string errorMessage = "decs::Container contains component context with id " + std::to_string(id) + " to type other than " + Type<TComponent>::Name();
+					std::string errorMessage = "decs::Container contains component context with id " + std::to_string(id) + " to type other than " + Type<ComponentType>::Name();
 					throw std::runtime_error(errorMessage.c_str());
 				}
 				return containedContext;
@@ -102,11 +102,11 @@ namespace decs
 			return false;
 		}
 
-		template<ComponentConcept TComponent>
+		template<component_concept ComponentType>
 		bool SetComponentOrder(int order)
 		{
-			GetOrCreateComponentContext<TComponent>();
-			return SetComponentOrder(Type<TComponent>::ID(), order);
+			GetOrCreateComponentContext<ComponentType>();
+			return SetComponentOrder(Type<ComponentType>::ID(), order);
 		}
 
 		uint32_t SetComponentsOrder(const ecsVector<std::pair<TypeID, int>>& componentOrders)
@@ -168,7 +168,7 @@ namespace decs
 			return true;
 		}
 
-		template<ComponentConcept TComponentType>
+		template<component_concept TComponentType>
 		bool SetComponentChunkSize(uint32_t chunkSize)
 		{
 			return SetComponentChunkSize(Type<TComponentType>::ID(), chunkSize);
@@ -195,7 +195,7 @@ namespace decs
 			}
 		}
 
-		template<ComponentConcept TComponentType>
+		template<component_concept TComponentType>
 		uint64_t GetComponentChunkSize()
 		{
 			return GetComponentChunkSize(Type<TComponentType>::ID());

@@ -16,14 +16,14 @@ namespace decs
 			virtual void SetObserversToContainer(Container& container) = 0;
 		};
 
-		template<typename TComponent>
+		template<typename ComponentType>
 		struct ComponentObserversGroupSetter : public ComponentObserversGroupSetterBase
 		{
 		public:
-			CreateComponentObserver<TComponent>* m_CreateObserver = nullptr;
-			DestroyComponentObserver<TComponent>* m_DestroyObserver = nullptr;
-			EnableComponentObserver<TComponent>* m_EnableObserver = nullptr;
-			DisableComponentObserver<TComponent>* m_DisableObserver = nullptr;
+			CreateComponentObserver<ComponentType>* m_CreateObserver = nullptr;
+			DestroyComponentObserver<ComponentType>* m_DestroyObserver = nullptr;
+			EnableComponentObserver<ComponentType>* m_EnableObserver = nullptr;
+			DisableComponentObserver<ComponentType>* m_DisableObserver = nullptr;
 
 		public:
 			virtual void SetObserversToContainer(Container& container) override
@@ -67,67 +67,67 @@ namespace decs
 			m_DisableEntityObserver = disableEntityObserver;
 		}
 
-		template<typename TComponent>
+		template<typename ComponentType>
 		void SetComponentObservers(
-			CreateComponentObserver<TComponent>* createObserver,
-			DestroyComponentObserver<TComponent>* destroyObserver,
-			EnableComponentObserver<TComponent>* enableObserver,
-			DisableComponentObserver<TComponent>* disableObserver
+			CreateComponentObserver<ComponentType>* createObserver,
+			DestroyComponentObserver<ComponentType>* destroyObserver,
+			EnableComponentObserver<ComponentType>* enableObserver,
+			DisableComponentObserver<ComponentType>* disableObserver
 		)
 		{
-			auto group = GetComponentObserverGroupSetter<TComponent>();
+			auto group = GetComponentObserverGroupSetter<ComponentType>();
 			group->m_CreateObserver = createObserver;
 			group->m_DestroyObserver = destroyObserver;
 			group->m_EnableObserver = enableObserver;
 			group->m_DisableObserver = disableObserver;
 		}
 
-		template<typename TComponent>
-		void SetCreateComponentObserver(CreateComponentObserver<TComponent>* createObserver)
+		template<typename ComponentType>
+		void SetCreateComponentObserver(CreateComponentObserver<ComponentType>* createObserver)
 		{
-			auto group = GetComponentObserverGroupSetter<TComponent>();
+			auto group = GetComponentObserverGroupSetter<ComponentType>();
 			group->m_CreateObserver = createObserver;
 		}
 
-		template<typename TComponent>
-		void SetDestroyComponentObserver(DestroyComponentObserver<TComponent>* destroyObserver)
+		template<typename ComponentType>
+		void SetDestroyComponentObserver(DestroyComponentObserver<ComponentType>* destroyObserver)
 		{
-			auto group = GetComponentObserverGroupSetter<TComponent>();
+			auto group = GetComponentObserverGroupSetter<ComponentType>();
 			group->m_DestroyObserver = destroyObserver;
 		}
 
-		template<typename TComponent>
-		void SetEnableComponentObserver(EnableComponentObserver<TComponent>* enableObserver)
+		template<typename ComponentType>
+		void SetEnableComponentObserver(EnableComponentObserver<ComponentType>* enableObserver)
 		{
-			auto group = GetComponentObserverGroupSetter<TComponent>();
+			auto group = GetComponentObserverGroupSetter<ComponentType>();
 			group->m_EnableObserver = enableObserver;
 		}
 
-		template<typename TComponent>
-		void SetDisableComponentObserver(DisableComponentObserver<TComponent>* disableObserver)
+		template<typename ComponentType>
+		void SetDisableComponentObserver(DisableComponentObserver<ComponentType>* disableObserver)
 		{
-			auto group = GetComponentObserverGroupSetter<TComponent>();
+			auto group = GetComponentObserverGroupSetter<ComponentType>();
 			group->m_DisableObserver = disableObserver;
 		}
 
-		template<typename TComponent>
+		template<typename ComponentType>
 		void SetCreateDestroyComponentObservers(
-			CreateComponentObserver<TComponent>* createObserver,
-			DestroyComponentObserver<TComponent>* destroyObserver
+			CreateComponentObserver<ComponentType>* createObserver,
+			DestroyComponentObserver<ComponentType>* destroyObserver
 		)
 		{
-			auto group = GetComponentObserverGroupSetter<TComponent>();
+			auto group = GetComponentObserverGroupSetter<ComponentType>();
 			group->m_CreateObserver = createObserver;
 			group->m_DestroyObserver = destroyObserver;
 		}
 
-		template<typename TComponent>
+		template<typename ComponentType>
 		void SetEnableDisableComponentObservers(
-			EnableComponentObserver<TComponent>* enableObserver,
-			DisableComponentObserver<TComponent>* disableObserver
+			EnableComponentObserver<ComponentType>* enableObserver,
+			DisableComponentObserver<ComponentType>* disableObserver
 		)
 		{
-			auto group = GetComponentObserverGroupSetter<TComponent>();
+			auto group = GetComponentObserverGroupSetter<ComponentType>();
 			group->m_EnableObserver = enableObserver;
 			group->m_DisableObserver = disableObserver;
 		}
@@ -160,16 +160,16 @@ namespace decs
 		ecsVector<ComponentObserversGroupSetterBase*> m_ComponentObserverGroups = {};
 
 	private:
-		template<typename TComponent>
-		ComponentObserversGroupSetter<TComponent>* GetComponentObserverGroupSetter()
+		template<typename ComponentType>
+		ComponentObserversGroupSetter<ComponentType>* GetComponentObserverGroupSetter()
 		{
-			auto& group = m_ComponentObserverGroupIndexes[Type<TComponent>::ID()];
+			auto& group = m_ComponentObserverGroupIndexes[Type<ComponentType>::ID()];
 			if (group == nullptr)
 			{
-				group = new ComponentObserversGroupSetter<TComponent>();
+				group = new ComponentObserversGroupSetter<ComponentType>();
 				m_ComponentObserverGroups.push_back(group);
 			}
-			return dynamic_cast<ComponentObserversGroupSetter<TComponent>*>(group);
+			return dynamic_cast<ComponentObserversGroupSetter<ComponentType>*>(group);
 		}
 
 	};

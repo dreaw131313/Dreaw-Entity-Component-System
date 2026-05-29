@@ -17,8 +17,8 @@ namespace decs::light
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
 
-		template<typename TComponent>
-		using PackedContainerType = PackedLightComponentContainer<TComponent>*;
+		template<typename ComponentType>
+		using PackedContainerType = PackedLightComponentContainer<ComponentType>*;
 
 		friend class SubQueryType;
 

@@ -16,7 +16,7 @@ namespace decs
 		virtual void SetContainerEnabled(Container* container, bool isEnabled) = 0;
 	};
 
-	template<ComponentConcept... ComponentsTypes>
+	template<component_concept... ComponentsTypes>
 	class MultiQuery : public IMultiQuery
 	{
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "MultiQuery must not use tags in as ComponentTypes!");
@@ -27,8 +27,8 @@ namespace decs
 		using ContainersTupleType = ArchetypeContextType::ContainersTuple;
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 
-		template<typename TComponent>
-		using PackedContainerType = PackedStableComponentContainer<TComponent>*;
+		template<typename ComponentType>
+		using PackedContainerType = PackedStableComponentContainer<ComponentType>*;
 
 	public:
 		MultiQuery() = default;

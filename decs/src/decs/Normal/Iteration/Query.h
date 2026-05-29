@@ -4,7 +4,7 @@
 
 namespace decs
 {
-	template<ComponentConcept... ComponentsTypes>
+	template<component_concept... ComponentsTypes>
 	class Query
 	{
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "Query must not use tags in as ComponentTypes!");
@@ -14,8 +14,8 @@ namespace decs
 		using ContainersTupleType = ArchetypeContextType::ContainersTuple;
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 
-		template<typename TComponent>
-		using PackedContainerType = PackedStableComponentContainer<TComponent>*;
+		template<typename ComponentType>
+		using PackedContainerType = PackedStableComponentContainer<ComponentType>*;
 
 	public:
 		Query() = default;
@@ -358,7 +358,7 @@ namespace decs
 		{
 			using QueryType = Query<ComponentsTypes...>;
 
-			template<ComponentConcept... Types>
+			template<component_concept... Types>
 			friend class Query;
 		public:
 			BatchIterator() {}

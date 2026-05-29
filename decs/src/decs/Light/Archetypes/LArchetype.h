@@ -694,10 +694,10 @@ namespace decs::light
 	private:
 		void AddEdge(ArchetypeDataKey key, Archetype* archetype, EArchetypeEdgeType edgeType);
 
-		template<light_component_or_filter_concept TComponent>
+		template<light_component_or_filter_concept ComponentType>
 		ArchetypeEdge GetEdge() const
 		{
-			auto it = m_Edges.find(Type<TComponent>::ID());
+			auto it = m_Edges.find(Type<ComponentType>::ID());
 			if (it != m_Edges.end())
 			{
 				return it->second;

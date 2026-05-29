@@ -10,9 +10,9 @@ namespace decs
 {
 	struct Entity final
 	{
-		template<ComponentConcept ...>
+		template<component_concept ...>
 		friend class Query;
-		template<ComponentConcept ...>
+		template<component_concept ...>
 		friend class MultiQuery;
 		friend class Container;
 		template<typename>
@@ -236,18 +236,18 @@ namespace decs
 			return nullptr;
 		}
 
-		template<ComponentConcept TComponent>
-		[[nodiscard]] inline TComponent* GetComponent() const
+		template<component_concept ComponentType>
+		[[nodiscard]] inline ComponentType* GetComponent() const
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->GetComponent<drop_const_t<TComponent>>(*GetEntityData());
+				return GetContainer_Internal()->GetComponent<drop_const_t<ComponentType>>(*GetEntityData());
 			}
 
 			return nullptr;
 		}
 
-		template<ComponentConcept... ComponentTypes>
+		template<component_concept... ComponentTypes>
 		[[nodiscard]] inline std::tuple<ComponentTypes*...> GetComponents()
 		{
 			if (IsValid())
@@ -273,12 +273,12 @@ namespace decs
 		/// </summary>
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <returns></returns>
-		template<ComponentConcept TComponent>
-		[[nodiscard]] inline TComponent* GetComponentDynamic() const
+		template<component_concept ComponentType>
+		[[nodiscard]] inline ComponentType* GetComponentDynamic() const
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->GetComponentDynamic<drop_const_t<TComponent>>(*GetEntityData());
+				return GetContainer_Internal()->GetComponentDynamic<drop_const_t<ComponentType>>(*GetEntityData());
 			}
 
 			return nullptr;
@@ -289,27 +289,27 @@ namespace decs
 		/// </summary>
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <param name="components"></param>
-		template<ComponentConcept TComponent>
-		inline void GetComponentsDynamic(ecsVector<TComponent*>& components) const
+		template<component_concept ComponentType>
+		inline void GetComponentsDynamic(ecsVector<ComponentType*>& components) const
 		{
 			if (IsValid())
 			{
-				GetContainer_Internal()->GetComponentsDynamic<pure_type_t<TComponent>>(*GetEntityData(), components);
+				GetContainer_Internal()->GetComponentsDynamic<pure_type_t<ComponentType>>(*GetEntityData(), components);
 			}
 		}
 
-		template<ComponentConcept TComponent>
+		template<component_concept ComponentType>
 		[[nodiscard]] inline bool HasComponent() const
 		{
-			return IsValid() && GetContainer_Internal()->HasComponent<pure_type_t<TComponent>>(*GetEntityData());
+			return IsValid() && GetContainer_Internal()->HasComponent<pure_type_t<ComponentType>>(*GetEntityData());
 		}
 
-		template<ComponentConcept TComponent>
-		inline bool TryGetComponent(TComponent*& component) const
+		template<component_concept ComponentType>
+		inline bool TryGetComponent(ComponentType*& component) const
 		{
 			if (IsValid())
 			{
-				component = GetContainer_Internal()->GetComponent<pure_type_t<TComponent>>(*GetEntityData());
+				component = GetContainer_Internal()->GetComponent<pure_type_t<ComponentType>>(*GetEntityData());
 			}
 			else
 			{
@@ -319,21 +319,21 @@ namespace decs
 			return component != nullptr;
 		}
 
-		template<ComponentConcept TComponent, typename... Args>
-		inline typename TComponent* AddComponent(Args&&... args) const
+		template<component_concept ComponentType, typename... Args>
+		inline typename ComponentType* AddComponent(Args&&... args) const
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->AddComponent<pure_type_t<TComponent>>(*this, *GetEntityData(), std::forward<Args>(args)...);
+				return GetContainer_Internal()->AddComponent<pure_type_t<ComponentType>>(*this, *GetEntityData(), std::forward<Args>(args)...);
 			}
 
 			return nullptr;
 		}
 
-		template<ComponentConcept TComponent>
+		template<component_concept ComponentType>
 		inline bool RemoveComponent() const
 		{
-			return IsValid() && GetContainer_Internal()->RemoveComponent<pure_type_t<TComponent>>(*this);
+			return IsValid() && GetContainer_Internal()->RemoveComponent<pure_type_t<ComponentType>>(*this);
 		}
 
 		inline bool RemoveComponent(TypeID componentTypeID) const
@@ -389,12 +389,12 @@ namespace decs
 		/// Add component observers are not invoked.
 		/// </summary>
 		/// <returns></returns>
-		template<ComponentConcept TComponent, typename... Args>
-		inline typename TComponent* AddComponent_NoObserver(Args&&... args) const
+		template<component_concept ComponentType, typename... Args>
+		inline typename ComponentType* AddComponent_NoObserver(Args&&... args) const
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->AddComponent_NoObserver<drop_const_t<TComponent>>(*this, *GetEntityData(), std::forward<Args>(args)...);
+				return GetContainer_Internal()->AddComponent_NoObserver<drop_const_t<ComponentType>>(*this, *GetEntityData(), std::forward<Args>(args)...);
 			}
 
 			return nullptr;
@@ -404,10 +404,10 @@ namespace decs
 		/// Destroy component observers are not invoked.
 		/// </summary>
 		/// <returns></returns>
-		template<ComponentConcept TComponent>
+		template<component_concept ComponentType>
 		inline bool RemoveComponent_NoObserver() const
 		{
-			return IsValid() && GetContainer_Internal()->RemoveComponent_NoObserver<drop_const_t<TComponent>>(*this);
+			return IsValid() && GetContainer_Internal()->RemoveComponent_NoObserver<drop_const_t<ComponentType>>(*this);
 		}
 
 		/// <summary>
@@ -561,9 +561,9 @@ namespace decs
 
 	class ConstEntity final
 	{
-		template<ComponentConcept...>
+		template<component_concept...>
 		friend class Query;
-		template<ComponentConcept...>
+		template<component_concept...>
 		friend class MultiQuery;
 		friend class Container;
 		template<typename>
@@ -630,22 +630,22 @@ namespace decs
 			return m_Entity.GetContainer();
 		}
 
-		template<ComponentConcept TComponent>
+		template<component_concept ComponentType>
 		[[nodiscard]] inline bool HasComponent() const
 		{
-			return m_Entity.HasComponent<TComponent>();
+			return m_Entity.HasComponent<ComponentType>();
 		}
 
-		template<ComponentConcept TComponent>
-		[[nodiscard]] inline TComponent* GetComponent() const
+		template<component_concept ComponentType>
+		[[nodiscard]] inline ComponentType* GetComponent() const
 		{
-			return m_Entity.GetComponent<TComponent>();
+			return m_Entity.GetComponent<ComponentType>();
 		}
 
-		template<ComponentConcept TComponent>
-		[[nodiscard]] inline TComponent* GetComponentDynamic() const
+		template<component_concept ComponentType>
+		[[nodiscard]] inline ComponentType* GetComponentDynamic() const
 		{
-			return m_Entity.GetComponentDynamic<TComponent>();
+			return m_Entity.GetComponentDynamic<ComponentType>();
 		}
 
 		/// <summary>
@@ -653,14 +653,14 @@ namespace decs
 		/// </summary>
 		/// <typeparam name="ComponentType"></typeparam>
 		/// <param name="components"></param>
-		template<ComponentConcept TComponent>
-		inline void GetComponentsDynamic(ecsVector<TComponent*>& components) const
+		template<component_concept ComponentType>
+		inline void GetComponentsDynamic(ecsVector<ComponentType*>& components) const
 		{
-			m_Entity.GetComponentDynamic<TComponent>(components);
+			m_Entity.GetComponentDynamic<ComponentType>(components);
 		}
 
-		template<ComponentConcept TComponent>
-		inline bool TryGetComponent(typename TComponent*& component) const
+		template<component_concept ComponentType>
+		inline bool TryGetComponent(typename ComponentType*& component) const
 		{
 			return m_Entity.TryGetComponent(component);
 		}

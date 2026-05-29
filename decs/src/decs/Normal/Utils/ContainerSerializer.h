@@ -21,29 +21,29 @@ namespace decs
 
 	};
 
-	template<ComponentConcept TComponent, typename SerializerData>
+	template<component_concept ComponentType, typename SerializerData>
 	class ComponentSerializer : ComponentSerializerBase<SerializerData>
 	{
 		template<typename>
 		friend class ContainerSerializer;
 	public:
-		virtual void SerializeComponent(const TComponent& component, SerializerData& serializerData) const = 0;
+		virtual void SerializeComponent(const ComponentType& component, SerializerData& serializerData) const = 0;
 
 		inline virtual TypeID GetComponentTypeID() const override final
 		{
-			return Type<TComponent>::ID();
+			return Type<ComponentType>::ID();
 		}
 
 		inline virtual std::string GetComponentTypeName() const override final
 		{
-			return Type<TComponent>::Name();
+			return Type<ComponentType>::Name();
 		}
 
 
 	private:
 		virtual void SerializeComponentFromVoid(EntityComponent* component, SerializerData& serializerData) const override final
 		{
-			SerializeComponent(*static_cast<TComponent*>(component), serializerData);
+			SerializeComponent(*static_cast<ComponentType*>(component), serializerData);
 		}
 	};
 
@@ -100,10 +100,10 @@ namespace decs
 
 		}
 
-		template<typename TComponent>
-		void SetComponentSerializer(ComponentSerializer<TComponent, SerializerData>* serializer)
+		template<typename ComponentType>
+		void SetComponentSerializer(ComponentSerializer<ComponentType, SerializerData>* serializer)
 		{
-			TYPE_ID_CONSTEXPR TypeID id = Type<TComponent>::ID();
+			TYPE_ID_CONSTEXPR TypeID id = Type<ComponentType>::ID();
 			m_ComponentSerializers[id] = serializer;
 		}
 

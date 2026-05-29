@@ -348,10 +348,10 @@ namespace decs::light
 			return it != m_ArchetypesGroupedByOneType.end() ? it->second->GetMainTypeArchetype() : nullptr;
 		}
 
-		template<light_component_or_filter_concept TComponent>
+		template<light_component_or_filter_concept ComponentType>
 		Archetype* GetSingleComponentArchetype() const
 		{
-			return GetSingleComponentArchetype(Type<TComponent>::ID());
+			return GetSingleComponentArchetype(Type<ComponentType>::ID());
 		}
 
 		ArchetypesGroupByOneType* GetArchetypesGroup(ArchetypeDataKey id, EArchetypesGroupType groupType);
@@ -366,10 +366,10 @@ namespace decs::light
 
 		// CREATING ARCHETYPES
 	private:
-		template<light_component_concept TComponent>
+		template<light_component_concept ComponentType>
 		Archetype* CreateSingleComponentArchetype()
 		{
-			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<TComponent>::ID();
+			TYPE_ID_CONSTEXPR TypeID componentTypeID = Type<ComponentType>::ID();
 
 			auto archetype = GetSingleComponentArchetype(componentTypeID);
 			if (archetype != nullptr)
@@ -377,7 +377,7 @@ namespace decs::light
 				return archetype;
 			}
 			archetype = m_ArchetypeAllocator.CreateArchetype();
-			archetype->AddTypeData_WithoutCheck(componentTypeID, m_ComponentContextManager.GetOrCreateContext<TComponent>());
+			archetype->AddTypeData_WithoutCheck(componentTypeID, m_ComponentContextManager.GetOrCreateContext<ComponentType>());
 			AddArchetypeToCorrectContainers(*archetype);
 			return archetype;
 		}
