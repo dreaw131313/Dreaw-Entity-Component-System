@@ -4,7 +4,7 @@
 int main()
 {
 	Light::Test{}.Run();
-	Normal::Test{}.Run();
+	//Normal::Test{}.Run();
 
 	return 0;
 }

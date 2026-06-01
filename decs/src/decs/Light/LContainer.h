@@ -80,6 +80,47 @@ namespace decs::light
 		}
 
 	private:
+
+		template<bool InvokeObservers, typename InitFunc, light_component_concept... ComponentTypes>
+		inline void CreateEntities_Impl_EntityInit(
+			InitFunc&& initFunc,
+			const LightComponentTypeGroup<ComponentTypes...>& components,
+			const std::tuple<TArchetypeTypeData<pure_type_t<ComponentTypes>>...>& typeDataTuple,
+			Archetype& archetype,
+			EntityData& entityData,
+			const Entity& entity
+		)
+		{
+			archetype.AddEntityData(&entityData);
+			std::tuple<pure_type_t<ComponentTypes>*...> createdComponents = {
+				&std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(typeDataTuple).m_PackedContainer->EmplaceBack<>()
+				...
+			};
+
+			if constexpr (InvokeObservers)
+			{
+				entityData.LockOperations();
+				{
+					(std::get<TArchetypeTypeData<pure_type_t<ComponentTypes>>>(typeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+
+					for (auto& filterData : archetype.GetFilters())
+					{
+						filterData.m_FilterTypeManager->InvokeOnAddObserver(entity, filterData.m_FilterContainer->GetFilterDataPtr());
+					}
+				}
+				entityData.UnlockOperations();
+			}
+
+			if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
+			{
+				initFunc(entity, *std::get<drop_const_t<ComponentTypes>*>(createdComponents)...);
+			}
+			else
+			{
+				initFunc(*std::get<ComponentTypes*>(createdComponents)...);
+			}
+		}
+
 		/// <summary>
 		/// This function ignores component callbacks orders, callbacks are invoked in order of ComponentTypes in LightComponentTypeGroup parameter.
 		/// During observer callbacks invocation removing components can cause undefined behavior or reading from freed memory.
@@ -128,35 +169,14 @@ namespace decs::light
 						if (Entity entity = CreateEntityRaw())
 						{
 							EntityData* entityData = GetEntityData(entity);
-							spawnArchetype->AddEntityData(entityData);
-
-							std::tuple<pure_type_t<ComponentTypes>*...> createdComponents = {
-								&std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_PackedContainer->EmplaceBack<>()
-								...
-							};
-
-							if constexpr (InvokeObservers)
-							{
-								entityData->LockOperations();
-								{
-									(std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
-
-									for (auto& filterData : spawnArchetype->GetFilters())
-									{
-										filterData.m_FilterTypeManager->InvokeOnAddObserver(entity, filterData.m_FilterContainer->GetFilterDataPtr());
-									}
-								}
-								entityData->UnlockOperations();
-							}
-
-							if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
-							{
-								initFunc(entity, *std::get<drop_const_t<ComponentTypes>*>(createdComponents)...);
-							}
-							else
-							{
-								initFunc(*std::get<ComponentTypes*>(createdComponents)...);
-							}
+							CreateEntities_Impl_EntityInit<InvokeObservers>(
+								initFunc,
+								components,
+								typeDataTuple,
+								*spawnArchetype,
+								*entityData,
+								entity
+							);
 						}
 					}
 				}
@@ -235,50 +255,22 @@ namespace decs::light
 					return e;
 				}
 			}
-			else
+			else if (Archetype* spawnArchetype = GetArchetypeWithComponentsTagsFilters(components, tags, filtersTupleData); spawnArchetype != nullptr)
 			{
-				Archetype* spawnArchetype = GetArchetypeWithComponentsTagsFilters(components, tags, filtersTupleData);
+				std::tuple<TArchetypeTypeData<ComponentTypes>...>  typeDataTuple{ spawnArchetype->GetComponentTypeData<ComponentTypes>()... };
 
-				if (spawnArchetype != nullptr)
+				if (Entity entity = CreateEntityRaw())
 				{
-					std::tuple<TArchetypeTypeData<ComponentTypes>...>  typeDataTuple{ spawnArchetype->GetComponentTypeData<ComponentTypes>()... };
-
-					if (Entity entity = CreateEntityRaw())
-					{
-						EntityData* entityData = GetEntityData(entity);
-						spawnArchetype->AddEntityData(entityData);
-
-						std::tuple<pure_type_t<ComponentTypes>*...> createdComponents = {
-							&std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_PackedContainer->EmplaceBack<>()
-							...
-						};
-
-						if constexpr (InvokeObservers)
-						{
-							entityData->LockOperations();
-							{
-								(std::get<TArchetypeTypeData<ComponentTypes>>(typeDataTuple).m_ComponentContext->InvokeOnCreate(entity, *std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
-
-								for (auto& filterData : spawnArchetype->GetFilters())
-								{
-									filterData.m_FilterTypeManager->InvokeOnAddObserver(entity, filterData.m_FilterContainer->GetFilterDataPtr());
-								}
-							}
-							entityData->UnlockOperations();
-
-						}
-
-						if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
-						{
-							initFunc(entity, *std::get<drop_const_t<ComponentTypes>*>(createdComponents)...);
-						}
-						else
-						{
-							initFunc(*std::get<ComponentTypes*>(createdComponents)...);
-						}
-
-						return entity;
-					}
+					EntityData* entityData = GetEntityData(entity);
+					CreateEntities_Impl_EntityInit<InvokeObservers>(
+						initFunc,
+						components,
+						typeDataTuple,
+						*spawnArchetype,
+						*entityData,
+						entity
+					);
+					return entity;
 				}
 			}
 
@@ -321,8 +313,6 @@ namespace decs::light
 			const std::tuple<> filtersTuple{};
 			return CreateEntity(components, tags, filtersTuple, initFunc);
 		}
-
-
 
 	private:
 		/// <summary>
