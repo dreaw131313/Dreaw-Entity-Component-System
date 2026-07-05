@@ -265,15 +265,7 @@ namespace decs::light
 		{
 			if (IsValid())
 			{
-				if constexpr (tag_concept<TagType>)
-				{
-					return GetContainer()->HasTag<TagType>(*m_EntityData);
-				}
-				else
-				{
-					return GetContainer()->HasTag<tag<TagType>>(*m_EntityData);
-				}
-
+				return GetContainer()->HasTag<tag_type_t<TagType>>(*m_EntityData);
 			}
 			return false;
 		}
@@ -293,14 +285,7 @@ namespace decs::light
 		{
 			if (IsValid())
 			{
-				if constexpr (tag_concept<TagType>)
-				{
-					return GetContainer()->AddTag<TagType>(*m_EntityData);
-				}
-				else
-				{
-					return GetContainer()->AddTag<tag<TagType>>(*m_EntityData);
-				}
+				return GetContainer()->AddTag<tag_type_t<TagType>>(*m_EntityData);
 			}
 			return false;
 		}
@@ -324,14 +309,7 @@ namespace decs::light
 		{
 			if (IsValid())
 			{
-				if constexpr (tag_concept<TagType>)
-				{
-					return GetContainer()->RemoveTag<TagType>(*m_EntityData);
-				}
-				else
-				{
-					return GetContainer()->RemoveTag<tag<TagType>>(*m_EntityData);
-				}
+				return GetContainer()->RemoveTag<tag_type_t<TagType>>(*m_EntityData);
 			}
 			return false;
 		}

@@ -466,7 +466,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->HasTag<::decs::tag_type_t<TagType>>(*m_EntityData);
+				return GetContainer_Internal()->HasTag<tag_type_t<TagType>>(*m_EntityData);
 			}
 			return false;
 		}
@@ -486,7 +486,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->AddTag<::decs::tag_type_t<TagType>>(*m_EntityData);
+				return GetContainer_Internal()->AddTag<tag_type_t<TagType>>(*m_EntityData);
 			}
 			return false;
 		}
@@ -510,7 +510,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->RemoveTag<::decs::tag_type_t<TagType>>(*m_EntityData);
+				return GetContainer_Internal()->RemoveTag<tag_type_t<TagType>>(*m_EntityData);
 			}
 			return false;
 		}
