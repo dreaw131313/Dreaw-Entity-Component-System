@@ -113,12 +113,13 @@ void Test::Run()
 	std::cout << "/////////////////////////////////////" << "\n";
 
 	//IterationTest();
-	EntityCreatePerformanceTest();
+	//EntityCreatePerformanceTest();
 	//QueryManagerTest();
 	//FilterTest();
 	//RemovingArchetypesTest();
 	//ObserversTest();
 	//SettingComponents();
+	ForEachFilterTest();
 }
 
 void Test::IterationTest()
@@ -633,61 +634,46 @@ void Test::SettingComponents()
 
 }
 
-template<typename... Types>
-struct ECSStateMachineContext
+void Test::ForEachFilterTest()
 {
-public:
+	decs::light::Container container{};
 
-
-private:
-	std::tuple<Types*...> m_Data{};
-};
-
-template<typename... Types>
-struct ECSStateMachine
-{
-public:
-	using ContextType = ECSStateMachineContext<Types...>;
-
-public:
-	virtual void Update(const ContextType& ctx)
 	{
+		decs::light::Entity e = container.CreateEntity();
+		e.AddFilter<float>(1.0f);
+		e.AddComponent<Position>();
 
+		container.Spawn(e);
 	}
 
-	class State
 	{
-	public:
-		virtual void OnEnter(const ContextType& ctx) {}
-		virtual void OnExit(const ContextType& ctx) {}
-		virtual void OnUpdate(const ContextType& ctx) {}
+		decs::light::Entity e2 = container.CreateEntity();
+		e2.AddFilter<float>(2.0f);
+		e2.AddComponent<Position>();
 
-	};
-
-	class Query
-	{
-	public:
-
-
-	private:
-		decs::light::Query<Types...> m_ECSQuery{};
-	};
-};
-
-class MyStateMachine :
-	public ECSStateMachine<
-		Position,
-		Test,
-		Renderer
-	>
-{
-public:
-	void Update(const ContextType& ctx)
-	{
-
+		container.Spawn(e2, 3);
 	}
 
-};
+	using QueryType = decs::light::Query<Position, Renderer, decs::filter<float>, double>;
+	using QuerySimpleIterator = QueryType::SimpleIteratorType;
+
+	QueryType filtersQuery{ &container };
+
+	filtersQuery.ForEachFilter([] (float f, const QuerySimpleIterator& entityIt)
+	{
+		std::cout << "Filter value = " << f << "\n";
+		std::cout << "  Entities:" << "\n";
+
+		entityIt.ForEach([] (const Position& p, Renderer& r, double d)
+		{
+			std::cout << "    entity:" << "\n";
+		});
+	});
+
+
+
+}
+
 
 
 

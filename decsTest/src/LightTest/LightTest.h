@@ -24,6 +24,8 @@ namespace Light
 		void ObserversTest();
 
 		void SettingComponents();
+
+		void ForEachFilterTest();
 	};
 
 }

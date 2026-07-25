@@ -28,66 +28,56 @@ namespace decs::light
 	using query_data_container_t = query_data_container<T>::container_type;
 
 
+	template<typename T>
+	struct is_filter_container : public std::false_type {};
+	template<typename T>
+	struct is_filter_container<FilterContainer<T>> : public std::true_type {};
+	template<typename T>
+	inline constexpr bool is_filter_container_v = is_filter_container<T>::value;
+	template< typename T>
+	using tuple_if_filter_container = std::conditional_t<is_filter_container_v<T>, std::tuple<T*>, std::tuple<>>;
+
+	template<typename T>
+	struct is_packed_container : public std::false_type {};
+	template<typename T>
+	struct is_packed_container<PackedLightComponentContainer<T>> : public std::true_type {};
+	template<typename T>
+	inline constexpr bool is_packed_container_v = is_packed_container<T>::value;
+	template< typename T>
+	using tuple_if_packed_container = std::conditional_t<is_packed_container_v<T>, std::tuple<T*>, std::tuple<>>;
+
+	template<typename... Ts>
+	using create_filter_container_only_tuple = decltype(std::tuple_cat(std::declval<tuple_if_filter_container<Ts>>()...));
+	template<typename... Ts>
+	using create_packed_container_only_tuple = decltype(std::tuple_cat(std::declval<tuple_if_packed_container<Ts>>()...));
+
 	class Iteration
 	{
 	public:
-
-		template<typename Desired, typename TupleType>
-		inline static Desired* get_optional_data_from_tuple(
-			uint64_t entityIndexInArchetype,
-			const TupleType& containersTuple
-		)
-		{
-			if constexpr (tuple_has_type_v<query_data_container_t<Desired>*, TupleType>)
-			{
-				return std::get<query_data_container_t<Desired>*>(containersTuple)->GetAsPtr(entityIndexInArchetype);
-			}
-			else
-			{
-				return nullptr;
-			}
-		}
-
-		template<typename Callable, typename TupleType, typename... ComponentTypes>
-		inline static void InvokeEntityIteration_WithOptional(
-			Callable&& func,
-			uint64_t entityIndexInArchetype,
-			const TupleType& containersTuple
-		)
-		{
-			if constexpr (sizeof...(ComponentTypes) != 0)
-			{
-				func(*get_optional_data_from_tuple<ComponentTypes, TupleType>(entityIndexInArchetype, containersTuple)...);
-			}
-			else
-			{
-				func();
-			}
-		}
-
-		template<typename Callable, typename... ComponentTypes>
+		template<typename Callable, typename... QueryDataContainerType>
 		inline static void InvokeEntityIteration(
 			Callable&& func,
 			uint64_t entityIndexInArchetype,
-			const std::tuple<query_data_container_t<ComponentTypes>*...>& containersTuple
+			const std::tuple<QueryDataContainerType*...>& containersTuple
 		)
 		{
-			func(std::get<query_data_container_t<ComponentTypes>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
+			func(std::get<QueryDataContainerType*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
 		}
 
-		template<typename Callable, typename... ComponentTypes>
+
+		template<typename Callable, typename... QueryDataContainerType>
 		inline static void InvokeEntityIteration(
 			Callable&& func,
 			Entity& entityBuffer,
 			EntityData& entityData,
 			uint64_t entityIndexInArchetype,
-			const std::tuple<query_data_container_t<ComponentTypes>*...>& containersTuple
+			const std::tuple<QueryDataContainerType*...>& containersTuple
 		)
 		{
 			entityBuffer.Set_Internal(entityData);
 			func(
 				entityBuffer,
-				std::get<query_data_container_t<ComponentTypes>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
+				std::get<QueryDataContainerType*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
 			);
 		}
 	};
@@ -215,6 +205,39 @@ namespace decs::light
 	public:
 		using ContainersTuple = std::tuple<query_data_container_t<ComponentsTypes>*...>;
 
+		using FiltersOnlyTuple = create_filter_container_only_tuple<query_data_container_t<ComponentsTypes>...>;
+		using ComponentsOnlyTuple = create_packed_container_only_tuple<query_data_container_t<ComponentsTypes>...>;
+
+		struct SimpleIterator
+		{
+		public:
+			SimpleIterator(const Archetype& archetype, const ComponentsOnlyTuple& components):
+				m_Archetype(archetype),
+				m_ComponentsTuple(components)
+			{
+
+			}
+
+			template<typename Func>
+			void ForEach(Func&& func) const 
+			{
+				uint64_t entityCount = m_Archetype.EntityCount();
+				if (entityCount == 0)
+				{
+					return;
+				}
+
+				for (uint64_t idx = 0; idx < entityCount; idx++)
+				{
+					Iteration::InvokeEntityIteration(func, idx, m_ComponentsTuple);
+				}
+			}
+
+		private:
+			const Archetype& m_Archetype;
+			const ComponentsOnlyTuple& m_ComponentsTuple;
+		};
+
 	public:
 		inline static constexpr uint64_t s_ComponentCount = sizeof...(ComponentsTypes);
 
@@ -274,7 +297,7 @@ namespace decs::light
 
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
-				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
+				Iteration::InvokeEntityIteration(func, idx, containersTuple);
 			}
 		}
 
@@ -292,7 +315,7 @@ namespace decs::light
 
 			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
 			{
-				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entities.Get(static_cast<size_t>(idx)), idx, containersTuple);
+				Iteration::InvokeEntityIteration(func, entityBuffer, *entities.Get(static_cast<size_t>(idx)), idx, containersTuple);
 			}
 		}
 
@@ -317,7 +340,7 @@ namespace decs::light
 				auto entityData = entities.Get(idx);
 				if (entityData != nullptr)
 				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
+					Iteration::InvokeEntityIteration(func, idx, containersTuple);
 				}
 			}
 		}
@@ -339,7 +362,7 @@ namespace decs::light
 				auto entityData = entities.Get(idx);
 				if (entityData != nullptr)
 				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData, idx, containersTuple);
+					Iteration::InvokeEntityIteration(func, entityBuffer, *entityData, idx, containersTuple);
 				}
 			}
 		}
@@ -362,7 +385,7 @@ namespace decs::light
 			int64_t idx = ctxEntityCount - 1;
 			for (; idx > -1; idx--)
 			{
-				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
+				Iteration::InvokeEntityIteration(func, idx, containersTuple);
 			}
 		}
 
@@ -382,7 +405,7 @@ namespace decs::light
 			for (; idx > -1; idx--)
 			{
 				auto entityData = entities.Get(idx);
-				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData, idx, containersTuple);
+				Iteration::InvokeEntityIteration(func, entityBuffer, *entityData, idx, containersTuple);
 			}
 		}
 
@@ -408,7 +431,7 @@ namespace decs::light
 				auto entityData = entities.Get(idx);
 				if (entityData != nullptr)
 				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
+					Iteration::InvokeEntityIteration(func, idx, containersTuple);
 				}
 			}
 		}
@@ -431,7 +454,7 @@ namespace decs::light
 				auto entityData = entities.Get(idx);
 				if (entityData != nullptr)
 				{
-					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData, idx, containersTuple);
+					Iteration::InvokeEntityIteration(func, entityBuffer, *entityData, idx, containersTuple);
 				}
 			}
 		}
@@ -447,7 +470,7 @@ namespace decs::light
 
 			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
 			{
-				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
+				Iteration::InvokeEntityIteration(func, idx, containersTuple);
 			}
 		}
 
@@ -459,7 +482,7 @@ namespace decs::light
 
 			for (uint64_t idx = fromIdx; idx < toIdx; idx++)
 			{
-				Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entities.Get(idx), idx, containersTuple);
+				Iteration::InvokeEntityIteration(func, entityBuffer, *entities.Get(idx), idx, containersTuple);
 			}
 		}
 
@@ -477,6 +500,36 @@ namespace decs::light
 			}
 		}
 
+	#pragma endregion
+
+	#pragma region FOREACH FILTER -> FOREACH ENTITY
+	public:
+		template<typename TFilterCallable>
+		void ForEachFilter(TFilterCallable&& func) const
+		{
+			FiltersOnlyTuple filterContainers{};
+			ComponentsOnlyTuple componentContainers{};
+
+			FillTuple(m_ContainersTuple, filterContainers);
+			FillTuple(m_ContainersTuple, componentContainers);
+
+			SimpleIterator thisIterator(*m_Archetype, componentContainers);
+
+			InvokeFiltersOnlyCallable(func, filterContainers, thisIterator);
+		}
+
+	private:
+		template<typename Func, typename... Filters>
+		inline static void InvokeFiltersOnlyCallable(Func&& func, const std::tuple<Filters...>& filters, const SimpleIterator& thisIterator)
+		{
+			func(std::get<Filters>(filters)->GetAsRef(0)..., thisIterator);
+		}
+
+		template<typename... From, typename... To>
+		inline static void FillTuple(const std::tuple<From...>& from, std::tuple<To...>& to)
+		{
+			((std::get<To>(to) = std::get<To>(from)), ...);
+		}
 	#pragma endregion
 
 	private:
@@ -510,12 +563,7 @@ namespace decs::light
 			const IterationArchetypeContext& m_Ctx;
 		};
 
-	public:
-		template<typename Func>
-		void ForEachFilter(Func&& func) const
-		{
 
-		}
 	};
 
 	template<light_component_or_filter_concept... ComponentsTypes>

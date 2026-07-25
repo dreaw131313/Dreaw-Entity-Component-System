@@ -8,11 +8,13 @@ namespace decs::light
 	template<light_component_or_filter_concept... ComponentsTypes>
 	class Query : public IQuery
 	{
-	private:
+	public:
 		using ArchetypeContextType = IterationArchetypeContext<drop_const_t<ComponentsTypes>...>;
 		using ContainersTupleType = ArchetypeContextType::ContainersTuple;
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
+
+		using SimpleIteratorType = ArchetypeContextType::SimpleIterator;
 	public:
 		Query() = default;
 
@@ -204,7 +206,6 @@ namespace decs::light
 
 			Container* container = m_ContainerContext.GetContainer();
 			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
-			const uint64_t contextCount = archetypeContexts.size();
 
 			if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 			{
@@ -232,6 +233,22 @@ namespace decs::light
 			Fetch();
 
 			m_ContainerContext.ForEachContainer(func);
+		}
+
+
+		template<typename Func>
+		void ForEachFilter(Func&& func)
+		{
+			if (!IsValid()) return;
+			Fetch();
+
+			Container* container = m_ContainerContext.GetContainer();
+			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
+
+			for (const auto& ctx : archetypeContexts)
+			{
+				ctx.ForEachFilter(func);
+			}
 		}
 
 		/// <summary>
