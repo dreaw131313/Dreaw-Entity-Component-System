@@ -397,19 +397,19 @@ namespace Normal
 	void Test::ObserversTest()
 	{
 		TestComponetObserver testComponentObserver = {};
-		decs::ObserversManager observerManager = {};
-		{
-			observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
-		}
 
 		decs::Container container{};
-		observerManager.FillContainerObservers(container);
+		container.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
 
 		auto observers = container.GetComponentObservers<TestComponent>();
 
 
 		auto entity = container.CreateEntity(true);
-		entity.AddComponent<TestComponent>();
+		entity.AddComponent_NoObserver<TestComponent>();
+
+		container.InvokeComponentOnCreateListeners<TestComponent>();
+		container.InvokeComponentOnDestroyListeners<TestComponent>();
+
 		entity.Destroy();
 	}
 }
