@@ -308,17 +308,4 @@ namespace decs
 	concept light_component_observer_func = std::is_invocable_v<Func, const light::Entity&, ComponentType&>;
 
 
-
-	template< typename T>
-	using tuple_if_filter = std::conditional_t<is_filter_v<T>, std::tuple<T>, std::tuple<>>;
-
-	template<typename... Ts>
-	using create_tuple_with_filters_only_t = decltype(std::tuple_cat(std::declval<tuple_if_filter<Ts>>()...));
-
-	template<typename T>
-	using tuple_if_light_component = std::conditional_t<is_light_component_v<T>, std::tuple<T>, std::tuple<>>;
-
-	template<typename... Ts>
-	using create_tuple_with_light_components_only_t = decltype(std::tuple_cat(std::declval<tuple_if_filter<Ts>>()...));
-
 }

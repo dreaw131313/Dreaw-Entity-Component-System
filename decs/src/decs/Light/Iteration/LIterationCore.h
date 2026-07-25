@@ -25,7 +25,7 @@ namespace decs::light
 	};
 
 	template<typename T>
-	using query_data_container_t = query_data_container<T>::container_type;
+	using query_data_container_t = typename query_data_container<T>::container_type;
 
 
 	template<typename T>
@@ -199,44 +199,65 @@ namespace decs::light
 		IFilterDataTupleHandle m_FilterDataTuple{};
 	};
 
+	template<typename... ComponentContainerType>
+	struct SimpleArchetypeIterator;
+
+	template<typename... ComponentContainerType>
+	struct SimpleArchetypeIterator<std::tuple<ComponentContainerType*...>>
+	{
+		using ComponentContainersTuple = std::tuple<ComponentContainerType*... >;
+
+	public:
+		SimpleArchetypeIterator(const Archetype& archetype, const ComponentContainersTuple& components) :
+			m_Archetype(archetype),
+			m_ComponentsTuple(components)
+		{
+
+		}
+
+		template<typename Func>
+			requires std::is_invocable_v<Func, typename ComponentContainerType::component_type&...>
+			|| std::is_invocable_v<Func, const Entity&, typename ComponentContainerType::component_type&...>
+		void ForEach(Func&& func) const
+		{
+			uint64_t entityCount = m_Archetype.EntityCount();
+			if (entityCount == 0)
+			{
+				return;
+			}
+
+			Entity entityBuffer{};
+
+			auto entityDataList = m_Archetype.GetEntities().Data();
+			for (uint64_t idx = 0; idx < entityCount; idx++)
+			{
+				auto& archetypeEntityData = entityDataList[idx];
+
+				if constexpr (std::is_invocable_v<Func, const Entity&, typename ComponentContainerType::component_type&...>)
+				{
+					Iteration::InvokeEntityIteration(func, entityBuffer, *archetypeEntityData, idx, m_ComponentsTuple);
+				}
+				else
+				{
+					Iteration::InvokeEntityIteration(func, idx, m_ComponentsTuple);
+				}
+			}
+		}
+
+	private:
+		const Archetype& m_Archetype;
+		const ComponentContainersTuple& m_ComponentsTuple;
+	};
+
+
 	template<light_component_or_filter_concept... ComponentsTypes>
 	class IterationArchetypeContext
 	{
 	public:
 		using ContainersTuple = std::tuple<query_data_container_t<ComponentsTypes>*...>;
-
 		using FiltersOnlyTuple = create_filter_container_only_tuple<query_data_container_t<ComponentsTypes>...>;
 		using ComponentsOnlyTuple = create_packed_container_only_tuple<query_data_container_t<ComponentsTypes>...>;
-
-		struct SimpleIterator
-		{
-		public:
-			SimpleIterator(const Archetype& archetype, const ComponentsOnlyTuple& components):
-				m_Archetype(archetype),
-				m_ComponentsTuple(components)
-			{
-
-			}
-
-			template<typename Func>
-			void ForEach(Func&& func) const 
-			{
-				uint64_t entityCount = m_Archetype.EntityCount();
-				if (entityCount == 0)
-				{
-					return;
-				}
-
-				for (uint64_t idx = 0; idx < entityCount; idx++)
-				{
-					Iteration::InvokeEntityIteration(func, idx, m_ComponentsTuple);
-				}
-			}
-
-		private:
-			const Archetype& m_Archetype;
-			const ComponentsOnlyTuple& m_ComponentsTuple;
-		};
+		using ComponentOnlyIterator = SimpleArchetypeIterator<ComponentsOnlyTuple>;
 
 	public:
 		inline static constexpr uint64_t s_ComponentCount = sizeof...(ComponentsTypes);
@@ -504,8 +525,8 @@ namespace decs::light
 
 	#pragma region FOREACH FILTER -> FOREACH ENTITY
 	public:
-		template<typename TFilterCallable>
-		void ForEachFilter(TFilterCallable&& func) const
+		template<typename Func>
+		void ForEachFilter(Func&& func) const
 		{
 			FiltersOnlyTuple filterContainers{};
 			ComponentsOnlyTuple componentContainers{};
@@ -513,14 +534,14 @@ namespace decs::light
 			FillTuple(m_ContainersTuple, filterContainers);
 			FillTuple(m_ContainersTuple, componentContainers);
 
-			SimpleIterator thisIterator(*m_Archetype, componentContainers);
+			ComponentOnlyIterator thisIterator(*m_Archetype, componentContainers);
 
 			InvokeFiltersOnlyCallable(func, filterContainers, thisIterator);
 		}
 
 	private:
 		template<typename Func, typename... Filters>
-		inline static void InvokeFiltersOnlyCallable(Func&& func, const std::tuple<Filters...>& filters, const SimpleIterator& thisIterator)
+		inline static void InvokeFiltersOnlyCallable(Func&& func, const std::tuple<Filters...>& filters, const ComponentOnlyIterator& thisIterator)
 		{
 			func(std::get<Filters>(filters)->GetAsRef(0)..., thisIterator);
 		}

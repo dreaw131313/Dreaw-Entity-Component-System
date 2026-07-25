@@ -53,6 +53,10 @@ namespace decs::light
 	{
 		friend class Container;
 		friend class Archetype;
+
+	public:
+		using component_type = ComponentType;
+
 	private:
 		ecsVector<ComponentType> m_Data{};
 

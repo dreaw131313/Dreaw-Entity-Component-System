@@ -14,7 +14,7 @@ namespace decs::light
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
 		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
 
-		using SimpleIteratorType = ArchetypeContextType::SimpleIterator;
+		using ComponentOnlyIterator = ArchetypeContextType::ComponentOnlyIterator;
 	public:
 		Query() = default;
 
