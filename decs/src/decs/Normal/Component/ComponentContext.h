@@ -16,7 +16,7 @@ namespace decs
 	{
 		friend class Container;
 	public:
-		IComponentContext(int observerOrder = 0):
+		IComponentContext(int observerOrder = 0) :
 			m_ObserverOrder(observerOrder)
 		{
 
@@ -41,9 +41,13 @@ namespace decs
 
 		virtual void InvokeOnDisableComponent(EntityComponent* component, const  Entity& entity) = 0;
 
-		inline virtual bool HasCreateObserver() const = 0;
-
-		inline virtual bool HasDestroyObserver() const = 0;
+		/// <summary>
+		/// Unsafe functions do not check if observer is valid, they are used where observer was checked earlier
+		/// </summary>
+		virtual void InvokeOnCreateComponent_Unsafe(EntityComponent* component, const Entity& entity) = 0;
+		virtual void InvokeOnDestroyComponent_Unsafe(EntityComponent* component, const Entity& entity) = 0;
+		virtual void InvokeOnEnableComponent_Unsafe(EntityComponent* component, const Entity& entity) = 0;
+		virtual void InvokeOnDisableComponent_Unsafe(EntityComponent* component, const  Entity& entity) = 0;
 
 		virtual IComponentContext* Clone(int observerOrder, uint32_t stableComponentChunkSize) = 0;
 
@@ -57,6 +61,11 @@ namespace decs
 
 		virtual void ClearStableContainer() = 0;
 
+		virtual bool HasCreateObserver() const noexcept = 0;
+		virtual bool HasDestroyObserver() const noexcept = 0;
+		virtual bool HasEnableObserver() const noexcept = 0;
+		virtual bool HasDisableObserver() const noexcept = 0;
+
 	private:
 		int m_ObserverOrder = 0;
 	};
@@ -67,7 +76,7 @@ namespace decs
 		friend class Container;
 
 	public:
-		ComponentContext(int order, uint32_t stableComponentChunkSize):
+		ComponentContext(int order, uint32_t stableComponentChunkSize) :
 			IComponentContext(order),
 			m_StableContainer(stableComponentChunkSize > 0 ? stableComponentChunkSize : 1000)
 		{
@@ -83,16 +92,6 @@ namespace decs
 			return Type<ComponentType>::ID();
 		}
 
-		inline bool HasCreateObserver() const override
-		{
-			return m_Observers.m_CreateObserver != nullptr;
-		}
-
-		inline bool HasDestroyObserver() const override
-		{
-			return m_Observers.m_DestroyObserver != nullptr;
-		}
-
 		IComponentContext* Clone(int observerOrder, uint32_t stableComponentChunkSize) override
 		{
 			return new ComponentContext<ComponentType>(observerOrder, stableComponentChunkSize);
@@ -100,49 +99,79 @@ namespace decs
 
 		void InvokeOnCreateComponent(EntityComponent* component, const Entity& entity)override
 		{
-			if (!component->IsCreatedByECS())
+			if (m_Observers.m_CreateObserver != nullptr)
 			{
-				component->SetCreated(true);
-				if (m_Observers.m_CreateObserver != nullptr)
+				if (!component->IsCreatedByECS())
 				{
+					component->SetCreated(true);
 					m_Observers.m_CreateObserver->OnCreateComponent(*::decs::check_cast<ComponentType*>(component), entity);
 				}
 			}
 		}
-
 		void InvokeOnDestroyComponent(EntityComponent* component, const Entity& entity)override
 		{
-			if (component->IsCreatedByECS())
+			if (m_Observers.m_DestroyObserver != nullptr)
 			{
-				component->SetCreated(false);
-				if (m_Observers.m_DestroyObserver != nullptr)
+				if (component->IsCreatedByECS())
 				{
+					component->SetCreated(false);
 					m_Observers.m_DestroyObserver->OnDestroyComponent(*::decs::check_cast<ComponentType*>(component), entity);
 				}
 			}
 		}
-
 		void InvokeOnEnableComponent(EntityComponent* component, const Entity& entity) override
 		{
-			if (!component->IsEnabledByECS())
+			if (m_Observers.m_EnableObserver != nullptr)
 			{
-				component->SetEnabled(true);
-				if (m_Observers.m_EnableObserver != nullptr)
+				if (!component->IsEnabledByECS())
 				{
+					component->SetEnabled(true);
 					m_Observers.m_EnableObserver->OnEnableComponent(*::decs::check_cast<ComponentType*>(component), entity);
 				}
 			}
 		}
-
 		void InvokeOnDisableComponent(EntityComponent* component, const Entity& entity) override
+		{
+			if (m_Observers.m_DisableObserver != nullptr)
+			{
+				if (component->IsEnabledByECS())
+				{
+					component->SetEnabled(false);
+					m_Observers.m_DisableObserver->OnDisableComponent(*::decs::check_cast<ComponentType*>(component), entity);
+				}
+			}
+		}
+
+		void InvokeOnCreateComponent_Unsafe(EntityComponent* component, const Entity& entity)override
+		{
+			if (!component->IsCreatedByECS())
+			{
+				component->SetCreated(true);
+				m_Observers.m_CreateObserver->OnCreateComponent(*::decs::check_cast<ComponentType*>(component), entity);
+			}
+		}
+		void InvokeOnDestroyComponent_Unsafe(EntityComponent* component, const Entity& entity)override
+		{
+			if (component->IsCreatedByECS())
+			{
+				component->SetCreated(false);
+				m_Observers.m_DestroyObserver->OnDestroyComponent(*::decs::check_cast<ComponentType*>(component), entity);
+			}
+		}
+		void InvokeOnEnableComponent_Unsafe(EntityComponent* component, const Entity& entity) override
+		{
+			if (!component->IsEnabledByECS())
+			{
+				component->SetEnabled(true);
+				m_Observers.m_EnableObserver->OnEnableComponent(*::decs::check_cast<ComponentType*>(component), entity);
+			}
+		}
+		void InvokeOnDisableComponent_Unsafe(EntityComponent* component, const Entity& entity) override
 		{
 			if (component->IsEnabledByECS())
 			{
 				component->SetEnabled(false);
-				if (m_Observers.m_DisableObserver != nullptr)
-				{
-					m_Observers.m_DisableObserver->OnDisableComponent(*::decs::check_cast<ComponentType*>(component), entity);
-				}
+				m_Observers.m_DisableObserver->OnDisableComponent(*::decs::check_cast<ComponentType*>(component), entity);
 			}
 		}
 
@@ -156,9 +185,31 @@ namespace decs
 			return new PackedStableComponentContainer<ComponentType>();
 		}
 
-		virtual void ClearStableContainer() override
+		void ClearStableContainer() override
 		{
 			m_StableContainer.Clear();
+		}
+
+		bool HasCreateObserver() const noexcept override
+		{
+			return m_Observers.m_CreateObserver != nullptr;
+		}
+		bool HasDestroyObserver() const noexcept override
+		{
+			return m_Observers.m_DestroyObserver != nullptr;
+		}
+		bool HasEnableObserver() const noexcept override
+		{
+			return m_Observers.m_EnableObserver != nullptr;
+		}
+		bool HasDisableObserver() const noexcept override
+		{
+			return m_Observers.m_DisableObserver != nullptr;
+		}
+
+		inline ComponentObserversGroup<ComponentType> GetObservers() const noexcept
+		{
+			return m_Observers;
 		}
 	private:
 		ComponentObserversGroup<ComponentType> m_Observers = {};

@@ -7,13 +7,13 @@
 
 namespace decs
 {
-	Container::Container():
+	Container::Container() :
 		m_EntityManager(m_DefaultEntitiesChunkSize)
 	{
 		InitializeLifeTimeData();
 	}
 
-	Container::Container(const ContainerConfig& config):
+	Container::Container(const ContainerConfig& config) :
 		m_EntityManager(config.EntityChunkSize),
 		m_ComponentContextManager(static_cast<uint32_t>(config.DefaultComponentChunkSize)),
 		m_ArchetypesMap(config.ArchetypeChunkSize, 100)
@@ -825,46 +825,7 @@ namespace decs
 		{
 			m_ComponentContextManager.IterateOverComponentContexts([&] (IComponentContext* componentContext)
 			{
-				const TypeID componentTypeID = componentContext->GetComponentTypeID();
-
-				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&] (Archetype* archetype)
-				{
-					const uint64_t entitiesCountToInvokeCallbacks = archetype->EntityCount();
-					if (entitiesCountToInvokeCallbacks == 0)
-					{
-						return;
-					}
-
-					const uint64_t compIdx = archetype->FindTypeIndex(componentTypeID);
-
-					const auto& typeData = archetype->m_TypeData[compIdx];
-					if (typeData.IsTag())
-					{
-						return;
-					}
-
-					auto* packedContainer = typeData.m_PackedContainer;
-					const auto& entityStorage = archetype->GetEntityStorage();
-
-					for (int64_t idx = static_cast<int64_t>(entitiesCountToInvokeCallbacks) - 1; idx >= 0; idx--)
-					{
-						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-						if (archetypeEntityData.IsValid())
-						{
-							auto entityData = archetypeEntityData.m_EntityData;
-							entity.Set_Internal(*entityData);
-
-							Archetype* currentArch = entityData->m_Archetype;
-							EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
-							componentContext->InvokeOnCreateComponent(componentPtr, entity);
-
-							if (entity.IsActive())
-							{
-								componentContext->InvokeOnEnableComponent(componentPtr, entity);
-							}
-						}
-					}
-				});
+				InvokeComponentTypeCreateEnableObservers(*componentContext);
 			});
 		}
 
@@ -883,44 +844,9 @@ namespace decs
 
 		// invoking components creation observers
 		{
-			Entity entity = {};
 			m_ComponentContextManager.IterateOverComponentContextsForDestryObservers([&] (IComponentContext* componentContext)
 			{
-				TypeID componentTypeID = componentContext->GetComponentTypeID();
-
-				m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&] (Archetype* archetype)
-				{
-					const uint64_t entityCount = archetype->EntityCount();
-					if (entityCount == 0)
-					{
-						return;
-					}
-
-					const uint64_t compIdx = archetype->FindTypeIndex(componentTypeID);
-
-					const auto& typeData = archetype->m_TypeData[compIdx];
-					if (typeData.IsTag())
-					{
-						return;
-					}
-					auto* packedContainer = typeData.m_PackedContainer;
-					const auto& entityStorage = archetype->GetEntityStorage();
-
-					for (int64_t idx = 0; idx < (int64_t)entityCount; idx++)
-					{
-						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-						if (archetypeEntityData.IsValid())
-						{
-							entity.Set_Internal(*archetypeEntityData.m_EntityData);
-							auto compPtr = packedContainer->GetComponentBasePtr(idx);
-							if (entity.IsActive())
-							{
-								componentContext->InvokeOnDisableComponent(compPtr, entity);
-							}
-							componentContext->InvokeOnDestroyComponent(compPtr, entity);
-						}
-					}
-				});
+				InvokeComponentTypeDestroyDisableObservers(*componentContext);
 			});
 		}
 
@@ -950,6 +876,28 @@ namespace decs
 				InvokeEntityDestroyObserver_Internal(entity);
 			});
 		}
+	}
+
+	bool Container::InvokeComponentOnCreateListeners(TypeID componentTypeID)
+	{
+		auto componentCtx = m_ComponentContextManager.GetComponentContext(componentTypeID);
+		if (componentCtx == nullptr)
+		{
+			return false;
+		}
+
+		return InvokeComponentTypeCreateEnableObservers(*componentCtx);
+	}
+
+	bool Container::InvokeComponentOnDestroyListeners(TypeID componentTypeID)
+	{
+		auto componentCtx = m_ComponentContextManager.GetComponentContext(componentTypeID);
+		if (componentCtx == nullptr)
+		{
+			return false;
+		}
+
+		return InvokeComponentTypeDestroyDisableObservers(*componentCtx);
 	}
 
 	void Container::InvokeEntityCreateEnableObservers(const decs::Entity& entity)
@@ -1203,6 +1151,175 @@ namespace decs
 			// erase used component refs:
 			m_ActivationChangeComponentPtrs.erase(m_ActivationChangeComponentPtrs.begin() + startRefsIdx, m_ActivationChangeComponentPtrs.end());
 		}
+	}
+
+	bool Container::InvokeComponentTypeCreateEnableObservers(IComponentContext& componentCtx)
+	{
+		const TypeID componentTypeID = componentCtx.GetComponentTypeID();
+		bool bHasCreateOrEnableObservers = componentCtx.HasCreateObserver() || componentCtx.HasEnableObserver();
+		if (!bHasCreateOrEnableObservers)
+		{
+			return false;
+		}
+
+		Entity entity = {};
+		entity.SetLifeTimeData_Internal(m_LifeTimeData);
+
+		m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&] (Archetype* archetype)
+		{
+			const uint64_t entityCount = archetype->EntityCount();
+			if (entityCount == 0)
+			{
+				return;
+			}
+
+			const uint64_t compIdx = archetype->FindTypeIndex(componentTypeID);
+
+			const auto& typeData = archetype->m_TypeData[compIdx];
+			if (typeData.IsTag())
+			{
+				return;
+			}
+
+			auto* packedContainer = typeData.m_PackedContainer;
+			const auto& entityStorage = archetype->GetEntityStorage();
+
+			if (componentCtx.HasCreateObserver() && componentCtx.HasEnableObserver())
+			{
+				for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
+				{
+					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+					if (archetypeEntityData.IsValid())
+					{
+						auto entityData = archetypeEntityData.m_EntityData;
+						entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+
+						EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+						componentCtx.InvokeOnCreateComponent_Unsafe(componentPtr, entity);
+
+						if (entity.IsActive())
+						{
+							componentCtx.InvokeOnEnableComponent_Unsafe(componentPtr, entity);
+						}
+					}
+				}
+			}
+			else if (componentCtx.HasCreateObserver())
+			{
+				for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
+				{
+					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+					if (archetypeEntityData.IsValid())
+					{
+						auto entityData = archetypeEntityData.m_EntityData;
+						entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+
+						EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+						componentCtx.InvokeOnCreateComponent_Unsafe(componentPtr, entity);
+					}
+				}
+			}
+			else if (componentCtx.HasEnableObserver())
+			{
+				for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
+				{
+					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+					if (archetypeEntityData.IsValid())
+					{
+						auto entityData = archetypeEntityData.m_EntityData;
+						entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+
+						EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+						if (entity.IsActive())
+						{
+							componentCtx.InvokeOnEnableComponent_Unsafe(componentPtr, entity);
+						}
+					}
+				}
+			}
+		});
+
+		return true;
+	}
+
+	bool Container::InvokeComponentTypeDestroyDisableObservers(IComponentContext& componentCtx)
+	{
+		const TypeID componentTypeID = componentCtx.GetComponentTypeID();
+		bool bHasDestroyOrDisableObservers = componentCtx.HasDestroyObserver() || componentCtx.HasDisableObserver();
+		if (!bHasDestroyOrDisableObservers)
+		{
+			return false;
+		}
+		Entity entity = {};
+		entity.SetLifeTimeData_Internal(m_LifeTimeData);
+
+		m_ArchetypesMap.IterateOverArchetypesWithType(componentTypeID, [&] (Archetype* archetype)
+		{
+			const uint64_t entityCount = archetype->EntityCount();
+			if (entityCount == 0)
+			{
+				return;
+			}
+
+			const uint64_t compIdx = archetype->FindTypeIndex(componentTypeID);
+
+			const auto& typeData = archetype->m_TypeData[compIdx];
+			if (typeData.IsTag())
+			{
+				return;
+			}
+			auto* packedContainer = typeData.m_PackedContainer;
+			const auto& entityStorage = archetype->GetEntityStorage();
+
+			if (componentCtx.HasDestroyObserver() && componentCtx.HasDisableObserver())
+			{
+				for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
+				{
+					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+					if (archetypeEntityData.IsValid())
+					{
+						entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
+						auto compPtr = packedContainer->GetComponentBasePtr(idx);
+						if (entity.IsActive())
+						{
+							componentCtx.InvokeOnDisableComponent_Unsafe(compPtr, entity);
+						}
+						componentCtx.InvokeOnDestroyComponent_Unsafe(compPtr, entity);
+					}
+				}
+			}
+			else if (componentCtx.HasDestroyObserver())
+			{
+				for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
+				{
+					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+					if (archetypeEntityData.IsValid())
+					{
+						entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
+						auto compPtr = packedContainer->GetComponentBasePtr(idx);
+						componentCtx.InvokeOnDestroyComponent_Unsafe(compPtr, entity);
+					}
+				}
+			}
+			else if (componentCtx.HasDisableObserver())
+			{
+				for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
+				{
+					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+					if (archetypeEntityData.IsValid())
+					{
+						entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
+						auto compPtr = packedContainer->GetComponentBasePtr(idx);
+						if (entity.IsActive())
+						{
+							componentCtx.InvokeOnDisableComponent_Unsafe(compPtr, entity);
+						}
+					}
+				}
+			}
+
+		});
+		return true;
 	}
 
 	void Container::PerformDelayedDestruction()

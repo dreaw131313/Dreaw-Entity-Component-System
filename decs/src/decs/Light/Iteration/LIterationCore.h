@@ -482,6 +482,40 @@ namespace decs::light
 	private:
 		const Archetype* m_Archetype = nullptr;
 		ContainersTuple m_ContainersTuple{};
+
+	public:
+		struct Iterator
+		{
+		public:
+			Iterator(IterationArchetypeContext& ctx) :
+				m_Ctx(ctx)
+			{
+
+			}
+			template<typename Func>
+			void ForEach(Func&& func) const
+			{
+				if constexpr (is_invocable_with_light_entity_v<Func, ComponentsTypes...>)
+				{
+					Entity e{};
+					m_Ctx.ForEachBackward_WithEntity(func);
+				}
+				else
+				{
+					m_Ctx.ForEach(func);
+				}
+			}
+
+		private:
+			const IterationArchetypeContext& m_Ctx;
+		};
+
+	public:
+		template<typename Func>
+		void ForEachFilter(Func&& func) const
+		{
+
+		}
 	};
 
 	template<light_component_or_filter_concept... ComponentsTypes>
@@ -503,7 +537,7 @@ namespace decs::light
 
 		}
 
-		IterationContainerContext(Container* container, bool bIsEnabled = true):
+		IterationContainerContext(Container* container, bool bIsEnabled = true) :
 			m_Container(container),
 			m_bIsEnabled(bIsEnabled)
 		{

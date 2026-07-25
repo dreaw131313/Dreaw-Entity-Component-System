@@ -1021,6 +1021,24 @@ namespace decs
 
 		void InvokeEntitesOnDestroyListeners(bool bMarkEntitiesDead = true);
 
+		bool InvokeComponentOnCreateListeners(TypeID componentTypeID);
+
+		template<component_concept ComponentType>
+		bool InvokeComponentOnCreateListeners()
+		{
+			return InvokeComponentOnCreateListeners(Type<ComponentType>::ID());
+		}
+
+		bool InvokeComponentOnDestroyListeners(TypeID componentTypeID);
+
+		template<component_concept ComponentType>
+		bool InvokeComponentOnDestroyListeners()
+		{
+			return InvokeComponentOnDestroyListeners(Type<ComponentType>::ID());
+		}
+
+
+
 		/// <summary>
 		/// Changes order of invoking function of component observers. Callback for component with lower order will be invoked first.
 		/// </summary>
@@ -1174,6 +1192,18 @@ namespace decs
 		/// <param name="entity"></param>
 		void InvokeEntityCreateEnableObservers(const decs::Entity& entity);
 
+		template<component_concept ComponentType>
+		ComponentObserversGroup<ComponentType> GetComponentObservers() const
+		{
+			ComponentContext<ComponentType>* componentCtx = m_ComponentContextManager.GetComponentContext<ComponentType>();
+			if (componentCtx == nullptr)
+			{
+				return {};
+			}
+
+			return componentCtx->GetObservers();
+		}
+
 	private:
 		ecsVector<EntityComponent*> m_ActivationChangeComponentPtrs = {};
 
@@ -1195,6 +1225,9 @@ namespace decs
 
 		void InvokeEntityAndComponentsDisableObservers_Internal(const Entity& entity);
 
+		bool InvokeComponentTypeCreateEnableObservers(IComponentContext& componentCtx);
+
+		bool InvokeComponentTypeDestroyDisableObservers(IComponentContext& componentCtx);
 	#pragma endregion
 
 	#pragma region DELAYED DESTROY:

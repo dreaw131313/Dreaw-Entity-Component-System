@@ -79,10 +79,17 @@ namespace decs
 			}
 		}
 
-		IComponentContext* GetComponentContext(const TypeID& typeID)
+		IComponentContext* GetComponentContext(const TypeID& typeID) const
 		{
 			auto it = m_Contexts.find(typeID);
 			return it != m_Contexts.end() ? it->second.m_Context : nullptr;
+		}
+
+		template<component_concept ComponentType>
+		ComponentContext<ComponentType>* GetComponentContext() const
+		{
+			auto it = m_Contexts.find(Type<ComponentType>::ID());
+			return it != m_Contexts.end() ? ::decs::check_cast<ComponentContext<ComponentType>*>(it->second.m_Context) : nullptr;
 		}
 
 		// Return true only when context form component with type id equal componentTypeID exist, else returns false

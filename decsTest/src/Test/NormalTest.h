@@ -12,6 +12,8 @@ namespace Normal
 		void QueryIterationTest();
 
 		void EntityCreatePerformanceTest();
+
+		void ObserversTest();
 	};
 
 }

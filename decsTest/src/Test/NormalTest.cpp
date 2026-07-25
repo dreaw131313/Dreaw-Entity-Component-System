@@ -86,7 +86,7 @@ namespace Normal
 		// Inherited via EnableComponentObserver
 		void OnEnableComponent(TestComponent& component, const decs::Entity& entity) override
 		{
-			PrintLine("Observer enable");
+			PrintLine("Observer Enable");
 		}
 
 
@@ -104,7 +104,8 @@ namespace Normal
 		std::cout << "///////////////////////////////////////////" << "\n";
 
 		//QueryIterationTest();
-		EntityCreatePerformanceTest();
+		//EntityCreatePerformanceTest();
+		ObserversTest();
 	}
 
 	void Test::QueryIterationTest()
@@ -114,13 +115,6 @@ namespace Normal
 		using DoubleTag = decs::tag<double>;
 		using BoolTag = decs::tag<bool>;
 
-		TestComponetObserver testComponentObserver = {};
-
-		decs::ObserversManager observerManager = {};
-		{
-			observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
-		}
-
 		{
 			const decs::ContainerConfig containerConfig{
 				.EntityChunkSize = 1000,
@@ -129,7 +123,6 @@ namespace Normal
 			};
 
 			decs::Container container = { containerConfig };
-			observerManager.FillContainerObservers(container);
 
 			{
 				decs::ComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
@@ -398,5 +391,25 @@ namespace Normal
 
 		std::cout << "Final avarage " << entityCount << " entity creation time " << finalEntitiesCreationTime << " ms\n";
 		std::cout << "Final avarage single entity creation time " << finalSingleEntityCreationTime * 1000. << " us (" << finalSingleEntityCreationTime << "ms)\n";
+	}
+
+
+	void Test::ObserversTest()
+	{
+		TestComponetObserver testComponentObserver = {};
+		decs::ObserversManager observerManager = {};
+		{
+			observerManager.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
+		}
+
+		decs::Container container{};
+		observerManager.FillContainerObservers(container);
+
+		auto observers = container.GetComponentObservers<TestComponent>();
+
+
+		auto entity = container.CreateEntity(true);
+		entity.AddComponent<TestComponent>();
+		entity.Destroy();
 	}
 }
