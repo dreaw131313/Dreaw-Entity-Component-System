@@ -51,6 +51,22 @@ namespace decs::light
 	template<typename... Ts>
 	using create_packed_container_only_tuple = decltype(std::tuple_cat(std::declval<tuple_if_packed_container<Ts>>()...));
 
+	template<typename Func, typename AditionalParam, typename... FiltersContainers>
+	struct is_invocable_with_only_filters : public std::false_type
+	{
+
+	};
+
+	template<typename Func, typename AditionalParam, typename... FiltersContainers>
+	struct is_invocable_with_only_filters<Func, AditionalParam, std::tuple<FiltersContainers*...>> : public std::bool_constant<std::is_invocable_v<Func, const typename FiltersContainers::FilterDataType&..., AditionalParam>>
+	{
+	};
+
+	template<typename Func, typename AditionalParam, typename... FiltersContainers>
+	inline constexpr bool is_invocable_with_only_filters_v = is_invocable_with_only_filters<Func, AditionalParam, FiltersContainers...>::value;
+
+
+
 	class Iteration
 	{
 	public:
@@ -217,8 +233,8 @@ namespace decs::light
 
 		template<typename Func>
 			requires std::is_invocable_v<Func, typename ComponentContainerType::component_type&...>
-			|| std::is_invocable_v<Func, const Entity&, typename ComponentContainerType::component_type&...>
-		void ForEach(Func&& func) const
+		|| std::is_invocable_v<Func, const Entity&, typename ComponentContainerType::component_type&...>
+			void ForEach(Func&& func) const
 		{
 			uint64_t entityCount = m_Archetype.EntityCount();
 			if (entityCount == 0)
@@ -526,6 +542,7 @@ namespace decs::light
 	#pragma region FOREACH FILTER -> FOREACH ENTITY
 	public:
 		template<typename Func>
+			requires is_invocable_with_only_filters_v<Func, const ComponentOnlyIterator&, FiltersOnlyTuple>
 		void ForEachFilter(Func&& func) const
 		{
 			FiltersOnlyTuple filterContainers{};

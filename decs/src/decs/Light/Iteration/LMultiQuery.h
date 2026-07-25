@@ -11,7 +11,7 @@ namespace decs::light
 	{
 		static_assert(!::decs::contain_tags_v<ComponentsTypes...>, "MultiQuery must not use tags in as ComponentTypes!");
 
-	private:
+	public:
 		using ArchetypeContextType = IterationArchetypeContext<drop_const_t<ComponentsTypes>...>;
 		using ContainersTupleType = ArchetypeContextType::ContainersTuple;
 		using QueryFilterConfigType = QueryFiltersConfig<drop_const_t<ComponentsTypes>...>;
@@ -20,7 +20,8 @@ namespace decs::light
 		template<typename ComponentType>
 		using PackedContainerType = PackedLightComponentContainer<ComponentType>*;
 
-		friend class SubQueryType;
+		using ComponentOnlyIterator = ArchetypeContextType::ComponentOnlyIterator;
+		using FilterContainerOnlyTuple = ArchetypeContextType::FiltersOnlyTuple;
 
 	public:
 		MultiQuery() = default;
@@ -320,6 +321,31 @@ namespace decs::light
 				containerContext.ForEachContainer(func);
 			}
 		}
+
+		template<typename Func>
+			requires is_invocable_with_only_filters_v<Func, const ComponentOnlyIterator&, FilterContainerOnlyTuple>
+		void ForEachFilter(Func&& func)
+		{
+			Fetch();
+
+			const uint64_t containerContextCount = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < containerContextCount; containerContextIndex++)
+			{
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				if (!containerContext.IsValidAndEnabled())
+				{
+					continue; // Skip if container context is disabled
+				}
+				Container* container = containerContext.GetContainer();
+				auto& archetypeContexts = containerContext.GetArchetypeContexts();
+
+				for (const auto& ctx : archetypeContexts)
+				{
+					ctx.ForEachFilter(func);
+				}
+			}
+		}
+
 
 		bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{

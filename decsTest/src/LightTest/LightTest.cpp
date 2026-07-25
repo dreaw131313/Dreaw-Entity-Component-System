@@ -641,6 +641,7 @@ void Test::ForEachFilterTest()
 	{
 		decs::light::Entity e = container.CreateEntity();
 		e.AddFilter<float>(1.0f);
+		e.AddFilter<TestEntityFilter>(TestEntityFilter(1));
 		e.AddComponent<Position>();
 		e.AddComponent<Renderer>();
 		e.AddComponent<double>();
@@ -649,34 +650,38 @@ void Test::ForEachFilterTest()
 	}
 
 	{
-		decs::light::Entity e2 = container.CreateEntity();
-		e2.AddFilter<float>(2.0f);
-		e2.AddComponent<Position>();
-		e2.AddComponent<Renderer>();
-		e2.AddComponent<double>();
+		decs::light::Entity e = container.CreateEntity();
+		e.AddFilter<float>(2.0f);
+		e.AddFilter<TestEntityFilter>(TestEntityFilter(2));
+		e.AddComponent<Position>();
+		e.AddComponent<Renderer>();
+		e.AddComponent<double>();
 
-		container.Spawn(e2, 3);
+		container.Spawn(e, 3);
 	}
 
-	using QueryType = decs::light::Query<
+	using QueryType = decs::light::MultiQuery<
 		// Filters:
-		decs::filter<float>, 
+		decs::filter<float>,
+		decs::filter<TestEntityFilter>,
 		// Components:
-		Position, 
-		Renderer, 
+		Position,
+		Renderer,
 		double
 	>;
 
-	QueryType filtersQuery{ &container };
+	//QueryType filtersQuery{ &container };
+	QueryType filtersQuery{};
+	filtersQuery.AddContainer(&container);
 
-	filtersQuery.ForEachFilter([] (float f, const QueryType::ComponentOnlyIterator& iterator)
+	filtersQuery.ForEachFilter([] (float f, const TestEntityFilter& testFilter, const QueryType::ComponentOnlyIterator iterator)
 	{
-		std::cout << "Filter value = " << f << "\n";
+		std::cout << "Filter value = " << f << " Test filter = " << testFilter.Data << "\n";
 		std::cout << "  Entities:" << "\n";
 
 		iterator.ForEach([] (const decs::light::Entity& e, const Position& p, Renderer& r, const double& d)
 		{
-			std::cout << "    entity: "<< e.GetID() << "\n";
+			std::cout << "    entity: " << e.GetID() << "\n";
 		});
 	});
 

@@ -15,6 +15,7 @@ namespace decs::light
 		using ContainerContextType = IterationContainerContext<drop_const_t<ComponentsTypes>...>;
 
 		using ComponentOnlyIterator = ArchetypeContextType::ComponentOnlyIterator;
+		using FilterContainerOnlyTuple = ArchetypeContextType::FiltersOnlyTuple;
 	public:
 		Query() = default;
 
@@ -235,8 +236,8 @@ namespace decs::light
 			m_ContainerContext.ForEachContainer(func);
 		}
 
-
 		template<typename Func>
+			requires is_invocable_with_only_filters_v<Func, const ComponentOnlyIterator&, FilterContainerOnlyTuple>
 		void ForEachFilter(Func&& func)
 		{
 			if (!IsValid()) return;
