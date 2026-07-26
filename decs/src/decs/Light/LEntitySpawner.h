@@ -82,28 +82,28 @@ namespace decs::light
 		}
 
 		template<typename InitFunc>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		inline Entity Spawn(InitFunc&& func)
 		{
 			return Spawn_Impl<true>(func);
 		}
 
 		template<typename InitFunc>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		inline void Spawn(size_t entityCount, InitFunc&& func)
 		{
 			return Spawn_Impl<true>(entityCount, func);
 		}
 
 		template<typename InitFunc>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		inline Entity Spawn_NoObservers(InitFunc&& func)
 		{
 			return Spawn_Impl<false>(func);
 		}
 
 		template<typename InitFunc>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		inline void Spawn_NoObservers(size_t entityCount, InitFunc&& func)
 		{
 			return Spawn_Impl<false>(entityCount, func);
@@ -143,7 +143,7 @@ namespace decs::light
 		}
 
 		template<bool InvokeObservers, typename InitFunc>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		void InitializeEntity(Entity& entity, InitFunc&& func)
 		{
 			auto entityData = entity.GetEntityData();
@@ -164,7 +164,7 @@ namespace decs::light
 				entityData->UnlockOperations();
 			}
 
-			if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
+			if constexpr (iteration::trait::is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
 			{
 				func(
 					entity,
@@ -178,7 +178,7 @@ namespace decs::light
 		}
 
 		template<bool InvokeObservers, typename InitFunc>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		Entity Spawn_Impl(InitFunc&& func)
 		{
 			if (!IsValid())
@@ -195,7 +195,7 @@ namespace decs::light
 		}
 
 		template<bool InvokeObservers, typename InitFunc>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		void Spawn_Impl(size_t entityCount, InitFunc&& func)
 		{
 			if (!IsValid() || entityCount == 0)

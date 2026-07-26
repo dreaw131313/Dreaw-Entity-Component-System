@@ -107,6 +107,7 @@
     <ClInclude Include="src\decs\Core\Stats.h" />
     <ClInclude Include="src\decs\Light\Component\LComponentContext.h" />
     <ClInclude Include="src\decs\Light\Archetypes\LArchetypeAllocator.h" />
+    <ClInclude Include="src\decs\Light\Iteration\LIterationTratis.h" />
     <ClInclude Include="src\decs\Light\Iteration\LQueryManager.h" />
     <ClInclude Include="src\decs\Light\Filter\LFilter.h" />
     <ClInclude Include="src\decs\Normal\Component\ComponentAllocator.h" />

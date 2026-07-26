@@ -3,84 +3,13 @@
 #include "decs/Light/Archetypes/LArchetypesMap.h"
 #include "decs/Light/LContainer.h"
 #include "decs/Light/LEntity.h"
+#include "LIterationTratis.h"
 
 namespace decs::light
 {
 
-	namespace iteration::traits
+	namespace iteration::trait
 	{
-		template<typename T>
-		struct query_data_container final
-		{
-		public:
-			using data_type = pure_type_t<T>;
-			using container_type = PackedLightComponentContainer<data_type>;
-			inline static constexpr bool is_filter = false;
-		};
-
-		template<typename T>
-		struct query_data_container<filter<T>> final
-		{
-		public:
-			using container_type = FilterContainer<filter<T>>;
-			inline static constexpr bool is_filter = true;
-		};
-
-		template<typename T>
-		using query_data_container_t = typename query_data_container<T>::container_type;
-
-
-		template<typename T>
-		struct is_filter_container : public std::false_type {};
-		template<typename T>
-		struct is_filter_container<FilterContainer<T>> : public std::true_type {};
-		template<typename T>
-		inline constexpr bool is_filter_container_v = is_filter_container<T>::value;
-		template< typename T>
-		using tuple_if_filter_container = std::conditional_t<is_filter_container_v<T>, std::tuple<T*>, std::tuple<>>;
-
-		template<typename T>
-		struct is_packed_container : public std::false_type {};
-		template<typename T>
-		struct is_packed_container<PackedLightComponentContainer<T>> : public std::true_type {};
-		template<typename T>
-		inline constexpr bool is_packed_container_v = is_packed_container<T>::value;
-		template< typename T>
-		using tuple_if_packed_container = std::conditional_t<is_packed_container_v<T>, std::tuple<T*>, std::tuple<>>;
-
-		template<typename... Ts>
-		using create_filter_container_only_tuple = decltype(std::tuple_cat(std::declval<tuple_if_filter_container<Ts>>()...));
-		template<typename... Ts>
-		using create_packed_container_only_tuple = decltype(std::tuple_cat(std::declval<tuple_if_packed_container<Ts>>()...));
-
-		template<typename Func, typename AditionalParam, typename... FiltersContainers>
-		struct is_invocable_with_only_filters : public std::false_type
-		{
-
-		};
-
-		template<typename Func, typename AditionalParam, typename... FiltersContainers>
-		struct is_invocable_with_only_filters<Func, AditionalParam, std::tuple<FiltersContainers*...>> : public std::bool_constant<std::is_invocable_v<Func, const typename FiltersContainers::filter_data_type&..., AditionalParam>>
-		{
-		};
-
-		template<typename Func, typename AditionalParam, typename... FiltersContainers>
-		inline constexpr bool is_invocable_with_only_filters_v = is_invocable_with_only_filters<Func, AditionalParam, FiltersContainers...>::value;
-
-
-		/*template<typename TCallable, typename... ComponentTypes>
-		concept	light_query_iterate_container_callable = std::is_invocable_v<TCallable, std::span<ligth_component_or_filter_t<ComponentTypes>>...>
-			|| std::is_invocable_v<TCallable, std::span<const ligth_component_or_filter_t<ComponentTypes>>...>
-			|| std::is_invocable_v<TCallable, const std::span<ligth_component_or_filter_t<ComponentTypes>>...>
-			|| std::is_invocable_v<TCallable, const std::span<ligth_component_or_filter_t<ComponentTypes>>&...>
-			|| std::is_invocable_v<TCallable, const std::span<const ligth_component_or_filter_t<ComponentTypes>>...>
-			|| std::is_invocable_v<TCallable, const std::span<const ligth_component_or_filter_t<ComponentTypes>>&...>
-			;*/
-		
-		template<typename TCallable, typename... ComponentTypes>
-		concept	light_query_iterate_container_callable = std::is_invocable_v<TCallable, typename query_data_container_t<ComponentTypes>::get_span_result...>;
-
-
 	}
 
 	class Iteration
@@ -286,9 +215,9 @@ namespace decs::light
 	class IterationArchetypeContext
 	{
 	public:
-		using ContainersTuple = std::tuple<iteration::traits::query_data_container_t<ComponentsTypes>*...>;
-		using FiltersOnlyTuple = iteration::traits::create_filter_container_only_tuple<iteration::traits::query_data_container_t<ComponentsTypes>...>;
-		using ComponentsOnlyTuple = iteration::traits::create_packed_container_only_tuple<iteration::traits::query_data_container_t<ComponentsTypes>...>;
+		using ContainersTuple = std::tuple<iteration::trait::query_data_container_t<ComponentsTypes>*...>;
+		using FiltersOnlyTuple = iteration::trait::create_filter_container_only_tuple<iteration::trait::query_data_container_t<ComponentsTypes>...>;
+		using ComponentsOnlyTuple = iteration::trait::create_packed_container_only_tuple<iteration::trait::query_data_container_t<ComponentsTypes>...>;
 		using ComponentOnlyIterator = SimpleArchetypeIterator<ComponentsOnlyTuple>;
 
 	public:
@@ -319,19 +248,19 @@ namespace decs::light
 			//m_ContainersTuple = { m_Archetype->GetTypePackedContainer<pure_type_t<ComponentsTypes>>()... };
 			m_ContainersTuple = { GetArchetypeDataContainer<ComponentsTypes>()... };
 
-			return ((std::get<iteration::traits::query_data_container_t<ComponentsTypes>*>(m_ContainersTuple) != nullptr) && ...);
+			return ((std::get<iteration::trait::query_data_container_t<ComponentsTypes>*>(m_ContainersTuple) != nullptr) && ...);
 		}
 
 		template<typename T>
-		iteration::traits::query_data_container_t<T>* GetArchetypeDataContainer()
+		iteration::trait::query_data_container_t<T>* GetArchetypeDataContainer()
 		{
-			if constexpr (iteration::traits::query_data_container<T>::is_filter)
+			if constexpr (iteration::trait::query_data_container<T>::is_filter)
 			{
 				return m_Archetype->GetFilterData<filter_type_t<T>>().m_FilterContainer;
 			}
 			else
 			{
-				return m_Archetype->GetTypePackedContainer<typename iteration::traits::query_data_container<T>::data_type>();
+				return m_Archetype->GetTypePackedContainer<typename iteration::trait::query_data_container<T>::data_type>();
 			}
 		}
 
@@ -544,12 +473,12 @@ namespace decs::light
 	#pragma region FOREACH CONTAINER
 	public:
 		template<typename TCallable>
-			requires iteration::traits::light_query_iterate_container_callable<TCallable, ComponentsTypes...>
+			requires iteration::trait::light_query_iterate_container_callable<TCallable, ComponentsTypes...>
 		void  InvokeForEachComponentContainer(TCallable&& func) const
 		{
 			if (GetEntityCount() > 0)
 			{
-				func(std::get<iteration::traits::query_data_container_t<ComponentsTypes>*>(m_ContainersTuple)->GetAsSpan()...);
+				func(std::get<iteration::trait::query_data_container_t<ComponentsTypes>*>(m_ContainersTuple)->GetAsSpan()...);
 			}
 		}
 
@@ -558,7 +487,7 @@ namespace decs::light
 	#pragma region FOREACH FILTER -> FOREACH ENTITY
 	public:
 		template<typename Func>
-			requires iteration::traits::is_invocable_with_only_filters_v<Func, const ComponentOnlyIterator&, FiltersOnlyTuple>
+			requires iteration::trait::is_invocable_with_only_filters_v<Func, const ComponentOnlyIterator&, FiltersOnlyTuple>
 		void ForEachFilter(Func&& func) const
 		{
 			if (m_Archetype->IsEmpty())
@@ -607,7 +536,7 @@ namespace decs::light
 			template<typename Func>
 			void ForEach(Func&& func) const
 			{
-				if constexpr (is_invocable_with_light_entity_v<Func, ComponentsTypes...>)
+				if constexpr (iteration::trait::is_invocable_with_light_entity_v<Func, ComponentsTypes...>)
 				{
 					Entity e{};
 					m_Ctx.ForEachBackward_WithEntity(func);
@@ -745,7 +674,7 @@ namespace decs::light
 		}
 
 		template<typename TCallable>
-			requires iteration::traits::light_query_iterate_container_callable<TCallable, ComponentsTypes...>
+			requires iteration::trait::light_query_iterate_container_callable<TCallable, ComponentsTypes...>
 		void ForEachContainer(TCallable&& func) const
 		{
 			for (const ArchetypeContextType& archetypeContext : m_ArchetypesContexts)

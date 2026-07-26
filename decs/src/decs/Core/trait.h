@@ -285,32 +285,6 @@ namespace decs
 	constexpr bool is_invocable_with_entity_v = std::is_invocable_v<TCallable, const Entity&, TComponentTypes...>
 		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
 
-	template<typename TCallable, typename... ComponentTypes>
-	concept light_query_callable = std::is_invocable_v<TCallable, ligth_component_or_filter_t<ComponentTypes>...>
-		|| std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>...>
-		|| std::is_invocable_v<TCallable, ligth_component_or_filter_t<ComponentTypes>&...>
-		|| std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
-
-
-	template<typename T>
-	struct component_span_or_filter_type
-	{
-	public:
-		using Type = std::span<const T>;
-	};
-
-	template<typename T>
-	struct component_span_or_filter_type<filter<T>>
-	{
-	public:
-		using Type = const typename filter<T>::DataType;
-	};
-
-
-	template<typename TCallable, typename... ComponentTypes>
-	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>...>
-		|| std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
-
 	template<typename Func, typename ComponentType>
 	concept light_component_observer_func = std::is_invocable_v<Func, const light::Entity&, ComponentType&>;
 

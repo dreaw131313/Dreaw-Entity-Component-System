@@ -112,13 +112,13 @@ void Test::Run()
 	std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
 	std::cout << "/////////////////////////////////////" << "\n";
 
-	//IterationTest();
-	//EntityCreatePerformanceTest();
-	//QueryManagerTest();
-	//FilterTest();
-	//RemovingArchetypesTest();
-	//ObserversTest();
-	//SettingComponents();
+	IterationTest();
+	EntityCreatePerformanceTest();
+	QueryManagerTest();
+	FilterTest();
+	RemovingArchetypesTest();
+	ObserversTest();
+	SettingComponents();
 	ForEachFilterTest();
 }
 
@@ -686,7 +686,7 @@ void Test::ForEachFilterTest()
 		});
 	});
 
-	filtersQuery.ForEachArchetype([] (const float& f, const TestEntityFilter& testFilter, std::span<const Position> pos, std::span<Renderer> renderers, std::span<double> doubles)
+	filtersQuery.ForEachArchetype([] (const float& f, const TestEntityFilter& testFilter, std::span<Position const > pos, std::span<Renderer> renderers, std::span<double> doubles)
 	{
 		std::cout << "float filter = " << f << " test filter = " << testFilter.Data << "\n";
 	});

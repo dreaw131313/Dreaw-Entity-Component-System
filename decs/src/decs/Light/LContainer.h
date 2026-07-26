@@ -6,6 +6,7 @@
 #include "Filter/LFilter.h"
 #include "Iteration/LQueryManager.h"
 #include "Component/LComponentContext.h"
+#include "Iteration/LIterationTratis.h"
 
 namespace decs::light
 {
@@ -111,7 +112,7 @@ namespace decs::light
 				entityData.UnlockOperations();
 			}
 
-			if constexpr (is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
+			if constexpr (iteration::trait::is_invocable_with_light_entity_v<InitFunc, ComponentTypes...>)
 			{
 				initFunc(entity, *std::get<drop_const_t<ComponentTypes>*>(createdComponents)...);
 			}
@@ -134,7 +135,7 @@ namespace decs::light
 		/// <param name="initFunc"></param>
 		/// <returns></returns>
 		template<bool InvokeObservers, typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities_Impl(
 			const LightComponentTypeGroup<ComponentTypes...>& components,
 			const TagTypeGroup<TagTypes...>& tags,
@@ -185,7 +186,7 @@ namespace decs::light
 
 	public:
 		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		inline void CreateEntities(
 			const LightComponentTypeGroup<ComponentTypes...>& components,
 			const TagTypeGroup<TagTypes...>& tags,
@@ -198,7 +199,7 @@ namespace decs::light
 		}
 
 		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...>& tags,
@@ -211,7 +212,7 @@ namespace decs::light
 		}
 
 		template<typename InitFunc, light_component_concept... ComponentTypes>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		void CreateEntities(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			uint32_t entityCount,
@@ -239,7 +240,7 @@ namespace decs::light
 	/// <param name="initFunc"></param>
 	/// <returns></returns>
 		template<bool InvokeObservers, typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity_Impl(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
@@ -279,7 +280,7 @@ namespace decs::light
 
 	public:
 		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes, typename... FiltersData>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
@@ -291,7 +292,7 @@ namespace decs::light
 		}
 
 		template<typename InitFunc, light_component_concept... ComponentTypes, typename... TagTypes>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			const TagTypeGroup<TagTypes...> tags,
@@ -303,7 +304,7 @@ namespace decs::light
 		}
 
 		template<typename InitFunc, light_component_concept... ComponentTypes>
-			requires light_query_callable<InitFunc, ComponentTypes...>
+			requires iteration::trait::light_query_callable<InitFunc, ComponentTypes...>
 		Entity CreateEntity(
 			const LightComponentTypeGroup<ComponentTypes...> components,
 			InitFunc&& initFunc

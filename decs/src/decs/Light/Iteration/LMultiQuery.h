@@ -147,7 +147,7 @@ namespace decs::light
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
-			requires light_query_callable<Callable, ComponentsTypes...>
+			requires iteration::trait::light_query_callable<Callable, ComponentsTypes...>
 		inline void ForEach(Callable&& func) noexcept
 		{
 			Fetch();
@@ -161,7 +161,7 @@ namespace decs::light
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
+				if constexpr (iteration::trait::is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 				{
 					Entity entityBuffer = {};
 
@@ -187,7 +187,7 @@ namespace decs::light
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
-			requires light_query_callable<Callable, ComponentsTypes...>
+			requires iteration::trait::light_query_callable<Callable, ComponentsTypes...>
 		inline void ForEach_Safe(Callable&& func) noexcept
 		{
 			Fetch();
@@ -201,7 +201,7 @@ namespace decs::light
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
+				if constexpr (iteration::trait::is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 				{
 					Entity entityBuffer = {};
 
@@ -231,7 +231,7 @@ namespace decs::light
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
-			requires light_query_callable<Callable, ComponentsTypes...>
+			requires iteration::trait::light_query_callable<Callable, ComponentsTypes...>
 		void ForEachBackward(Callable&& func) noexcept
 		{
 			Fetch();
@@ -245,7 +245,7 @@ namespace decs::light
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
+				if constexpr (iteration::trait::is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 				{
 					Entity entityBuffer = {};
 
@@ -271,7 +271,7 @@ namespace decs::light
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
 		template<typename Callable>
-			requires light_query_callable<Callable, ComponentsTypes...>
+			requires iteration::trait::light_query_callable<Callable, ComponentsTypes...>
 		void ForEachBackward_Safe(Callable&& func) noexcept
 		{
 			Fetch();
@@ -285,7 +285,7 @@ namespace decs::light
 					continue; // Skip if container context is disabled
 				}
 
-				if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
+				if constexpr (iteration::trait::is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 				{
 					Entity entityBuffer = {};
 
@@ -305,7 +305,7 @@ namespace decs::light
 		}
 
 		template<typename TCallable>
-			requires iteration::traits::light_query_iterate_container_callable<TCallable, ComponentsTypes...>
+			requires iteration::trait::light_query_iterate_container_callable<TCallable, ComponentsTypes...>
 		void ForEachArchetype(TCallable&& func)
 		{
 			Fetch();
@@ -447,7 +447,7 @@ namespace decs::light
 			const ContainersTupleType& containersTuple
 		)
 		{
-			if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
+			if constexpr (iteration::trait::is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 			{
 				entityBuffer.Set_Internal(entityData);
 				func(
@@ -589,7 +589,7 @@ namespace decs::light
 			}
 
 			template<typename Callable>
-				requires light_query_callable<Callable, ComponentsTypes...>
+				requires iteration::trait::light_query_callable<Callable, ComponentsTypes...>
 			void ForEach(Callable&& func) noexcept
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
@@ -642,7 +642,7 @@ namespace decs::light
 							leftEntitiesToIterate -= leftEntitiesInArchetypeToIterate;
 						}
 
-						if constexpr (is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
+						if constexpr (iteration::trait::is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
 						{
 							ctx.ForEachFromTo_WithEntity(func, entityBuffer, startEntitiyIndex, entitiesCount);
 						}
