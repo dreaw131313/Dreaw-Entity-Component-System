@@ -165,14 +165,14 @@ namespace decs::light
 				{
 					Entity entityBuffer = {};
 
-					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
 					{
 						ctx.ForEach_WithEntity(func, entityBuffer);
 					}
 				}
 				else
 				{
-					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
 					{
 						ctx.ForEach(func);
 					}
@@ -205,14 +205,14 @@ namespace decs::light
 				{
 					Entity entityBuffer = {};
 
-					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
 					{
 						ctx.ForEach_WithEntity_Safe(func, entityBuffer);
 					}
 				}
 				else
 				{
-					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
 					{
 						ctx.ForEach_Safe(func);
 					}
@@ -249,14 +249,14 @@ namespace decs::light
 				{
 					Entity entityBuffer = {};
 
-					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
 					{
 						ctx.ForEachBackward_WithEntity(func, entityBuffer);
 					}
 				}
 				else
 				{
-					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
 					{
 						ctx.ForEachBackward(func);
 					}
@@ -289,14 +289,14 @@ namespace decs::light
 				{
 					Entity entityBuffer = {};
 
-					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
 					{
 						ctx.ForEachBackward_WithEntity_Safe(func, entityBuffer);
 					}
 				}
 				else
 				{
-					for (const auto& ctx : containerContext.m_ArchetypesContexts)
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
 					{
 						ctx.ForEachBackward_Safe(func);
 					}
@@ -305,7 +305,7 @@ namespace decs::light
 		}
 
 		template<typename TCallable>
-			requires light_query_iterate_container_callable<TCallable, ComponentsTypes...>
+			requires iteration::traits::light_query_iterate_container_callable<TCallable, ComponentsTypes...>
 		void ForEachArchetype(TCallable&& func)
 		{
 			Fetch();
@@ -339,7 +339,7 @@ namespace decs::light
 				Container* container = containerContext.GetContainer();
 				auto& archetypeContexts = containerContext.GetArchetypeContexts();
 
-				for (const auto& ctx : archetypeContexts)
+				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
 					ctx.ForEachFilter(func);
 				}

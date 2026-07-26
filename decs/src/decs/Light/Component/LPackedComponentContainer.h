@@ -56,6 +56,7 @@ namespace decs::light
 
 	public:
 		using component_type = ComponentType;
+		using get_span_result = std::span<typename component_type>;
 
 	private:
 		ecsVector<ComponentType> m_Data{};

@@ -56,32 +56,33 @@ namespace decs::light
 	class FilterContainer : public IFilterContainerBase
 	{
 	public:
-		using FilterDataType = FilterType::DataType;
+		using filter_data_type = typename FilterType::DataType;
+		using get_span_result = const typename FilterType::DataType&;
 
 	public:
-		FilterDataType m_Data{};
+		filter_data_type m_Data{};
 		size_t m_DataHash = 0;
 
 	public:
 		FilterContainer()
 		{
-			m_DataHash = std::hash<FilterDataType>{}(m_Data);
+			m_DataHash = std::hash<filter_data_type>{}(m_Data);
 		}
 
-		FilterContainer(const FilterDataType& data):
+		FilterContainer(const filter_data_type& data):
 			m_Data(data)
 		{
-			m_DataHash = std::hash<FilterDataType>{}(m_Data);
+			m_DataHash = std::hash<filter_data_type>{}(m_Data);
 		}
 
 		template<typename...Args>
 		FilterContainer(Args&&...args):
 			m_Data(std::forward<Args>(args)...)
 		{
-			m_DataHash = std::hash<FilterDataType>{}(m_Data);
+			m_DataHash = std::hash<filter_data_type>{}(m_Data);
 		}
 
-		inline const FilterDataType& GetFilterData() const
+		inline const filter_data_type& GetFilterData() const
 		{
 			return m_Data;
 		}
@@ -115,19 +116,24 @@ namespace decs::light
 			return &m_Data;
 		}
 
-		inline const FilterDataType& GetAsRef(size_t) const
+		inline const filter_data_type& GetAsRef(size_t) const
 		{
 			return m_Data;
 		}
 
-		inline const FilterDataType* GetAsPtr(size_t) const
+		inline const filter_data_type* GetAsPtr(size_t) const
 		{
 			return &m_Data;
 		}
 
-		inline std::span<const FilterDataType> GetAsSpan() const
+		/*inline std::span<const FilterDataType> GetAsSpan() const
 		{
 			return { &m_Data , 1 };
+		}*/
+
+		inline const filter_data_type& GetAsSpan() const
+		{
+			return m_Data;
 		}
 
 	};
@@ -200,10 +206,10 @@ namespace decs::light
 		using FilterContainerType = FilterContainer<FilterType>;
 		using FilterEntryKeyType = FilterEntryKey<FilterType>;
 
-		using FilterDataType = FilterType::DataType;
+		using filter_data_type = FilterType::DataType;
 
-		using ObserverFunction = TObserverFunction<void(const Entity&, const FilterDataType&)>;
-		using ChangeFilterObserverFunction = TObserverFunction<void(const Entity&, const FilterDataType&, const FilterDataType&)>;
+		using ObserverFunction = TObserverFunction<void(const Entity&, const filter_data_type&)>;
+		using ChangeFilterObserverFunction = TObserverFunction<void(const Entity&, const filter_data_type&, const filter_data_type&)>;
 
 	public:
 		ObserverFunction m_OnAddObserver{};
@@ -218,7 +224,7 @@ namespace decs::light
 			m_FiltersMap.clear();
 		}
 
-		FilterContainerType* GetOrAddContainer(const FilterDataType& filter)
+		FilterContainerType* GetOrAddContainer(const filter_data_type& filter)
 		{
 			FilterEntryKeyType tempKey(filter);
 
@@ -231,7 +237,7 @@ namespace decs::light
 			return CreateContainer(filter);
 		}
 
-		inline FilterContainerType* GetContainer(const FilterDataType& filter) const
+		inline FilterContainerType* GetContainer(const filter_data_type& filter) const
 		{
 			auto it = m_FiltersMap.find(FilterEntryKeyType(filter));
 			return it != m_FiltersMap.end() ? it->second : nullptr;
@@ -281,34 +287,34 @@ namespace decs::light
 
 		void InvokeOnAddObserver(const Entity& entity, const void* filterData) override
 		{
-			m_OnAddObserver.Invoke(entity, *static_cast<const FilterDataType*>(filterData));
+			m_OnAddObserver.Invoke(entity, *static_cast<const filter_data_type*>(filterData));
 		}
 
 		void InvokeOnRemoveObserver(const Entity& entity, const void* filterData) override
 		{
-			m_OnRemoveObserver.Invoke(entity, *static_cast<const FilterDataType*>(filterData));
+			m_OnRemoveObserver.Invoke(entity, *static_cast<const filter_data_type*>(filterData));
 		}
 
 		void InvokeOnChangeObserver(const Entity& entity, const void* oldFilterData, const void* newFilterData) override
 		{
 			m_OnSetObserver.Invoke(
 				entity,
-				*static_cast<const FilterDataType*>(oldFilterData),
-				*static_cast<const FilterDataType*>(newFilterData)
+				*static_cast<const filter_data_type*>(oldFilterData),
+				*static_cast<const filter_data_type*>(newFilterData)
 			);
 		}
 
-		void InvokeOnAddObserver(const Entity& entity, const FilterDataType& filterData)
+		void InvokeOnAddObserver(const Entity& entity, const filter_data_type& filterData)
 		{
 			m_OnAddObserver.Invoke(entity, filterData);
 		}
 
-		void InvokeOnRemoveObserver(const Entity& entity, const FilterDataType& filterData)
+		void InvokeOnRemoveObserver(const Entity& entity, const filter_data_type& filterData)
 		{
 			m_OnRemoveObserver.Invoke(entity, filterData);
 		}
 
-		void InvokeOnSetObserver(const Entity& entity, const FilterDataType& oldFilterData, const FilterDataType& newFilterData)
+		void InvokeOnSetObserver(const Entity& entity, const filter_data_type& oldFilterData, const filter_data_type& newFilterData)
 		{
 			m_OnSetObserver.Invoke(entity, oldFilterData, newFilterData);
 		}
@@ -319,7 +325,7 @@ namespace decs::light
 		ecsMap<FilterEntryKeyType, FilterContainerType*> m_FiltersMap{};
 
 	private:
-		FilterContainerType* CreateContainer(const FilterDataType& filter)
+		FilterContainerType* CreateContainer(const filter_data_type& filter)
 		{
 			FilterContainerType* newContainer = nullptr;
 			if (m_FreeList.empty())

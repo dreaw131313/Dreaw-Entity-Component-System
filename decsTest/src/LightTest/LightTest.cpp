@@ -174,7 +174,7 @@ void Test::IterationTest()
 		PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
 	};
 
-	auto forEachArchetypeFunc = [] (std::span<const TestComponent> components, std::span<const TestEntityFilter> filter)
+	auto forEachArchetypeFunc = [] (std::span<const TestComponent> components, const TestEntityFilter& filter)
 	{
 		PrintLine(std::format("{0} component count", components.size()));
 	};
@@ -656,11 +656,12 @@ void Test::ForEachFilterTest()
 		e.AddComponent<Position>();
 		e.AddComponent<Renderer>();
 		e.AddComponent<double>();
+		e.AddComponent<int>();
 
 		container.Spawn(e, 3);
 	}
 
-	using QueryType = decs::light::MultiQuery<
+	using QueryType = decs::light::Query<
 		// Filters:
 		decs::filter<float>,
 		decs::filter<TestEntityFilter>,
@@ -670,11 +671,11 @@ void Test::ForEachFilterTest()
 		double
 	>;
 
-	//QueryType filtersQuery{ &container };
-	QueryType filtersQuery{};
-	filtersQuery.AddContainer(&container);
+	QueryType filtersQuery{ &container };
+	filtersQuery.SetContainer(&container);
+	//filtersQuery.AddContainer(&container);
 
-	filtersQuery.ForEachFilter([] (float f, const TestEntityFilter& testFilter, const QueryType::ComponentOnlyIterator iterator)
+	filtersQuery.ForEachFilter([] (float f, const TestEntityFilter& testFilter, const QueryType::ComponentOnlyIterator& iterator)
 	{
 		std::cout << "Filter value = " << f << " Test filter = " << testFilter.Data << "\n";
 		std::cout << "  Entities:" << "\n";
@@ -685,6 +686,10 @@ void Test::ForEachFilterTest()
 		});
 	});
 
+	filtersQuery.ForEachArchetype([] (const float& f, const TestEntityFilter& testFilter, std::span<const Position> pos, std::span<Renderer> renderers, std::span<double> doubles)
+	{
+		std::cout << "float filter = " << f << " test filter = " << testFilter.Data << "\n";
+	});
 
 
 }
