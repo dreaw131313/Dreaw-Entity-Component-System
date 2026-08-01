@@ -151,7 +151,6 @@
     <ClInclude Include="src\decs\Normal\Iteration\Query.h" />
     <ClInclude Include="src\decs\Normal\NormalECS.h" />
     <ClInclude Include="src\decs\Normal\Observers\Observers.h" />
-    <ClInclude Include="src\decs\Normal\Observers\ObserversManager.h" />
     <ClInclude Include="src\decs\Normal\Utils\ContainerIterator.h" />
     <ClInclude Include="src\decs\Normal\Utils\ContainerSerializer.h" />
     <ClInclude Include="src\decs\Normal\Utils\ContainerSerializerComplex.h" />

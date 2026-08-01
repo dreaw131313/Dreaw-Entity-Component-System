@@ -8,7 +8,6 @@
 #include "Component/StableComponentContainer.h"
 #include "Component/Component.h"
 
-#include "Observers/Observers.h"
 #include "EntityManager.h"
 
 namespace decs

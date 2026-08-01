@@ -62,16 +62,12 @@ namespace Normal
 	};
 
 
-	class TestComponetObserver :
-		public decs::CreateComponentObserver<TestComponent>,
-		public decs::DestroyComponentObserver<TestComponent>,
-		public decs::EnableComponentObserver<TestComponent>,
-		public decs::DisableComponentObserver<TestComponent>
+	class TestComponetObserver
 	{
 	public:
 
 		// Inherited via CreateComponentObserver
-		void OnCreateComponent(TestComponent& component, const decs::Entity& entity) override
+		void OnCreateComponent(TestComponent& component, const decs::Entity& entity)
 		{
 			component.GetEntity().AddComponent<Position>();
 
@@ -79,21 +75,21 @@ namespace Normal
 		}
 
 		// Inherited via DestroyComponentObserver
-		void OnDestroyComponent(TestComponent& component, const decs::Entity& entity) override
+		void OnDestroyComponent(TestComponent& component, const decs::Entity& entity)
 		{
 			PrintLine("Observer Destroy");
 		}
 
 
 		// Inherited via EnableComponentObserver
-		void OnEnableComponent(TestComponent& component, const decs::Entity& entity) override
+		void OnEnableComponent(TestComponent& component, const decs::Entity& entity)
 		{
 			PrintLine("Observer Enable");
 		}
 
 
 		// Inherited via DisableComponentObserver
-		void OnDisableComponent(TestComponent& component, const decs::Entity& entity) override
+		void OnDisableComponent(TestComponent& component, const decs::Entity& entity)
 		{
 			PrintLine("Observer Disable");
 		}
@@ -105,8 +101,8 @@ namespace Normal
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
 
-		//QueryIterationTest();
-		//EntityCreatePerformanceTest();
+		QueryIterationTest();
+		EntityCreatePerformanceTest();
 		ObserversTest();
 	}
 

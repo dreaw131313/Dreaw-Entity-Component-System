@@ -3,7 +3,6 @@
 #include "decs/Core/check_cast.h"
 #include "decs/Core/ObserverFunction.h"
 
-#include "decs/Normal/Observers/Observers.h"
 #include "decs/Normal/Component/Component.h"
 #include "decs/Normal/Component/StableComponentContainer.h"
 #include "decs/Normal/Component/PackedComponentContainer.h"

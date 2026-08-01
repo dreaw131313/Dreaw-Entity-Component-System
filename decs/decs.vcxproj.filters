@@ -114,9 +114,6 @@
     <ClInclude Include="src\decs\Normal\Observers\Observers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\decs\Normal\Observers\ObserversManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\decs\Normal\Utils\ContainerIterator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
