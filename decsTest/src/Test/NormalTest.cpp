@@ -66,30 +66,30 @@ namespace Normal
 	{
 	public:
 
-		// Inherited via CreateComponentObserver
-		void OnCreateComponent(TestComponent& component, const decs::Entity& entity)
+		//// Inherited via CreateComponentObserver
+		void OnCreateComponent(const decs::Entity& entity, TestComponent& component)
 		{
 			component.GetEntity().AddComponent<Position>();
-
+		
 			PrintLine("Observer Create");
 		}
 
 		// Inherited via DestroyComponentObserver
-		void OnDestroyComponent(TestComponent& component, const decs::Entity& entity)
-		{
-			PrintLine("Observer Destroy");
-		}
+		//void OnDestroyComponent(const decs::Entity& entity, TestComponent& component)
+		//{
+		//	PrintLine("Observer Destroy");
+		//}
 
 
-		// Inherited via EnableComponentObserver
-		void OnEnableComponent(TestComponent& component, const decs::Entity& entity)
-		{
-			PrintLine("Observer Enable");
-		}
+		//// Inherited via EnableComponentObserver
+		//void OnEnableComponent(const decs::Entity& entity, TestComponent& component)
+		//{
+		//	PrintLine("Observer Enable");
+		//}
 
 
 		// Inherited via DisableComponentObserver
-		void OnDisableComponent(TestComponent& component, const decs::Entity& entity)
+		void OnDisableComponent(const decs::Entity& entity, TestComponent& component)
 		{
 			PrintLine("Observer Disable");
 		}
@@ -101,8 +101,8 @@ namespace Normal
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
 
-		QueryIterationTest();
-		EntityCreatePerformanceTest();
+		//QueryIterationTest();
+		//EntityCreatePerformanceTest();
 		ObserversTest();
 	}
 
@@ -397,31 +397,33 @@ namespace Normal
 
 		decs::Container container{};
 
-		auto createObserver = [] (const decs::Entity& e, TestComponent& comp)
-		{
-			PrintLine("Create observer 1");
-		};
+		 /*{
+			auto createObserver = [] (const decs::Entity& e, TestComponent& comp)
+			{
+				PrintLine("Create observer 1");
+			};
 
-		auto createObserver2 = [] (const decs::Entity& e, TestComponent& comp)
-		{
-			PrintLine("Create observer 2");
-		};
+			auto createObserver2 = [] (const decs::Entity& e, TestComponent& comp)
+			{
+				PrintLine("Create observer 2");
+			};
 
-		auto destroyObserver = [] (const decs::Entity& e, TestComponent& comp)
-		{
-			PrintLine("Destroy observer");
-		};
+			auto destroyObserver = [] (const decs::Entity& e, TestComponent& comp)
+			{
+				PrintLine("Destroy observer");
+			};
 
-		container.AddComponentObserver<TestComponent>(decs::EComponentObserver::Create, createObserver);
-		container.AddComponentObserver<TestComponent>(decs::EComponentObserver::Create, createObserver2, -1);
-		container.AddComponentObserver<TestComponent>(decs::EComponentObserver::Destroy, destroyObserver);
+			container.AddComponentObserver<TestComponent>(decs::EComponentObserver::Create, createObserver);
+			container.AddComponentObserver<TestComponent>(decs::EComponentObserver::Create, createObserver2, -1);
+			container.AddComponentObserver<TestComponent>(decs::EComponentObserver::Destroy, destroyObserver);
+		}*/
 
-		{
-			TestComponetObserver testComponentObserver = {};
-			//container.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
-			//auto observers = container.GetComponentObservers<TestComponent>();
-		}
 
+		TestComponetObserver testComponentObserver = {};
+		decs::ObserversManager observersManager{};
+		observersManager.AddContainer(&container);
+
+		observersManager.AddObserver<TestComponent, TestComponetObserver>(&testComponentObserver, 0);
 
 		auto entity = container.CreateEntity(true);
 		entity.AddComponent_NoObserver<TestComponent>();

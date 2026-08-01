@@ -18,6 +18,12 @@ namespace decs
 		friend struct TObserverFunction;
 
 	public:
+		inline operator bool() const noexcept
+		{
+			return m_Value != std::numeric_limits<size_t>::max();
+		}
+
+
 		bool operator == (const ObserverFunctionID& other) const noexcept
 		{
 			return this->m_Value == other.m_Value;
@@ -72,6 +78,11 @@ namespace decs
 
 		bool RemoveFunction(ObserverFunctionID id)
 		{
+			if (!id)
+			{
+				return false;
+			}
+
 			for (size_t i = 0; i < m_Records.size(); i++)
 			{
 				ItemRecord& item = m_Records[i];

@@ -1120,7 +1120,8 @@ namespace decs
 	#pragma region COMPONENT OBSERVERS:
 	public:
 		template<component_concept ComponentType, typename Func>
-		ObserverFunctionID AddComponentObserver(EComponentObserver observerType,Func&& func, int order = 0)
+			requires component_observer_function_concept<Func, ComponentType>
+		ObserverFunctionID AddComponentObserver(EComponentObserver observerType, Func&& func, int order = 0)
 		{
 			ComponentContext<pure_type_t<ComponentType>>* componentContext = m_ComponentContextManager.GetOrCreateComponentContext<pure_type_t<ComponentType>>();
 			if (componentContext == nullptr)
@@ -1157,14 +1158,29 @@ namespace decs
 				case EComponentObserver::Create:
 					return componentContext->m_CreateObservers.RemoveFunction(observerID);
 				case EComponentObserver::Destroy:
-					return componentContext->m_CreateObservers.RemoveFunction(observerID);
+					return componentContext->m_DestroyObservers.RemoveFunction(observerID);
 				case EComponentObserver::Enable:
-					return componentContext->m_CreateObservers.RemoveFunction(observerID);
+					return componentContext->m_EnableObservers.RemoveFunction(observerID);
 				case EComponentObserver::Disable:
-					return componentContext->m_CreateObservers.RemoveFunction(observerID);
+					return componentContext->m_DisableObservers.RemoveFunction(observerID);
 			}
 
 			return false;
+		}
+
+		template<component_concept ComponentType>
+		void RemoveComponentObservers(ObserverFunctionID createID, ObserverFunctionID destroyID, ObserverFunctionID enableID, ObserverFunctionID disableID)
+		{
+			ComponentContext<pure_type_t<ComponentType>>* componentContext = m_ComponentContextManager.GetComponentContext<pure_type_t<ComponentType>>();
+			if (componentContext == nullptr)
+			{
+				return;
+			}
+
+			componentContext->m_CreateObservers.RemoveFunction(createID);
+			componentContext->m_DestroyObservers.RemoveFunction(destroyID);
+			componentContext->m_EnableObservers.RemoveFunction(enableID);
+			componentContext->m_DisableObservers.RemoveFunction(disableID);
 		}
 
 

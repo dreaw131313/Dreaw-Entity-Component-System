@@ -1007,7 +1007,7 @@ namespace decs
 		auto entityData = entity.GetEntityData();
 		if (entityData->m_bIsCreatedByContainer)
 		{
-			entityData->m_bIsCreatedByContainer = false; 
+			entityData->m_bIsCreatedByContainer = false;
 			m_DestroyEntityObserver.Invoke(entity);
 		}
 	}
@@ -1131,11 +1131,6 @@ namespace decs
 	bool Container::InvokeComponentTypeCreateEnableObservers(IComponentContext& componentCtx)
 	{
 		const TypeID componentTypeID = componentCtx.GetComponentTypeID();
-		bool bHasCreateOrEnableObservers = componentCtx.HasCreateObservers() || componentCtx.HasEnableObservers();
-		if (!bHasCreateOrEnableObservers)
-		{
-			return false;
-		}
 
 		Entity entity = {};
 		entity.SetLifeTimeData_Internal(m_LifeTimeData);
@@ -1159,59 +1154,80 @@ namespace decs
 			auto* packedContainer = typeData.m_PackedContainer;
 			const auto& entityStorage = archetype->GetEntityStorage();
 
-			if (componentCtx.HasCreateObservers() && componentCtx.HasEnableObservers())
+			for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
 			{
-				for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
+				const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+				if (archetypeEntityData.IsValid())
 				{
-					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-					if (archetypeEntityData.IsValid())
+					auto entityData = archetypeEntityData.m_EntityData;
+					entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+
+					EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+					componentCtx.InvokeOnCreateComponent(componentPtr, entity);
+
+					if (entity.IsActive())
 					{
-						auto entityData = archetypeEntityData.m_EntityData;
-						entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+						componentCtx.InvokeOnEnableComponent(componentPtr, entity);
+					}
+				}
+			}
 
-						EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
-						componentCtx.InvokeOnCreateComponent(componentPtr, entity);
-
-						if (entity.IsActive())
+			// THIS IS BAD - if we need e.g. only destroy observer, component without create observer will not be invoked beacaouse component is not marked as created
+			/* {
+				if (componentCtx.HasCreateObservers() && componentCtx.HasEnableObservers())
+				{
+					for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
+					{
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+						if (archetypeEntityData.IsValid())
 						{
-							componentCtx.InvokeOnEnableComponent(componentPtr, entity);
+							auto entityData = archetypeEntityData.m_EntityData;
+							entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+
+							EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+							componentCtx.InvokeOnCreateComponent(componentPtr, entity);
+
+							if (entity.IsActive())
+							{
+								componentCtx.InvokeOnEnableComponent(componentPtr, entity);
+							}
 						}
 					}
 				}
-			}
-			else if (componentCtx.HasCreateObservers())
-			{
-				for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
+				else if (componentCtx.HasCreateObservers())
 				{
-					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-					if (archetypeEntityData.IsValid())
+					for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
 					{
-						auto entityData = archetypeEntityData.m_EntityData;
-						entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
-
-						EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
-						componentCtx.InvokeOnCreateComponent(componentPtr, entity);
-					}
-				}
-			}
-			else if (componentCtx.HasEnableObservers())
-			{
-				for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
-				{
-					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-					if (archetypeEntityData.IsValid())
-					{
-						auto entityData = archetypeEntityData.m_EntityData;
-						entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
-
-						EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
-						if (entity.IsActive())
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+						if (archetypeEntityData.IsValid())
 						{
-							componentCtx.InvokeOnEnableComponent(componentPtr, entity);
+							auto entityData = archetypeEntityData.m_EntityData;
+							entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+
+							EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+							componentCtx.InvokeOnCreateComponent(componentPtr, entity);
 						}
 					}
 				}
-			}
+				else if (componentCtx.HasEnableObservers())
+				{
+					for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
+					{
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+						if (archetypeEntityData.IsValid())
+						{
+							auto entityData = archetypeEntityData.m_EntityData;
+							entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+
+							EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+							if (entity.IsActive())
+							{
+								componentCtx.InvokeOnEnableComponent(componentPtr, entity);
+							}
+						}
+					}
+				}
+			}*/
 		});
 
 		return true;
@@ -1220,11 +1236,6 @@ namespace decs
 	bool Container::InvokeComponentTypeDestroyDisableObservers(IComponentContext& componentCtx)
 	{
 		const TypeID componentTypeID = componentCtx.GetComponentTypeID();
-		bool bHasDestroyOrDisableObservers = componentCtx.HasDestroyObservers() || componentCtx.HasDisableObservers();
-		if (!bHasDestroyOrDisableObservers)
-		{
-			return false;
-		}
 		Entity entity = {};
 		entity.SetLifeTimeData_Internal(m_LifeTimeData);
 
@@ -1246,52 +1257,70 @@ namespace decs
 			auto* packedContainer = typeData.m_PackedContainer;
 			const auto& entityStorage = archetype->GetEntityStorage();
 
-			if (componentCtx.HasDestroyObservers() && componentCtx.HasDisableObservers())
+			for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
 			{
-				for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
+				const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+				if (archetypeEntityData.IsValid())
 				{
-					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-					if (archetypeEntityData.IsValid())
+					entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
+					auto compPtr = packedContainer->GetComponentBasePtr(idx);
+					if (entity.IsActive())
 					{
-						entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
-						auto compPtr = packedContainer->GetComponentBasePtr(idx);
-						if (entity.IsActive())
-						{
-							componentCtx.InvokeOnDisableComponent(compPtr, entity);
-						}
-						componentCtx.InvokeOnDestroyComponent(compPtr, entity);
+						componentCtx.InvokeOnDisableComponent(compPtr, entity);
 					}
+					componentCtx.InvokeOnDestroyComponent(compPtr, entity);
 				}
 			}
-			else if (componentCtx.HasDestroyObservers())
-			{
-				for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
+
+			// THIS IS BAD - if we need e.g. only destroy observer, component without create observer will not be invoked beacaouse component is not marked as created
+			/*{
+				if (componentCtx.HasDestroyObservers() && componentCtx.HasDisableObservers())
 				{
-					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-					if (archetypeEntityData.IsValid())
+					for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
 					{
-						entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
-						auto compPtr = packedContainer->GetComponentBasePtr(idx);
-						componentCtx.InvokeOnDestroyComponent(compPtr, entity);
-					}
-				}
-			}
-			else if (componentCtx.HasDisableObservers())
-			{
-				for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
-				{
-					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-					if (archetypeEntityData.IsValid())
-					{
-						entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
-						auto compPtr = packedContainer->GetComponentBasePtr(idx);
-						if (entity.IsActive())
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+						if (archetypeEntityData.IsValid())
 						{
-							componentCtx.InvokeOnDisableComponent(compPtr, entity);
+							entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
+							auto compPtr = packedContainer->GetComponentBasePtr(idx);
+							if (entity.IsActive())
+							{
+								componentCtx.InvokeOnDisableComponent(compPtr, entity);
+							}
+							componentCtx.InvokeOnDestroyComponent(compPtr, entity);
 						}
 					}
 				}
-			}
+				else if (componentCtx.HasDestroyObservers())
+				{
+					for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
+					{
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+						if (archetypeEntityData.IsValid())
+						{
+							entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
+							auto compPtr = packedContainer->GetComponentBasePtr(idx);
+							componentCtx.InvokeOnDestroyComponent(compPtr, entity);
+						}
+					}
+				}
+				else if (componentCtx.HasDisableObservers())
+				{
+					for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
+					{
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+						if (archetypeEntityData.IsValid())
+						{
+							entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
+							auto compPtr = packedContainer->GetComponentBasePtr(idx);
+							if (entity.IsActive())
+							{
+								componentCtx.InvokeOnDisableComponent(compPtr, entity);
+							}
+						}
+					}
+				}
+			}*/
 
 		});
 		return true;
