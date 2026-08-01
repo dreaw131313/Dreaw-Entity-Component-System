@@ -65,8 +65,6 @@ namespace Normal
 	class TestComponetObserver
 	{
 	public:
-
-		//// Inherited via CreateComponentObserver
 		void OnCreateComponent(const decs::Entity& entity, TestComponent& component)
 		{
 			component.GetEntity().AddComponent<Position>();
@@ -74,21 +72,16 @@ namespace Normal
 			PrintLine("Observer Create");
 		}
 
-		// Inherited via DestroyComponentObserver
-		//void OnDestroyComponent(const decs::Entity& entity, TestComponent& component)
-		//{
-		//	PrintLine("Observer Destroy");
-		//}
+		void OnDestroyComponent(const decs::Entity& entity, TestComponent& component)
+		{
+			PrintLine("Observer Destroy");
+		}
 
+		void OnEnableComponent(const decs::Entity& entity, TestComponent& component)
+		{
+			PrintLine("Observer Enable");
+		}
 
-		//// Inherited via EnableComponentObserver
-		//void OnEnableComponent(const decs::Entity& entity, TestComponent& component)
-		//{
-		//	PrintLine("Observer Enable");
-		//}
-
-
-		// Inherited via DisableComponentObserver
 		void OnDisableComponent(const decs::Entity& entity, TestComponent& component)
 		{
 			PrintLine("Observer Disable");
@@ -428,8 +421,8 @@ namespace Normal
 		auto entity = container.CreateEntity(true);
 		entity.AddComponent_NoObserver<TestComponent>();
 
-		container.InvokeComponentOnCreateListeners<TestComponent>();
-		container.InvokeComponentOnDestroyListeners<TestComponent>();
+		container.InvokeEntitesOnCreateListeners();
+		container.InvokeEntitesOnDestroyListeners();
 
 		entity.Destroy();
 	}

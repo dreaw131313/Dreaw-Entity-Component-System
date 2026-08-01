@@ -268,6 +268,7 @@ namespace decs
 			m_ContainerStates.clear();
 			m_Observers.clear();
 		}
+
 	private:
 		ecsMap<TypeID, std::shared_ptr<IObserverRecord>>m_Observers{};
 		ecsMap<Container*, ContainerState> m_ContainerStates{};
