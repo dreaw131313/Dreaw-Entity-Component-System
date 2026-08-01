@@ -7,7 +7,7 @@ namespace decs
 {
 	class ObserversManager
 	{
-	private:
+	/*private:
 		class ComponentObserversGroupSetterBase
 		{
 		public:
@@ -49,7 +49,7 @@ namespace decs
 
 		inline void SetCreateEntityObserver(CreateEntityObserver* createEntityObserver)
 		{
-			m_CreateEntityObserver = createEntityObserver;
+			m_CreateEntityObservers = createEntityObserver;
 		}
 
 		inline void SetDestroyEntityObserver(DestroyEntityObserver* destroyEntityObserver)
@@ -135,7 +135,7 @@ namespace decs
 		void FillContainerObservers(Container& container)
 		{
 			container.SetEntityObservers(
-				m_CreateEntityObserver,
+				m_CreateEntityObservers,
 				m_DestroyEntityObserver,
 				m_EnableEntityObserver,
 				m_DisableEntityObserver
@@ -151,7 +151,7 @@ namespace decs
 		}
 
 	private:
-		CreateEntityObserver* m_CreateEntityObserver = nullptr;
+		CreateEntityObserver* m_CreateEntityObservers = nullptr;
 		DestroyEntityObserver* m_DestroyEntityObserver = nullptr;
 		EnableEntityObserver* m_EnableEntityObserver = nullptr;
 		DisableEntityObserver* m_DisableEntityObserver = nullptr;
@@ -170,7 +170,7 @@ namespace decs
 				m_ComponentObserverGroups.push_back(group);
 			}
 			return dynamic_cast<ComponentObserversGroupSetter<ComponentType>*>(group);
-		}
+		}*/
 
 	};
 }

@@ -24,10 +24,12 @@ namespace Normal
 
 	public:
 		Position()
-		{ }
+		{
+		}
 
-		Position(float x, float y): X(x), Y(y)
-		{ }
+		Position(float x, float y) : X(x), Y(y)
+		{
+		}
 
 		void TestFunc(int& i)
 		{
@@ -396,12 +398,33 @@ namespace Normal
 
 	void Test::ObserversTest()
 	{
-		TestComponetObserver testComponentObserver = {};
 
 		decs::Container container{};
-		container.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
 
-		auto observers = container.GetComponentObservers<TestComponent>();
+		auto createObserver = [] (const decs::Entity& e, TestComponent& comp)
+		{
+			PrintLine("Create observer 1");
+		};
+
+		auto createObserver2 = [] (const decs::Entity& e, TestComponent& comp)
+		{
+			PrintLine("Create observer 2");
+		};
+
+		auto destroyObserver = [] (const decs::Entity& e, TestComponent& comp)
+		{
+			PrintLine("Destroy observer");
+		};
+
+		container.AddComponentObserver<TestComponent>(decs::EComponentObserver::Create, createObserver);
+		container.AddComponentObserver<TestComponent>(decs::EComponentObserver::Create, createObserver2, -1);
+		container.AddComponentObserver<TestComponent>(decs::EComponentObserver::Destroy, destroyObserver);
+
+		{
+			TestComponetObserver testComponentObserver = {};
+			//container.SetComponentObservers(&testComponentObserver, &testComponentObserver, &testComponentObserver, &testComponentObserver);
+			//auto observers = container.GetComponentObservers<TestComponent>();
+		}
 
 
 		auto entity = container.CreateEntity(true);

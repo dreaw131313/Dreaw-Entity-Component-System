@@ -44,8 +44,8 @@ namespace decs::light
 	public:
 		using ObserverFunction = ::decs::TObserverFunction<void(const Entity&, ComponentType&)>;
 
-		ObserverFunction m_OnCreateFunction{};
-		ObserverFunction m_OnDestroyFunction{};
+		ObserverFunction m_CreateObservers{};
+		ObserverFunction m_DestroyObservers{};
 		ObserverFunction m_OnSetFunction{};
 
 	public:
@@ -71,12 +71,12 @@ namespace decs::light
 
 		inline void InvokeOnCreate(const Entity& entity, ComponentType& component)
 		{
-			m_OnCreateFunction.Invoke(entity, component);
+			m_CreateObservers.Invoke(entity, component);
 		}
 
 		inline void InvokeOnDestroy(const Entity& entity, ComponentType& component)
 		{
-			m_OnDestroyFunction.Invoke(entity, component);
+			m_DestroyObservers.Invoke(entity, component);
 		}
 
 		inline void InvokeOnSet(const Entity& entity, ComponentType& component)
@@ -86,12 +86,12 @@ namespace decs::light
 
 		void InvokeOnCreateObserver(const Entity& entity, void* compPtr) override
 		{
-			m_OnCreateFunction.Invoke(entity, *static_cast<ComponentType*>(compPtr));
+			m_CreateObservers.Invoke(entity, *static_cast<ComponentType*>(compPtr));
 		}
 
 		void InvokeOnDestroyObserver(const Entity& entity, void* compPtr) override
 		{
-			m_OnDestroyFunction.Invoke(entity, *static_cast<ComponentType*>(compPtr));
+			m_DestroyObservers.Invoke(entity, *static_cast<ComponentType*>(compPtr));
 		}
 
 	};

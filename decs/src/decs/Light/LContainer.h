@@ -371,17 +371,17 @@ namespace decs::light
 		/// <returns>id for removing function observer</returns>
 		template<light_component_concept ComponentType, typename Func>
 			requires light_component_observer_func<Func, ComponentType>
-		ObserverFunctionID AddComponentCreateObserver(Func&& func)
+		ObserverFunctionID AddComponentCreateObserver(Func&& func, int order = 0)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
-			return context->m_OnCreateFunction.AddFunction(func);
+			return context->m_CreateObservers.AddFunction(func, order);
 		}
 
 		template<light_component_concept ComponentType>
 		bool RemoveComponentCreateObserver(ObserverFunctionID id)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
-			return context->m_OnCreateFunction.RemoveFunction(id);
+			return context->m_CreateObservers.RemoveFunction(id);
 		}
 
 		/// <summary>
@@ -393,25 +393,25 @@ namespace decs::light
 		/// <returns>id for removing function observer</returns>
 		template<light_component_concept ComponentType, typename Func>
 			requires light_component_observer_func<Func, ComponentType>
-		ObserverFunctionID AddComponentDestroyObserver(Func&& func)
+		ObserverFunctionID AddComponentDestroyObserver(Func&& func, int order = 0)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
-			return context->m_OnDestroyFunction.AddFunction(func);
+			return context->m_DestroyObservers.AddFunction(func, order);
 		}
 
 		template<light_component_concept ComponentType>
 		bool RemoveComponentDestroyObserver(ObserverFunctionID id)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
-			return context->m_OnDestroyFunction.RemoveFunction(id);
+			return context->m_DestroyObservers.RemoveFunction(id);
 		}
 
 		template<light_component_concept ComponentType, typename Func>
 			requires light_component_observer_func<Func, ComponentType>
-		ObserverFunctionID AddComponentSetObserver(Func&& func)
+		ObserverFunctionID AddComponentSetObserver(Func&& func, int order = 0)
 		{
 			TComponentContext<pure_type_t<ComponentType>>* context = m_ComponentContextManager.GetOrCreateContext<ComponentType>();
-			return context->m_OnSetFunction.AddFunction(func);
+			return context->m_OnSetFunction.AddFunction(func, order);
 		}
 
 		template<light_component_concept ComponentType>
@@ -612,11 +612,11 @@ namespace decs::light
 	#pragma region FILTERS
 	public:
 		template<typename Filter, typename Func>
-		ObserverFunctionID AddFilterAddObserver(Func&& func)
+		ObserverFunctionID AddFilterAddObserver(Func&& func, int order = 0)
 		{
 			using FilterType = filter_type_t<Filter>;
 			FilterTypeManager<FilterType>* filterTypeManager = m_FilterManager.GetOrCreateFilterTypeManager<FilterType>();
-			return filterTypeManager->m_OnAddObserver.AddFunction(func);
+			return filterTypeManager->m_OnAddObserver.AddFunction(func, order);
 		}
 		template<typename Filter, typename Func>
 		bool RemoveFilterAddObserver(ObserverFunctionID id)
@@ -627,11 +627,11 @@ namespace decs::light
 		}
 
 		template<typename Filter, typename Func>
-		ObserverFunctionID AddFilterRemoveObserver(Func&& func)
+		ObserverFunctionID AddFilterRemoveObserver(Func&& func, int order = 0)
 		{
 			using FilterType = filter_type_t<Filter>;
 			FilterTypeManager<FilterType>* filterTypeManager = m_FilterManager.GetOrCreateFilterTypeManager<FilterType>();
-			return filterTypeManager->m_OnRemoveObserver.AddFunction(func);
+			return filterTypeManager->m_OnRemoveObserver.AddFunction(func, order);
 		}
 		template<typename Filter, typename Func>
 		bool RemoveFilterRemoveObserver(ObserverFunctionID id)
@@ -642,11 +642,11 @@ namespace decs::light
 		}
 
 		template<typename Filter, typename Func>
-		ObserverFunctionID AddFilterChangeObserver(Func&& func)
+		ObserverFunctionID AddFilterChangeObserver(Func&& func, int order = 0)
 		{
 			using FilterType = filter_type_t<Filter>;
 			FilterTypeManager<FilterType>* filterTypeManager = m_FilterManager.GetOrCreateFilterTypeManager<FilterType>();
-			return filterTypeManager->m_OnSetObserver.AddFunction(func);
+			return filterTypeManager->m_OnSetObserver.AddFunction(func, order);
 		}
 		template<typename Filter, typename Func>
 		bool RemoveFilterChangeObserver(ObserverFunctionID id)
