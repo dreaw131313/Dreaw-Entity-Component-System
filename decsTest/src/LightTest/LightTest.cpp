@@ -102,8 +102,13 @@ STD_HASH(Light::TestEntityFilter)
 	return std::hash<int>{}(v.Data);
 }
 
+STD_HASH(Light::Position)
+{
+	return std::hash<float>{}(v.X);
+}
 
 BEGIN_NAMESPACE(Light)
+
 
 
 void Test::Run()
@@ -113,9 +118,9 @@ void Test::Run()
 	std::cout << "/////////////////////////////////////" << "\n";
 
 	//IterationTest();
-	EntityCreatePerformanceTest();
+	//EntityCreatePerformanceTest();
 	//QueryManagerTest();
-	//FilterTest();
+	FilterTest();
 	//RemovingArchetypesTest();
 	//ObserversTest();
 	//SettingComponents();
@@ -438,6 +443,8 @@ void Test::FilterTest()
 
 	e.AddFilter<TestEntityFilter>(TestEntityFilter(1));
 	e.AddFilter<float>(1.f);
+
+	e.AddFilter<Position>(Position());
 
 	{
 		decs::LightComponentTypeGroup<Position, TestComponent> comps{};

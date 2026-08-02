@@ -82,6 +82,12 @@ namespace decs
 #pragma region FILTER
 
 	template<typename T>
+	concept filter_data_concept = requires (const T & value)
+	{
+		{ ::std::hash<T>{}(value) }->::std::convertible_to<::std::size_t>;
+	};
+
+	template<typename T>
 	struct filter
 	{
 	public:
@@ -96,6 +102,12 @@ namespace decs
 		using DataType = T;
 		using FilterType = filter<T>;
 	};
+
+	template<typename T>
+	using filter_type_t = filter<T>::FilterType;
+
+	template<typename T>
+	using filter_data_t = filter<T>::DataType;
 
 	template<typename T>
 	struct is_filter final
@@ -115,13 +127,10 @@ namespace decs
 	inline constexpr bool is_filter_v = is_filter<T>::value;
 
 	template<typename T>
-	using filter_type_t = filter<T>::FilterType;
-
-	template<typename T>
-	using filter_data_t = filter<T>::DataType;
-
-	template<typename T>
 	concept filter_concept = is_filter_v<T>;
+
+	template<typename T>
+	concept filter_or_filter_data_concept = filter_concept<T> || filter_data_concept<T>;
 
 #pragma endregion
 

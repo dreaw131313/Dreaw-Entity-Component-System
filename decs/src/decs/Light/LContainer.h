@@ -611,16 +611,16 @@ namespace decs::light
 			return true;
 		}
 
-		template<filter_concept FilterType>
-		bool AddFilter(const Entity& entity, EntityData& entityData, const filter_data_t<FilterType>& filter)
+		template<filter_data_concept FilterDataType>
+		bool AddFilter(const Entity& entity, EntityData& entityData, const FilterDataType& filterData)
 		{
-			return AddFilter_Impl<true, FilterType>(entity, entityData, filter);
+			return AddFilter_Impl<true, filter_type_t<FilterDataType>>(entity, entityData, filterData);
 		}
 
-		template<filter_concept FilterType>
-		bool AddFilter_NoObserver(const Entity& entity, EntityData& entityData, const filter_data_t<FilterType>& filter)
+		template<filter_data_concept FilterDataType>
+		bool AddFilter_NoObserver(const Entity& entity, EntityData& entityData, const FilterDataType& filterData)
 		{
-			return AddFilter_Impl<false, FilterType>(entity, entityData, filter);
+			return AddFilter_Impl<false, filter_type_t<FilterDataType>>(entity, entityData, filterData);
 		}
 
 		template<bool InvokeObserver, filter_concept FilterType>
@@ -669,30 +669,30 @@ namespace decs::light
 			return true;
 		}
 
-		template<filter_concept FilterType>
-		bool SetFilter(const Entity& entity, EntityData& entityData, const filter_data_t<FilterType>& filter)
+		template<filter_data_concept FilterDataType>
+		bool SetFilter(const Entity& entity, EntityData& entityData, const FilterDataType& filterData)
 		{
-			return SetFilter_Impl<true, FilterType>(entity, entityData, filter);
+			return SetFilter_Impl<true, filter_type_t<FilterDataType>>(entity, entityData, filterData);
 		}
 
-		template<filter_concept FilterType>
-		bool SetFilter_NoObserver(const Entity& entity, EntityData& entityData, const filter_data_t<FilterType>& filter)
+		template<filter_data_concept FilterDataType>
+		bool SetFilter_NoObserver(const Entity& entity, EntityData& entityData, const FilterDataType& filterData)
 		{
-			return SetFilter_Impl<false, FilterType>(entity, entityData, filter);
+			return SetFilter_Impl<false, filter_type_t<FilterDataType>>(entity, entityData, filterData);
 		}
 
 		bool RemoveFilter_Impl(EntityData& entityData, TypeID filterTypeID, bool bInvokeObserver);
 
-		template<filter_concept FilterType>
+		template<filter_data_concept FilterDataType>
 		bool RemoveFilter(EntityData& entityData)
 		{
-			return RemoveFilter_Impl(entityData, Type<FilterType>::ID(), true);
+			return RemoveFilter_Impl(entityData, Type<filter_type_t<FilterDataType>>::ID(), true);
 		}
 
-		template<filter_concept FilterType>
+		template<filter_data_concept FilterDataType>
 		bool RemoveFilter_NoObserver(EntityData& entityData)
 		{
-			return RemoveFilter_Impl(entityData, Type<FilterType>::ID(), false);
+			return RemoveFilter_Impl(entityData, Type<filter_type_t<FilterDataType>>::ID(), false);
 		}
 
 		bool RemoveFilter(EntityData& entityData, TypeID filterTypeID)
@@ -705,17 +705,16 @@ namespace decs::light
 			return RemoveFilter_Impl(entityData, filterTypeID, false);
 		}
 
-		template<filter_concept FilterType>
-		const filter_data_t<FilterType>* GetFilter(EntityData& entityData)
+		template<filter_data_concept FilterDataType>
+		const FilterDataType* GetFilter(EntityData& entityData)
 		{
-			if (entityData.m_Archetype == nullptr
-				|| entityData.m_Archetype->GetFilters().size() == 0
-				)
+			if (entityData.m_Archetype == nullptr || entityData.m_Archetype->GetFilters().size() == 0)
 			{
 				return nullptr;
 			}
 
-			TArchetypeFilterData<FilterType> filterData = entityData.m_Archetype->GetFilterData<FilterType>();
+			using filter_type = filter_type_t<FilterDataType>;
+			TArchetypeFilterData<filter_type> filterData = entityData.m_Archetype->GetFilterData<filter_type>();
 			if (!filterData)
 			{
 				return nullptr;
@@ -726,14 +725,14 @@ namespace decs::light
 
 		bool HasFilter(const EntityData& entityData, TypeID filterID);
 
-		template<filter_concept FilterType>
+		template<filter_data_concept FilterDataType>
 		bool HasFilter(const EntityData& entityData)
 		{
-			return HasFilter(entityData, Type<FilterType>::ID());
+			return HasFilter(entityData, Type<filter_type_t<FilterDataType>>::ID());
 		}
 
-		template<filter_concept FilterType>
-		bool HasFilter(const EntityData& entityData, const filter_data_t<FilterType>& filterData)
+		template<filter_data_concept FilterDataType>
+		bool HasFilter(const EntityData& entityData, const FilterDataType& filterData)
 		{
 			if (entityData.m_Archetype == nullptr
 				|| entityData.m_Archetype->GetFilters().size() == 0
@@ -742,7 +741,8 @@ namespace decs::light
 				return false;
 			}
 
-			FilterContainer<FilterType>* filterContainer = entityData.m_Archetype->GetFilterData<FilterType>();
+			using filter_type = filter_type_t<FilterDataType>;
+			FilterContainer<filter_type>* filterContainer = entityData.m_Archetype->GetFilterData<filter_type>();
 			if (filterContainer == nullptr)
 			{
 				return false;

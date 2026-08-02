@@ -318,40 +318,40 @@ namespace decs::light
 
 	#pragma region FILTERS:
 	public:
-		template<typename FilterType>
-		bool AddFilter(const filter_data_t<FilterType>& filterData) const
+		template<filter_data_concept FilterDataType>
+		bool AddFilter(const FilterDataType& filterData) const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->AddFilter<filter_type_t<FilterType>>(*this, *m_EntityData, filterData);
+				return GetContainer()->AddFilter<FilterDataType>(*this, *m_EntityData, filterData);
 			}
 			return false;
 		}
-		template<typename FilterType>
-		bool AddFilter_NoObserver(const filter_data_t<FilterType>& filterData) const
+		template<filter_data_concept FilterDataType>
+		bool AddFilter_NoObserver(const FilterDataType& filterData) const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->AddFilter_NoObserver<filter_type_t<FilterType>>(*this, *m_EntityData, filterData);
+				return GetContainer()->AddFilter_NoObserver<FilterDataType>(*this, *m_EntityData, filterData);
 			}
 			return false;
 		}
 
-		template<typename FilterType>
-		bool SetFilter(const filter_data_t<FilterType>& filterData) const
+		template<filter_data_concept FilterDataType>
+		bool SetFilter(const FilterDataType& filterData) const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->SetFilter<filter_type_t<FilterType>>(*this, *m_EntityData, filterData);
+				return GetContainer()->SetFilter<FilterDataType>(*this, *m_EntityData, filterData);
 			}
 			return false;
 		}
-		template<typename FilterType>
-		bool SetFilter_NoObserver(const filter_data_t<FilterType>& filterData) const
+		template<filter_data_concept FilterDataType>
+		bool SetFilter_NoObserver(const FilterDataType& filterData) const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->SetFilter_NoObserver<filter_type_t<FilterType>>(*this, *m_EntityData, filterData);
+				return GetContainer()->SetFilter_NoObserver<FilterDataType>(*this, *m_EntityData, filterData);
 			}
 			return false;
 		}
@@ -369,12 +369,12 @@ namespace decs::light
 			return false;
 		}
 
-		template<typename FilterType>
+		template<filter_data_concept FilterDataType>
 		bool RemoveFilter() const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->RemoveFilter<filter_type_t<FilterType>>(*m_EntityData);
+				return GetContainer()->RemoveFilter<FilterDataType>(*m_EntityData);
 			}
 			return false;
 		}
@@ -392,22 +392,22 @@ namespace decs::light
 			return false;
 		}
 
-		template<typename FilterType>
+		template<filter_data_concept FilterDataType>
 		bool RemoveFilter_NoObserver() const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->RemoveFilter_NoObserver<filter_type_t<FilterType>>(*m_EntityData);
+				return GetContainer()->RemoveFilter_NoObserver<FilterDataType>(*m_EntityData);
 			}
 			return false;
 		}
 
-		template<typename FilterType>
-		[[nodiscard]] const filter_data_t<FilterType>* GetFilter() const
+		template<filter_data_concept FilterDataType>
+		[[nodiscard]] const FilterDataType* GetFilter() const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->GetFilter<filter_type_t<FilterType>>(*m_EntityData);
+				return GetContainer()->GetFilter<FilterDataType>(*m_EntityData);
 			}
 			return nullptr;
 		}
@@ -425,33 +425,33 @@ namespace decs::light
 			return false;
 		}
 
-		template<typename FilterType>
+		template<filter_data_concept FilterDataType>
 		[[nodiscard]] bool HasFilter()const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->HasFilter<filter_type_t<FilterType>>(*m_EntityData);
+				return GetContainer()->HasFilter<FilterDataType>(*m_EntityData);
 			}
 			return false;
 		}
 
-		template<typename FilterType>
-		[[nodiscard]] bool HasFilter(const filter_data_t<FilterType>& filterData)const
+		template<filter_data_concept FilterDataType>
+		[[nodiscard]] bool HasFilter(const FilterDataType& filterData)const
 		{
 			if (IsValid())
 			{
-				return GetContainer()->HasFilter<filter_type_t<FilterType>>(*m_EntityData, filterData);
+				return GetContainer()->HasFilter<FilterDataType>(*m_EntityData, filterData);
 			}
 			return false;
 		}
 
-		template<typename... FilterType>
+		template<filter_data_concept... FilterDataType>
 		[[nodiscard]] bool HasFilters()const
 		{
 			if (IsValid())
 			{
 				auto container = GetContainer();
-				return ((container->HasFilter<filter_type_t<FilterType>>(*m_EntityData)) && ...);
+				return ((container->HasFilter<FilterDataType>(*m_EntityData)) && ...);
 			}
 			return false;
 		}
