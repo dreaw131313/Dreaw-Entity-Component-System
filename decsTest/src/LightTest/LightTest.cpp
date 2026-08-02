@@ -443,8 +443,7 @@ void Test::FilterTest()
 
 	e.AddFilter<TestEntityFilter>(TestEntityFilter(1));
 	e.AddFilter<float>(1.f);
-
-	e.AddFilter<Position>(Position());
+	//e.RemoveFilter<TestEntityFilter>();
 
 	{
 		decs::LightComponentTypeGroup<Position, TestComponent> comps{};
