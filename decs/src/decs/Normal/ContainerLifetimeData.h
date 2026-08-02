@@ -1,0 +1,33 @@
+#pragma once
+
+#include "decs/Core/RefCounterHandle.h"
+
+namespace decs
+{
+
+	/// <summary>
+	/// Helper class which allows simple flag change to set all entities as dead
+	/// </summary>
+	struct ContainerLifetimeData :
+		public RefCountedObject,
+		private NonCopyableNonMoveable
+	{
+		friend class Container;
+
+	public:
+		ContainerLifetimeData() = default;
+
+		~ContainerLifetimeData() = default;
+
+		inline bool IsAlive() const noexcept
+		{
+			return m_bIsContainerAlive.load();
+		}
+
+	private:
+		std::atomic<bool> m_bIsContainerAlive = true;
+	};
+
+	using ContainerLifetimeDataHandle = TRefCountHandle<ContainerLifetimeData>;
+
+}

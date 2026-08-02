@@ -62,7 +62,7 @@ namespace Normal
 	};
 
 
-	class TestComponetObserver
+	class TestComponentObserver
 	{
 	public:
 		void OnCreateComponent(const decs::Entity& entity, TestComponent& component)
@@ -412,16 +412,19 @@ namespace Normal
 		}*/
 
 
-		TestComponetObserver testComponentObserver = {};
+		TestComponentObserver testComponentObserver = {};
 		decs::ObserversManager observersManager{};
 		observersManager.AddContainer(&container);
 
-		observersManager.AddObserver<TestComponent, TestComponetObserver>(&testComponentObserver, 0);
+		observersManager.AddObserver<TestComponent, TestComponentObserver>(&testComponentObserver, 0);
 
 		auto entity = container.CreateEntity(true);
 		entity.AddComponent_NoObserver<TestComponent>();
 
 		container.InvokeEntitesOnCreateListeners();
+		//observersManager.RemoveObserver<TestComponent, TestComponentObserver>(&testComponentObserver);
+		observersManager.RemoveObserver<TestComponentObserver>();
+
 		container.InvokeEntitesOnDestroyListeners();
 
 		entity.Destroy();

@@ -99,7 +99,7 @@ namespace decs
 
 	void Container::InitializeLifeTimeData()
 	{
-		m_LifeTimeData = TRefCountHandle<EnityLifeTimeData>::Create();
+		m_LifeTimeData = TRefCountHandle<ContainerLifetimeData>::Create();
 	}
 
 	void Container::DestroyLifeTimeData()
@@ -913,7 +913,7 @@ namespace decs
 				if (entity.IsActive() && !entityData->m_bIsEnabledByContainer)
 				{
 					entityData->m_bIsEnabledByContainer = true;
-					m_EnableEntityObserver.Invoke(entity);
+					m_EnableEntityObservers.Invoke(entity);
 				}
 			}
 
@@ -1008,7 +1008,7 @@ namespace decs
 		if (entityData->m_bIsCreatedByContainer)
 		{
 			entityData->m_bIsCreatedByContainer = false;
-			m_DestroyEntityObserver.Invoke(entity);
+			m_DestroyEntityObservers.Invoke(entity);
 		}
 	}
 
@@ -1018,7 +1018,7 @@ namespace decs
 		if (!entityData->m_bIsEnabledByContainer)
 		{
 			entityData->m_bIsEnabledByContainer = true;
-			m_EnableEntityObserver.Invoke(entity);
+			m_EnableEntityObservers.Invoke(entity);
 		}
 	}
 
@@ -1028,13 +1028,13 @@ namespace decs
 		if (entityData->m_bIsEnabledByContainer)
 		{
 			entityData->m_bIsEnabledByContainer = false;
-			m_DisableEntityObserver.Invoke(entity);
+			m_DisableEntityObservers.Invoke(entity);
 		}
 	}
 
 	void Container::InvokeEntityAndComponentEnableObservers_Internal(const Entity& entity)
 	{
-		m_EnableEntityObserver.Invoke(entity);
+		m_EnableEntityObservers.Invoke(entity);
 
 		EntityData& entityData = *entity.GetEntityData();
 		uint32_t entityIndexInArchetype = entityData.m_IndexInArchetype;
@@ -1083,7 +1083,7 @@ namespace decs
 
 	void Container::InvokeEntityAndComponentsDisableObservers_Internal(const Entity& entity)
 	{
-		m_DisableEntityObserver.Invoke(entity);
+		m_DisableEntityObservers.Invoke(entity);
 
 		EntityData& entityData = *entity.GetEntityData();
 		uint32_t entityIndexInArchetype = entityData.m_IndexInArchetype;

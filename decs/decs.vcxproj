@@ -142,6 +142,7 @@
     <ClInclude Include="src\decs\Normal\Component\PackedComponentContainer.h" />
     <ClInclude Include="src\decs\Normal\Component\StableComponentContainer.h" />
     <ClInclude Include="src\decs\Normal\Container.h" />
+    <ClInclude Include="src\decs\Normal\ContainerLifetimeData.h" />
     <ClInclude Include="src\decs\Normal\Entity.h" />
     <ClInclude Include="src\decs\Normal\EntityData.h" />
     <ClInclude Include="src\decs\Normal\EntityManager.h" />

@@ -171,6 +171,9 @@
     <ClInclude Include="src\decs\Light\Iteration\LIterationTratis.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\decs\Normal\ContainerLifetimeData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\decs\decs.cpp">

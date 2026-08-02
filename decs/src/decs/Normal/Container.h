@@ -94,11 +94,10 @@ namespace decs
 	private:
 		ecsVector<EntityData*> m_EmptyEntities = {};
 		EntityManager m_EntityManager{};
-
-		TRefCountHandle<EnityLifeTimeData> m_LifeTimeData{};
+		ContainerLifetimeDataHandle m_LifeTimeData{};
 
 	public:
-		[[nodiscard]] const TRefCountHandle<EnityLifeTimeData>& GetLifeTimeData() const
+		[[nodiscard]] const TRefCountHandle<ContainerLifetimeData>& GetLifeTimeData() const
 		{
 			return m_LifeTimeData;
 		}
@@ -1075,28 +1074,28 @@ namespace decs
 
 		inline bool HasEntityDestroyObserver() const
 		{
-			return m_DestroyEntityObserver.Empty();
+			return m_DestroyEntityObservers.Empty();
 		}
 
-		template<typename Func>
+		template<entity_observer_function_concept Func>
 		inline ObserverFunctionID AddCreateEntityObserver(Func&& func, int order = 0)
 		{
 			return m_CreateEntityObservers.AddFunction(func, order);
 		}
-		template<typename Func>
+		template<entity_observer_function_concept Func>
 		inline ObserverFunctionID AddDestroyEntityObserver(Func&& func, int order = 0)
 		{
-			return m_DestroyEntityObserver.AddFunction(func, order);
+			return m_DestroyEntityObservers.AddFunction(func, order);
 		}
-		template<typename Func>
+		template<entity_observer_function_concept Func>
 		inline ObserverFunctionID AddEnableEntityObserver(Func&& func, int order = 0)
 		{
-			return m_EnableEntityObserver.AddFunction(func, order);
+			return m_EnableEntityObservers.AddFunction(func, order);
 		}
-		template<typename Func>
+		template<entity_observer_function_concept Func>
 		inline bool AddDisableEntityObserver(ObserverFunctionID observerID, int order = 0)
 		{
-			return m_DisableEntityObserver.RemoveFunction(observerID, order);
+			return m_DisableEntityObservers.RemoveFunction(observerID, order);
 		}
 		inline bool RemoveCreateEntityObserver(ObserverFunctionID observerID)
 		{
@@ -1104,15 +1103,27 @@ namespace decs
 		}
 		inline bool RemoveDestroyEntityObserver(ObserverFunctionID observerID)
 		{
-			return m_DestroyEntityObserver.RemoveFunction(observerID);
+			return m_DestroyEntityObservers.RemoveFunction(observerID);
 		}
 		inline bool RemoveEnableEntityObserver(ObserverFunctionID observerID)
 		{
-			return m_EnableEntityObserver.RemoveFunction(observerID);
+			return m_EnableEntityObservers.RemoveFunction(observerID);
 		}
 		inline bool RemoveDisableEntityObserver(ObserverFunctionID observerID)
 		{
-			return m_DisableEntityObserver.RemoveFunction(observerID);
+			return m_DisableEntityObservers.RemoveFunction(observerID);
+		}
+		void RemoveEntityObservers(
+			ObserverFunctionID createObserverID,
+			ObserverFunctionID destroyObserverID,
+			ObserverFunctionID enableObserverID,
+			ObserverFunctionID disableObserverID
+			)
+		{
+			m_CreateEntityObservers.RemoveFunction(createObserverID);
+			m_DestroyEntityObservers.RemoveFunction(destroyObserverID);
+			m_EnableEntityObservers.RemoveFunction(enableObserverID);
+			m_DisableEntityObservers.RemoveFunction(disableObserverID);
 		}
 
 	#pragma endregion
@@ -1183,6 +1194,57 @@ namespace decs
 			componentContext->m_DisableObservers.RemoveFunction(disableID);
 		}
 
+		template<component_concept ComponentType, typename Func>
+			requires component_observer_function_concept<Func, ComponentType>
+		ObserverFunctionID AddComponentCreateObserver(Func&& func, int order = 0)
+		{
+			return AddComponentObserver<ComponentType, Func>(EComponentObserver::Create, func, order);
+		}
+
+		template<component_concept ComponentType>
+		bool RemoveComponentCreateObserver(ObserverFunctionID observerID)
+		{
+			return RemoveComponentObserver<ComponentType>(EComponentObserver::Create, observerID);
+		}
+
+		template<component_concept ComponentType, typename Func>
+			requires component_observer_function_concept<Func, ComponentType>
+		ObserverFunctionID AddComponentDestroyObserver(Func&& func, int order = 0)
+		{
+			return AddComponentObserver<ComponentType, Func>(EComponentObserver::Destroy, func, order);
+		}
+
+		template<component_concept ComponentType>
+		bool RemoveComponentDestroyObserver(ObserverFunctionID observerID)
+		{
+			return RemoveComponentObserver<ComponentType>(EComponentObserver::Destroy, observerID);
+		}
+
+		template<component_concept ComponentType, typename Func>
+			requires component_observer_function_concept<Func, ComponentType>
+		ObserverFunctionID AddComponentEnableObserver(Func&& func, int order = 0)
+		{
+			return AddComponentObserver<ComponentType, Func>(EComponentObserver::Enable, func, order);
+		}
+
+		template<component_concept ComponentType>
+		bool RemoveComponentEnableObserver(ObserverFunctionID observerID)
+		{
+			return RemoveComponentObserver<ComponentType>(EComponentObserver::Enable, observerID);
+		}
+
+		template<component_concept ComponentType, typename Func>
+			requires component_observer_function_concept<Func, ComponentType>
+		ObserverFunctionID AddComponentDisableObserver(Func&& func, int order = 0)
+		{
+			return AddComponentObserver<ComponentType, Func>(EComponentObserver::Disable, func, order);
+		}
+
+		template<component_concept ComponentType>
+		bool RemoveComponentDisableObserver(ObserverFunctionID observerID)
+		{
+			return RemoveComponentObserver<ComponentType>(EComponentObserver::Disable, observerID);
+		}
 
 	#pragma endregion
 
@@ -1198,9 +1260,9 @@ namespace decs
 		using EntityObserverFunction = ::decs::TObserverFunction<void(const Entity&)>;
 
 		EntityObserverFunction m_CreateEntityObservers{};
-		EntityObserverFunction m_DestroyEntityObserver{};
-		EntityObserverFunction m_EnableEntityObserver{};
-		EntityObserverFunction m_DisableEntityObserver{};
+		EntityObserverFunction m_DestroyEntityObservers{};
+		EntityObserverFunction m_EnableEntityObservers{};
+		EntityObserverFunction m_DisableEntityObservers{};
 
 	private:
 		void InvokeEntityCreateObserver_Internal(const Entity& entity);

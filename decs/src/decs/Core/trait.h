@@ -291,6 +291,9 @@ namespace decs
 	template<typename Func, typename ComponentType>
 	concept component_observer_function_concept = std::is_invocable_v<Func, const Entity&, ComponentType&>;
 
+	template<typename Func>
+	concept entity_observer_function_concept = std::is_invocable_v<Func, const Entity&>;
+
 
 
 }
