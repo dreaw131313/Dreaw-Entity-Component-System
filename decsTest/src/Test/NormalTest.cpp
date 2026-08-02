@@ -68,7 +68,7 @@ namespace Normal
 		void OnCreateComponent(const decs::Entity& entity, TestComponent& component)
 		{
 			component.GetEntity().AddComponent<Position>();
-		
+
 			PrintLine("TestComponent Create");
 		}
 
@@ -116,8 +116,8 @@ namespace Normal
 		std::cout << "///////////////////////////////////////////" << "\n";
 
 		//QueryIterationTest();
-		EntityCreatePerformanceTest();
-		//ObserversTest();
+		//EntityCreatePerformanceTest();
+		ObserversTest();
 	}
 
 	void Test::QueryIterationTest()
@@ -447,10 +447,13 @@ namespace Normal
 
 		container.InvokeEntitesOnCreateListeners();
 
-		observersManager.RemoveContainer(&container);
+		//observersManager.RemoveContainer(&container);
 
-		//observersManager.RemoveObserver<TestComponentObserver>();
-		//observersManager.RemoveObserver<EntityObserver>();
+		//observersManager.RemoveObserver<TestComponentObserver>(&testComponentObserver);
+		//observersManager.RemoveObserver<EntityObserver>(&entityObserver);
+
+		observersManager.RemoveObserver<TestComponentObserver>();
+		observersManager.RemoveObserver<EntityObserver>();
 
 		//container.InvokeEntitesOnDestroyListeners();
 
