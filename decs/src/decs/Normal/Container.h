@@ -1078,38 +1078,38 @@ namespace decs
 		}
 
 		template<entity_observer_function_concept Func>
-		inline ObserverFunctionID AddCreateEntityObserver(Func&& func, int order = 0)
+		inline ObserverFunctionID AddEntityCreateObserver(Func&& func, int order = 0)
 		{
 			return m_CreateEntityObservers.AddFunction(func, order);
 		}
 		template<entity_observer_function_concept Func>
-		inline ObserverFunctionID AddDestroyEntityObserver(Func&& func, int order = 0)
+		inline ObserverFunctionID AddEntityDestroyObserver(Func&& func, int order = 0)
 		{
 			return m_DestroyEntityObservers.AddFunction(func, order);
 		}
 		template<entity_observer_function_concept Func>
-		inline ObserverFunctionID AddEnableEntityObserver(Func&& func, int order = 0)
+		inline ObserverFunctionID AddEntityEnableObserver(Func&& func, int order = 0)
 		{
 			return m_EnableEntityObservers.AddFunction(func, order);
 		}
 		template<entity_observer_function_concept Func>
-		inline bool AddDisableEntityObserver(ObserverFunctionID observerID, int order = 0)
+		inline ObserverFunctionID AddEntityDisableObserver(Func&& func, int order = 0)
 		{
-			return m_DisableEntityObservers.RemoveFunction(observerID, order);
+			return m_DisableEntityObservers.AddFunction(func, order);
 		}
-		inline bool RemoveCreateEntityObserver(ObserverFunctionID observerID)
+		inline bool RemoveEntityCreateObserver(ObserverFunctionID observerID)
 		{
 			return m_CreateEntityObservers.RemoveFunction(observerID);
 		}
-		inline bool RemoveDestroyEntityObserver(ObserverFunctionID observerID)
+		inline bool RemoveEntityDestroyObserver(ObserverFunctionID observerID)
 		{
 			return m_DestroyEntityObservers.RemoveFunction(observerID);
 		}
-		inline bool RemoveEnableEntityObserver(ObserverFunctionID observerID)
+		inline bool RemoveEntityEnableObserver(ObserverFunctionID observerID)
 		{
 			return m_EnableEntityObservers.RemoveFunction(observerID);
 		}
-		inline bool RemoveDisableEntityObserver(ObserverFunctionID observerID)
+		inline bool RemoveEntityDisableObserver(ObserverFunctionID observerID)
 		{
 			return m_DisableEntityObservers.RemoveFunction(observerID);
 		}

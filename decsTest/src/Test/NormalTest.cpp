@@ -69,22 +69,43 @@ namespace Normal
 		{
 			component.GetEntity().AddComponent<Position>();
 		
-			PrintLine("Observer Create");
+			PrintLine("TestComponent Create");
 		}
 
 		void OnDestroyComponent(const decs::Entity& entity, TestComponent& component)
 		{
-			PrintLine("Observer Destroy");
+			PrintLine("TestComponent Destroy");
 		}
 
 		void OnEnableComponent(const decs::Entity& entity, TestComponent& component)
 		{
-			PrintLine("Observer Enable");
+			PrintLine("TestComponent Enable");
 		}
 
 		void OnDisableComponent(const decs::Entity& entity, TestComponent& component)
 		{
-			PrintLine("Observer Disable");
+			PrintLine("TestComponent Disable");
+		}
+	};
+
+	class EntityObserver
+	{
+	public:
+		void OnCreateEntity(const decs::Entity& entity)
+		{
+			PrintLine("Entity created");
+		}
+		void OnDestroyEntity(const decs::Entity& entity)
+		{
+			PrintLine("Entity destroyed");
+		}
+		void OnEnableEntity(const decs::Entity& entity)
+		{
+			PrintLine("Entity enabled");
+		}
+		void OnDisableEntity(const decs::Entity& entity)
+		{
+			PrintLine("Entity disabled");
 		}
 	};
 
@@ -388,6 +409,9 @@ namespace Normal
 	void Test::ObserversTest()
 	{
 
+		TestComponentObserver testComponentObserver{};
+		EntityObserver entityObserver{};
+
 		decs::Container container{};
 
 		 /*{
@@ -412,20 +436,23 @@ namespace Normal
 		}*/
 
 
-		TestComponentObserver testComponentObserver = {};
 		decs::ObserversManager observersManager{};
 		observersManager.AddContainer(&container);
 
 		observersManager.AddObserver<TestComponent, TestComponentObserver>(&testComponentObserver, 0);
+		observersManager.AddEntityObserver(&entityObserver);
 
 		auto entity = container.CreateEntity(true);
 		entity.AddComponent_NoObserver<TestComponent>();
 
 		container.InvokeEntitesOnCreateListeners();
-		//observersManager.RemoveObserver<TestComponent, TestComponentObserver>(&testComponentObserver);
-		observersManager.RemoveObserver<TestComponentObserver>();
 
-		container.InvokeEntitesOnDestroyListeners();
+		observersManager.RemoveContainer(&container);
+
+		//observersManager.RemoveObserver<TestComponentObserver>();
+		//observersManager.RemoveObserver<EntityObserver>();
+
+		//container.InvokeEntitesOnDestroyListeners();
 
 		entity.Destroy();
 	}
