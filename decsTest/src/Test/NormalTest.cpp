@@ -116,8 +116,8 @@ namespace Normal
 		std::cout << "///////////////////////////////////////////" << "\n";
 
 		//QueryIterationTest();
-		//EntityCreatePerformanceTest();
-		ObserversTest();
+		EntityCreatePerformanceTest();
+		//ObserversTest();
 	}
 
 	void Test::QueryIterationTest()
@@ -310,12 +310,12 @@ namespace Normal
 
 	void Test::EntityCreatePerformanceTest()
 	{
-		const uint32_t testCount = 1;
-		const uint32_t entityCount = 65536;
+		const uint32_t testCount = 10;
+		const uint32_t entityCount = 100000;
 
 		decs::ContainerConfig config{
 			.EntityChunkSize = 10000,
-			.DefaultComponentChunkSize = 1000,
+			.DefaultComponentChunkSize = 10000,
 			.ArchetypeChunkSize = 100,
 		};
 

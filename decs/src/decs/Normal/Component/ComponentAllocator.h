@@ -115,38 +115,26 @@ namespace decs
 
 			m_Size += 1;
 
+			uint32_t allocationIndex = 0;
 			if (m_FreeSpaces.size() > 0)
 			{
-				uint32_t freeSpaceIndex = m_FreeSpaces.back();
+				allocationIndex = static_cast<uint32_t>(m_FreeSpaces.back());
 				m_FreeSpaces.pop_back();
-
-				InternalComponentData& internalData = m_InternalData[freeSpaceIndex];
-				internalData.m_bIsAllocated = true;
-
-				T& componentRaw = m_Components[freeSpaceIndex];
-				T* componentPtr = new(&componentRaw)T(std::forward<Args>(args)...);
-
-				EntityComponent* baseCompPtr = componentPtr;
-				baseCompPtr->m_InternalData = &internalData;
-
-				return AllocationResult(componentPtr, freeSpaceIndex);
 			}
-
+			else
 			{
-				uint32_t allocationIndex = m_CurrentAllocationOffset;
+				allocationIndex = m_CurrentAllocationOffset;
 				m_CurrentAllocationOffset += 1;
-
-				InternalComponentData& internalData = m_InternalData[allocationIndex];
-				internalData.m_bIsAllocated = true;
-
-				T& componentRaw = m_Components[allocationIndex];
-				T* componentPtr = new(&componentRaw)T(std::forward<Args>(args)...);
-
-				EntityComponent* baseCompPtr = componentPtr;
-				baseCompPtr->m_InternalData = &internalData;
-
-				return AllocationResult(componentPtr, allocationIndex);
 			}
+
+			InternalComponentData& internalData = m_InternalData[allocationIndex];
+			internalData.m_bIsAllocated = true;
+
+			T* componentPtr = new(&m_Components[allocationIndex])T(std::forward<Args>(args)...);
+			static_cast<EntityComponent*>(componentPtr)->m_InternalData = &internalData;
+
+			return AllocationResult(componentPtr, allocationIndex);
+
 		}
 
 		bool RemoveAt(uint32_t index, const T* value)
@@ -234,7 +222,7 @@ namespace decs
 			}
 		}
 
-		TComponentAllocator(const TComponentAllocator& other) = delete;
+		TComponentAllocator(const TComponentAllocator&) = delete;
 		/*TAllocator(const TAllocator& other):
 		m_ChunkCapacity(other.m_ChunkCapacity)
 		{
@@ -265,7 +253,7 @@ namespace decs
 			other.m_CurrentChunk = nullptr;
 		}
 
-		TComponentAllocator& operator=(const TComponentAllocator& other) = delete;
+		TComponentAllocator& operator=(const TComponentAllocator&) = delete;
 
 		TComponentAllocator& operator=(TComponentAllocator&& other) noexcept
 		{
@@ -360,7 +348,6 @@ namespace decs
 			ChunkType* chunk = resourceRecord.m_Chunk;
 			const uint32_t indexInChunk = resourceRecord.m_IndexInChunk;
 
-			bool wasChunkFull = chunk->IsFull();
 			if (chunk->RemoveAt(indexInChunk, value))
 			{
 				if (chunk->IsEmpty())
