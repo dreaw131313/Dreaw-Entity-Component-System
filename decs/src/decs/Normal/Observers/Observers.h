@@ -1,97 +1,496 @@
 #pragma once
 #include "decs/Core/Core.h"
+#include "decs/Core/trait.h"
 
 #include "decs/Normal/Component/Component.h"
+#include "decs/Normal/Container.h"
 
 namespace decs
 {
 	struct Entity;
 
-	class CreateEntityObserver
+	template<typename Observer, typename ComponentType>
+	concept component_create_observer_concept = requires
 	{
-	public:
-		virtual ~CreateEntityObserver() = default;
-
-		/// <summary>
-		/// In this method modifying or changing component setup of any entity (except entity passed to this function) is forbidden because it lead to undefined behavior. New entities can be created. Existing entities can be destroyed.
-		/// </summary>
-		/// <param name="entity"></param>
-		virtual void OnCreateEntity(const Entity& entity) = 0;
+		{ static_cast<void(Observer::*)(const Entity&, ComponentType&)>(&Observer::OnCreateComponent) };
 	};
 
-	class DestroyEntityObserver
+	template<typename Observer, typename ComponentType>
+	concept component_destroy_observer_concept = requires
 	{
-	public:
-		virtual ~DestroyEntityObserver() = default;
-
-		virtual void OnDestroyEntity(const Entity& entity) = 0;
+		{ static_cast<void(Observer::*)(const Entity&, ComponentType&)>(&Observer::OnDestroyComponent) };
 	};
 
-	class EnableEntityObserver
+	template<typename Observer, typename ComponentType>
+	concept component_enable_observer_concept = requires
 	{
-	public:
-		virtual ~EnableEntityObserver() = default;
-
-		virtual void OnEnableEntity(const Entity& entity) = 0;
+		{ static_cast<void(Observer::*)(const Entity&, ComponentType&)>(&Observer::OnEnableComponent) };
 	};
 
-	class DisableEntityObserver
+	template<typename Observer, typename ComponentType>
+	concept component_disable_observer_concept = requires
 	{
-	public:
-		virtual ~DisableEntityObserver() = default;
-
-		virtual void OnDisableEntity(const Entity& entity) = 0;;
+		{ static_cast<void(Observer::*)(const Entity&, ComponentType&)>(&Observer::OnDisableComponent) };
 	};
 
-	template<component_concept ComponentType>
-	class CreateComponentObserver
-	{
-	public:
-		virtual ~CreateComponentObserver() = default;
+	template<typename Observer, typename ComponentType>
+	concept any_component_observer = component_concept<ComponentType>
+		&& (component_create_observer_concept<Observer, ComponentType>
+		|| component_destroy_observer_concept<Observer, ComponentType>
+		|| component_enable_observer_concept<Observer, ComponentType>
+		|| component_disable_observer_concept<Observer, ComponentType>)
+		;
 
-		/// <summary>
-		/// In this method setup of components of existing entites (except entity passed to this function) should not be changed, because it can lead to undefined behavior when this method is called in function "Container::InvokeEntitesOnCreateListeners". New entites can be created and it component setup can be changed.
-		/// </summary>
-		/// <param name="component"></param>
-		/// <param name="entity"></param>
-		virtual void OnCreateComponent(ComponentType& component, const Entity& entity) = 0;
+	template<typename Observer>
+	concept entity_create_observer_concept = requires
+	{
+		{ static_cast<void(Observer::*)(const Entity&)>(&Observer::OnCreateEntity) };
 	};
 
-	template<component_concept ComponentType>
-	class DestroyComponentObserver
+	template<typename Observer>
+	concept entity_destroy_observer_concept = requires
 	{
-	public:
-		virtual ~DestroyComponentObserver() = default;
-
-		virtual void OnDestroyComponent(ComponentType& component, const Entity& entity) = 0;
+		{ static_cast<void(Observer::*)(const Entity&)>(&Observer::OnDestroyEntity) };
 	};
 
-	template<component_concept ComponentType>
-	class EnableComponentObserver
+	template<typename Observer>
+	concept entity_enable_observer_concept = requires
 	{
-	public:
-		virtual ~EnableComponentObserver() = default;
-
-		virtual void OnEnableComponent(ComponentType& component, const Entity& entity) = 0;
+		{ static_cast<void(Observer::*)(const Entity&)>(&Observer::OnEnableEntity) };
 	};
 
-	template<component_concept ComponentType>
-	class DisableComponentObserver
+	template<typename Observer>
+	concept entity_disable_observer_concept = requires
 	{
-	public:
-		virtual ~DisableComponentObserver() = default;
-
-		virtual void OnDisableComponent(ComponentType& component, const Entity& entity) = 0;
+		{ static_cast<void(Observer::*)(const Entity&)>(&Observer::OnDisableEntity) };
 	};
 
-	template<component_concept ComponentType>
-	struct ComponentObserversGroup
-	{
-	public:
-		CreateComponentObserver<ComponentType>* m_CreateObserver = nullptr;
-		DestroyComponentObserver<ComponentType>* m_DestroyObserver = nullptr;
-		EnableComponentObserver<ComponentType>* m_EnableObserver = nullptr;
-		DisableComponentObserver<ComponentType>* m_DisableObserver = nullptr;
-	};
+	template<typename Observer>
+	concept any_entity_observer_concept = entity_create_observer_concept<Observer>
+		|| entity_destroy_observer_concept<Observer>
+		|| entity_enable_observer_concept<Observer>
+		|| entity_disable_observer_concept<Observer>
+		;
 
+	class ObserversManager
+	{
+	private:
+		class IObserverRecord
+		{
+		public:
+			virtual ~IObserverRecord() = default;
+
+			virtual void CreateObservers(Container& container) = 0;
+			virtual void RemoveObservers(Container& container) = 0;
+			virtual std::shared_ptr<IObserverRecord> Clone() const = 0;
+			virtual bool IsComponentObserver() const noexcept = 0;
+			virtual bool IsEntityObserver() const noexcept = 0;
+			virtual TypeID GetComponentTypeID() const noexcept = 0;
+			virtual TypeID GetObserverTypeID() const noexcept = 0;
+		};
+
+		template<component_concept ComponentType, any_component_observer<ComponentType> ObserverType>
+		class TComponentObserverRecord final : public IObserverRecord
+		{
+		public:
+			ObserverType* m_ObserverPtr = nullptr;
+			ObserverFunctionID m_CreateID{};
+			ObserverFunctionID m_DestroyID{};
+			ObserverFunctionID m_EnableID{};
+			ObserverFunctionID m_DisableID{};
+			int m_Order = 0;
+
+		public:
+			TComponentObserverRecord(ObserverType* observerPtr, int order) :
+				m_ObserverPtr(observerPtr),
+				m_Order(order)
+			{
+
+			}
+
+			void CreateObservers(Container& container) override final
+			{
+				if constexpr (component_create_observer_concept<ObserverType, ComponentType>)
+				{
+					auto func = [obsrever = m_ObserverPtr] (const Entity& entity, ComponentType& component)
+					{
+						obsrever->OnCreateComponent(entity, component);
+					};
+					m_CreateID = container.AddComponentCreateObserver<ComponentType>(func, m_Order);
+				}
+				if constexpr (component_destroy_observer_concept<ObserverType, ComponentType>)
+				{
+					auto func = [obsrever = m_ObserverPtr] (const Entity& entity, ComponentType& component)
+					{
+						obsrever->OnDestroyComponent(entity, component);
+					};
+					m_DestroyID = container.AddComponentDestroyObserver<ComponentType>(func, m_Order);
+				}
+				if constexpr (component_enable_observer_concept<ObserverType, ComponentType>)
+				{
+					auto func = [obsrever = m_ObserverPtr] (const Entity& entity, ComponentType& component)
+					{
+						obsrever->OnEnableComponent(entity, component);
+					};
+					m_EnableID = container.AddComponentEnableObserver<ComponentType>(func, m_Order);
+				}
+				if constexpr (component_disable_observer_concept<ObserverType, ComponentType>)
+				{
+					auto func = [obsrever = m_ObserverPtr] (const Entity& entity, ComponentType& component)
+					{
+						obsrever->OnDisableComponent(entity, component);
+					};
+					m_DisableID = container.AddComponentDisableObserver<ComponentType>(func, m_Order);
+				}
+			}
+
+			void RemoveObservers(Container& container) override final
+			{
+				container.RemoveComponentObservers<ComponentType>(m_CreateID, m_DestroyID, m_EnableID, m_DisableID);
+			}
+
+			bool IsComponentObserver() const noexcept override final
+			{
+				return true;
+			}
+
+			bool IsEntityObserver() const noexcept override final
+			{
+				return false;
+			}
+
+			TypeID GetComponentTypeID() const noexcept override final
+			{
+				return Type<ComponentType>::ID();
+			}
+
+			TypeID GetObserverTypeID() const noexcept override final
+			{
+				return Type<ObserverType>::ID();
+			}
+
+			std::shared_ptr<IObserverRecord> Clone() const override final
+			{
+				return std::make_shared<TComponentObserverRecord>(m_ObserverPtr, m_Order);
+			}
+		};
+
+		template<any_entity_observer_concept ObserverType>
+		class TEntityObserverRecord final : public IObserverRecord
+		{
+		public:
+			ObserverType* m_ObserverPtr = nullptr;
+			ObserverFunctionID m_CreateID{};
+			ObserverFunctionID m_DestroyID{};
+			ObserverFunctionID m_EnableID{};
+			ObserverFunctionID m_DisableID{};
+			int m_Order = 0;
+
+		public:
+			TEntityObserverRecord(ObserverType* observer, int order) :
+				m_ObserverPtr(observer),
+				m_Order(order)
+			{
+
+			}
+
+			void CreateObservers(Container& container) override final
+			{
+				if constexpr (entity_create_observer_concept<ObserverType>)
+				{
+					auto func = [obsrever = m_ObserverPtr] (const Entity& entity)
+					{
+						obsrever->OnCreateEntity(entity);
+					};
+					m_CreateID = container.AddEntityCreateObserver(func, m_Order);
+				}
+				if constexpr (entity_destroy_observer_concept<ObserverType>)
+				{
+					auto func = [obsrever = m_ObserverPtr] (const Entity& entity)
+					{
+						obsrever->OnDestroyEntity(entity);
+					};
+					m_DestroyID = container.AddEntityDestroyObserver(func, m_Order);
+				}
+				if constexpr (entity_enable_observer_concept<ObserverType>)
+				{
+					auto func = [obsrever = m_ObserverPtr] (const Entity& entity)
+					{
+						obsrever->OnEnableEntity(entity);
+					};
+					m_EnableID = container.AddEntityEnableObserver(func, m_Order);
+				}
+				if constexpr (entity_disable_observer_concept<ObserverType>)
+				{
+					auto func = [obsrever = m_ObserverPtr] (const Entity& entity)
+					{
+						obsrever->OnDisableEntity(entity);
+					};
+					m_DisableID = container.AddEntityDisableObserver(func, m_Order);
+				}
+			}
+
+			void RemoveObservers(Container& container) override final
+			{
+				container.RemoveEntityObservers(m_CreateID, m_DestroyID, m_EnableID, m_DisableID);
+			}
+
+			bool IsComponentObserver() const noexcept override final
+			{
+				return false;
+			}
+
+			bool IsEntityObserver() const noexcept override final
+			{
+				return true;
+			}
+
+			TypeID GetComponentTypeID() const noexcept override final
+			{
+				return InvalidTypeID;
+			}
+
+			TypeID GetObserverTypeID() const noexcept override final
+			{
+				return Type<ObserverType>::ID();
+			}
+
+			std::shared_ptr<IObserverRecord> Clone() const override final
+			{
+				return std::make_shared<TEntityObserverRecord>(m_ObserverPtr, m_Order);
+			}
+		};
+
+		struct ContainerState
+		{
+		public:
+			Container* m_Container{};
+			ecsMap<TypeID, std::shared_ptr<IObserverRecord>> m_Observers{};
+
+		public:
+			void AddObserver(TypeID id, const std::shared_ptr<const IObserverRecord>& observerRecord)
+			{
+				auto clone = observerRecord->Clone();
+				m_Observers[id] = clone;
+				clone->CreateObservers(*m_Container);
+			}
+
+			void RemoveObserver(TypeID id)
+			{
+				auto observerIt = m_Observers.find(id);
+				if (observerIt != m_Observers.end())
+				{
+					observerIt->second->RemoveObservers(*m_Container);
+					m_Observers.erase(observerIt);
+				}
+			}
+
+			void RemoveAllObservers()
+			{
+				for (auto& [id, observer] : m_Observers)
+				{
+					observer->RemoveObservers(*m_Container);
+				}
+			}
+		};
+
+	public:
+		ObserversManager() = default;
+
+		~ObserversManager()
+		{
+			ClearObserversAndContainers();
+		}
+
+		bool AddContainer(Container* container)
+		{
+			if (container == nullptr || m_ContainerStates.contains(container->GetLifeTimeData()))
+			{
+				return false;
+			}
+
+			auto& state = m_ContainerStates[container->GetLifeTimeData()];
+			state.m_Container = container;
+
+			for (auto& [observerTypeID, observerRecord] : m_Observers)
+			{
+				state.AddObserver(observerTypeID, observerRecord);
+			}
+
+			return true;
+		}
+
+		bool RemoveContainer(Container* container)
+		{
+			if (container == nullptr)
+			{
+				return false;
+			}
+
+			auto it = m_ContainerStates.find(container->GetLifeTimeData());
+			if (it == m_ContainerStates.end())
+			{
+				return false;
+			}
+
+			it->second.RemoveAllObservers();
+			m_ContainerStates.erase(it);
+			return true;
+		}
+
+		template<component_concept ComponentType, typename ObserverType>
+		bool AddObserver(ObserverType* observer, int order = 0)
+		{
+			if constexpr (!any_component_observer<ObserverType, ComponentType>)
+			{
+				return false;
+			}
+			else
+			{
+				constexpr TypeID observerTypeID = Type<ObserverType>::ID();
+				if (observer == nullptr || m_Observers.contains(observerTypeID))
+				{
+					return false;
+				}
+
+				auto observerRecord = std::make_shared<TComponentObserverRecord<ComponentType, ObserverType>>(observer, order);
+				m_Observers[observerTypeID] = observerRecord;
+
+				for (auto& [lifetime, containerState] : m_ContainerStates)
+				{
+					if (lifetime->IsAlive())
+					{
+						containerState.AddObserver(observerTypeID, observerRecord);
+					}
+				}
+
+				return true;
+			}
+		}
+
+		template<component_concept ComponentType, typename ObserverType>
+		bool RemoveObserver(ObserverType* observer)
+		{
+			if constexpr (!any_component_observer<ObserverType, ComponentType>)
+			{
+				return false;
+			}
+
+			constexpr TypeID observerTypeID = Type<ObserverType>::ID();
+			if (observer == nullptr)
+			{
+				return false;
+			}
+
+			auto observerRecordIt = m_Observers.find(observerTypeID);
+			if (observerRecordIt == m_Observers.end())
+			{
+				return false;
+			}
+
+			auto observerRecord = std::dynamic_pointer_cast<TComponentObserverRecord<ObserverType, ComponentType>>(observerRecordIt->second);
+			if (!observerRecord || observerRecord->m_ObserverPtr != observer)
+			{
+				return false;
+			}
+
+			for (auto& [lifetime, containerState] : m_ContainerStates)
+			{
+				if (lifetime->IsAlive())
+				{
+					containerState.RemoveObserver(observerTypeID);
+				}
+			}
+			m_Observers.erase(observerRecordIt);
+
+			return true;
+		}
+
+		template<typename ObserverType>
+		bool RemoveObserver()
+		{
+			constexpr TypeID observerTypeID = Type<ObserverType>::ID();
+			auto observerRecordIt = m_Observers.find(observerTypeID);
+			if (observerRecordIt == m_Observers.end())
+			{
+				return false;
+			}
+
+			for (auto& [lifetime, containerState] : m_ContainerStates)
+			{
+				if (lifetime->IsAlive())
+				{
+					containerState.RemoveObserver(observerTypeID);
+				}
+			}
+			m_Observers.erase(observerRecordIt);
+
+			return true;
+		}
+
+		template<typename ObserverType>
+		bool AddEntityObserver(ObserverType* observer, int order = 0)
+		{
+			if constexpr (!any_entity_observer_concept<ObserverType>)
+			{
+				return false;
+			}
+			else
+			{
+				constexpr TypeID observerTypeID = Type<ObserverType>::ID();
+				if (observer == nullptr || m_Observers.contains(observerTypeID))
+				{
+					return false;
+				}
+
+				auto observerRecord = std::make_shared<TEntityObserverRecord<ObserverType>>(observer, order);
+				m_Observers[observerTypeID] = observerRecord;
+
+				for (auto& [lifetime, containerState] : m_ContainerStates)
+				{
+					if (lifetime->IsAlive())
+					{
+						containerState.AddObserver(observerTypeID, observerRecord);
+					}
+				}
+
+				return true;
+			}
+		}
+
+		void ClearObserversAndContainers()
+		{
+			for (auto& [lifetime, state] : m_ContainerStates)
+			{
+				if (lifetime->IsAlive())
+				{
+					state.RemoveAllObservers();
+				}
+			}
+			m_ContainerStates.clear();
+			m_Observers.clear();
+		}
+
+		void ClearDeadContainers()
+		{
+			std::vector<ContainerLifetimeDataHandle> statesToRemove{};
+			for (auto& [lifetime, state] : m_ContainerStates)
+			{
+				if (!lifetime->IsAlive())
+				{
+					statesToRemove.push_back(lifetime);
+				}
+			}
+
+			for (auto& lifetime : statesToRemove)
+			{
+				m_ContainerStates.erase(lifetime);
+			}
+		}
+
+	private:
+		ecsMap<TypeID, std::shared_ptr<IObserverRecord>>m_Observers{};
+		ecsMap<ContainerLifetimeDataHandle, ContainerState> m_ContainerStates{};
+
+	};
 }

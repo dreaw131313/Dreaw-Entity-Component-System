@@ -112,14 +112,14 @@ void Test::Run()
 	std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
 	std::cout << "/////////////////////////////////////" << "\n";
 
-	IterationTest();
+	//IterationTest();
 	EntityCreatePerformanceTest();
-	QueryManagerTest();
-	FilterTest();
-	RemovingArchetypesTest();
-	ObserversTest();
-	SettingComponents();
-	ForEachFilterTest();
+	//QueryManagerTest();
+	//FilterTest();
+	//RemovingArchetypesTest();
+	//ObserversTest();
+	//SettingComponents();
+	//ForEachFilterTest();
 }
 
 void Test::IterationTest()
@@ -311,7 +311,7 @@ void Test::EntityCreatePerformanceTest()
 {
 	size_t entityCounter = 0;
 
-	const uint32_t testCount = 1;
+	const uint32_t testCount = 10;
 	const uint32_t entityCount = 100000;
 
 	decs::light::ContainerConfig config{
@@ -358,22 +358,22 @@ void Test::EntityCreatePerformanceTest()
 					e.AddComponent<TestComponent>();
 				}*/
 
-				for (uint32_t i = 0; i < entityCount; i++)
+				//for (uint32_t i = 0; i < entityCount; i++)
+				//{
+				//	container.CreateEntity(comps,/* tags, filters,*/ [] (Position& pos, TestComponent& test)
+				//	{
+
+				//	});
+				//	/*container.CreateEntity(comps, [] (Position& pos, TestComponent& test)
+				//	{
+
+				//	});*/
+				//}
+
+				container.CreateEntities(comps, tags, entityCount, [] (Position& pos, TestComponent& test)
 				{
-					container.CreateEntity(comps,/* tags, filters,*/ [] (Position& pos, TestComponent& test)
-					{
 
-					});
-					/*container.CreateEntity(comps, [] (Position& pos, TestComponent& test)
-					{
-
-					});*/
-				}
-
-				/*container.CreateEntities(comps, tags, entityCount, [] (Position& pos, TestComponent& test)
-				{
-
-				});*/
+				});
 
 				/*container.CreateEntities(comps, tags, filters, entityCount, [] (Position& pos, TestComponent& test)
 				{

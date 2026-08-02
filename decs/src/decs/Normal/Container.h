@@ -1,13 +1,13 @@
 #pragma once
 #include <tuple>
 
+#include "decs/Core/ObserverFunction.h"
 #include "Archetypes/ArchetypesMap.h"
 #include "Component/ComponentContextsManager.h"
 #include "Component/PackedComponentContainer.h"
 #include "Component/StableComponentContainer.h"
 #include "Component/Component.h"
 
-#include "Observers/Observers.h"
 #include "EntityManager.h"
 
 namespace decs
@@ -94,11 +94,10 @@ namespace decs
 	private:
 		ecsVector<EntityData*> m_EmptyEntities = {};
 		EntityManager m_EntityManager{};
-
-		TRefCountHandle<EnityLifeTimeData> m_LifeTimeData{};
+		ContainerLifetimeDataHandle m_LifeTimeData{};
 
 	public:
-		[[nodiscard]] const TRefCountHandle<EnityLifeTimeData>& GetLifeTimeData() const
+		[[nodiscard]] const TRefCountHandle<ContainerLifetimeData>& GetLifeTimeData() const
 		{
 			return m_LifeTimeData;
 		}
@@ -482,7 +481,7 @@ namespace decs
 				const EntityComponent* prefabComponent,
 				IStableComponentContainer* spawnStableContainer,
 				IComponentContext* spawnedComponentContext
-			):
+			) :
 				m_PrefabComponent(prefabComponent),
 				m_SpawnStableContainer(spawnStableContainer),
 				m_SpawnedComponentContext(spawnedComponentContext)
@@ -527,7 +526,7 @@ namespace decs
 			uint32_t m_ComponentDataStart;
 
 		public:
-			SpawnDataState(SpawnData& spawnData):
+			SpawnDataState(SpawnData& spawnData) :
 				m_ComponentDataStart((uint32_t)spawnData.m_ComponentData.size())
 			{
 
@@ -1037,8 +1036,6 @@ namespace decs
 			return InvokeComponentOnDestroyListeners(Type<ComponentType>::ID());
 		}
 
-
-
 		/// <summary>
 		/// Changes order of invoking function of component observers. Callback for component with lower order will be invoked first.
 		/// </summary>
@@ -1068,123 +1065,188 @@ namespace decs
 			}
 		}
 
+	#pragma region ENTITY OBSERVERS:
+	public:
 		inline bool HasEntityCreateObserver() const
 		{
-			return m_CreateEntityObserver != nullptr;
-		}
-
-		inline decs::CreateEntityObserver* GetEntityCreateObserver()
-		{
-			return m_CreateEntityObserver;
+			return m_CreateEntityObservers.Empty();
 		}
 
 		inline bool HasEntityDestroyObserver() const
 		{
-			return m_DestroyEntityObserver != nullptr;
+			return m_DestroyEntityObservers.Empty();
 		}
 
-		inline decs::DestroyEntityObserver* GetEntityDestroyObserver()
+		template<entity_observer_function_concept Func>
+		inline ObserverFunctionID AddEntityCreateObserver(Func&& func, int order = 0)
 		{
-			return m_DestroyEntityObserver;
+			return m_CreateEntityObservers.AddFunction(func, order);
+		}
+		template<entity_observer_function_concept Func>
+		inline ObserverFunctionID AddEntityDestroyObserver(Func&& func, int order = 0)
+		{
+			return m_DestroyEntityObservers.AddFunction(func, order);
+		}
+		template<entity_observer_function_concept Func>
+		inline ObserverFunctionID AddEntityEnableObserver(Func&& func, int order = 0)
+		{
+			return m_EnableEntityObservers.AddFunction(func, order);
+		}
+		template<entity_observer_function_concept Func>
+		inline ObserverFunctionID AddEntityDisableObserver(Func&& func, int order = 0)
+		{
+			return m_DisableEntityObservers.AddFunction(func, order);
+		}
+		inline bool RemoveEntityCreateObserver(ObserverFunctionID observerID)
+		{
+			return m_CreateEntityObservers.RemoveFunction(observerID);
+		}
+		inline bool RemoveEntityDestroyObserver(ObserverFunctionID observerID)
+		{
+			return m_DestroyEntityObservers.RemoveFunction(observerID);
+		}
+		inline bool RemoveEntityEnableObserver(ObserverFunctionID observerID)
+		{
+			return m_EnableEntityObservers.RemoveFunction(observerID);
+		}
+		inline bool RemoveEntityDisableObserver(ObserverFunctionID observerID)
+		{
+			return m_DisableEntityObservers.RemoveFunction(observerID);
+		}
+		void RemoveEntityObservers(
+			ObserverFunctionID createObserverID,
+			ObserverFunctionID destroyObserverID,
+			ObserverFunctionID enableObserverID,
+			ObserverFunctionID disableObserverID
+			)
+		{
+			m_CreateEntityObservers.RemoveFunction(createObserverID);
+			m_DestroyEntityObservers.RemoveFunction(destroyObserverID);
+			m_EnableEntityObservers.RemoveFunction(enableObserverID);
+			m_DisableEntityObservers.RemoveFunction(disableObserverID);
 		}
 
-		inline void SetCreateEntityObserver(CreateEntityObserver* createEntityObserver)
-		{
-			m_CreateEntityObserver = createEntityObserver;
-		}
+	#pragma endregion
 
-		inline void SetDestroyEntityObserver(DestroyEntityObserver* destroyEntityObserver)
+	#pragma region COMPONENT OBSERVERS:
+	public:
+		template<component_concept ComponentType, typename Func>
+			requires component_observer_function_concept<Func, ComponentType>
+		ObserverFunctionID AddComponentObserver(EComponentObserver observerType, Func&& func, int order = 0)
 		{
-			m_DestroyEntityObserver = destroyEntityObserver;
-		}
+			ComponentContext<pure_type_t<ComponentType>>* componentContext = m_ComponentContextManager.GetOrCreateComponentContext<pure_type_t<ComponentType>>();
+			if (componentContext == nullptr)
+			{
+				return {};
+			}
 
-		inline void SetEnableEntityObserver(EnableEntityObserver* enableEntityObserver)
-		{
-			m_EnableEntityObserver = enableEntityObserver;
-		}
+			switch (observerType)
+			{
+				case EComponentObserver::Create:
+					return componentContext->m_CreateObservers.AddFunction(func, order);
+				case EComponentObserver::Destroy:
+					return componentContext->m_DestroyObservers.AddFunction(func, order);
+				case EComponentObserver::Enable:
+					return componentContext->m_EnableObservers.AddFunction(func, order);
+				case EComponentObserver::Disable:
+					return componentContext->m_DisableObservers.AddFunction(func, order);
+			}
 
-		inline void SetDisableEntityObserver(DisableEntityObserver* disableEntityObserver)
-		{
-			m_DisableEntityObserver = disableEntityObserver;
-		}
-
-		inline void SetEntityObservers(
-			CreateEntityObserver* createEntityObserver,
-			DestroyEntityObserver* destroyEntityObserver,
-			EnableEntityObserver* enableEntityObserver,
-			DisableEntityObserver* disableEntityObserver
-		)
-		{
-			m_CreateEntityObserver = createEntityObserver;
-			m_DestroyEntityObserver = destroyEntityObserver;
-			m_EnableEntityObserver = enableEntityObserver;
-			m_DisableEntityObserver = disableEntityObserver;
-		}
-
-		template<component_concept ComponentType>
-		void SetComponentObservers(
-			CreateComponentObserver<ComponentType>* createObserver,
-			DestroyComponentObserver<ComponentType>* destroyObserver,
-			EnableComponentObserver<ComponentType>* enableObserver,
-			DisableComponentObserver<ComponentType>* disableObserver
-		)
-		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
-			componentContext->m_Observers.m_CreateObserver = createObserver;
-			componentContext->m_Observers.m_DestroyObserver = destroyObserver;
-			componentContext->m_Observers.m_EnableObserver = enableObserver;
-			componentContext->m_Observers.m_DisableObserver = disableObserver;
-		}
-
-		template<component_concept ComponentType>
-		void SetCreateComponentObserver(CreateComponentObserver<ComponentType>* createObserver)
-		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
-			componentContext->m_Observers.m_CreateObserver = createObserver;
-		}
-
-		template<component_concept ComponentType>
-		void SetDestroyComponentObserver(DestroyComponentObserver<ComponentType>* destroyObserver)
-		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
-			componentContext->m_Observers.m_DestroyObserver = destroyObserver;
-		}
-
-		template<component_concept ComponentType>
-		void SetCreateDestroyComponentObservers(
-			CreateComponentObserver<ComponentType>* createObserver,
-			DestroyComponentObserver<ComponentType>* destroyObserver
-		)
-		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
-			componentContext->m_Observers.m_CreateObserver = createObserver;
-			componentContext->m_Observers.m_DestroyObserver = destroyObserver;
-		}
-
-		template<component_concept ComponentType>
-		void SetEnableComponentObserver(EnableComponentObserver<ComponentType>* enableObserver)
-		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
-			componentContext->m_Observers.m_EnableObserver = enableObserver;
+			return {};
 		}
 
 		template<component_concept ComponentType>
-		void SetDisableComponentObserver(DisableComponentObserver<ComponentType>* disableObserver)
+		bool RemoveComponentObserver(EComponentObserver observerType, ObserverFunctionID observerID)
 		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
-			componentContext->m_Observers.m_DisableObserver = disableObserver;
+			ComponentContext<pure_type_t<ComponentType>>* componentContext = m_ComponentContextManager.GetComponentContext<pure_type_t<ComponentType>>();
+			if (componentContext == nullptr)
+			{
+				return {};
+			}
+
+			switch (observerType)
+			{
+				case EComponentObserver::Create:
+					return componentContext->m_CreateObservers.RemoveFunction(observerID);
+				case EComponentObserver::Destroy:
+					return componentContext->m_DestroyObservers.RemoveFunction(observerID);
+				case EComponentObserver::Enable:
+					return componentContext->m_EnableObservers.RemoveFunction(observerID);
+				case EComponentObserver::Disable:
+					return componentContext->m_DisableObservers.RemoveFunction(observerID);
+			}
+
+			return false;
 		}
 
 		template<component_concept ComponentType>
-		void SetEnableDisableComponentObservers(
-			EnableComponentObserver<ComponentType>* enableObserver,
-			DisableComponentObserver<ComponentType>* disableObserver
-		)
+		void RemoveComponentObservers(ObserverFunctionID createID, ObserverFunctionID destroyID, ObserverFunctionID enableID, ObserverFunctionID disableID)
 		{
-			auto componentContext = m_ComponentContextManager.GetOrCreateComponentContext<ComponentType>();
-			componentContext->m_Observers.m_EnableObserver = enableObserver;
-			componentContext->m_Observers.m_DisableObserver = disableObserver;
+			ComponentContext<pure_type_t<ComponentType>>* componentContext = m_ComponentContextManager.GetComponentContext<pure_type_t<ComponentType>>();
+			if (componentContext == nullptr)
+			{
+				return;
+			}
+
+			componentContext->m_CreateObservers.RemoveFunction(createID);
+			componentContext->m_DestroyObservers.RemoveFunction(destroyID);
+			componentContext->m_EnableObservers.RemoveFunction(enableID);
+			componentContext->m_DisableObservers.RemoveFunction(disableID);
 		}
+
+		template<component_concept ComponentType, typename Func>
+			requires component_observer_function_concept<Func, ComponentType>
+		ObserverFunctionID AddComponentCreateObserver(Func&& func, int order = 0)
+		{
+			return AddComponentObserver<ComponentType, Func>(EComponentObserver::Create, func, order);
+		}
+
+		template<component_concept ComponentType>
+		bool RemoveComponentCreateObserver(ObserverFunctionID observerID)
+		{
+			return RemoveComponentObserver<ComponentType>(EComponentObserver::Create, observerID);
+		}
+
+		template<component_concept ComponentType, typename Func>
+			requires component_observer_function_concept<Func, ComponentType>
+		ObserverFunctionID AddComponentDestroyObserver(Func&& func, int order = 0)
+		{
+			return AddComponentObserver<ComponentType, Func>(EComponentObserver::Destroy, func, order);
+		}
+
+		template<component_concept ComponentType>
+		bool RemoveComponentDestroyObserver(ObserverFunctionID observerID)
+		{
+			return RemoveComponentObserver<ComponentType>(EComponentObserver::Destroy, observerID);
+		}
+
+		template<component_concept ComponentType, typename Func>
+			requires component_observer_function_concept<Func, ComponentType>
+		ObserverFunctionID AddComponentEnableObserver(Func&& func, int order = 0)
+		{
+			return AddComponentObserver<ComponentType, Func>(EComponentObserver::Enable, func, order);
+		}
+
+		template<component_concept ComponentType>
+		bool RemoveComponentEnableObserver(ObserverFunctionID observerID)
+		{
+			return RemoveComponentObserver<ComponentType>(EComponentObserver::Enable, observerID);
+		}
+
+		template<component_concept ComponentType, typename Func>
+			requires component_observer_function_concept<Func, ComponentType>
+		ObserverFunctionID AddComponentDisableObserver(Func&& func, int order = 0)
+		{
+			return AddComponentObserver<ComponentType, Func>(EComponentObserver::Disable, func, order);
+		}
+
+		template<component_concept ComponentType>
+		bool RemoveComponentDisableObserver(ObserverFunctionID observerID)
+		{
+			return RemoveComponentObserver<ComponentType>(EComponentObserver::Disable, observerID);
+		}
+
+	#pragma endregion
 
 		/// <summary>
 		/// Invokes only entity Create and Enable (if entity is enabled). If callbacks was invoked earliers then callbacks will not be invoked. This function should be used with CreateEntity_NoObserver method.
@@ -1192,25 +1254,15 @@ namespace decs
 		/// <param name="entity"></param>
 		void InvokeEntityCreateEnableObservers(const decs::Entity& entity);
 
-		template<component_concept ComponentType>
-		ComponentObserversGroup<ComponentType> GetComponentObservers() const
-		{
-			ComponentContext<ComponentType>* componentCtx = m_ComponentContextManager.GetComponentContext<ComponentType>();
-			if (componentCtx == nullptr)
-			{
-				return {};
-			}
-
-			return componentCtx->GetObservers();
-		}
-
 	private:
 		ecsVector<EntityComponent*> m_ActivationChangeComponentPtrs = {};
 
-		CreateEntityObserver* m_CreateEntityObserver = nullptr;
-		DestroyEntityObserver* m_DestroyEntityObserver = nullptr;
-		EnableEntityObserver* m_EnableEntityObserver = nullptr;
-		DisableEntityObserver* m_DisableEntityObserver = nullptr;
+		using EntityObserverFunction = ::decs::TObserverFunction<void(const Entity&)>;
+
+		EntityObserverFunction m_CreateEntityObservers{};
+		EntityObserverFunction m_DestroyEntityObservers{};
+		EntityObserverFunction m_EnableEntityObservers{};
+		EntityObserverFunction m_DisableEntityObservers{};
 
 	private:
 		void InvokeEntityCreateObserver_Internal(const Entity& entity);
@@ -1279,12 +1331,13 @@ namespace decs
 		struct BoolSwitch final
 		{
 		public:
-			BoolSwitch(bool& boolToSwitch):
+			BoolSwitch(bool& boolToSwitch) :
 				m_Bool(boolToSwitch),
 				m_FinalValue(!boolToSwitch)
-			{ }
+			{
+			}
 
-			BoolSwitch(bool& boolToSwitch, const bool& startValue):
+			BoolSwitch(bool& boolToSwitch, const bool& startValue) :
 				m_Bool(boolToSwitch),
 				m_FinalValue(!startValue)
 			{

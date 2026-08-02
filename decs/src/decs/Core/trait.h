@@ -288,5 +288,12 @@ namespace decs
 	template<typename Func, typename ComponentType>
 	concept light_component_observer_func = std::is_invocable_v<Func, const light::Entity&, ComponentType&>;
 
+	template<typename Func, typename ComponentType>
+	concept component_observer_function_concept = std::is_invocable_v<Func, const Entity&, ComponentType&>;
+
+	template<typename Func>
+	concept entity_observer_function_concept = std::is_invocable_v<Func, const Entity&>;
+
+
 
 }

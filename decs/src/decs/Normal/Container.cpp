@@ -99,7 +99,7 @@ namespace decs
 
 	void Container::InitializeLifeTimeData()
 	{
-		m_LifeTimeData = TRefCountHandle<EnityLifeTimeData>::Create();
+		m_LifeTimeData = TRefCountHandle<ContainerLifetimeData>::Create();
 	}
 
 	void Container::DestroyLifeTimeData()
@@ -908,18 +908,12 @@ namespace decs
 			if (!entityData->m_bIsCreatedByContainer)
 			{
 				entityData->m_bIsCreatedByContainer = true;
-				if (m_CreateEntityObserver != nullptr)
-				{
-					m_CreateEntityObserver->OnCreateEntity(entity);
-				}
+				m_CreateEntityObservers.Invoke(entity);
 
 				if (entity.IsActive() && !entityData->m_bIsEnabledByContainer)
 				{
 					entityData->m_bIsEnabledByContainer = true;
-					if (m_EnableEntityObserver != nullptr)
-					{
-						m_EnableEntityObserver->OnEnableEntity(entity);
-					}
+					m_EnableEntityObservers.Invoke(entity);
 				}
 			}
 
@@ -1004,10 +998,7 @@ namespace decs
 		if (!entityData->m_bIsCreatedByContainer)
 		{
 			entityData->m_bIsCreatedByContainer = true;
-			if (m_CreateEntityObserver != nullptr)
-			{
-				m_CreateEntityObserver->OnCreateEntity(entity);
-			}
+			m_CreateEntityObservers.Invoke(entity);
 		}
 	}
 
@@ -1017,10 +1008,7 @@ namespace decs
 		if (entityData->m_bIsCreatedByContainer)
 		{
 			entityData->m_bIsCreatedByContainer = false;
-			if (m_DestroyEntityObserver != nullptr)
-			{
-				m_DestroyEntityObserver->OnDestroyEntity(entity);
-			}
+			m_DestroyEntityObservers.Invoke(entity);
 		}
 	}
 
@@ -1030,10 +1018,7 @@ namespace decs
 		if (!entityData->m_bIsEnabledByContainer)
 		{
 			entityData->m_bIsEnabledByContainer = true;
-			if (m_EnableEntityObserver != nullptr)
-			{
-				m_EnableEntityObserver->OnEnableEntity(entity);
-			}
+			m_EnableEntityObservers.Invoke(entity);
 		}
 	}
 
@@ -1043,19 +1028,13 @@ namespace decs
 		if (entityData->m_bIsEnabledByContainer)
 		{
 			entityData->m_bIsEnabledByContainer = false;
-			if (m_DisableEntityObserver != nullptr)
-			{
-				m_DisableEntityObserver->OnDisableEntity(entity);
-			}
+			m_DisableEntityObservers.Invoke(entity);
 		}
 	}
 
 	void Container::InvokeEntityAndComponentEnableObservers_Internal(const Entity& entity)
 	{
-		if (m_EnableEntityObserver != nullptr)
-		{
-			m_EnableEntityObserver->OnEnableEntity(entity);
-		}
+		m_EnableEntityObservers.Invoke(entity);
 
 		EntityData& entityData = *entity.GetEntityData();
 		uint32_t entityIndexInArchetype = entityData.m_IndexInArchetype;
@@ -1104,12 +1083,8 @@ namespace decs
 
 	void Container::InvokeEntityAndComponentsDisableObservers_Internal(const Entity& entity)
 	{
-		if (m_DisableEntityObserver != nullptr)
-		{
-			m_DisableEntityObserver->OnDisableEntity(entity);
-		}
+		m_DisableEntityObservers.Invoke(entity);
 
-		// TODO: add components deactivation listeners invoking
 		EntityData& entityData = *entity.GetEntityData();
 		uint32_t entityIndexInArchetype = entityData.m_IndexInArchetype;
 
@@ -1156,11 +1131,6 @@ namespace decs
 	bool Container::InvokeComponentTypeCreateEnableObservers(IComponentContext& componentCtx)
 	{
 		const TypeID componentTypeID = componentCtx.GetComponentTypeID();
-		bool bHasCreateOrEnableObservers = componentCtx.HasCreateObserver() || componentCtx.HasEnableObserver();
-		if (!bHasCreateOrEnableObservers)
-		{
-			return false;
-		}
 
 		Entity entity = {};
 		entity.SetLifeTimeData_Internal(m_LifeTimeData);
@@ -1184,59 +1154,80 @@ namespace decs
 			auto* packedContainer = typeData.m_PackedContainer;
 			const auto& entityStorage = archetype->GetEntityStorage();
 
-			if (componentCtx.HasCreateObserver() && componentCtx.HasEnableObserver())
+			for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
 			{
-				for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
+				const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+				if (archetypeEntityData.IsValid())
 				{
-					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-					if (archetypeEntityData.IsValid())
+					auto entityData = archetypeEntityData.m_EntityData;
+					entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+
+					EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+					componentCtx.InvokeOnCreateComponent(componentPtr, entity);
+
+					if (entity.IsActive())
 					{
-						auto entityData = archetypeEntityData.m_EntityData;
-						entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+						componentCtx.InvokeOnEnableComponent(componentPtr, entity);
+					}
+				}
+			}
 
-						EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
-						componentCtx.InvokeOnCreateComponent_Unsafe(componentPtr, entity);
-
-						if (entity.IsActive())
+			// THIS IS BAD - if we need e.g. only destroy observer, component without create observer will not be invoked beacaouse component is not marked as created
+			/* {
+				if (componentCtx.HasCreateObservers() && componentCtx.HasEnableObservers())
+				{
+					for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
+					{
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+						if (archetypeEntityData.IsValid())
 						{
-							componentCtx.InvokeOnEnableComponent_Unsafe(componentPtr, entity);
+							auto entityData = archetypeEntityData.m_EntityData;
+							entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+
+							EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+							componentCtx.InvokeOnCreateComponent(componentPtr, entity);
+
+							if (entity.IsActive())
+							{
+								componentCtx.InvokeOnEnableComponent(componentPtr, entity);
+							}
 						}
 					}
 				}
-			}
-			else if (componentCtx.HasCreateObserver())
-			{
-				for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
+				else if (componentCtx.HasCreateObservers())
 				{
-					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-					if (archetypeEntityData.IsValid())
+					for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
 					{
-						auto entityData = archetypeEntityData.m_EntityData;
-						entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
-
-						EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
-						componentCtx.InvokeOnCreateComponent_Unsafe(componentPtr, entity);
-					}
-				}
-			}
-			else if (componentCtx.HasEnableObserver())
-			{
-				for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
-				{
-					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-					if (archetypeEntityData.IsValid())
-					{
-						auto entityData = archetypeEntityData.m_EntityData;
-						entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
-
-						EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
-						if (entity.IsActive())
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+						if (archetypeEntityData.IsValid())
 						{
-							componentCtx.InvokeOnEnableComponent_Unsafe(componentPtr, entity);
+							auto entityData = archetypeEntityData.m_EntityData;
+							entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+
+							EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+							componentCtx.InvokeOnCreateComponent(componentPtr, entity);
 						}
 					}
 				}
-			}
+				else if (componentCtx.HasEnableObservers())
+				{
+					for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
+					{
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+						if (archetypeEntityData.IsValid())
+						{
+							auto entityData = archetypeEntityData.m_EntityData;
+							entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
+
+							EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
+							if (entity.IsActive())
+							{
+								componentCtx.InvokeOnEnableComponent(componentPtr, entity);
+							}
+						}
+					}
+				}
+			}*/
 		});
 
 		return true;
@@ -1245,11 +1236,6 @@ namespace decs
 	bool Container::InvokeComponentTypeDestroyDisableObservers(IComponentContext& componentCtx)
 	{
 		const TypeID componentTypeID = componentCtx.GetComponentTypeID();
-		bool bHasDestroyOrDisableObservers = componentCtx.HasDestroyObserver() || componentCtx.HasDisableObserver();
-		if (!bHasDestroyOrDisableObservers)
-		{
-			return false;
-		}
 		Entity entity = {};
 		entity.SetLifeTimeData_Internal(m_LifeTimeData);
 
@@ -1271,52 +1257,70 @@ namespace decs
 			auto* packedContainer = typeData.m_PackedContainer;
 			const auto& entityStorage = archetype->GetEntityStorage();
 
-			if (componentCtx.HasDestroyObserver() && componentCtx.HasDisableObserver())
+			for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
 			{
-				for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
+				const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+				if (archetypeEntityData.IsValid())
 				{
-					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-					if (archetypeEntityData.IsValid())
+					entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
+					auto compPtr = packedContainer->GetComponentBasePtr(idx);
+					if (entity.IsActive())
 					{
-						entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
-						auto compPtr = packedContainer->GetComponentBasePtr(idx);
-						if (entity.IsActive())
-						{
-							componentCtx.InvokeOnDisableComponent_Unsafe(compPtr, entity);
-						}
-						componentCtx.InvokeOnDestroyComponent_Unsafe(compPtr, entity);
+						componentCtx.InvokeOnDisableComponent(compPtr, entity);
 					}
+					componentCtx.InvokeOnDestroyComponent(compPtr, entity);
 				}
 			}
-			else if (componentCtx.HasDestroyObserver())
-			{
-				for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
+
+			// THIS IS BAD - if we need e.g. only destroy observer, component without create observer will not be invoked beacaouse component is not marked as created
+			/*{
+				if (componentCtx.HasDestroyObservers() && componentCtx.HasDisableObservers())
 				{
-					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-					if (archetypeEntityData.IsValid())
+					for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
 					{
-						entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
-						auto compPtr = packedContainer->GetComponentBasePtr(idx);
-						componentCtx.InvokeOnDestroyComponent_Unsafe(compPtr, entity);
-					}
-				}
-			}
-			else if (componentCtx.HasDisableObserver())
-			{
-				for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
-				{
-					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-					if (archetypeEntityData.IsValid())
-					{
-						entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
-						auto compPtr = packedContainer->GetComponentBasePtr(idx);
-						if (entity.IsActive())
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+						if (archetypeEntityData.IsValid())
 						{
-							componentCtx.InvokeOnDisableComponent_Unsafe(compPtr, entity);
+							entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
+							auto compPtr = packedContainer->GetComponentBasePtr(idx);
+							if (entity.IsActive())
+							{
+								componentCtx.InvokeOnDisableComponent(compPtr, entity);
+							}
+							componentCtx.InvokeOnDestroyComponent(compPtr, entity);
 						}
 					}
 				}
-			}
+				else if (componentCtx.HasDestroyObservers())
+				{
+					for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
+					{
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+						if (archetypeEntityData.IsValid())
+						{
+							entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
+							auto compPtr = packedContainer->GetComponentBasePtr(idx);
+							componentCtx.InvokeOnDestroyComponent(compPtr, entity);
+						}
+					}
+				}
+				else if (componentCtx.HasDisableObservers())
+				{
+					for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
+					{
+						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
+						if (archetypeEntityData.IsValid())
+						{
+							entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
+							auto compPtr = packedContainer->GetComponentBasePtr(idx);
+							if (entity.IsActive())
+							{
+								componentCtx.InvokeOnDisableComponent(compPtr, entity);
+							}
+						}
+					}
+				}
+			}*/
 
 		});
 		return true;

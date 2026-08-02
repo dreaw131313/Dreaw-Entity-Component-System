@@ -1,6 +1,6 @@
 #pragma once
 
-#include "decs/Core/RefCounterHandle.h"
+#include "ContainerLifetimeData.h"
 
 namespace decs
 {
@@ -12,29 +12,6 @@ namespace decs
 		Alive = 1,
 		InDestruction = 2,
 		DelayedToDestruction = 3,
-	};
-
-	/// <summary>
-	/// Helper class which allows simple flag change to set all entities as dead
-	/// </summary>
-	struct EnityLifeTimeData :
-		public RefCountedObject,
-		private NonCopyableNonMoveable
-	{
-		friend class Container;
-
-	public:
-		EnityLifeTimeData() = default;
-
-		~EnityLifeTimeData() = default;
-
-		inline bool IsAlive() const noexcept
-		{
-			return m_bIsContainerAlive.load();
-		}
-
-	private:
-		std::atomic<bool> m_bIsContainerAlive = true;
 	};
 
 	struct EntityData final
