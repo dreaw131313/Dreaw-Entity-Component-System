@@ -37,6 +37,24 @@ namespace decs
 
 		void ForceDestroyEntity(EntityData* entityData);
 
+		inline const EntityData* GetEntityData(EntityID id) const
+		{
+			if (id < m_EntityDatas.Size())
+			{
+				return &m_EntityDatas[id];
+			}
+			return nullptr;
+		}
+
+		inline EntityData* GetEntityData(EntityID id)
+		{
+			if (id < m_EntityDatas.Size())
+			{
+				return &m_EntityDatas[id];
+			}
+			return nullptr;
+		}
+
 	private:
 		TChunkedVector<EntityData> m_EntityDatas{};
 		ecsVector<EntityData*> m_FreeEntities{};

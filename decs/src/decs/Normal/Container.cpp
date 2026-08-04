@@ -191,11 +191,6 @@ namespace decs
 		}
 	}
 
-	EntityData* Container::GetEntityData(const Entity& entity) const
-	{
-		return entity.m_EntityData;
-	}
-
 	bool Container::IsEntityActive(const Entity& entity) const
 	{
 		return entity.IsActive();
@@ -207,6 +202,10 @@ namespace decs
 		return Entity(m_EntityManager.CreateEntity(bIsActive, *this));
 	}
 
+	EntityData* Container::GetEntityData(const Entity& entity) const
+	{
+		return entity.m_EntityData;
+	}
 
 	void Container::SetEntityActiveOverride(const Entity& entity, bool bIsActiveOverride)
 	{

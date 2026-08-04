@@ -430,11 +430,27 @@ namespace decs
 
 		void SetEntityActive(const Entity& entity, bool bIsActive);
 
-		EntityData* GetEntityData(const Entity& entity) const;
-
 		bool IsEntityActive(const Entity& entity) const;
 
 		Entity CreateEntityRaw(bool bIsActive);
+
+		EntityData* GetEntityData(const Entity& entity) const;
+
+		inline const EntityData* GetEntityDataByID(EntityID id) const
+		{
+			return m_EntityManager.GetEntityData(id);
+		}
+
+		inline EntityData* GetEntityDataByID(EntityID id)
+		{
+			return m_EntityManager.GetEntityData(id);
+		}
+
+		inline bool IsEntityDataAliveWithVersion(EntityID id, EntityVersion version) const
+		{
+			auto entityData = m_EntityManager.GetEntityData(id);
+			return entityData != nullptr && entityData->m_Version == version;
+		}
 
 	public:
 		/// <summary>
@@ -1070,7 +1086,7 @@ namespace decs
 			ObserverFunctionID destroyObserverID,
 			ObserverFunctionID enableObserverID,
 			ObserverFunctionID disableObserverID
-			)
+		)
 		{
 			m_CreateEntityObservers.RemoveFunction(createObserverID);
 			m_DestroyEntityObservers.RemoveFunction(destroyObserverID);
