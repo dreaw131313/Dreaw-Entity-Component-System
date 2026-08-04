@@ -112,7 +112,7 @@ namespace decs
 	{
 		template<typename T>
 		friend class TComponentChunk;
-		friend struct EntityComponent;
+		friend class EntityComponent;
 
 	private:
 		EntityData* m_EntityData = nullptr;
@@ -140,7 +140,7 @@ namespace decs
 		}
 	};
 
-	struct EntityComponent
+	class EntityComponent
 	{
 		friend class Container;
 		template<typename>

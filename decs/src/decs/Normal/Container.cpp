@@ -99,12 +99,12 @@ namespace decs
 
 	void Container::InitializeLifeTimeData()
 	{
-		m_LifeTimeData = TRefCountHandle<ContainerLifetimeData>::Create();
+		m_LifeTimeData = TRefCountHandle<ContainerLifetimeData>::Create(this);
 	}
 
 	void Container::DestroyLifeTimeData()
 	{
-		m_LifeTimeData->m_bIsContainerAlive = false;
+		m_LifeTimeData->MarkDead();
 		m_LifeTimeData.Reset();
 	}
 

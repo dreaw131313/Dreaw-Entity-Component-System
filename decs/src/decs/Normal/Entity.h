@@ -20,8 +20,9 @@ namespace decs
 		friend class ContainerSerializerComplex;
 		friend class ContainerIterator;
 		friend class Iteration;
+		friend class EntityComponent;
 
-		friend class ConstEntity;
+		friend struct ConstEntity;
 
 		friend struct std::hash<decs::Entity>;
 
@@ -149,7 +150,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				GetContainer()->SetEntityActiveOverride(*this, bIsActiveOverride);
+				GetContainer_Internal()->SetEntityActiveOverride(*this, bIsActiveOverride);
 			}
 		}
 
@@ -157,7 +158,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				GetContainer()->SetEntityDisabledOverrideCount(*this, disabledOverrideCount);
+				GetContainer_Internal()->SetEntityDisabledOverrideCount(*this, disabledOverrideCount);
 			}
 		}
 
@@ -165,7 +166,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				GetContainer()->ResetDisabledOverrideCount(*this);
+				GetContainer_Internal()->ResetDisabledOverrideCount(*this);
 			}
 		}
 
@@ -252,7 +253,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer()->GetComponents<ComponentTypes...>(*m_EntityData);
+				return GetContainer_Internal()->GetComponents<ComponentTypes...>(*m_EntityData);
 			}
 
 			return { static_cast<ComponentTypes*>(nullptr) ... };
@@ -529,7 +530,7 @@ namespace decs
 
 	};
 
-	class ConstEntity final
+	struct ConstEntity final
 	{
 		template<component_concept...>
 		friend class Query;
@@ -651,12 +652,6 @@ namespace decs
 
 	private:
 		Entity m_Entity = {};
-
-	private:
-		inline void Set(EntityData& data)
-		{
-			m_Entity.Set_Internal(data);
-		}
 
 	};
 }
