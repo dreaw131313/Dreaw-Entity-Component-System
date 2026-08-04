@@ -67,8 +67,6 @@ namespace Normal
 	public:
 		void OnCreateComponent(const decs::Entity& entity, TestComponent& component)
 		{
-			component.GetEntity().AddComponent<Position>();
-
 			PrintLine("TestComponent Create");
 		}
 
@@ -115,7 +113,7 @@ namespace Normal
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
 
-		//QueryIterationTest();
+		QueryIterationTest();
 		EntityCreatePerformanceTest();
 		//ObserversTest();
 	}
@@ -310,7 +308,7 @@ namespace Normal
 
 	void Test::EntityCreatePerformanceTest()
 	{
-		const uint32_t testCount = 1;
+		const uint32_t testCount = 10;
 		const uint32_t entityCount = 100000;
 
 		decs::ContainerConfig config{

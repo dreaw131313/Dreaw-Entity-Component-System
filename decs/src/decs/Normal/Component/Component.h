@@ -115,7 +115,6 @@ namespace decs
 		friend class EntityComponent;
 
 	private:
-		EntityData* m_EntityData = nullptr;
 		uint32_t m_IndexInAllocator = std::numeric_limits<uint32_t>::max();
 		EntityComponentFlags m_Flags = {};
 		uint16_t m_DependencyCount = 0;
@@ -124,7 +123,6 @@ namespace decs
 		void Reset()
 		{
 			m_IndexInAllocator = std::numeric_limits<uint32_t>::max();
-			m_EntityData = nullptr;
 			m_Flags = {};
 			m_DependencyCount = 0;
 		}
@@ -182,8 +180,6 @@ namespace decs
 		{
 			return *this;
 		}
-
-		Entity GetEntity() const noexcept;
 
 		inline bool IsCreatedByECS() const noexcept
 		{
@@ -275,24 +271,6 @@ namespace decs
 				return true;
 			}
 			return false;
-		}
-
-		bool SetEntityData(EntityData* entityData)
-		{
-			if (m_InternalData != nullptr)
-			{
-				m_InternalData->m_EntityData = entityData;
-				return true;
-			}
-			return false;
-		}
-
-		inline void OnPreCreate(EntityData* entitydata)
-		{
-			if (m_InternalData != nullptr)
-			{
-				m_InternalData->m_EntityData = entitydata;
-			}
 		}
 
 		inline void SetFlags(bool bIsCreated, bool bIsEnabled)

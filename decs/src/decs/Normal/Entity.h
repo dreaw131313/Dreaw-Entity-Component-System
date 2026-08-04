@@ -32,18 +32,10 @@ namespace decs
 
 		}
 
-		Entity(EntityData& entityData):
-			m_EntityData(&entityData),
-			m_LifeTimeData(entityData.m_Container->m_LifeTimeData),
+		Entity(Container& container, EntityData& entityData) :
+			m_LifeTimeData(container.GetLifeTimeData()),
+			m_EntityID(entityData.GetID()),
 			m_Version(entityData.GetVersion())
-		{
-
-		}
-
-		Entity(EntityData* entityData):
-			m_EntityData(entityData),
-			m_LifeTimeData(entityData != nullptr ? entityData->m_Container->GetLifeTimeData() : nullptr),
-			m_Version(entityData != nullptr ? entityData->GetVersion() : 0)
 		{
 
 		}
@@ -55,14 +47,16 @@ namespace decs
 
 		bool operator==(const Entity& rhs)const
 		{
-			return this->m_EntityData == rhs.m_EntityData && this->m_Version == rhs.m_Version;
+			return m_LifeTimeData == rhs.m_LifeTimeData
+				&& m_EntityID == rhs.m_EntityID
+				&& m_Version == rhs.m_Version;
 		}
 
 		[[nodiscard]] inline std::size_t CalculateHash() const noexcept
 		{
 			if (IsValid())
 			{
-				uint64_t entityDataHash = std::hash<decs::EntityData*>{}(m_EntityData);
+				uint64_t entityDataHash = std::hash<decs::EntityData*>{}(GetEntityData_Internal());
 				uint64_t entityVersionHash = std::hash<decs::EntityVersion>{}(m_Version);
 
 				return decs::hash::Combine(entityDataHash, entityVersionHash);
@@ -72,7 +66,9 @@ namespace decs
 
 		[[nodiscard]] inline bool IsValid() const
 		{
-			return m_LifeTimeData.IsValid() && m_LifeTimeData->IsAlive() && m_EntityData != nullptr && m_EntityData->IsAliveWithVersion(m_Version);
+			return m_LifeTimeData.IsValid() && m_LifeTimeData->IsAlive()
+				&& GetContainer_Internal()->IsEntityDataAliveWithVersion(m_EntityID, m_Version)
+				;
 		}
 
 		[[nodiscard]] inline bool IsNull() const
@@ -84,7 +80,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_EntityData->IsInDestructionOrDelayedToDestruction();
+				return GetEntityData_Internal()->IsInDestructionOrDelayedToDestruction();
 			}
 			return false;
 		}
@@ -93,7 +89,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_EntityData->GetID();
+				return m_EntityID;
 			}
 			return std::numeric_limits< EntityID>::max();
 		}
@@ -106,16 +102,16 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return static_cast<CombinedEntityID>(m_EntityData->GetID() & 0xFFFFFFFFull) | (static_cast<CombinedEntityID>(m_Version) << (sizeof(EntityID) * 8));
+				return static_cast<CombinedEntityID>(m_EntityID & 0xFFFFFFFFull) | (static_cast<CombinedEntityID>(m_Version) << (sizeof(EntityID) * 8));
 			}
-			return 0;
+			return std::numeric_limits< CombinedEntityID>::max();
 		}
 
 		[[nodiscard]] inline Container* GetContainer() const
 		{
 			if (IsValid())
 			{
-				return m_EntityData->m_Container;
+				return m_LifeTimeData->GetContainer();
 			}
 			return nullptr;
 		}
@@ -126,7 +122,7 @@ namespace decs
 		/// <returns>Active state with disable overrides taken into account</returns>
 		[[nodiscard]] inline bool IsActive() const
 		{
-			return IsValid() && m_EntityData->IsActive();
+			return IsValid() && GetEntityData_Internal()->IsActive();
 		}
 
 		/// <summary>
@@ -135,7 +131,7 @@ namespace decs
 		/// <returns>Active state without disable overrides taken into account</returns>
 		[[nodiscard]] inline bool IsActiveFlag() const
 		{
-			return IsValid() && m_EntityData->IsActiveFlag();
+			return IsValid() && GetEntityData_Internal()->IsActiveFlag();
 		}
 
 		inline void SetActive(const bool& isActive) const
@@ -174,7 +170,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_EntityData->GetDisabledOverrideCount();
+				return GetEntityData_Internal()->GetDisabledOverrideCount();
 			}
 
 			return 0;
@@ -195,7 +191,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_EntityData->GetComponentOnlyCount();
+				return GetEntityData_Internal()->GetComponentOnlyCount();
 			}
 			return 0;
 		}
@@ -204,7 +200,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_EntityData->GetComponentAndTagCount();
+				return GetEntityData_Internal()->GetComponentAndTagCount();
 			}
 			return 0;
 		}
@@ -218,7 +214,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->GetComponentAtIndex_ObserversOrder(*m_EntityData, componentIndex);
+				return GetContainer_Internal()->GetComponentAtIndex_ObserversOrder(*GetEntityData_Internal(), componentIndex);
 			}
 			return nullptr;
 		}
@@ -232,7 +228,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->GetComponentAtIndex_TypeIDOrder(*m_EntityData, componentIndex);
+				return GetContainer_Internal()->GetComponentAtIndex_TypeIDOrder(*GetEntityData_Internal(), componentIndex);
 			}
 			return nullptr;
 		}
@@ -242,7 +238,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->GetComponent<drop_const_t<ComponentType>>(*GetEntityData());
+				return GetContainer_Internal()->GetComponent<drop_const_t<ComponentType>>(*GetEntityData_Internal());
 			}
 
 			return nullptr;
@@ -253,7 +249,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->GetComponents<ComponentTypes...>(*m_EntityData);
+				return GetContainer_Internal()->GetComponents<ComponentTypes...>(*GetEntityData_Internal());
 			}
 
 			return { static_cast<ComponentTypes*>(nullptr) ... };
@@ -263,7 +259,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->GetComponent(*m_EntityData, componentType);
+				return GetContainer_Internal()->GetComponent(*GetEntityData_Internal(), componentType);
 			}
 
 			return nullptr;
@@ -272,7 +268,7 @@ namespace decs
 		template<component_concept ComponentType>
 		[[nodiscard]] inline bool HasComponent() const
 		{
-			return IsValid() && GetContainer_Internal()->HasComponent<pure_type_t<ComponentType>>(*GetEntityData());
+			return IsValid() && GetContainer_Internal()->HasComponent<pure_type_t<ComponentType>>(*GetEntityData_Internal());
 		}
 
 		template<component_concept ComponentType>
@@ -280,7 +276,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				component = GetContainer_Internal()->GetComponent<pure_type_t<ComponentType>>(*GetEntityData());
+				component = GetContainer_Internal()->GetComponent<pure_type_t<ComponentType>>(*GetEntityData_Internal());
 			}
 			else
 			{
@@ -295,7 +291,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->AddComponent<pure_type_t<ComponentType>>(*this, *GetEntityData(), std::forward<Args>(args)...);
+				return GetContainer_Internal()->AddComponent<pure_type_t<ComponentType>>(*this, *GetEntityData_Internal(), std::forward<Args>(args)...);
 			}
 
 			return nullptr;
@@ -321,7 +317,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_EntityData->m_Archetype;
+				return GetEntityData_Internal()->m_Archetype;
 			}
 
 			return nullptr;
@@ -365,7 +361,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->AddComponent_NoObserver<drop_const_t<ComponentType>>(*this, *GetEntityData(), std::forward<Args>(args)...);
+				return GetContainer_Internal()->AddComponent_NoObserver<drop_const_t<ComponentType>>(*this, *GetEntityData_Internal(), std::forward<Args>(args)...);
 			}
 
 			return nullptr;
@@ -427,7 +423,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->HasTag(*m_EntityData, tagType);
+				return GetContainer_Internal()->HasTag(*GetEntityData_Internal(), tagType);
 			}
 			return false;
 		}
@@ -437,7 +433,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->HasTag<tag_type_t<TagType>>(*m_EntityData);
+				return GetContainer_Internal()->HasTag<tag_type_t<TagType>>(*GetEntityData_Internal());
 			}
 			return false;
 		}
@@ -447,7 +443,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->HasTags<tag_type_t<TagType>...>(*m_EntityData);
+				return GetContainer_Internal()->HasTags<tag_type_t<TagType>...>(*GetEntityData_Internal());
 			}
 			return false;
 		}
@@ -457,7 +453,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->AddTag<tag_type_t<TagType>>(*m_EntityData);
+				return GetContainer_Internal()->AddTag<tag_type_t<TagType>>(*GetEntityData_Internal());
 			}
 			return false;
 		}
@@ -471,7 +467,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->RemoveTag(*m_EntityData, tagType);
+				return GetContainer_Internal()->RemoveTag(*GetEntityData_Internal(), tagType);
 			}
 			return false;
 		}
@@ -481,7 +477,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetContainer_Internal()->RemoveTag<tag_type_t<TagType>>(*m_EntityData);
+				return GetContainer_Internal()->RemoveTag<tag_type_t<TagType>>(*GetEntityData_Internal());
 			}
 			return false;
 		}
@@ -490,27 +486,27 @@ namespace decs
 
 	private:
 		ContainerLifetimeDataHandle m_LifeTimeData{};
-		mutable EntityData* m_EntityData = nullptr;
-		mutable EntityVersion m_Version = std::numeric_limits<EntityVersion>::max();
+		mutable EntityID m_EntityID = InvalidEntityID;
+		mutable EntityVersion m_Version = InvalidEntityVersion;
 
 	private:
-		inline void Set_Internal(EntityData& data)
+		inline void Set_Internal(const Container& container, const EntityData& data)
 		{
-			m_EntityData = &data;
-			m_Version = m_EntityData->GetVersion();
-			m_LifeTimeData = m_EntityData->m_Container->m_LifeTimeData;
+			m_LifeTimeData = container.GetLifeTimeData();
+			m_EntityID = data.GetID();
+			m_Version = data.GetVersion();
 		}
 
 		inline void Invalidate_WithoutLifeTimeData() const
 		{
-			m_EntityData = nullptr;
-			m_Version = std::numeric_limits<EntityVersion>::max();
+			m_EntityID = InvalidEntityID;
+			m_Version = InvalidEntityVersion;
 		}
 
-		inline void SetWithoutLifeTimeDataInvalidation_Internal(EntityData& data)
+		inline void SetWithoutLifeTimeDataInvalidation_Internal(const EntityData& data)
 		{
-			m_EntityData = &data;
-			m_Version = m_EntityData->GetVersion();
+			m_EntityID = data.GetID();
+			m_Version = data.GetVersion();
 		}
 
 		inline void SetLifeTimeData_Internal(const ContainerLifetimeDataHandle& lifeTimeData)
@@ -518,14 +514,14 @@ namespace decs
 			m_LifeTimeData = lifeTimeData;
 		}
 
-		Container* GetContainer_Internal() const
+		inline Container* GetContainer_Internal() const
 		{
-			return m_EntityData->m_Container;
+			return m_LifeTimeData->GetContainer();
 		}
 
-		EntityData* GetEntityData() const
+		inline EntityData* GetEntityData_Internal() const
 		{
-			return m_EntityData;
+			return GetContainer_Internal()->GetEntityDataByID(m_EntityID);
 		}
 
 	};
@@ -550,7 +546,7 @@ namespace decs
 
 		}
 
-		ConstEntity(const Entity& entity):
+		ConstEntity(const Entity& entity) :
 			m_Entity(entity)
 		{
 

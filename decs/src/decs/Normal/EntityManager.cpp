@@ -22,7 +22,7 @@ namespace decs
 	{
 	}
 
-	EntityData* EntityManager::CreateEntity(bool isActive, Container& container)
+	EntityData* EntityManager::CreateEntity(bool isActive)
 	{
 		m_CreatedEntityCount++;
 
@@ -37,7 +37,7 @@ namespace decs
 			entityData->SetActiveState(isActive);
 			entityData->m_bIsCreatedByContainer = false;
 			entityData->m_bIsEnabledByContainer = false;
-			entityData->m_Container = &container;
+			entityData->m_bIsInManager = true;
 
 			return entityData;
 		}
@@ -45,7 +45,7 @@ namespace decs
 		{
 			uint32_t id = static_cast<uint32_t>(m_EntityDatas.Size());
 			EntityData* entityData = &m_EntityDatas.EmplaceBack(id, isActive);
-			entityData->m_Container = &container;
+			entityData->m_bIsInManager = true;
 
 			return entityData;
 		}

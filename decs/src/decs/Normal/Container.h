@@ -129,7 +129,6 @@ namespace decs
 			const TArchetypeTypeData<PureType>& archetypeData = std::get<TArchetypeTypeData<PureType>>(archetypesData);
 			PureType* comp = archetypeData.m_StableContainer->Create();
 			archetypeData.m_PackedContainer->PushBack(comp);
-			static_cast<EntityComponent*>(comp)->OnPreCreate(&entityData);
 			return comp;
 		}
 
@@ -647,7 +646,6 @@ namespace decs
 				newArchetype->AddEntityData(&entityData);
 			}
 
-			static_cast<EntityComponent*>(componentPtr)->OnPreCreate(&entityData);
 			if constexpr (InvokeObservers)
 			{
 				OnAddComponentInvokeObservers(entity, newCompTypeData.m_ComponentContext, newCompTypeData.m_PackedContainer, componentTypeID);

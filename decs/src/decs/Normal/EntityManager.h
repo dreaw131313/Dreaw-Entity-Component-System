@@ -31,7 +31,7 @@ namespace decs
 			return m_CreatedEntityCount;
 		}
 
-		EntityData* CreateEntity(bool isActive, Container& container);
+		EntityData* CreateEntity(bool isActive);
 
 		bool DestroyEntity(EntityData* entityData);
 

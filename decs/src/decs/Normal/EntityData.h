@@ -25,7 +25,6 @@ namespace decs
 
 	private:
 		Archetype* m_Archetype = nullptr;
-		Container* m_Container = nullptr;
 
 		EntityID m_ID = std::numeric_limits<EntityID>::max();
 		uint32_t m_IndexInArchetype = std::numeric_limits<uint32_t>::max();
@@ -41,6 +40,7 @@ namespace decs
 		bool m_bIsActive = false;
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByContainer = false;
+		bool m_bIsInManager = false;
 
 	public:
 		EntityData() = delete;
@@ -149,7 +149,7 @@ namespace decs
 
 		inline bool IsInManager() const
 		{
-			return m_Container == nullptr;
+			return m_bIsInManager;
 		}
 
 		void SetValidStateOnCreateFromReservedEntityData(bool bIsActive)
@@ -161,13 +161,7 @@ namespace decs
 		}
 
 	private:
-		inline void OnDestroyByEntityManager()
-		{
-			m_Container = nullptr;
-			m_Archetype = nullptr;
-			m_Version += 1;
-			m_State = EEntityState::Dead;
-		}
+		void OnDestroyByEntityManager();
 	};
 
 }

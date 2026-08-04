@@ -66,7 +66,7 @@ namespace decs
 		ContainerIterator iterator = {};
 		iterator.Foreach(*this, [this] (const decs::Entity& entity)
 		{
-			m_EntityManager.ForceDestroyEntity(entity.m_EntityData);
+			m_EntityManager.ForceDestroyEntity(entity.GetEntityData_Internal());
 		});
 	}
 
@@ -74,9 +74,9 @@ namespace decs
 	{
 		if (m_CanCreateEntities)
 		{
-			EntityData* entityData = m_EntityManager.CreateEntity(bIsActive, *this);
-			Entity e(*entityData);
-			AddToEmptyEntitiesRightAfterNewEntityCreation(*e.GetEntityData());
+			EntityData* entityData = m_EntityManager.CreateEntity(bIsActive);
+			Entity e(*this, *entityData);
+			AddToEmptyEntitiesRightAfterNewEntityCreation(*e.GetEntityData_Internal());
 			InvokeEntityCreateObserver_Internal(e);
 			if (bIsActive)
 			{
@@ -113,7 +113,7 @@ namespace decs
 		if (m_CanDestroyEntities && entity.GetContainer() == this)
 		{
 			EntityID entityID = entity.GetID();
-			EntityData& entityData = *entity.GetEntityData();
+			EntityData& entityData = *entity.GetEntityData_Internal();
 			if (!entityData.CanBeDestructed())
 			{
 				return false;
@@ -158,7 +158,7 @@ namespace decs
 				RemoveFromEmptyEntities(entityData);
 			}
 
-			m_EntityManager.DestroyEntity(entity.GetEntityData());
+			m_EntityManager.DestroyEntity(entity.GetEntityData_Internal());
 
 			return true;
 		}
@@ -169,13 +169,13 @@ namespace decs
 	void Container::SetEntityActive(const Entity& entity, bool bIsActive)
 	{
 		if (entity.GetContainer() == this
-			&& entity.GetEntityData()->IsValidToChangeActiveState()
-			&& entity.GetEntityData()->IsActiveFlag() != bIsActive
+			&& entity.GetEntityData_Internal()->IsValidToChangeActiveState()
+			&& entity.GetEntityData_Internal()->IsActiveFlag() != bIsActive
 			)
 		{
-			const bool bOldEntityActiveState = entity.GetEntityData()->IsActive();
-			entity.GetEntityData()->SetActiveState(bIsActive);
-			const bool bNewEntityActiveState = entity.GetEntityData()->IsActive();
+			const bool bOldEntityActiveState = entity.GetEntityData_Internal()->IsActive();
+			entity.GetEntityData_Internal()->SetActiveState(bIsActive);
+			const bool bNewEntityActiveState = entity.GetEntityData_Internal()->IsActive();
 
 			if (bOldEntityActiveState != bNewEntityActiveState)
 			{
@@ -199,19 +199,19 @@ namespace decs
 
 	Entity Container::CreateEntityRaw(bool bIsActive)
 	{
-		return Entity(m_EntityManager.CreateEntity(bIsActive, *this));
+		return Entity(*this, *m_EntityManager.CreateEntity(bIsActive));
 	}
 
 	EntityData* Container::GetEntityData(const Entity& entity) const
 	{
-		return entity.m_EntityData;
+		return entity.GetEntityData_Internal();
 	}
 
 	void Container::SetEntityActiveOverride(const Entity& entity, bool bIsActiveOverride)
 	{
 		if (entity.GetContainer() == this)
 		{
-			auto entityData = entity.GetEntityData();
+			auto entityData = entity.GetEntityData_Internal();
 			if (entityData->IsValidToChangeActiveState())
 			{
 				const bool bOldEntityActiveState = entityData->IsActive();
@@ -237,7 +237,7 @@ namespace decs
 	{
 		if (entity.GetContainer() == this)
 		{
-			auto entityData = entity.GetEntityData();
+			auto entityData = entity.GetEntityData_Internal();
 			if (entityData->IsValidToChangeActiveState())
 			{
 				const bool bOldEntityActiveState = entityData->IsActive();
@@ -266,9 +266,9 @@ namespace decs
 
 	uint32_t Container::GetEntityActiveOverrides(const Entity& entity)
 	{
-		if (entity.GetContainer() == this && entity.GetEntityData()->IsValidToChangeActiveState())
+		if (entity.GetContainer() == this && entity.GetEntityData_Internal()->IsValidToChangeActiveState())
 		{
-			return entity.GetEntityData()->GetDisabledOverrideCount();
+			return entity.GetEntityData_Internal()->GetDisabledOverrideCount();
 		}
 		return 0;
 	}
@@ -311,7 +311,7 @@ namespace decs
 
 	void Container::InvokeEntityComponentDestructionObservers(const Entity& entity)
 	{
-		Archetype* currentArchetype = entity.GetEntityData()->m_Archetype;
+		Archetype* currentArchetype = entity.GetEntityData_Internal()->m_Archetype;
 		const uint32_t componentsCount = currentArchetype->GetComponentOnlyCount();
 
 		auto& typeDatas = currentArchetype->m_TypeData;
@@ -323,7 +323,7 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
-				const uint32_t indexInArchetype = entity.GetEntityData()->m_IndexInArchetype;
+				const uint32_t indexInArchetype = entity.GetEntityData_Internal()->m_IndexInArchetype;
 				const auto& orderData = orderDatas[i];
 				ArchetypeTypeData& typeData = typeDatas[orderData.m_ComponentIndex];
 				if (!typeData.IsTag())
@@ -337,7 +337,7 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
-				const uint32_t indexInArchetype = entity.GetEntityData()->m_IndexInArchetype;
+				const uint32_t indexInArchetype = entity.GetEntityData_Internal()->m_IndexInArchetype;
 				const auto& orderData = orderDatas[i];
 				ArchetypeTypeData& typeData = typeDatas[orderData.m_ComponentIndex];
 				// typeData.m_ComponentContext->InvokeOnDisableEntity(typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype), entity); // no becouse entity is disabled
@@ -357,11 +357,11 @@ namespace decs
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
 		Container* prefabContainer = prefab.GetContainer();
-		EntityData& prefabEntityData = *prefab.GetEntityData();
+		EntityData& prefabEntityData = *prefab.GetEntityData_Internal();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
-		Entity spawnedEntity(*m_EntityManager.CreateEntity(bIsActive, *this));
-		EntityData* spawnedEntityData = spawnedEntity.GetEntityData();
+		Entity spawnedEntity(*this, *m_EntityManager.CreateEntity(bIsActive));
+		EntityData* spawnedEntityData = spawnedEntity.GetEntityData_Internal();
 
 		if (prefabArchetype == nullptr)
 		{
@@ -402,16 +402,16 @@ namespace decs
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
 		Container* prefabContainer = prefab.GetContainer();
-		EntityData& prefabEntityData = *prefab.GetEntityData();
+		EntityData& prefabEntityData = *prefab.GetEntityData_Internal();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
 		if (prefabArchetype == nullptr)
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
-				Entity spawnedEntity(*m_EntityManager.CreateEntity(areActive, *this));
+				Entity spawnedEntity(*this, *m_EntityManager.CreateEntity(areActive));
 
-				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.GetEntityData());
+				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.GetEntityData_Internal());
 
 				InvokeEntityCreateObserver_Internal(spawnedEntity);
 				if (spawnedEntity.IsActive())
@@ -432,7 +432,7 @@ namespace decs
 
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
-			Entity spawnedEntity(*m_EntityManager.CreateEntity(areActive, *this));
+			Entity spawnedEntity(*this, *m_EntityManager.CreateEntity(areActive));
 
 			CreateEntityFromSpawnData(spawnState, spawnedEntity, *spawnArchetype);
 
@@ -454,7 +454,7 @@ namespace decs
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
 		Container* prefabContainer = prefab.GetContainer();
-		EntityData& prefabEntityData = *prefab.GetEntityData();
+		EntityData& prefabEntityData = *prefab.GetEntityData_Internal();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
 		spawnedEntities.reserve(spawnedEntities.size() + spawnCount);
@@ -463,8 +463,8 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
-				Entity& spawnedEntity = spawnedEntities.emplace_back(*m_EntityManager.CreateEntity(areActive, *this));
-				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.GetEntityData());
+				Entity& spawnedEntity = spawnedEntities.emplace_back(*this, *m_EntityManager.CreateEntity(areActive));
+				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.GetEntityData_Internal());
 
 				InvokeEntityCreateObserver_Internal(spawnedEntity);
 				if (spawnedEntity.IsActive())
@@ -485,7 +485,7 @@ namespace decs
 
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
-			Entity& spawnedEntity = spawnedEntities.emplace_back(*m_EntityManager.CreateEntity(areActive, *this));
+			Entity& spawnedEntity = spawnedEntities.emplace_back(*this, *m_EntityManager.CreateEntity(areActive));
 
 			CreateEntityFromSpawnData(spawnState, spawnedEntity, *spawnArchetype);
 
@@ -548,7 +548,7 @@ namespace decs
 		Archetype& spawnArchetype
 	)
 	{
-		auto entityData = spawnedEntity.GetEntityData();
+		auto entityData = spawnedEntity.GetEntityData_Internal();
 		spawnArchetype.AddEntityData(entityData);
 
 		auto& archetypeTypeData = spawnArchetype.m_TypeData;
@@ -565,7 +565,6 @@ namespace decs
 
 			auto spawnedCompPtr = spawnComponentData.m_SpawnStableContainer->CreateFromComponentBase(spawnComponentData.m_PrefabComponent);
 			currentTypeData.m_PackedContainer->PushBackFromBase(spawnedCompPtr);
-			spawnedCompPtr->OnPreCreate(entityData);
 
 			spawnComponentData.m_SpawnedComponent = spawnedCompPtr;
 		}
@@ -601,7 +600,7 @@ namespace decs
 		TypeID compTypeID
 	)
 	{
-		auto entityData = entity.GetEntityData();
+		auto entityData = entity.GetEntityData_Internal();
 		Archetype* currentArch = entityData->m_Archetype;
 
 		componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
@@ -637,7 +636,7 @@ namespace decs
 
 		if (entity.GetContainer() != this) return false;
 
-		EntityData& entityData = *entity.GetEntityData();
+		EntityData& entityData = *entity.GetEntityData_Internal();
 		if (entityData.m_Archetype == nullptr || !entityData.IsValidToPerformComponentOperation()) return false;
 
 		uint32_t compIdxInArch = entityData.m_Archetype->FindTypeIndex(componentTypeID);
@@ -727,7 +726,6 @@ namespace decs
 	bool Container::RemoveTag(EntityData& entityData, TypeID tagType)
 	{
 		if (!m_CanRemoveComponents
-			|| entityData.m_Container != this
 			|| entityData.m_Archetype == nullptr
 			|| !entityData.IsValidToPerformComponentOperation()
 			)
@@ -785,7 +783,7 @@ namespace decs
 		{
 			for (int64_t i = m_EmptyEntities.size() - 1; i << m_EmptyEntities.size() >= 0; i--)
 			{
-				entity.Set_Internal(*m_EmptyEntities[i]);
+				entity.Set_Internal(*this, *m_EmptyEntities[i]);
 
 				InvokeEntityCreateObserver_Internal(entity);
 				if (entity.IsActive())
@@ -808,7 +806,7 @@ namespace decs
 					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
 					if (archetypeEntityData.IsValid())
 					{
-						entity.Set_Internal(*archetypeEntityData.m_EntityData);
+						entity.Set_Internal(*this, *archetypeEntityData.m_EntityData);
 
 						InvokeEntityCreateObserver_Internal(entity);
 						if (entity.IsActive())
@@ -860,7 +858,7 @@ namespace decs
 					InvokeEntityDisableObserver_Internal(entity);
 				}
 				InvokeEntityDestroyObserver_Internal(entity);
-				entity.GetEntityData()->SetState(EEntityState::Dead);
+				entity.GetEntityData_Internal()->SetState(EEntityState::Dead);
 			});
 		}
 		else
@@ -903,7 +901,7 @@ namespace decs
 	{
 		if (entity.IsValid())
 		{
-			auto entityData = entity.GetEntityData();
+			auto entityData = entity.GetEntityData_Internal();
 			if (!entityData->m_bIsCreatedByContainer)
 			{
 				entityData->m_bIsCreatedByContainer = true;
@@ -993,7 +991,7 @@ namespace decs
 
 	void Container::InvokeEntityCreateObserver_Internal(const Entity& entity)
 	{
-		auto entityData = entity.GetEntityData();
+		auto entityData = entity.GetEntityData_Internal();
 		if (!entityData->m_bIsCreatedByContainer)
 		{
 			entityData->m_bIsCreatedByContainer = true;
@@ -1003,7 +1001,7 @@ namespace decs
 
 	void Container::InvokeEntityDestroyObserver_Internal(const Entity& entity)
 	{
-		auto entityData = entity.GetEntityData();
+		auto entityData = entity.GetEntityData_Internal();
 		if (entityData->m_bIsCreatedByContainer)
 		{
 			entityData->m_bIsCreatedByContainer = false;
@@ -1013,7 +1011,7 @@ namespace decs
 
 	void Container::InvokeEntityEnableObserver_Internal(const Entity& entity)
 	{
-		auto entityData = entity.GetEntityData();
+		auto entityData = entity.GetEntityData_Internal();
 		if (!entityData->m_bIsEnabledByContainer)
 		{
 			entityData->m_bIsEnabledByContainer = true;
@@ -1023,7 +1021,7 @@ namespace decs
 
 	void Container::InvokeEntityDisableObserver_Internal(const Entity& entity)
 	{
-		auto entityData = entity.GetEntityData();
+		auto entityData = entity.GetEntityData_Internal();
 		if (entityData->m_bIsEnabledByContainer)
 		{
 			entityData->m_bIsEnabledByContainer = false;
@@ -1035,7 +1033,7 @@ namespace decs
 	{
 		m_EnableEntityObservers.Invoke(entity);
 
-		EntityData& entityData = *entity.GetEntityData();
+		EntityData& entityData = *entity.GetEntityData_Internal();
 		uint32_t entityIndexInArchetype = entityData.m_IndexInArchetype;
 
 		if (entityData.m_Archetype != nullptr)
@@ -1084,7 +1082,7 @@ namespace decs
 	{
 		m_DisableEntityObservers.Invoke(entity);
 
-		EntityData& entityData = *entity.GetEntityData();
+		EntityData& entityData = *entity.GetEntityData_Internal();
 		uint32_t entityIndexInArchetype = entityData.m_IndexInArchetype;
 
 		if (entityData.m_Archetype != nullptr)
@@ -1336,7 +1334,7 @@ namespace decs
 		Entity e = {};
 		for (auto& entityDataToDelayedDestroy : m_DelayedEntitiesToDestroy)
 		{
-			e.Set_Internal(*entityDataToDelayedDestroy.entityData);
+			e.Set_Internal(*this, *entityDataToDelayedDestroy.entityData);
 			DestroyDelayedEntity(e, entityDataToDelayedDestroy.bInvokeCallbacks);
 		}
 		m_DelayedEntitiesToDestroy.clear();
@@ -1360,8 +1358,8 @@ namespace decs
 
 	void Container::DestroyDelayedEntity(const Entity& entity, bool bInvokeCallbacks)
 	{
-		Archetype* currentArchetype = entity.GetEntityData()->m_Archetype;
-		EntityData& entityData = *entity.GetEntityData();
+		Archetype* currentArchetype = entity.GetEntityData_Internal()->m_Archetype;
+		EntityData& entityData = *entity.GetEntityData_Internal();
 
 		// Destroy callbacks:
 
@@ -1386,21 +1384,21 @@ namespace decs
 			RemoveFromEmptyEntities(entityData);
 		}
 
-		m_EntityManager.DestroyEntity(entity.GetEntityData());
+		m_EntityManager.DestroyEntity(entity.GetEntityData_Internal());
 	}
 
 	void Container::AddEntityToDelayedDestroy(const Entity& entity, bool bInvokeCallbacks)
 	{
-		entity.GetEntityData()->SetState(EEntityState::DelayedToDestruction);
-		m_DelayedEntitiesToDestroy.push_back({ entity.GetEntityData(), bInvokeCallbacks });
+		entity.GetEntityData_Internal()->SetState(EEntityState::DelayedToDestruction);
+		m_DelayedEntitiesToDestroy.push_back({ entity.GetEntityData_Internal(), bInvokeCallbacks });
 	}
 
 	Entity Container::CreateEntity_NoObserver(bool bIsActive)
 	{
 		if (m_CanCreateEntities)
 		{
-			Entity e(*m_EntityManager.CreateEntity(bIsActive, *this));
-			AddToEmptyEntitiesRightAfterNewEntityCreation(*e.GetEntityData());
+			Entity e(*this, *m_EntityManager.CreateEntity(bIsActive));
+			AddToEmptyEntitiesRightAfterNewEntityCreation(*e.GetEntityData_Internal());
 			return e;
 		}
 		return Entity();
@@ -1422,14 +1420,14 @@ namespace decs
 		if (!m_CanSpawn || prefab.IsNull()) return Entity();
 
 		Container* prefabContainer = prefab.GetContainer();
-		EntityData& prefabEntityData = *prefab.GetEntityData();
+		EntityData& prefabEntityData = *prefab.GetEntityData_Internal();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
-		Entity spawnedEntity(*m_EntityManager.CreateEntity(bIsActive, *this));
+		Entity spawnedEntity(*this, *m_EntityManager.CreateEntity(bIsActive));
 
 		if (prefabArchetype == nullptr)
 		{
-			AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.GetEntityData());
+			AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.GetEntityData_Internal());
 
 			return spawnedEntity;
 		}
@@ -1452,15 +1450,15 @@ namespace decs
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
 		Container* prefabContainer = prefab.GetContainer();
-		EntityData& prefabEntityData = *prefab.GetEntityData();
+		EntityData& prefabEntityData = *prefab.GetEntityData_Internal();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
 		if (prefabArchetype == nullptr)
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
-				Entity spawnedEntity(*m_EntityManager.CreateEntity(bAreActive, *this));
-				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.GetEntityData());
+				Entity spawnedEntity(*this, *m_EntityManager.CreateEntity(bAreActive));
+				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.GetEntityData_Internal());
 			}
 			return true;
 		}
@@ -1475,7 +1473,7 @@ namespace decs
 
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
-			Entity spawnedEntity(*m_EntityManager.CreateEntity(bAreActive, *this));
+			Entity spawnedEntity(*this, *m_EntityManager.CreateEntity(bAreActive));
 			CreateEntityFromSpawnData(spawnState, spawnedEntity, *spawnArchetype);
 		}
 
@@ -1489,7 +1487,7 @@ namespace decs
 		if (!m_CanSpawn || spawnCount == 0 || prefab.IsNull()) return false;
 
 		Container* prefabContainer = prefab.GetContainer();
-		EntityData& prefabEntityData = *prefab.GetEntityData();
+		EntityData& prefabEntityData = *prefab.GetEntityData_Internal();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
 		spawnedEntities.reserve(spawnedEntities.size() + spawnCount);
@@ -1498,8 +1496,8 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
-				Entity& spawnedEntity = spawnedEntities.emplace_back(*m_EntityManager.CreateEntity(bAreActive, *this));
-				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.GetEntityData());
+				Entity& spawnedEntity = spawnedEntities.emplace_back(*this, *m_EntityManager.CreateEntity(bAreActive));
+				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.GetEntityData_Internal());
 			}
 			return true;
 		}
@@ -1514,7 +1512,7 @@ namespace decs
 
 		for (uint64_t entityIdx = 0; entityIdx < spawnCount; entityIdx++)
 		{
-			Entity& spawnedEntity = spawnedEntities.emplace_back(*m_EntityManager.CreateEntity(bAreActive, *this));
+			Entity& spawnedEntity = spawnedEntities.emplace_back(*this, *m_EntityManager.CreateEntity(bAreActive));
 			CreateEntityFromSpawnData(spawnState, spawnedEntity, *spawnArchetype);
 		}
 
@@ -1526,10 +1524,10 @@ namespace decs
 	void Container::SetEntityActive_NoObserver(const Entity& entity, bool bIsActive)
 	{
 		if (entity.GetContainer() == this
-			&& entity.GetEntityData()->IsAlive()
-			&& entity.GetEntityData()->IsActiveFlag() != bIsActive)
+			&& entity.GetEntityData_Internal()->IsAlive()
+			&& entity.GetEntityData_Internal()->IsActiveFlag() != bIsActive)
 		{
-			entity.GetEntityData()->SetActiveState(bIsActive);
+			entity.GetEntityData_Internal()->SetActiveState(bIsActive);
 		}
 	}
 
@@ -1537,7 +1535,7 @@ namespace decs
 	{
 		if (entity.GetContainer() == this)
 		{
-			auto entityData = entity.GetEntityData();
+			auto entityData = entity.GetEntityData_Internal();
 			if (entityData->IsValidToChangeActiveState())
 			{
 				const bool bOldEntityActiveState = entityData->IsActive();
@@ -1551,7 +1549,7 @@ namespace decs
 	{
 		if (entity.GetContainer() == this)
 		{
-			auto entityData = entity.GetEntityData();
+			auto entityData = entity.GetEntityData_Internal();
 			if (entityData->IsValidToChangeActiveState())
 			{
 				const bool bOldEntityActiveState = entityData->IsActive();

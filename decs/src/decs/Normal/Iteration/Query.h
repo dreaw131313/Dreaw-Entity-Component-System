@@ -119,14 +119,14 @@ namespace decs
 				Entity entityBuffer = {};
 				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 
-				for (const auto& ctx : archetypeContexts)
+				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
 					ctx.ForEach_WithEntity(func, entityBuffer);
 				}
 			}
 			else
 			{
-				for (const auto& ctx : archetypeContexts)
+				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
 					ctx.ForEach(func);
 				}
@@ -155,14 +155,14 @@ namespace decs
 				Entity entityBuffer = {};
 				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 
-				for (const auto& ctx : archetypeContexts)
+				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
 					ctx.ForEach_WithEntity_Safe(func, entityBuffer);
 				}
 			}
 			else
 			{
-				for (const auto& ctx : archetypeContexts)
+				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
 					ctx.ForEach_Safe(func);
 				}
@@ -194,14 +194,14 @@ namespace decs
 				Entity entityBuffer = {};
 				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 
-				for (const auto& ctx : archetypeContexts)
+				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
 					ctx.ForEachBackward_WithEntity(func, entityBuffer);
 				}
 			}
 			else
 			{
-				for (const auto& ctx : archetypeContexts)
+				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
 					ctx.ForEachBackward(func);
 				}
@@ -230,14 +230,14 @@ namespace decs
 				Entity entityBuffer = {};
 				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 
-				for (const auto& ctx : archetypeContexts)
+				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
 					ctx.ForEachBackward_WithEntity_Safe(func, entityBuffer);
 				}
 			}
 			else
 			{
-				for (const auto& ctx : archetypeContexts)
+				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
 					ctx.ForEachBackward_Safe(func);
 				}
@@ -265,14 +265,14 @@ namespace decs
 				Entity entityBuffer = {};
 				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
 
-				for (const auto& ctx : archetypeContexts)
+				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
 					ctx.ForEach_IngoreEntityActiveState_WithEntity(func, entityBuffer);
 				}
 			}
 			else
 			{
-				for (const auto& ctx : archetypeContexts)
+				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
 					ctx.ForEach_IngoreEntityActiveState(func);
 				}
