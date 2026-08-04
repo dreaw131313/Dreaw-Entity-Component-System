@@ -113,7 +113,7 @@ namespace Normal
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
 
-		QueryIterationTest();
+		//QueryIterationTest();
 		EntityCreatePerformanceTest();
 		//ObserversTest();
 	}
