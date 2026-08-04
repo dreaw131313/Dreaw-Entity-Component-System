@@ -268,36 +268,6 @@ namespace decs
 			return nullptr;
 		}
 
-		/// <summary>
-		/// Iterates over all components on entity and use dynamic cast. If casted component is not nullptr returns it. If none of componets can be casted to ComponentType returns nullptr.
-		/// </summary>
-		/// <typeparam name="ComponentType"></typeparam>
-		/// <returns></returns>
-		template<component_concept ComponentType>
-		[[nodiscard]] inline ComponentType* GetComponentDynamic() const
-		{
-			if (IsValid())
-			{
-				return GetContainer_Internal()->GetComponentDynamic<drop_const_t<ComponentType>>(*GetEntityData());
-			}
-
-			return nullptr;
-		}
-
-		/// <summary>
-		/// Entity can not have multiple components of same type, bu can have components which inherits from same type. This method retrive all components which are or inherits from ComponentType. In is not efficient method, it uses dynamic cast to check if component is valid
-		/// </summary>
-		/// <typeparam name="ComponentType"></typeparam>
-		/// <param name="components"></param>
-		template<component_concept ComponentType>
-		inline void GetComponentsDynamic(ecsVector<ComponentType*>& components) const
-		{
-			if (IsValid())
-			{
-				GetContainer_Internal()->GetComponentsDynamic<pure_type_t<ComponentType>>(*GetEntityData(), components);
-			}
-		}
-
 		template<component_concept ComponentType>
 		[[nodiscard]] inline bool HasComponent() const
 		{
@@ -640,23 +610,6 @@ namespace decs
 		[[nodiscard]] inline ComponentType* GetComponent() const
 		{
 			return m_Entity.GetComponent<ComponentType>();
-		}
-
-		template<component_concept ComponentType>
-		[[nodiscard]] inline ComponentType* GetComponentDynamic() const
-		{
-			return m_Entity.GetComponentDynamic<ComponentType>();
-		}
-
-		/// <summary>
-		/// Entity can not have multiple components of same type, bu can have components which inherits from same type. This method retrive all components which are or inherits from ComponentType. In is not efficient method, it uses dynamic cast to check if component is valid
-		/// </summary>
-		/// <typeparam name="ComponentType"></typeparam>
-		/// <param name="components"></param>
-		template<component_concept ComponentType>
-		inline void GetComponentsDynamic(ecsVector<ComponentType*>& components) const
-		{
-			m_Entity.GetComponentDynamic<ComponentType>(components);
 		}
 
 		template<component_concept ComponentType>

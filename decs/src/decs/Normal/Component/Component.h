@@ -15,12 +15,19 @@ namespace decs
 	struct EntityComponentFlags
 	{
 	private:
-		inline static constexpr const uint8_t s_IsCreatedBitIndex = 30;
-		inline static constexpr const uint8_t s_IsEnabledBitIndex = 31;
+		inline static constexpr const uint8_t s_IsAllocatedBitIndex = 13;
+		inline static constexpr const uint8_t s_IsCreatedBitIndex = 14;
+		inline static constexpr const uint8_t s_IsEnabledBitIndex = 15;
+		inline static constexpr const uint32_t s_IsAllocatedBit = 1u << s_IsAllocatedBitIndex;
 		inline static constexpr const uint32_t s_IsCreatedBit = 1u << s_IsCreatedBitIndex;
 		inline static constexpr const uint32_t s_IsEnabledBit = 1u << s_IsEnabledBitIndex;
 
 	public:
+		inline bool IsAllocated() const noexcept
+		{
+			return m_Data & s_IsAllocatedBitIndex;
+		}
+
 		inline bool IsCreated() const noexcept
 		{
 			return m_Data & s_IsCreatedBit;
@@ -29,6 +36,18 @@ namespace decs
 		inline bool IsEnabled() const noexcept
 		{
 			return m_Data & s_IsEnabledBit;
+		}
+
+		inline void SetAllocated(bool bAllocated)
+		{
+			if (bAllocated)
+			{
+				m_Data = m_Data | s_IsAllocatedBitIndex;
+			}
+			else
+			{
+				m_Data = m_Data & ~s_IsAllocatedBitIndex;
+			}
 		}
 
 		inline void SetCreated(bool bIsCreated)
@@ -60,10 +79,12 @@ namespace decs
 			return m_Data & (1u << bitIndex);
 		}
 
-		inline void SetBit(uint8_t bitIndex, bool bValue)
+		inline bool SetBit(uint8_t bitIndex, bool bValue)
 		{
-			// we assert in debug builds because internal bits can only be changed by this library
-			DECS_ASSERT(bitIndex != s_IsCreatedBitIndex && bitIndex != s_IsEnabledBitIndex, "Bit indices used internaly must not be used!");
+			if (bitIndex == s_IsCreatedBitIndex || bitIndex == s_IsEnabledBitIndex || bitIndex == s_IsAllocatedBitIndex)
+			{
+				return false;
+			}
 
 			if (bValue)
 			{
@@ -73,10 +94,12 @@ namespace decs
 			{
 				m_Data = m_Data & ~(1u << bitIndex);
 			}
+
+			return true;
 		}
 
 	private:
-		uint32_t m_Data = 0;
+		uint16_t m_Data = 0;
 	};
 
 	struct EntityData;
@@ -92,11 +115,10 @@ namespace decs
 		friend struct EntityComponent;
 
 	private:
-		uint64_t m_IndexInAllocator = std::numeric_limits<uint32_t>::max();
 		EntityData* m_EntityData = nullptr;
+		uint32_t m_IndexInAllocator = std::numeric_limits<uint32_t>::max();
 		EntityComponentFlags m_Flags = {};
 		uint16_t m_DependencyCount = 0;
-		bool m_bIsAllocated = false;
 
 	private:
 		void Reset()
@@ -104,8 +126,17 @@ namespace decs
 			m_IndexInAllocator = std::numeric_limits<uint32_t>::max();
 			m_EntityData = nullptr;
 			m_Flags = {};
-			m_bIsAllocated = false;
 			m_DependencyCount = 0;
+		}
+
+		bool IsAllocated() const noexcept
+		{
+			return m_Flags.IsAllocated();
+		}
+
+		void SetAllocated(bool bAllcoated)
+		{
+			m_Flags.SetAllocated(bAllcoated);
 		}
 	};
 
@@ -130,6 +161,7 @@ namespace decs
 
 	public:
 		EntityComponent() = default;
+		~EntityComponent() = default;
 
 		EntityComponent(const EntityComponent& other)
 		{
@@ -150,8 +182,6 @@ namespace decs
 		{
 			return *this;
 		}
-
-		virtual ~EntityComponent() = default;
 
 		Entity GetEntity() const noexcept;
 
@@ -228,16 +258,16 @@ namespace decs
 		InternalComponentData* m_InternalData = nullptr;
 
 	private:
-		uint64_t GetIndexInAllocator() const
+		uint32_t GetIndexInAllocator() const
 		{
 			if (m_InternalData == nullptr)
 			{
-				return std::numeric_limits<uint64_t>::max();
+				return std::numeric_limits<uint32_t>::max();
 			}
 			return m_InternalData->m_IndexInAllocator;
 		}
 
-		bool SetIndexInAllocator(uint64_t index)
+		bool SetIndexInAllocator(uint32_t index)
 		{
 			if (m_InternalData != nullptr)
 			{

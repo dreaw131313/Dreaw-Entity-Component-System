@@ -80,7 +80,7 @@ namespace decs
 			for (uint32_t i = 0; i < m_CurrentAllocationOffset; i++)
 			{
 				auto& internalData = m_InternalData[i];
-				if (internalData.m_bIsAllocated)
+				if (internalData.IsAllocated())
 				{
 					m_Components[i].~T();
 				}
@@ -128,7 +128,7 @@ namespace decs
 			}
 
 			InternalComponentData& internalData = m_InternalData[allocationIndex];
-			internalData.m_bIsAllocated = true;
+			internalData.SetAllocated(true);
 
 			T* componentPtr = new(&m_Components[allocationIndex])T(std::forward<Args>(args)...);
 			static_cast<EntityComponent*>(componentPtr)->m_InternalData = &internalData;
@@ -147,7 +147,7 @@ namespace decs
 			InternalComponentData& internalData = m_InternalData[index];
 			T& component = m_Components[index];
 
-			if (internalData.m_bIsAllocated && (&component) == value)
+			if (internalData.IsAllocated() && (&component) == value)
 			{
 				m_Size -= 1;
 
@@ -304,7 +304,7 @@ namespace decs
 			}
 
 			EntityComponent* baseComponentPtr = result.m_Resource;
-			baseComponentPtr->SetIndexInAllocator(m_ResourceRecords.size());
+			baseComponentPtr->SetIndexInAllocator(static_cast<uint32_t>(m_ResourceRecords.size()));
 
 			m_ResourceRecords.push_back({ result.m_Resource, chunk, result.m_Index });
 
@@ -323,8 +323,8 @@ namespace decs
 			{
 				return false;
 			}
-			const uint64_t resourceIndexInAllocator = baseComponentPtr->GetIndexInAllocator();
-			const uint64_t recordCount = m_ResourceRecords.size();
+			const uint32_t resourceIndexInAllocator = baseComponentPtr->GetIndexInAllocator();
+			const uint32_t recordCount = static_cast<uint32_t>(m_ResourceRecords.size());
 
 			if (resourceIndexInAllocator >= recordCount)
 			{

@@ -755,54 +755,6 @@ namespace decs
 		/// <returns></returns>
 		EntityComponent* GetComponentAtIndex_TypeIDOrder(EntityData& entityData, uint32_t componentIndex);
 
-		template<component_concept ComponentType>
-		ComponentType* GetComponentDynamic(EntityData& entityData)
-		{
-			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
-			{
-				uint32_t archetypeComponentCount = entityData.m_Archetype->GetComponentAndTagCount();
-				const auto& typeDataVector = entityData.m_Archetype->m_TypeData;
-				for (uint32_t i = 0; i < archetypeComponentCount; i++)
-				{
-					auto& typeData = typeDataVector[i];
-					if (!typeData.IsTag())
-					{
-						auto componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
-						ComponentType* casted = dynamic_cast<ComponentType*>(componentPtr);
-						if (casted != nullptr)
-						{
-							return casted;
-						}
-					}
-				}
-			}
-
-			return nullptr;
-		}
-
-		template<component_concept ComponentType>
-		void GetComponentsDynamic(EntityData& entityData, ecsVector<ComponentType*>& outComponents)
-		{
-			if (entityData.m_Archetype != nullptr && entityData.IsAlive())
-			{
-				uint32_t archetypeComponentCount = entityData.m_Archetype->GetComponentAndTagCount();
-				const auto& typeDataVector = entityData.m_Archetype->m_TypeData;
-				for (uint32_t i = 0; i < archetypeComponentCount; i++)
-				{
-					auto& typeData = typeDataVector[i];
-					if (!typeData.IsTag())
-					{
-						auto componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype);
-						ComponentType* casted = dynamic_cast<ComponentType*>(componentPtr);
-						if (casted != nullptr)
-						{
-							outComponents.push_back(casted);
-						}
-					}
-				}
-			}
-		}
-
 		bool HasComponentInternal(EntityData& entityData, TypeID typeID) const
 		{
 			if (entityData.m_Archetype != nullptr)

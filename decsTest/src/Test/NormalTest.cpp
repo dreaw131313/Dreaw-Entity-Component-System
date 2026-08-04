@@ -116,8 +116,8 @@ namespace Normal
 		std::cout << "///////////////////////////////////////////" << "\n";
 
 		//QueryIterationTest();
-		//EntityCreatePerformanceTest();
-		ObserversTest();
+		EntityCreatePerformanceTest();
+		//ObserversTest();
 	}
 
 	void Test::QueryIterationTest()

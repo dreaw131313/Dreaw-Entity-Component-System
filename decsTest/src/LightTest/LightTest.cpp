@@ -118,9 +118,9 @@ void Test::Run()
 	std::cout << "/////////////////////////////////////" << "\n";
 
 	//IterationTest();
-	//EntityCreatePerformanceTest();
+	EntityCreatePerformanceTest();
 	//QueryManagerTest();
-	FilterTest();
+	//FilterTest();
 	//RemovingArchetypesTest();
 	//ObserversTest();
 	//SettingComponents();
