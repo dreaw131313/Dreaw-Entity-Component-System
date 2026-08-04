@@ -17,7 +17,7 @@ namespace decs
 	public:
 		TComponentChunkAllocation() = default;
 
-		TComponentChunkAllocation(T* resource, uint32_t index):
+		TComponentChunkAllocation(T* resource, uint32_t index) :
 			m_Resource(resource), m_Index(index)
 		{
 
@@ -37,6 +37,8 @@ namespace decs
 
 		template<typename T>
 		friend class TComponentAllocator;
+		template<typename T>
+		friend struct TComponentAllocatorResourceRecord;
 
 	private:
 		ecsVector<uint32_t> m_FreeSpaces;
@@ -56,7 +58,7 @@ namespace decs
 		bool m_IsInFreeSpaces = false;
 
 	private:
-		TComponentChunk(uint32_t capacity):
+		TComponentChunk(uint32_t capacity) :
 			m_Capacity(capacity > 0 ? capacity : 100)
 		{
 			constexpr uint64_t alignment = alignof(T) > alignof(InternalComponentData) ? alignof(T) : alignof(InternalComponentData);
@@ -184,9 +186,13 @@ namespace decs
 	struct TComponentAllocatorResourceRecord
 	{
 	public:
-		T* m_ComponentPtr = nullptr;
 		TComponentChunk<T>* m_Chunk = nullptr;
 		uint32_t m_IndexInChunk = std::numeric_limits<uint32_t>::max();
+
+		inline T* GetPtrFromChunk() const
+		{
+			return &m_Chunk->m_Components[m_IndexInChunk];
+		}
 	};
 
 	template<typename T>
@@ -205,7 +211,7 @@ namespace decs
 			m_ResourceRecords.reserve(m_ChunkCapacity);
 		}
 
-		TComponentAllocator(uint32_t chunkCapacity):
+		TComponentAllocator(uint32_t chunkCapacity) :
 			m_ChunkCapacity(chunkCapacity == 0 ? 1 : chunkCapacity)
 		{
 			m_ResourceRecords.reserve(m_ChunkCapacity);
@@ -239,7 +245,7 @@ namespace decs
 		m_CurrentChunk = m_Chunks[other.m_CurrentChunk->m_Index];
 		}*/
 
-		TComponentAllocator(TComponentAllocator&& other) noexcept:
+		TComponentAllocator(TComponentAllocator&& other) noexcept :
 			m_ChunkCapacity(other.m_ChunkCapacity)
 		{
 			m_Chunks = std::move(other.m_Chunks);
@@ -285,8 +291,11 @@ namespace decs
 			{
 				const EntityComponent* r = static_cast<const EntityComponent*>(value);
 				const uint64_t indexInAllocator = r->GetIndexInAllocator();
-
-				return  indexInAllocator < m_ResourceRecords.size() && m_ResourceRecords[indexInAllocator].m_ComponentPtr == value;
+				if (indexInAllocator < m_ResourceRecords.size())
+				{
+					const ResourceRecord& record = m_ResourceRecords[indexInAllocator];
+					return record.GetPtrFromChunk() == value;
+				}
 			}
 
 			return false;
@@ -306,7 +315,7 @@ namespace decs
 			EntityComponent* baseComponentPtr = result.m_Resource;
 			baseComponentPtr->SetIndexInAllocator(static_cast<uint32_t>(m_ResourceRecords.size()));
 
-			m_ResourceRecords.push_back({ result.m_Resource, chunk, result.m_Index });
+			m_ResourceRecords.push_back({ chunk, result.m_Index });
 
 			return result.m_Resource;
 		}
@@ -332,7 +341,7 @@ namespace decs
 			}
 
 			ResourceRecord resourceRecord = m_ResourceRecords[resourceIndexInAllocator];
-			if (resourceRecord.m_ComponentPtr != baseComponentPtr)
+			if (resourceRecord.GetPtrFromChunk() != baseComponentPtr)
 			{
 				return false;
 			}
@@ -340,7 +349,7 @@ namespace decs
 			if (resourceIndexInAllocator < (recordCount - 1))
 			{
 				ResourceRecord& lastRecord = m_ResourceRecords.back();
-				static_cast<EntityComponent*>(lastRecord.m_ComponentPtr)->SetIndexInAllocator(resourceIndexInAllocator);
+				static_cast<EntityComponent*>(lastRecord.GetPtrFromChunk())->SetIndexInAllocator(resourceIndexInAllocator);
 				m_ResourceRecords[resourceIndexInAllocator] = lastRecord;
 			}
 			m_ResourceRecords.pop_back();
@@ -381,7 +390,7 @@ namespace decs
 		{
 			for (ResourceRecord& resourceRecord : m_ResourceRecords)
 			{
-				callable(*resourceRecord.m_ComponentPtr);
+				callable(*resourceRecord.GetPtrFromChunk());
 			}
 		}
 
