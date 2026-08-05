@@ -43,11 +43,7 @@ namespace decs
 	private:
 		ecsVector<uint32_t> m_FreeSpaces;
 
-		std::byte* m_MemoryBlock = nullptr;
-		uint64_t m_MemoryBlockSize = 0;
 		T* m_Components = nullptr;
-		InternalComponentData* m_InternalData = nullptr;
-
 		uint32_t m_Capacity = 0;
 
 		uint32_t m_CurrentAllocationOffset = 0;
@@ -61,35 +57,12 @@ namespace decs
 		TComponentChunk(uint32_t capacity) :
 			m_Capacity(capacity > 0 ? capacity : 100)
 		{
-			constexpr uint64_t alignment = alignof(T) > alignof(InternalComponentData) ? alignof(T) : alignof(InternalComponentData);
-
-			const uint64_t componentsSize = m_Capacity * sizeof(T);
-			const uint64_t internalDataOffset = Memory::Align(componentsSize, alignof(InternalComponentData));
-			const uint64_t internalDataSize = m_Capacity * sizeof(InternalComponentData);
-
-			m_MemoryBlockSize = Memory::Align(internalDataOffset + internalDataSize, alignment);
-
-			m_MemoryBlock = static_cast<std::byte*>(operator new(m_MemoryBlockSize, static_cast<std::align_val_t>(alignment)));
-
-			m_Components = reinterpret_cast<T*>(m_MemoryBlock);
-			m_InternalData = reinterpret_cast<InternalComponentData*>(m_MemoryBlock + internalDataOffset);
-
-			std::uninitialized_default_construct_n(m_InternalData, m_Capacity);
+			m_Components = (T*) ::operator new(m_Capacity * sizeof(T), static_cast<std::align_val_t>(alignof(T)));
 		}
 
 		~TComponentChunk()
 		{
-			for (uint32_t i = 0; i < m_CurrentAllocationOffset; i++)
-			{
-				auto& internalData = m_InternalData[i];
-				if (internalData.IsAllocated())
-				{
-					m_Components[i].~T();
-				}
-			}
-
-			std::destroy_n(m_InternalData, m_Capacity);
-			operator delete(m_MemoryBlock, m_MemoryBlockSize, static_cast<std::align_val_t>(alignof(T)));
+			::operator delete(m_Components, m_Capacity * sizeof(T), static_cast<std::align_val_t>(alignof(T)));
 		}
 
 		uint32_t GetChunkIndex() const
@@ -105,6 +78,13 @@ namespace decs
 		bool IsFull() const
 		{
 			return m_Capacity == m_Size;
+		}
+
+		void ResetState()
+		{
+			m_Size = 0;
+			m_FreeSpaces.clear();
+			m_CurrentAllocationOffset = 0;
 		}
 
 		template<typename... Args>
@@ -129,11 +109,7 @@ namespace decs
 				m_CurrentAllocationOffset += 1;
 			}
 
-			InternalComponentData& internalData = m_InternalData[allocationIndex];
-			internalData.SetAllocated(true);
-
 			T* componentPtr = new(&m_Components[allocationIndex])T(std::forward<Args>(args)...);
-			static_cast<EntityComponent*>(componentPtr)->m_InternalData = &internalData;
 
 			return AllocationResult(componentPtr, allocationIndex);
 
@@ -146,10 +122,9 @@ namespace decs
 				return false;
 			}
 
-			InternalComponentData& internalData = m_InternalData[index];
-			T& component = m_Components[index];
+			T* exitingComponentPtr = &m_Components[index];
 
-			if (internalData.IsAllocated() && (&component) == value)
+			if (exitingComponentPtr == value)
 			{
 				m_Size -= 1;
 
@@ -171,14 +146,23 @@ namespace decs
 						m_FreeSpaces.push_back(index);
 					}
 				}
-
-				internalData.Reset();
-				component.~T();
+				static_cast<EntityComponent*>(exitingComponentPtr)->m_InternalData.Reset();
+				exitingComponentPtr->~T();
 
 				return true;
 			}
 
 			return false;
+		}
+
+		/// <summary>
+		/// This method is called only in TComponentAllocator destructor, because allocator know which components are allocated
+		/// </summary>
+		/// <param name="index"></param>
+		/// <param name="value"></param>
+		void CallDestructor_Unchecked(uint32_t index)
+		{
+			m_Components[index].~T();
 		}
 	};
 
@@ -219,6 +203,11 @@ namespace decs
 
 		~TComponentAllocator()
 		{
+			for (ResourceRecord& record: m_ResourceRecords)
+			{
+				record.m_Chunk->CallDestructor_Unchecked(record.m_IndexInChunk);
+			}
+
 			for (auto& chunk : m_Chunks)
 			{
 				if (chunk != nullptr)
@@ -328,10 +317,6 @@ namespace decs
 			}
 
 			const EntityComponent* baseComponentPtr = static_cast<const EntityComponent*>(value);
-			if (baseComponentPtr->m_InternalData == nullptr)
-			{
-				return false;
-			}
 			const uint32_t resourceIndexInAllocator = baseComponentPtr->GetIndexInAllocator();
 			const uint32_t recordCount = static_cast<uint32_t>(m_ResourceRecords.size());
 
@@ -341,7 +326,7 @@ namespace decs
 			}
 
 			ResourceRecord resourceRecord = m_ResourceRecords[resourceIndexInAllocator];
-			if (resourceRecord.GetPtrFromChunk() != baseComponentPtr)
+			if (resourceRecord.GetPtrFromChunk() != value)
 			{
 				return false;
 			}

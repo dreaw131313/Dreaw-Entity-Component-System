@@ -352,16 +352,16 @@ void Test::EntityCreatePerformanceTest()
 
 				});*/
 
-				/*for (size_t i = 0; i < entityCount; i++)
-				{
-					auto e = container.CreateEntity();
-					e.AddTag<float>();
-					e.AddTag<int>();
-					e.AddFilter<int>(1);
-					e.AddFilter<bool>(false);
-					e.AddComponent<Position>();
-					e.AddComponent<TestComponent>();
-				}*/
+				//for (size_t i = 0; i < entityCount; i++)
+				//{
+				//	auto e = container.CreateEntity();
+				//	e.AddTag<float>();
+				//	e.AddTag<int>();
+				//	/*e.AddFilter<int>(1);
+				//	e.AddFilter<bool>(false);*/
+				//	e.AddComponent<Position>();
+				//	e.AddComponent<TestComponent>();
+				//}
 
 				//for (uint32_t i = 0; i < entityCount; i++)
 				//{

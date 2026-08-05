@@ -15,19 +15,12 @@ namespace decs
 	struct EntityComponentFlags
 	{
 	private:
-		inline static constexpr const uint8_t s_IsAllocatedBitIndex = 13;
 		inline static constexpr const uint8_t s_IsCreatedBitIndex = 14;
 		inline static constexpr const uint8_t s_IsEnabledBitIndex = 15;
-		inline static constexpr const uint32_t s_IsAllocatedBit = 1u << s_IsAllocatedBitIndex;
 		inline static constexpr const uint32_t s_IsCreatedBit = 1u << s_IsCreatedBitIndex;
 		inline static constexpr const uint32_t s_IsEnabledBit = 1u << s_IsEnabledBitIndex;
 
 	public:
-		inline bool IsAllocated() const noexcept
-		{
-			return m_Data & s_IsAllocatedBitIndex;
-		}
-
 		inline bool IsCreated() const noexcept
 		{
 			return m_Data & s_IsCreatedBit;
@@ -36,18 +29,6 @@ namespace decs
 		inline bool IsEnabled() const noexcept
 		{
 			return m_Data & s_IsEnabledBit;
-		}
-
-		inline void SetAllocated(bool bAllocated)
-		{
-			if (bAllocated)
-			{
-				m_Data = m_Data | s_IsAllocatedBitIndex;
-			}
-			else
-			{
-				m_Data = m_Data & ~s_IsAllocatedBitIndex;
-			}
 		}
 
 		inline void SetCreated(bool bIsCreated)
@@ -81,7 +62,7 @@ namespace decs
 
 		inline bool SetBit(uint8_t bitIndex, bool bValue)
 		{
-			if (bitIndex == s_IsCreatedBitIndex || bitIndex == s_IsEnabledBitIndex || bitIndex == s_IsAllocatedBitIndex)
+			if (bitIndex == s_IsCreatedBitIndex || bitIndex == s_IsEnabledBitIndex )
 			{
 				return false;
 			}
@@ -125,16 +106,6 @@ namespace decs
 			m_IndexInAllocator = std::numeric_limits<uint32_t>::max();
 			m_Flags = {};
 			m_DependencyCount = 0;
-		}
-
-		bool IsAllocated() const noexcept
-		{
-			return m_Flags.IsAllocated();
-		}
-
-		void SetAllocated(bool bAllcoated)
-		{
-			m_Flags.SetAllocated(bAllcoated);
 		}
 	};
 
@@ -183,119 +154,75 @@ namespace decs
 
 		inline bool IsCreatedByECS() const noexcept
 		{
-			if (m_InternalData == nullptr)
-			{
-				return false;
-			}
-			return m_InternalData->m_Flags.IsCreated();
+			return m_InternalData.m_Flags.IsCreated();
 		}
 
 		inline bool IsEnabledByECS() const noexcept
 		{
-			if (m_InternalData == nullptr)
-			{
-				return false;
-			}
-			return m_InternalData->m_Flags.IsEnabled();
+			return m_InternalData.m_Flags.IsEnabled();
 		}
 
 		inline uint16_t GetDependecyCount() const
 		{
-			if (m_InternalData == nullptr)
-			{
-				return 0;
-			}
-			return m_InternalData->m_DependencyCount;
+			return m_InternalData.m_DependencyCount;
 		}
 
 		inline void AddDependency(uint16_t dependecyCount = 1)
 		{
-			if (m_InternalData != nullptr)
-			{
-				m_InternalData->m_DependencyCount++;
-			}
+			m_InternalData.m_DependencyCount++;
 		}
 
 		inline void RemoveDependecy(uint16_t dependecyCount = 1)
 		{
-			if (m_InternalData != nullptr)
+			if (dependecyCount > m_InternalData.m_DependencyCount)
 			{
-				if (dependecyCount > m_InternalData->m_DependencyCount)
-				{
-					m_InternalData->m_DependencyCount = 0;
-				}
-				else
-				{
-					m_InternalData->m_DependencyCount -= dependecyCount;
-				}
+				m_InternalData.m_DependencyCount = 0;
+			}
+			else
+			{
+				m_InternalData.m_DependencyCount -= dependecyCount;
 			}
 		}
 
 	protected:
 		inline bool SetInternalFlag(uint8_t flagIndex, bool bValue)
 		{
-			if (m_InternalData == nullptr)
-			{
-				return false;
-			}
-			return m_InternalData->m_Flags.SetBit(flagIndex, bValue);
+			return m_InternalData.m_Flags.SetBit(flagIndex, bValue);
 		}
 
 		inline bool GetInternalFlag(uint8_t flagIndex) const noexcept
 		{
-			if (m_InternalData == nullptr)
-			{
-				return false;
-			}
-			return m_InternalData->m_Flags.GetBit(flagIndex);
+			return m_InternalData.m_Flags.GetBit(flagIndex);
 		}
 
 	private:
-		InternalComponentData* m_InternalData = nullptr;
+		InternalComponentData m_InternalData{};
 
 	private:
 		uint32_t GetIndexInAllocator() const
 		{
-			if (m_InternalData == nullptr)
-			{
-				return std::numeric_limits<uint32_t>::max();
-			}
-			return m_InternalData->m_IndexInAllocator;
+			return m_InternalData.m_IndexInAllocator;
 		}
 
-		bool SetIndexInAllocator(uint32_t index)
+		void SetIndexInAllocator(uint32_t index)
 		{
-			if (m_InternalData != nullptr)
-			{
-				m_InternalData->m_IndexInAllocator = index;
-				return true;
-			}
-			return false;
+			m_InternalData.m_IndexInAllocator = index;
 		}
 
 		inline void SetFlags(bool bIsCreated, bool bIsEnabled)
 		{
-			if (m_InternalData != nullptr)
-			{
-				m_InternalData->m_Flags.SetCreated(bIsCreated);
-				m_InternalData->m_Flags.SetEnabled(bIsEnabled);
-			}
+			m_InternalData.m_Flags.SetCreated(bIsCreated);
+			m_InternalData.m_Flags.SetEnabled(bIsEnabled);
 		}
 
 		inline void SetCreated(bool bIsCreated)
 		{
-			if (m_InternalData != nullptr)
-			{
-				m_InternalData->m_Flags.SetCreated(bIsCreated);
-			}
+			m_InternalData.m_Flags.SetCreated(bIsCreated);
 		}
 
 		inline void SetEnabled(bool bIsEnabled)
 		{
-			if (m_InternalData != nullptr)
-			{
-				m_InternalData->m_Flags.SetEnabled(bIsEnabled);
-			}
+			m_InternalData.m_Flags.SetEnabled(bIsEnabled);
 		}
 
 	};
