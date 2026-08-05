@@ -232,13 +232,13 @@ namespace decs
 		}
 
 	protected:
-		inline void SetInternalFlag(uint8_t flagIndex, bool bValue)
+		inline bool SetInternalFlag(uint8_t flagIndex, bool bValue)
 		{
 			if (m_InternalData == nullptr)
 			{
-				return;
+				return false;
 			}
-			m_InternalData->m_Flags.SetBit(flagIndex, bValue);
+			return m_InternalData->m_Flags.SetBit(flagIndex, bValue);
 		}
 
 		inline bool GetInternalFlag(uint8_t flagIndex) const noexcept
