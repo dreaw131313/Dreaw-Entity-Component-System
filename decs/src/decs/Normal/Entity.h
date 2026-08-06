@@ -34,7 +34,7 @@ namespace decs
 
 		Entity(Container& container, EntityData& entityData) :
 			m_LifeTimeData(container.GetLifeTimeData()),
-			m_EntityID(entityData.GetID()),
+			m_EntityData(&entityData),
 			m_Version(entityData.GetVersion())
 		{
 
@@ -48,7 +48,7 @@ namespace decs
 		bool operator==(const Entity& rhs)const
 		{
 			return m_LifeTimeData == rhs.m_LifeTimeData
-				&& m_EntityID == rhs.m_EntityID
+				&& m_EntityData == rhs.m_EntityData
 				&& m_Version == rhs.m_Version;
 		}
 
@@ -67,7 +67,7 @@ namespace decs
 		[[nodiscard]] inline bool IsValid() const
 		{
 			return m_LifeTimeData.IsValid() && m_LifeTimeData->IsAlive()
-				&& GetContainer_Internal()->IsEntityDataAliveWithVersion(m_EntityID, m_Version)
+				&& GetEntityData_Internal()->IsAliveWithVersion(m_Version)
 				;
 		}
 
@@ -89,7 +89,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return m_EntityID;
+				return GetEntityData_Internal()->GetID();
 			}
 			return std::numeric_limits< EntityID>::max();
 		}
@@ -102,7 +102,7 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return static_cast<CombinedEntityID>(m_EntityID & 0xFFFFFFFFull) | (static_cast<CombinedEntityID>(m_Version) << (sizeof(EntityID) * 8));
+				return static_cast<CombinedEntityID>(GetEntityData_Internal()->GetID() & 0xFFFFFFFFull) | (static_cast<CombinedEntityID>(m_Version) << (sizeof(EntityID) * 8));
 			}
 			return std::numeric_limits< CombinedEntityID>::max();
 		}
@@ -486,26 +486,26 @@ namespace decs
 
 	private:
 		ContainerLifetimeDataHandle m_LifeTimeData{};
-		mutable EntityID m_EntityID = InvalidEntityID;
+		mutable EntityData* m_EntityData= nullptr;
 		mutable EntityVersion m_Version = InvalidEntityVersion;
 
 	private:
-		inline void Set_Internal(const Container& container, const EntityData& data)
+		inline void Set_Internal(const Container& container, EntityData& data)
 		{
 			m_LifeTimeData = container.GetLifeTimeData();
-			m_EntityID = data.GetID();
+			m_EntityData = &data;
 			m_Version = data.GetVersion();
 		}
 
 		inline void Invalidate_WithoutLifeTimeData() const
 		{
-			m_EntityID = InvalidEntityID;
+			m_EntityData = nullptr;
 			m_Version = InvalidEntityVersion;
 		}
 
-		inline void SetWithoutLifeTimeDataInvalidation_Internal(const EntityData& data)
+		inline void SetWithoutLifeTimeDataInvalidation_Internal(EntityData& data)
 		{
-			m_EntityID = data.GetID();
+			m_EntityData = &data;
 			m_Version = data.GetVersion();
 		}
 
@@ -521,7 +521,7 @@ namespace decs
 
 		inline EntityData* GetEntityData_Internal() const
 		{
-			return GetContainer_Internal()->GetEntityDataByID(m_EntityID);
+			return m_EntityData;
 		}
 
 	};

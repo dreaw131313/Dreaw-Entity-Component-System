@@ -59,7 +59,6 @@ namespace decs
 		{
 		}
 
-
 		inline EntityVersion GetVersion() const
 		{
 			return m_Version;

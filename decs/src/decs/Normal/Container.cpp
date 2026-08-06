@@ -168,14 +168,19 @@ namespace decs
 
 	void Container::SetEntityActive(const Entity& entity, bool bIsActive)
 	{
-		if (entity.GetContainer() == this
-			&& entity.GetEntityData_Internal()->IsValidToChangeActiveState()
-			&& entity.GetEntityData_Internal()->IsActiveFlag() != bIsActive
+		if (entity.GetContainer() != this)
+		{
+			return;
+		}
+
+		auto entityData = entity.GetEntityData_Internal();
+		if (entityData->IsValidToChangeActiveState()
+			&& entityData->IsActiveFlag() != bIsActive
 			)
 		{
-			const bool bOldEntityActiveState = entity.GetEntityData_Internal()->IsActive();
-			entity.GetEntityData_Internal()->SetActiveState(bIsActive);
-			const bool bNewEntityActiveState = entity.GetEntityData_Internal()->IsActive();
+			const bool bOldEntityActiveState = entityData->IsActive();
+			entityData->SetActiveState(bIsActive);
+			const bool bNewEntityActiveState = entityData->IsActive();
 
 			if (bOldEntityActiveState != bNewEntityActiveState)
 			{
@@ -266,9 +271,14 @@ namespace decs
 
 	uint32_t Container::GetEntityActiveOverrides(const Entity& entity)
 	{
-		if (entity.GetContainer() == this && entity.GetEntityData_Internal()->IsValidToChangeActiveState())
+		if (entity.GetContainer() != this)
 		{
-			return entity.GetEntityData_Internal()->GetDisabledOverrideCount();
+			return 0;
+		}
+		auto entityData = entity.GetEntityData_Internal();
+		if (entityData->IsValidToChangeActiveState())
+		{
+			return entityData->GetDisabledOverrideCount();
 		}
 		return 0;
 	}
@@ -311,7 +321,8 @@ namespace decs
 
 	void Container::InvokeEntityComponentDestructionObservers(const Entity& entity)
 	{
-		Archetype* currentArchetype = entity.GetEntityData_Internal()->m_Archetype;
+		auto entityData = entity.GetEntityData_Internal();
+		Archetype* currentArchetype = entityData->m_Archetype;
 		const uint32_t componentsCount = currentArchetype->GetComponentOnlyCount();
 
 		auto& typeDatas = currentArchetype->m_TypeData;
@@ -323,7 +334,7 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
-				const uint32_t indexInArchetype = entity.GetEntityData_Internal()->m_IndexInArchetype;
+				const uint32_t indexInArchetype = entityData->m_IndexInArchetype;
 				const auto& orderData = orderDatas[i];
 				ArchetypeTypeData& typeData = typeDatas[orderData.m_ComponentIndex];
 				if (!typeData.IsTag())
@@ -337,7 +348,7 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
-				const uint32_t indexInArchetype = entity.GetEntityData_Internal()->m_IndexInArchetype;
+				const uint32_t indexInArchetype = entityData->m_IndexInArchetype;
 				const auto& orderData = orderDatas[i];
 				ArchetypeTypeData& typeData = typeDatas[orderData.m_ComponentIndex];
 				// typeData.m_ComponentContext->InvokeOnDisableEntity(typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype), entity); // no becouse entity is disabled
@@ -360,8 +371,8 @@ namespace decs
 		EntityData& prefabEntityData = *prefab.GetEntityData_Internal();
 		Archetype* prefabArchetype = prefabEntityData.m_Archetype;
 
-		Entity spawnedEntity(*this, *m_EntityManager.CreateEntity(bIsActive));
-		EntityData* spawnedEntityData = spawnedEntity.GetEntityData_Internal();
+		EntityData* spawnedEntityData = m_EntityManager.CreateEntity(bIsActive);
+		Entity spawnedEntity(*this, *spawnedEntityData);
 
 		if (prefabArchetype == nullptr)
 		{
@@ -409,9 +420,10 @@ namespace decs
 		{
 			for (uint64_t i = 0; i < spawnCount; i++)
 			{
-				Entity spawnedEntity(*this, *m_EntityManager.CreateEntity(areActive));
+				auto spawnedEntityData = m_EntityManager.CreateEntity(areActive);
+				Entity spawnedEntity(*this, *spawnedEntityData);
 
-				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.GetEntityData_Internal());
+				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntityData);
 
 				InvokeEntityCreateObserver_Internal(spawnedEntity);
 				if (spawnedEntity.IsActive())

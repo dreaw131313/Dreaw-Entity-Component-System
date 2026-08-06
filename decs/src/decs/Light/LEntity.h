@@ -475,12 +475,12 @@ namespace decs::light
 			m_Version = m_EntityData->GetVersion();
 		}
 
-		Container* GetContainer_Internal() const
+		inline Container* GetContainer_Internal() const
 		{
 			return m_EntityData->m_Container;
 		}
 
-		EntityData* GetEntityData() const
+		inline EntityData* GetEntityData() const
 		{
 			return m_EntityData;
 		}
