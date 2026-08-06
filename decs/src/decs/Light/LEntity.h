@@ -29,7 +29,7 @@ namespace decs::light
 
 		Entity(EntityData* entityData):
 			m_EntityData(entityData),
-			m_Version(entityData != nullptr ? entityData->GetVersion() : 0)
+			m_Version(entityData != nullptr ? entityData->GetVersion() : InvalidEntityVersion)
 		{
 
 		}

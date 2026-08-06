@@ -189,6 +189,7 @@ namespace decs::light
 			if (Entity entity = m_Container->CreateEntityInArchetypeWithoutObservers(*m_Archetype))
 			{
 				InitializeEntity<InvokeObservers>(entity, func);
+				return entity;
 			}
 
 			return {};
