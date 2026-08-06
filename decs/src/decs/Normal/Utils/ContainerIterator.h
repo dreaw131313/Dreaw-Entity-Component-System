@@ -74,7 +74,7 @@ namespace decs
 
 			for (uint32_t i = 0; i < container.m_EmptyEntities.size(); i++)
 			{
-				entityBuffer.Set_Internal(*container.m_EmptyEntities[i]);
+				entityBuffer.Set_Internal(container, *container.m_EmptyEntities[i]);
 				entityFunc(entityBuffer);
 			}
 
@@ -98,7 +98,7 @@ namespace decs
 							auto entityData = entityStorage.GetEntity(entityIdx);
 							if (entityData != nullptr)
 							{
-								entityBuffer.Set_Internal(*entityData);
+								entityBuffer.Set_Internal(container, *entityData);
 								entityFunc(entityBuffer);
 							}
 						}
