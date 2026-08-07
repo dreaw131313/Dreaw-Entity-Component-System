@@ -19,12 +19,12 @@ namespace decs
 		inline virtual TypeID GetTypeID()const noexcept = 0;
 
 		virtual bool Destroy(EntityComponent* component) = 0;
-		virtual EntityComponent* CreateFromComponentBase(const EntityComponent* ptr) = 0;
+		virtual EntityComponent* CreateFromComponentBase(const Entity& e, const EntityComponent* ptr) = 0;
 		virtual uint32_t GetChunkSize() const noexcept = 0;
 		virtual void Clear() = 0;
 	};
 
-	template<typename TComponentType>
+	template<typename ComponentType>
 	class StableComponentContainer : 
 		public IStableComponentContainer,
 		private NonCopyableNonMoveable
@@ -46,7 +46,7 @@ namespace decs
 
 		inline TypeID GetTypeID()const noexcept override
 		{
-			return Type<TComponentType>::ID();
+			return Type<ComponentType>::ID();
 		}
 
 		inline uint32_t GetChunkSize() const noexcept override
@@ -55,24 +55,30 @@ namespace decs
 		}
 
 		template<typename... Args>
-		inline TComponentType* Create(Args&&... args)
+		inline ComponentType* Create(const Entity& e, Args&&... args)
 		{
-			return m_Allocator.Create(std::forward<Args>(args)...);
+			ComponentType* t = m_Allocator.Create(std::forward<Args>(args)...);;
+			if constexpr (::decs::has_ecs_on_construct<ComponentType>)
+			{
+				t->ECS_OnConstruct(e);
+			}
+
+			return t;
 		}
 
 		inline bool Destroy(EntityComponent* componentBase) override
 		{
-			return m_Allocator.Destroy(::decs::check_cast<TComponentType*>(componentBase));
+			return m_Allocator.Destroy(::decs::check_cast<ComponentType*>(componentBase));
 		}
 
-		inline bool Destroy(TComponentType* component)
+		inline bool Destroy(ComponentType* component)
 		{
 			return m_Allocator.Destroy(component);
 		}
 
-		inline EntityComponent* CreateFromComponentBase(const EntityComponent* ptr)override
+		inline EntityComponent* CreateFromComponentBase(const Entity& e, const EntityComponent* ptr)override
 		{
-			return m_Allocator.Create(*decs::check_cast<const TComponentType*>(ptr));
+			return Create(e, *decs::check_cast<const ComponentType*>(ptr));
 		}
 
 		inline void Clear() override
@@ -81,6 +87,6 @@ namespace decs
 		}
 
 	private:
-		TComponentAllocator<TComponentType> m_Allocator{};
+		TComponentAllocator<ComponentType> m_Allocator{};
 	};
 }

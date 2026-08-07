@@ -575,7 +575,7 @@ namespace decs
 				continue;
 			}
 
-			auto spawnedCompPtr = spawnComponentData.m_SpawnStableContainer->CreateFromComponentBase(spawnComponentData.m_PrefabComponent);
+			auto spawnedCompPtr = spawnComponentData.m_SpawnStableContainer->CreateFromComponentBase(spawnedEntity, spawnComponentData.m_PrefabComponent);
 			currentTypeData.m_PackedContainer->PushBackFromBase(spawnedCompPtr);
 
 			spawnComponentData.m_SpawnedComponent = spawnedCompPtr;

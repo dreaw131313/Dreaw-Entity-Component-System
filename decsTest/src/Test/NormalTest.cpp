@@ -37,6 +37,11 @@ namespace Normal
 			//i += 1;
 		}
 
+		void ECS_OnConstruct(const decs::Entity& e)
+		{
+			//PrintLine("Position on construct!");
+		}
+
 	};
 
 	struct TestComponent : public decs::EntityComponent
@@ -44,7 +49,11 @@ namespace Normal
 	public:
 		int table[50];
 
-
+	public:
+		void ECS_OnConstruct(const decs::Entity& e)
+		{
+			//PrintLine("TestComponent on construct!");
+		}
 	};
 
 	struct HeavyDataComponent : public decs::EntityComponent
@@ -335,14 +344,14 @@ namespace Normal
 			{
 				MeasureTimer timer(true);
 				{
-					for (size_t i = 0; i < entityCount; i++)
+					/*for (size_t i = 0; i < entityCount; i++)
 					{
 						auto e = container.CreateEntity();
 						e.AddTag<float>();
 						e.AddTag<int>();
 						auto position = e.AddComponent<Position>();
 						auto testComponent = e.AddComponent<TestComponent>();
-					}
+					}*/
 
 					//for (uint32_t i = 0; i < entityCount; i++)
 					//{
@@ -360,10 +369,10 @@ namespace Normal
 					{
 
 					});*/
-					/*container.CreateEntities(comps, tags, entityCount, true, [] (Position& pos, TestComponent& test)
+					container.CreateEntities(comps, tags, entityCount, true, [] (Position& pos, TestComponent& test)
 					{
 
-					});*/
+					});
 
 					/*container.CreateEntities(comps, entityCount, [] (Position& pos, TestComponent& test)
 					{

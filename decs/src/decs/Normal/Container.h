@@ -121,13 +121,13 @@ namespace decs
 		template<component_concept T, component_concept... ComponentTypes>
 		inline pure_type_t<T>* CreateEntity_Impl_AddCompoenent(
 			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
-			EntityData& entityData
+			const Entity& entity
 		)
 		{
 			using PureType = pure_type_t<T>;
 
 			const TArchetypeTypeData<PureType>& archetypeData = std::get<TArchetypeTypeData<PureType>>(archetypesData);
-			PureType* comp = archetypeData.m_StableContainer->Create();
+			PureType* comp = archetypeData.m_StableContainer->Create(entity);
 			archetypeData.m_PackedContainer->PushBack(comp);
 			return comp;
 		}
@@ -161,7 +161,7 @@ namespace decs
 		{
 			entityArchetype.AddEntityData(&entityData);
 
-			std::tuple<pure_type_t<ComponentTypes>*...>createdComponents = { CreateEntity_Impl_AddCompoenent<ComponentTypes>(archetypesData, entityData)... };
+			std::tuple<pure_type_t<ComponentTypes>*...>createdComponents = { CreateEntity_Impl_AddCompoenent<ComponentTypes>(archetypesData, entity)... };
 
 			if constexpr (InvokeObservers)
 			{
@@ -624,7 +624,7 @@ namespace decs
 			Archetype* newArchetype = GetArchetypeAfterAddComponent<PureComponentType>(oldArchetype);
 			TArchetypeTypeData<PureComponentType> newCompTypeData = newArchetype->GetTypeData<PureComponentType>();
 
-			ComponentType* componentPtr = newCompTypeData.m_StableContainer->Create(std::forward<Args>(args)...);
+			ComponentType* componentPtr = newCompTypeData.m_StableContainer->Create(entity, std::forward<Args>(args)...);
 			newCompTypeData.m_PackedContainer->PushBackFromBase(componentPtr);
 
 			// Adding entity to archetype

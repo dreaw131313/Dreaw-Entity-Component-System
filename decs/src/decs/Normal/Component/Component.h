@@ -62,7 +62,7 @@ namespace decs
 
 		inline bool SetBit(uint8_t bitIndex, bool bValue)
 		{
-			if (bitIndex == s_IsCreatedBitIndex || bitIndex == s_IsEnabledBitIndex )
+			if (bitIndex == s_IsCreatedBitIndex || bitIndex == s_IsEnabledBitIndex)
 			{
 				return false;
 			}
@@ -83,7 +83,6 @@ namespace decs
 		uint16_t m_Data = 0;
 	};
 
-	struct EntityData;
 	struct Entity;
 	class IStableComponentContainer;
 	template<typename TComponentType>
@@ -248,6 +247,16 @@ namespace decs
 		}
 
 	private:
-		TypeGroup<Types...> m_Group{};
+		TypeGroup<pure_type_t<Types>...> m_Group{};
+	};
+
+	
+	/// <summary>
+	/// During this operations any structural changes to entity or other entities are forbidden and causes undefined behavior
+	/// </summary>
+	template<typename T>
+	concept has_ecs_on_construct = requires (T t, const Entity & e)
+	{
+		{ t.ECS_OnConstruct(e) };
 	};
 }
