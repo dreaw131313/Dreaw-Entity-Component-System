@@ -317,7 +317,7 @@ namespace Normal
 
 	void Test::EntityCreatePerformanceTest()
 	{
-		const uint32_t testCount = 10;
+		const uint32_t testCount = 30;
 		const uint32_t entityCount = 100000;
 
 		decs::ContainerConfig config{
@@ -388,7 +388,7 @@ namespace Normal
 			double entityAvarageTime = avarage / entityCount;
 
 			std::cout << "Creating " << entityCount << " entities -> " << avarage << " ms (entity avarage time " << entityAvarageTime * 1000. << "us)\n";
-			std::cout << "Lookup table size " << container.GetEntityDataLookupTableSize() << "\n";
+			//std::cout << "Lookup table size " << container.GetEntityDataLookupTableSize() << "\n";
 
 			if (testCounter > 0)
 			{

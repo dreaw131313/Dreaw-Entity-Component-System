@@ -201,6 +201,11 @@ namespace decs
 		return entity.IsActive();
 	}
 
+	bool Container::IsEntityActive(const Entity& entity, const EntityData& entityData) const
+	{
+		return entityData.IsActiveWithVersion(entity.GetVersion());
+	}
+
 
 	Entity Container::CreateEntityRaw(bool bIsActive)
 	{
@@ -329,7 +334,7 @@ namespace decs
 
 		// Invoke On destroy methods
 
-		if (entity.IsActive())
+		if (entityData.IsActiveWithVersion(entity.GetVersion()))
 		{
 			for (uint64_t i = 0; i < componentsCount; i++)
 			{
@@ -379,7 +384,7 @@ namespace decs
 
 			InvokeEntityCreateObserver_Internal(*spawnedEntityData, spawnedEntity);
 
-			if (spawnedEntity.IsActive())
+			if (spawnedEntityData->IsActiveWithVersion(spawnedEntity.GetVersion()))
 			{
 				InvokeEntityEnableObserver_Internal(*spawnedEntityData, spawnedEntity);
 			}
@@ -396,11 +401,11 @@ namespace decs
 		CreateEntityFromSpawnData(spawnState, *spawnedEntityData, spawnedEntity, *spawnArchetype);
 
 		InvokeEntityCreateObserver_Internal(*spawnedEntityData, spawnedEntity);
-		if (spawnedEntity.IsActive())
+		if (spawnedEntityData->IsActiveWithVersion(spawnedEntity.GetVersion()))
 		{
 			InvokeEntityEnableObserver_Internal(*spawnedEntityData, spawnedEntity);
 		}
-		InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, *spawnArchetype, spawnState);
+		InvokeComponentCreateAndEnableObserversOnSpawn(*spawnedEntityData, spawnedEntity, *spawnArchetype, spawnState);
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ComponentDataStart);
 
@@ -425,7 +430,7 @@ namespace decs
 				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntityData);
 
 				InvokeEntityCreateObserver_Internal(*spawnedEntityData, spawnedEntity);
-				if (spawnedEntity.IsActive())
+				if (spawnedEntityData->IsActiveWithVersion(spawnedEntity.GetVersion()))
 				{
 					InvokeEntityEnableObserver_Internal(*spawnedEntityData, spawnedEntity);
 				}
@@ -449,11 +454,11 @@ namespace decs
 			CreateEntityFromSpawnData(spawnState, *spawnedEntityData, spawnedEntity, *spawnArchetype);
 
 			InvokeEntityCreateObserver_Internal(*spawnedEntityData, spawnedEntity);
-			if (spawnedEntity.IsActive())
+			if (spawnedEntityData->IsActiveWithVersion(spawnedEntity.GetVersion()))
 			{
 				InvokeEntityEnableObserver_Internal(*spawnedEntityData, spawnedEntity);
 			}
-			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, *spawnArchetype, spawnState);
+			InvokeComponentCreateAndEnableObserversOnSpawn(*spawnedEntityData, spawnedEntity, *spawnArchetype, spawnState);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ComponentDataStart);
@@ -480,7 +485,7 @@ namespace decs
 				AddToEmptyEntitiesRightAfterNewEntityCreation(*spawnedEntity.GetEntityData_Internal());
 
 				InvokeEntityCreateObserver_Internal(*spawnedEntityData, spawnedEntity);
-				if (spawnedEntity.IsActive())
+				if (spawnedEntityData->IsActiveWithVersion(spawnedEntity.GetVersion()))
 				{
 					InvokeEntityEnableObserver_Internal(*spawnedEntityData, spawnedEntity);
 				}
@@ -504,12 +509,12 @@ namespace decs
 			CreateEntityFromSpawnData(spawnState, *spawnedEntityData, spawnedEntity, *spawnArchetype);
 
 			InvokeEntityCreateObserver_Internal(*spawnedEntityData, spawnedEntity);
-			if (spawnedEntity.IsActive())
+			if (spawnedEntityData->IsActiveWithVersion(spawnedEntity.GetVersion()))
 			{
 				InvokeEntityEnableObserver_Internal(*spawnedEntityData, spawnedEntity);
 			}
 
-			InvokeComponentCreateAndEnableObserversOnSpawn(spawnedEntity, *spawnArchetype, spawnState);
+			InvokeComponentCreateAndEnableObserversOnSpawn(*spawnedEntityData, spawnedEntity, *spawnArchetype, spawnState);
 		}
 
 		m_SpawnData.PopBackSpawnState(spawnState.m_ComponentDataStart);
@@ -584,7 +589,7 @@ namespace decs
 		}
 	}
 
-	void Container::InvokeComponentCreateAndEnableObserversOnSpawn(const Entity& entity, const Archetype& archetype, const SpawnDataState& spawnState)
+	void Container::InvokeComponentCreateAndEnableObserversOnSpawn(const EntityData& entityData, const Entity& entity, const Archetype& archetype, const SpawnDataState& spawnState)
 	{
 		auto& orderContextVector = archetype.m_ComponentContextsInOrder;
 		const uint32_t observerInvokeCount = static_cast<uint32_t>(orderContextVector.size()); // must use this becouse orderContextVector does not contain observers for tags
@@ -599,7 +604,7 @@ namespace decs
 			{
 				orderData.m_ComponentContext->InvokeOnCreateComponent(spawnedComponent, entity);
 
-				if (entity.IsActive())
+				if (entityData.IsActiveWithVersion(entity.GetVersion()))
 				{
 					orderData.m_ComponentContext->InvokeOnEnableComponent(spawnedComponent, entity);
 				}
@@ -608,20 +613,20 @@ namespace decs
 	}
 
 	void Container::OnAddComponentInvokeObservers(
+		const EntityData& entityData,
 		const Entity& entity,
 		IComponentContext* componentContext,
 		IPackedComponentContainer* packedContainer,
 		TypeID compTypeID
 	)
 	{
-		auto entityData = entity.GetEntityData_Internal();
-		Archetype* currentArch = entityData->m_Archetype;
+		Archetype* currentArch = entityData.m_Archetype;
 
-		componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
+		componentContext->InvokeOnCreateComponent(packedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype), entity);
 
 		// All this checks are here to check if this entity containe components after OnCreateMethod
-		Archetype* newArch = entityData->m_Archetype;
-		if (newArch != nullptr && entity.IsActive())
+		Archetype* newArch = entityData.m_Archetype;
+		if (newArch != nullptr && entityData.IsActiveWithVersion(entity.GetVersion()))
 		{
 			if (currentArch != newArch)
 			{
@@ -629,14 +634,14 @@ namespace decs
 				if (compIndex < newArch->GetComponentAndTagCount())
 				{
 					componentContext->InvokeOnEnableComponent(
-						newArch->m_TypeData[compIndex].m_PackedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype),
+						newArch->m_TypeData[compIndex].m_PackedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype),
 						entity
 					);
 				}
 			}
 			else
 			{
-				componentContext->InvokeOnEnableComponent(packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype), entity);
+				componentContext->InvokeOnEnableComponent(packedContainer->GetComponentBasePtr(entityData.m_IndexInArchetype), entity);
 			}
 		}
 	}
@@ -801,7 +806,7 @@ namespace decs
 				entity.Set_Internal(*this, *entiytData);
 
 				InvokeEntityCreateObserver_Internal(*entiytData, entity);
-				if (entity.IsActive())
+				if (entiytData->IsActiveWithVersion(entity.GetVersion()))
 				{
 					InvokeEntityEnableObserver_Internal(*entiytData, entity);
 				}
@@ -824,7 +829,7 @@ namespace decs
 						entity.Set_Internal(*this, *archetypeEntityData.m_EntityData);
 
 						InvokeEntityCreateObserver_Internal(*archetypeEntityData.m_EntityData, entity);
-						if (entity.IsActive())
+						if (archetypeEntityData.m_EntityData->IsActiveWithVersion(entity.GetVersion()))
 						{
 							InvokeEntityEnableObserver_Internal(*archetypeEntityData.m_EntityData, entity);
 						}
@@ -869,7 +874,7 @@ namespace decs
 			iterator.Foreach(*this, [&] (const decs::Entity& entity)
 			{
 				EntityData* entityData = entity.GetEntityData_Internal();
-				if (entity.IsActive())
+				if (entityData->IsActiveWithVersion(entity.GetVersion()))
 				{
 					InvokeEntityDisableObserver_Internal(*entityData, entity);
 				}
@@ -883,7 +888,7 @@ namespace decs
 			iterator.Foreach(*this, [&] (const decs::Entity& entity)
 			{
 				EntityData* entityData = entity.GetEntityData_Internal();
-				if (entity.IsActive())
+				if (entityData->IsActiveWithVersion(entity.GetVersion()))
 				{
 					InvokeEntityDisableObserver_Internal(*entityData, entity);
 				}
@@ -924,7 +929,7 @@ namespace decs
 				entityData->m_bIsCreatedByContainer = true;
 				m_CreateEntityObservers.Invoke(entity);
 
-				if (entity.IsActive() && !entityData->m_bIsEnabledByContainer)
+				if (entityData->IsActiveWithVersion(entity.GetVersion()) && !entityData->m_bIsEnabledByContainer)
 				{
 					entityData->m_bIsEnabledByContainer = true;
 					m_EnableEntityObservers.Invoke(entity);
@@ -953,7 +958,7 @@ namespace decs
 					{
 						orderData.m_ComponentContext->InvokeOnCreateComponent(componentPtr, entity);
 
-						if (entity.IsActive())
+						if (entityData->IsActiveWithVersion(entity.GetVersion()))
 						{
 							orderData.m_ComponentContext->InvokeOnEnableComponent(componentPtr, entity);
 						}
@@ -1173,69 +1178,12 @@ namespace decs
 					EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
 					componentCtx.InvokeOnCreateComponent(componentPtr, entity);
 
-					if (entity.IsActive())
+					if (entityData->IsActiveWithVersion(entity.GetVersion()))
 					{
 						componentCtx.InvokeOnEnableComponent(componentPtr, entity);
 					}
 				}
 			}
-
-			// THIS IS BAD - if we need e.g. only destroy observer, component without create observer will not be invoked beacaouse component is not marked as created
-			/* {
-				if (componentCtx.HasCreateObservers() && componentCtx.HasEnableObservers())
-				{
-					for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
-					{
-						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-						if (archetypeEntityData.IsValid())
-						{
-							auto entityData = archetypeEntityData.m_EntityData;
-							entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
-
-							EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
-							componentCtx.InvokeOnCreateComponent(componentPtr, entity);
-
-							if (entity.IsActive())
-							{
-								componentCtx.InvokeOnEnableComponent(componentPtr, entity);
-							}
-						}
-					}
-				}
-				else if (componentCtx.HasCreateObservers())
-				{
-					for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
-					{
-						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-						if (archetypeEntityData.IsValid())
-						{
-							auto entityData = archetypeEntityData.m_EntityData;
-							entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
-
-							EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
-							componentCtx.InvokeOnCreateComponent(componentPtr, entity);
-						}
-					}
-				}
-				else if (componentCtx.HasEnableObservers())
-				{
-					for (int64_t idx = static_cast<int64_t>(entityCount) - 1; idx >= 0; idx--)
-					{
-						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-						if (archetypeEntityData.IsValid())
-						{
-							auto entityData = archetypeEntityData.m_EntityData;
-							entity.SetWithoutLifeTimeDataInvalidation_Internal(*entityData);
-
-							EntityComponent* componentPtr = packedContainer->GetComponentBasePtr(entityData->m_IndexInArchetype);
-							if (entity.IsActive())
-							{
-								componentCtx.InvokeOnEnableComponent(componentPtr, entity);
-							}
-						}
-					}
-				}
-			}*/
 		});
 
 		return true;
@@ -1272,64 +1220,13 @@ namespace decs
 				{
 					entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
 					auto compPtr = packedContainer->GetComponentBasePtr(idx);
-					if (entity.IsActive())
+					if (archetypeEntityData.m_EntityData->IsActiveWithVersion(entity.GetVersion()))
 					{
 						componentCtx.InvokeOnDisableComponent(compPtr, entity);
 					}
 					componentCtx.InvokeOnDestroyComponent(compPtr, entity);
 				}
 			}
-
-			// THIS IS BAD - if we need e.g. only destroy observer, component without create observer will not be invoked beacaouse component is not marked as created
-			/*{
-				if (componentCtx.HasDestroyObservers() && componentCtx.HasDisableObservers())
-				{
-					for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
-					{
-						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-						if (archetypeEntityData.IsValid())
-						{
-							entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
-							auto compPtr = packedContainer->GetComponentBasePtr(idx);
-							if (entity.IsActive())
-							{
-								componentCtx.InvokeOnDisableComponent(compPtr, entity);
-							}
-							componentCtx.InvokeOnDestroyComponent(compPtr, entity);
-						}
-					}
-				}
-				else if (componentCtx.HasDestroyObservers())
-				{
-					for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
-					{
-						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-						if (archetypeEntityData.IsValid())
-						{
-							entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
-							auto compPtr = packedContainer->GetComponentBasePtr(idx);
-							componentCtx.InvokeOnDestroyComponent(compPtr, entity);
-						}
-					}
-				}
-				else if (componentCtx.HasDisableObservers())
-				{
-					for (int64_t idx = 0; idx < static_cast<int64_t>(entityCount); idx++)
-					{
-						const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
-						if (archetypeEntityData.IsValid())
-						{
-							entity.SetWithoutLifeTimeDataInvalidation_Internal(*archetypeEntityData.m_EntityData);
-							auto compPtr = packedContainer->GetComponentBasePtr(idx);
-							if (entity.IsActive())
-							{
-								componentCtx.InvokeOnDisableComponent(compPtr, entity);
-							}
-						}
-					}
-				}
-			}*/
-
 		});
 		return true;
 	}

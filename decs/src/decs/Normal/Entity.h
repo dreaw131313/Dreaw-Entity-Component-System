@@ -87,11 +87,7 @@ namespace decs
 
 		[[nodiscard]] inline EntityID GetID() const
 		{
-			if (IsValid())
-			{
-				return m_EntityID;
-			}
-			return InvalidEntityID;
+			return m_EntityID;
 		}
 
 		/// <summary>

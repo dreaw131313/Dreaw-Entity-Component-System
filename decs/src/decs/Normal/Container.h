@@ -135,6 +135,7 @@ namespace decs
 		template<component_concept T, component_concept... ComponentTypes>
 		inline void CreateEntity_Impl_InvokeComponentObservers(
 			const Entity& entity,
+			EntityData& entityData,
 			const std::tuple<TArchetypeTypeData<ComponentTypes>...>& archetypesData,
 			T* component
 		)
@@ -143,7 +144,7 @@ namespace decs
 
 			const TArchetypeTypeData<PureType>& archetypeData = std::get<TArchetypeTypeData<PureType>>(archetypesData);
 			archetypeData.m_ComponentContext->InvokeOnCreateComponent(component, entity);
-			if (IsEntityActive(entity))
+			if (IsEntityActive(entity, entityData))
 			{
 				archetypeData.m_ComponentContext->InvokeOnEnableComponent(component, entity);
 			}
@@ -165,13 +166,13 @@ namespace decs
 
 			if constexpr (InvokeObservers)
 			{
-				InvokeEntityCreateObserver_Internal(entityData,entity);
+				InvokeEntityCreateObserver_Internal(entityData, entity);
 				if (entityData.IsActive())
 				{
 					InvokeEntityEnableObserver_Internal(entityData, entity);
 				}
 
-				(CreateEntity_Impl_InvokeComponentObservers<pure_type_t<ComponentTypes>>(entity, archetypesData, std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
+				(CreateEntity_Impl_InvokeComponentObservers<pure_type_t<ComponentTypes>>(entity, entityData, archetypesData, std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
 			}
 
 			if constexpr (is_invocable_with_entity_v<InitFunc, ComponentTypes...>)
@@ -432,6 +433,8 @@ namespace decs
 
 		bool IsEntityActive(const Entity& entity) const;
 
+		bool IsEntityActive(const Entity& entity, const EntityData& entityData) const;
+
 		Entity CreateEntityRaw(bool bIsActive);
 
 		EntityData* GetEntityData(const Entity& entity) const;
@@ -585,7 +588,7 @@ namespace decs
 			Archetype& spawnArchetype
 		);
 
-		void InvokeComponentCreateAndEnableObserversOnSpawn(const Entity& entity, const Archetype& archetype, const SpawnDataState& spawnState);
+		void InvokeComponentCreateAndEnableObserversOnSpawn(const EntityData& entityData, const Entity& entity, const Archetype& archetype, const SpawnDataState& spawnState);
 
 	#pragma endregion
 
@@ -595,6 +598,7 @@ namespace decs
 
 	private:
 		void OnAddComponentInvokeObservers(
+			const EntityData& entityData,
 			const Entity& entity,
 			IComponentContext* componentContext,
 			IPackedComponentContainer* packedContainer,

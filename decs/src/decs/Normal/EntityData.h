@@ -48,7 +48,7 @@ namespace decs
 		EntityData& operator=(const EntityData&) = delete;
 		EntityData& operator=(EntityData&&) = delete;
 
-		EntityData(EntityID id, bool bIsActive):
+		EntityData(EntityID id, bool bIsActive) :
 			m_ID(id),
 			m_bIsActive(bIsActive)
 		{
@@ -91,6 +91,11 @@ namespace decs
 		inline bool IsAliveWithVersion(uint32_t desiredVersion) const noexcept
 		{
 			return desiredVersion == m_Version && IsAlive();
+		}
+
+		inline bool IsActiveWithVersion(uint32_t desiredVersion) const noexcept
+		{
+			return IsAliveWithVersion(desiredVersion) && IsActive();
 		}
 
 		inline bool IsDead() const
