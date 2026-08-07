@@ -9,6 +9,7 @@ namespace decs
 {
 	struct EntityManager
 	{
+		friend class Container;
 	public:
 		EntityManager();
 
@@ -35,32 +36,19 @@ namespace decs
 
 		bool DestroyEntity(EntityData* entityData);
 
-		void ForceDestroyEntity(EntityData* entityData);
-
-		inline const EntityData* GetEntityData(EntityID id) const
+		inline EntityData* GetEntityData(EntityID id) const noexcept
 		{
-			if (id < m_EntityDatas.Size())
+			if (id < m_LookupTable.size())
 			{
-				return &m_EntityDatas[id];
-			}
-			return nullptr;
-		}
-
-		inline EntityData* GetEntityData(EntityID id)
-		{
-			if (id < m_EntityDatas.Size())
-			{
-				return &m_EntityDatas[id];
+				return m_LookupTable[id];
 			}
 			return nullptr;
 		}
 
 	private:
 		TChunkedVector<EntityData> m_EntityDatas{};
+		ecsVector<EntityData*> m_LookupTable{};
 		ecsVector<EntityData*> m_FreeEntities{};
-
 		uint32_t m_CreatedEntityCount = 0;
-
-	private:
 	};
 }

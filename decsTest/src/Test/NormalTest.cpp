@@ -388,6 +388,7 @@ namespace Normal
 			double entityAvarageTime = avarage / entityCount;
 
 			std::cout << "Creating " << entityCount << " entities -> " << avarage << " ms (entity avarage time " << entityAvarageTime * 1000. << "us)\n";
+			std::cout << "Lookup table size " << container.GetEntityDataLookupTableSize() << "\n";
 
 			if (testCounter > 0)
 			{

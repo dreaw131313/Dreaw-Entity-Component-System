@@ -34,7 +34,7 @@ namespace decs
 
 		Entity(Container& container, EntityData& entityData) :
 			m_LifeTimeData(container.GetLifeTimeData()),
-			m_EntityData(&entityData),
+			m_EntityID(entityData.GetID()),
 			m_Version(entityData.GetVersion())
 		{
 
@@ -48,7 +48,7 @@ namespace decs
 		bool operator==(const Entity& rhs)const
 		{
 			return m_LifeTimeData == rhs.m_LifeTimeData
-				&& m_EntityData == rhs.m_EntityData
+				&& m_EntityID == rhs.m_EntityID
 				&& m_Version == rhs.m_Version;
 		}
 
@@ -89,9 +89,9 @@ namespace decs
 		{
 			if (IsValid())
 			{
-				return GetEntityData_Internal()->GetID();
+				return m_EntityID;
 			}
-			return std::numeric_limits< EntityID>::max();
+			return InvalidEntityID;
 		}
 
 		/// <summary>
@@ -486,26 +486,26 @@ namespace decs
 
 	private:
 		ContainerLifetimeDataHandle m_LifeTimeData{};
-		mutable EntityData* m_EntityData= nullptr;
+		mutable EntityID m_EntityID = InvalidEntityID;
 		mutable EntityVersion m_Version = InvalidEntityVersion;
 
 	private:
 		inline void Set_Internal(const Container& container, EntityData& data)
 		{
 			m_LifeTimeData = container.GetLifeTimeData();
-			m_EntityData = &data;
+			m_EntityID = data.GetID();
 			m_Version = data.GetVersion();
 		}
 
 		inline void Invalidate_WithoutLifeTimeData() const
 		{
-			m_EntityData = nullptr;
+			m_EntityID = InvalidEntityID;
 			m_Version = InvalidEntityVersion;
 		}
 
 		inline void SetWithoutLifeTimeDataInvalidation_Internal(EntityData& data)
 		{
-			m_EntityData = &data;
+			m_EntityID = data.GetID();
 			m_Version = data.GetVersion();
 		}
 
@@ -514,14 +514,14 @@ namespace decs
 			m_LifeTimeData = lifeTimeData;
 		}
 
-		inline Container* GetContainer_Internal() const
+		inline Container* GetContainer_Internal() const noexcept
 		{
 			return m_LifeTimeData->GetContainer();
 		}
 
-		inline EntityData* GetEntityData_Internal() const
+		inline EntityData* GetEntityData_Internal() const noexcept
 		{
-			return m_EntityData;
+			return GetContainer_Internal()->GetEntityDataByID(m_EntityID);
 		}
 
 	};

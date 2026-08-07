@@ -102,7 +102,6 @@ namespace decs
 		m_Archetype = nullptr;
 		m_Version += 1;
 		m_State = EEntityState::Dead;
-		m_bIsInManager = false;
 	}
 
 }

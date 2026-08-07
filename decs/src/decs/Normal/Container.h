@@ -165,10 +165,10 @@ namespace decs
 
 			if constexpr (InvokeObservers)
 			{
-				InvokeEntityCreateObserver_Internal(entity);
+				InvokeEntityCreateObserver_Internal(entityData,entity);
 				if (entityData.IsActive())
 				{
-					InvokeEntityEnableObserver_Internal(entity);
+					InvokeEntityEnableObserver_Internal(entityData, entity);
 				}
 
 				(CreateEntity_Impl_InvokeComponentObservers<pure_type_t<ComponentTypes>>(entity, archetypesData, std::get<pure_type_t<ComponentTypes>*>(createdComponents)), ...);
@@ -240,11 +240,8 @@ namespace decs
 
 				for (uint32_t i = 0; i < entityCount; i++)
 				{
-					if (Entity entity = CreateEntityRaw(bIsActive))
-					{
-						EntityData* entityData = GetEntityData(entity);
-						CreateEntity_Impl_Initialization<InvokeObservers>(components, *archetype, componentTypesDataTuple, entity, *entityData, initFunc);
-					}
+					EntityData* entityData = m_EntityManager.CreateEntity(bIsActive);
+					CreateEntity_Impl_Initialization<InvokeObservers>(components, *archetype, componentTypesDataTuple, Entity(*this, *entityData), *entityData, initFunc); \
 				}
 			}
 		}
@@ -302,6 +299,10 @@ namespace decs
 			CreateEntities<false>(components, emptyTagTypeGroup, entityCount, bIsActive, initFunc);
 		}
 
+		size_t GetEntityDataLookupTableSize() const noexcept
+		{
+			return m_EntityManager.m_EntityDatas.Size();
+		}
 
 	private:
 
@@ -472,7 +473,7 @@ namespace decs
 
 		void RemoveFromEmptyEntities(EntityData& data);
 
-		void InvokeEntityComponentDestructionObservers(const Entity& entity);
+		void InvokeEntityComponentDestructionObservers(EntityData& data, const Entity& entity);
 
 	#pragma endregion
 
@@ -579,6 +580,7 @@ namespace decs
 
 		void CreateEntityFromSpawnData(
 			const SpawnDataState& spawnState,
+			EntityData& spawnedEntityData,
 			const Entity& spawnedEntity,
 			Archetype& spawnArchetype
 		);
@@ -984,6 +986,10 @@ namespace decs
 	public:
 		void InvokeEntitesOnCreateListeners();
 
+		/// <summary>
+		/// TODO: marking entity as dead is dangerous cause now entity manager cant destroy it
+		/// </summary>
+		/// <param name="bMarkEntitiesDead"></param>
 		void InvokeEntitesOnDestroyListeners(bool bMarkEntitiesDead = true);
 
 		bool InvokeComponentOnCreateListeners(TypeID componentTypeID);
@@ -1231,17 +1237,17 @@ namespace decs
 		EntityObserverFunction m_DisableEntityObservers{};
 
 	private:
-		void InvokeEntityCreateObserver_Internal(const Entity& entity);
+		void InvokeEntityCreateObserver_Internal(EntityData& entityData, const Entity& entity);
 
-		void InvokeEntityDestroyObserver_Internal(const Entity& entity);
+		void InvokeEntityDestroyObserver_Internal(EntityData& entityData, const Entity& entity);
 
-		void InvokeEntityEnableObserver_Internal(const Entity& entity);
+		void InvokeEntityEnableObserver_Internal(EntityData& entityData, const Entity& entity);
 
-		void InvokeEntityDisableObserver_Internal(const Entity& entity);
+		void InvokeEntityDisableObserver_Internal(EntityData& entityData, const Entity& entity);
 
-		void InvokeEntityAndComponentEnableObservers_Internal(const Entity& entity);
+		void InvokeEntityAndComponentEnableObservers_Internal(EntityData& entityData, const Entity& entity);
 
-		void InvokeEntityAndComponentsDisableObservers_Internal(const Entity& entity);
+		void InvokeEntityAndComponentsDisableObservers_Internal(EntityData& entityData, const Entity& entity);
 
 		bool InvokeComponentTypeCreateEnableObservers(IComponentContext& componentCtx);
 

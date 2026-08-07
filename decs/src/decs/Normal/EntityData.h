@@ -40,7 +40,6 @@ namespace decs
 		bool m_bIsActive = false;
 		bool m_bIsCreatedByContainer = false;
 		bool m_bIsEnabledByContainer = false;
-		bool m_bIsInManager = false;
 
 	public:
 		EntityData() = delete;
@@ -145,11 +144,6 @@ namespace decs
 		void SetDisabledOverrideCount(uint32_t disableOverrideCount);
 
 		void ResetDisableOverrideCount();
-
-		inline bool IsInManager() const
-		{
-			return m_bIsInManager;
-		}
 
 		void SetValidStateOnCreateFromReservedEntityData(bool bIsActive)
 		{
