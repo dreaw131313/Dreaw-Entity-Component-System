@@ -466,8 +466,8 @@ namespace Normal
 
 		//observersManager.RemoveContainer(&container);
 
-		//observersManager.RemoveObserver<TestComponentObserver>(&testComponentObserver);
-		//observersManager.RemoveObserver<EntityObserver>(&entityObserver);
+		observersManager.RemoveObserver<TestComponentObserver>(&testComponentObserver);
+		observersManager.RemoveObserver<EntityObserver>(&entityObserver);
 
 		//observersManager.RemoveObserver<TestComponentObserver>();
 		//observersManager.RemoveObserver<EntityObserver>();

@@ -16,6 +16,8 @@ namespace decs
 	{
 		template<typename...>
 		friend struct TObserverFunction;
+	public:
+		using value_type = uint32_t;
 
 	public:
 		inline operator bool() const noexcept
@@ -34,7 +36,7 @@ namespace decs
 			return this->m_Value != other.m_Value;
 		}
 	private:
-		size_t m_Value = std::numeric_limits<size_t>::max();
+		value_type m_Value = std::numeric_limits<value_type>::max();
 	};
 
 	template<typename... Args>
@@ -111,7 +113,7 @@ namespace decs
 
 	private:
 		ecsVector<ItemRecord> m_Records{};
-		size_t m_IDGenerator = 0;
+		ObserverFunctionID::value_type m_IDGenerator = 0;
 
 	private:
 		ObserverFunctionID GenerateID()
