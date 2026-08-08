@@ -54,12 +54,15 @@ namespace decs
 
 		[[nodiscard]] inline std::size_t CalculateHash() const noexcept
 		{
-			if (IsValid())
+			if (m_LifeTimeData)
 			{
 				const uint64_t entityIDHash = std::hash<decs::EntityID>{}(m_EntityID);
 				const uint64_t entityVersionHash = std::hash<decs::EntityVersion>{}(m_Version);
 
-				return decs::hash::Combine(decs::hash::Combine(entityIDHash, entityVersionHash), std::hash<ContainerLifetimeData*>{}(m_LifeTimeData.Get()));
+				return decs::hash::Combine(
+					decs::hash::Combine(entityIDHash, entityVersionHash), 
+					std::hash<ContainerLifetimeData*>{}(m_LifeTimeData.Get())
+				);
 			}
 			return 0ull;
 		}
