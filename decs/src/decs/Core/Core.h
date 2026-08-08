@@ -45,6 +45,7 @@ namespace decs
 	inline constexpr TypeID InvalidTypeID = std::numeric_limits<TypeID>::min();
 	inline constexpr EntityID InvalidEntityID = std::numeric_limits<EntityID>::min();
 	inline constexpr EntityVersion InvalidEntityVersion = std::numeric_limits<EntityVersion>::min();
+	inline constexpr CombinedEntityID InvalidCombinedID = std::numeric_limits<CombinedEntityID>::min();
 
 	namespace Limits
 	{

@@ -427,11 +427,9 @@ namespace decs
 
 		void DestroyLifeTimeData();
 
-		bool DestroyEntityInternal(const Entity& entity, bool bInvokeObservers);
+		bool DestroyEntityInternal(EntityData& entityData, const Entity& entity, bool bInvokeObservers);
 
-		void SetEntityActive(const Entity& entity, bool bIsActive);
-
-		bool IsEntityActive(const Entity& entity) const;
+		void SetEntityActive(EntityData& entityData, const Entity& entity, bool bIsActive);
 
 		bool IsEntityActive(const Entity& entity, const EntityData& entityData) const;
 
@@ -455,19 +453,16 @@ namespace decs
 			return entityData != nullptr && entityData->m_Version == version;
 		}
 
-	public:
 		/// <summary>
 		/// Needed for Try Engine to make hierarchies active state changes correct
 		/// </summary>
 		/// <param name="entity"></param>
 		/// <param name="bIsActive"></param>
-		void SetEntityActiveOverride(const Entity& entity, bool bIsActiveOverride);
+		void SetEntityActiveOverride(EntityData& entityData, const Entity& entity, bool bIsActiveOverride);
 
-		void SetEntityDisabledOverrideCount(const Entity& entity, uint32_t disabledOverrideCount);
+		void SetEntityDisabledOverrideCount(EntityData& entityData, const Entity& entity, uint32_t disabledOverrideCount);
 
-		void ResetDisabledOverrideCount(const Entity& entity);
-
-		uint32_t GetEntityActiveOverrides(const Entity& entity);
+		void ResetDisabledOverrideCount(EntityData& entityData, const Entity& entity);
 
 	private:
 		void AddToEmptyEntitiesRightAfterNewEntityCreation(EntityData& data);
@@ -654,7 +649,7 @@ namespace decs
 
 			if constexpr (InvokeObservers)
 			{
-				OnAddComponentInvokeObservers(entity, newCompTypeData.m_ComponentContext, newCompTypeData.m_PackedContainer, componentTypeID);
+				OnAddComponentInvokeObservers(entityData, entity, newCompTypeData.m_ComponentContext, newCompTypeData.m_PackedContainer, componentTypeID);
 			}
 
 			return componentPtr;
@@ -674,29 +669,29 @@ namespace decs
 		}
 
 	private:
-		bool RemoveComponent_Impl(const Entity& entity, TypeID componentTypeID, bool bInvokeObservers);
+		bool RemoveComponent_Impl(EntityData& entityData, const Entity& entity, TypeID componentTypeID, bool bInvokeObservers);
 
 	public:
 		template<component_concept ComponentType>
-		bool RemoveComponent(const Entity& entity)
+		bool RemoveComponent(EntityData& entityData, const Entity& entity)
 		{
-			return RemoveComponent_Impl(entity, Type<ComponentType>::ID(), true);
+			return RemoveComponent_Impl(entityData, entity, Type<ComponentType>::ID(), true);
 		}
 
-		bool RemoveComponent(const Entity& entity, TypeID typeID)
+		bool RemoveComponent(EntityData& entityData, const Entity& entity, TypeID typeID)
 		{
-			return RemoveComponent_Impl(entity, typeID, true);
+			return RemoveComponent_Impl(entityData, entity, typeID, true);
 		}
 
 		template<component_concept ComponentType>
-		bool RemoveComponent_NoObserver(const Entity& entity)
+		bool RemoveComponent_NoObserver(EntityData& entityData, const Entity& entity)
 		{
-			return RemoveComponent_Impl(entity, Type<ComponentType>::ID(), false);
+			return RemoveComponent_Impl(entityData, entity, Type<ComponentType>::ID(), false);
 		}
 
-		bool RemoveComponent_NoObserver(const Entity& entity, TypeID typeID)
+		bool RemoveComponent_NoObserver(EntityData& entityData, const Entity& entity, TypeID typeID)
 		{
-			return RemoveComponent_Impl(entity, typeID, false);
+			return RemoveComponent_Impl(entityData, entity, typeID, false);
 		}
 
 	public:
@@ -1371,14 +1366,13 @@ namespace decs
 		);
 
 	private:
-		void SetEntityActive_NoObserver(const Entity& entity, bool bIsActive);
+		void SetEntityActive_NoObserver(EntityData& entityData, const Entity& entity, bool bIsActive);
 
-	public:
-		void SetEntityActiveOverride_NoObserver(const Entity& entity, bool bIsActiveOverride);
+		void SetEntityActiveOverride_NoObserver(EntityData& entityData, const Entity& entity, bool bIsActiveOverride);
 
-		void SetEntityDisabledOverrideCount_NoObserver(const Entity& entity, uint32_t disabledOverrideCount);
+		void SetEntityDisabledOverrideCount_NoObserver(EntityData& entityData, const Entity& entity, uint32_t disabledOverrideCount);
 
-		void ResetDisabledOverrideCount_NoObserver(const Entity& entity);
+		void ResetDisabledOverrideCount_NoObserver(EntityData& entityData, const Entity& entity);
 
 	#pragma endregion
 

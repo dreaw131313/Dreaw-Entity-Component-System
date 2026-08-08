@@ -317,11 +317,18 @@ namespace Normal
 
 	void Test::EntityCreatePerformanceTest()
 	{
+	#ifdef DECS_DEBUG
+		const uint32_t testCount = 1;
+	#else
 		const uint32_t testCount = 30;
-		const uint32_t entityCount = 100000;
+	#endif
+
+		std::unordered_map<decs::Entity, int> map{};
+
+		const uint32_t entityCount = 66000;
 
 		decs::ContainerConfig config{
-			.EntityChunkSize = 10000,
+			.EntityChunkSize = 100000,
 			.DefaultComponentChunkSize = 10000,
 			.ArchetypeChunkSize = 100,
 		};
@@ -344,14 +351,14 @@ namespace Normal
 			{
 				MeasureTimer timer(true);
 				{
-					/*for (size_t i = 0; i < entityCount; i++)
+					for (size_t i = 0; i < entityCount; i++)
 					{
 						auto e = container.CreateEntity();
 						e.AddTag<float>();
 						e.AddTag<int>();
 						auto position = e.AddComponent<Position>();
 						auto testComponent = e.AddComponent<TestComponent>();
-					}*/
+					}
 
 					//for (uint32_t i = 0; i < entityCount; i++)
 					//{
@@ -369,10 +376,10 @@ namespace Normal
 					{
 
 					});*/
-					container.CreateEntities(comps, tags, entityCount, true, [] (Position& pos, TestComponent& test)
+					/*container.CreateEntities(comps, tags, entityCount, true, [] (Position& pos, TestComponent& test)
 					{
 
-					});
+					});*/
 
 					/*container.CreateEntities(comps, entityCount, [] (Position& pos, TestComponent& test)
 					{
