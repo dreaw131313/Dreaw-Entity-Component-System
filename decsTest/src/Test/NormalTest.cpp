@@ -451,7 +451,7 @@ namespace Normal
 		}*/
 
 
-		decs::ConatinerObserversManager observersManager(container);
+		decs::ContainerObserversManager observersManager(container);
 
 		observersManager.AddObserver<TestComponent, TestComponentObserver>(&testComponentObserver, 0);
 		observersManager.AddEntityObserver(&entityObserver);

@@ -501,10 +501,10 @@ namespace decs
 		ecsMap<ContainerLifetimeDataHandle, ContainerState> m_ContainerStates{};
 	};
 
-	class ConatinerObserversManager
+	class ContainerObserversManager
 	{
 	public:
-		ConatinerObserversManager(Container& container):
+		ContainerObserversManager(Container& container):
 			m_Container(&container)
 		{
 
