@@ -123,8 +123,8 @@ namespace Normal
 		std::cout << "///////////////////////////////////////////" << "\n";
 
 		//QueryIterationTest();
-		EntityCreatePerformanceTest();
-		//ObserversTest();
+		//EntityCreatePerformanceTest();
+		ObserversTest();
 	}
 
 	void Test::QueryIterationTest()
@@ -451,8 +451,7 @@ namespace Normal
 		}*/
 
 
-		decs::ObserversManager observersManager{};
-		observersManager.AddContainer(&container);
+		decs::ConatinerObserversManager observersManager(container);
 
 		observersManager.AddObserver<TestComponent, TestComponentObserver>(&testComponentObserver, 0);
 		observersManager.AddEntityObserver(&entityObserver);
@@ -467,8 +466,8 @@ namespace Normal
 		//observersManager.RemoveObserver<TestComponentObserver>(&testComponentObserver);
 		//observersManager.RemoveObserver<EntityObserver>(&entityObserver);
 
-		observersManager.RemoveObserver<TestComponentObserver>();
-		observersManager.RemoveObserver<EntityObserver>();
+		//observersManager.RemoveObserver<TestComponentObserver>();
+		//observersManager.RemoveObserver<EntityObserver>();
 
 		//container.InvokeEntitesOnDestroyListeners();
 
