@@ -302,7 +302,7 @@ namespace decs
 
 		size_t GetEntityDataLookupTableSize() const noexcept
 		{
-			return m_EntityManager.m_EntityDatas.Size();
+			return m_EntityManager.m_LookupTable.size();
 		}
 
 	private:

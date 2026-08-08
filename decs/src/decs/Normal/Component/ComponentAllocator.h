@@ -360,6 +360,10 @@ namespace decs
 
 		void Clear()
 		{
+			for (ResourceRecord& record : m_ResourceRecords)
+			{
+				record.m_Chunk->CallDestructor_Unchecked(record.m_IndexInChunk);
+			}
 			for (auto& chunk : m_Chunks)
 			{
 				delete chunk;

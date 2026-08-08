@@ -902,92 +902,98 @@ namespace decs
 
 	void Container::InvokeEntityCreateEnableObservers(const decs::Entity& entity)
 	{
-		if (entity.IsValid())
+		if (entity.m_LifeTimeData != m_LifeTimeData)
 		{
-			auto entityData = GetEntityData(entity);
-			if (!entityData->m_bIsCreatedByContainer)
-			{
-				entityData->m_bIsCreatedByContainer = true;
-				m_CreateEntityObservers.Invoke(entity);
+			return;
+		}
+		auto entityData = entity.TryGetEntityData();
+		if (entityData== nullptr)
+		{
+			return;
+		}
 
-				if (entityData->IsActiveWithVersion(entity.GetVersion()) && !entityData->m_bIsEnabledByContainer)
-				{
-					entityData->m_bIsEnabledByContainer = true;
-					m_EnableEntityObservers.Invoke(entity);
-				}
+		if (!entityData->m_bIsCreatedByContainer)
+		{
+			entityData->m_bIsCreatedByContainer = true;
+			m_CreateEntityObservers.Invoke(entity);
+
+			if (entityData->IsActiveWithVersion(entity.GetVersion()) && !entityData->m_bIsEnabledByContainer)
+			{
+				entityData->m_bIsEnabledByContainer = true;
+				m_EnableEntityObservers.Invoke(entity);
 			}
+		}
 
-			Archetype* archetype = entityData->m_Archetype;
-			if (archetype != nullptr)
+		Archetype* archetype = entityData->m_Archetype;
+		if (archetype != nullptr)
+		{
+			uint32_t observerInvokeCount = static_cast<uint32_t>(archetype->m_ComponentContextsInOrder.size()); // must use this becouse orderContextVector does not contain observers for tags
+
+			Archetype* lastArchetype = archetype;
+
+			for (uint64_t componentIdx = 0; componentIdx < observerInvokeCount; componentIdx++)
 			{
-				uint32_t observerInvokeCount = static_cast<uint32_t>(archetype->m_ComponentContextsInOrder.size()); // must use this becouse orderContextVector does not contain observers for tags
+				uint32_t indexInArchetype = entityData->m_IndexInArchetype;
+				auto& orderData = archetype->m_ComponentContextsInOrder[componentIdx];
+				auto& typeData = archetype->m_TypeData[orderData.m_ComponentIndex];
 
-				Archetype* lastArchetype = archetype;
+				TypeID lastComponentTypeID = typeData.m_TypeID;
+				int observerOrder = orderData.m_ComponentContext->GetObserverOrder();
 
-				for (uint64_t componentIdx = 0; componentIdx < observerInvokeCount; componentIdx++)
+				EntityComponent* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype);
+
+				if (componentPtr != nullptr)
 				{
-					uint32_t indexInArchetype = entityData->m_IndexInArchetype;
-					auto& orderData = archetype->m_ComponentContextsInOrder[componentIdx];
-					auto& typeData = archetype->m_TypeData[orderData.m_ComponentIndex];
+					orderData.m_ComponentContext->InvokeOnCreateComponent(componentPtr, entity);
 
-					TypeID lastComponentTypeID = typeData.m_TypeID;
-					int observerOrder = orderData.m_ComponentContext->GetObserverOrder();
-
-					EntityComponent* componentPtr = typeData.m_PackedContainer->GetComponentBasePtr(indexInArchetype);
-
-					if (componentPtr != nullptr)
+					if (entityData->IsActiveWithVersion(entity.GetVersion()))
 					{
-						orderData.m_ComponentContext->InvokeOnCreateComponent(componentPtr, entity);
-
-						if (entityData->IsActiveWithVersion(entity.GetVersion()))
-						{
-							orderData.m_ComponentContext->InvokeOnEnableComponent(componentPtr, entity);
-						}
+						orderData.m_ComponentContext->InvokeOnEnableComponent(componentPtr, entity);
 					}
-
-				#pragma region RESOLVING ARCHETYPE CHANGE
-					lastArchetype = entityData->m_Archetype;
-
-					if (lastArchetype != archetype)
-					{
-						// if archetype chagned in callbacks then we find where to start continuing invoking observers
-
-						if (lastArchetype == nullptr)
-						{
-							break;
-						}
-
-						if (lastArchetype->FindTypeIndex(lastComponentTypeID) == std::numeric_limits<uint32_t>::max())
-						{
-							// we removed current component so we need find where to start invoking based on componnet order value
-							for (uint32_t oi = 0; oi < lastArchetype->m_ComponentContextsInOrder.size(); oi++)
-							{
-								if (lastArchetype->m_ComponentContextsInOrder[oi].m_ComponentContext->GetObserverOrder() >= observerOrder)
-								{
-									// we make minus one becaouse for loop will increment index by one
-									componentIdx = oi - 1;
-									break;
-								}
-							}
-						}
-						else
-						{
-							for (uint32_t oi = 0; oi < lastArchetype->m_ComponentContextsInOrder.size(); oi++)
-							{
-								if (lastArchetype->m_ComponentContextsInOrder[oi].m_ComponentContext->GetComponentTypeID() == lastComponentTypeID)
-								{
-									// we asigning oi index becaouse for loop will increment index by one
-									componentIdx = oi;
-									break;
-								}
-							}
-						}
-
-						archetype = lastArchetype;
-						observerInvokeCount = static_cast<uint32_t>(archetype->m_ComponentContextsInOrder.size());
-					}
-				#pragma endregion
 				}
+
+			#pragma region RESOLVING ARCHETYPE CHANGE
+				lastArchetype = entityData->m_Archetype;
+
+				if (lastArchetype != archetype)
+				{
+					// if archetype chagned in callbacks then we find where to start continuing invoking observers
+
+					if (lastArchetype == nullptr)
+					{
+						break;
+					}
+
+					if (lastArchetype->FindTypeIndex(lastComponentTypeID) == std::numeric_limits<uint32_t>::max())
+					{
+						// we removed current component so we need find where to start invoking based on componnet order value
+						for (uint32_t oi = 0; oi < lastArchetype->m_ComponentContextsInOrder.size(); oi++)
+						{
+							if (lastArchetype->m_ComponentContextsInOrder[oi].m_ComponentContext->GetObserverOrder() >= observerOrder)
+							{
+								// we make minus one becaouse for loop will increment index by one
+								componentIdx = oi - 1;
+								break;
+							}
+						}
+					}
+					else
+					{
+						for (uint32_t oi = 0; oi < lastArchetype->m_ComponentContextsInOrder.size(); oi++)
+						{
+							if (lastArchetype->m_ComponentContextsInOrder[oi].m_ComponentContext->GetComponentTypeID() == lastComponentTypeID)
+							{
+								// we asigning oi index becaouse for loop will increment index by one
+								componentIdx = oi;
+								break;
+							}
+						}
+					}
+
+					archetype = lastArchetype;
+					observerInvokeCount = static_cast<uint32_t>(archetype->m_ComponentContextsInOrder.size());
+				}
+			#pragma endregion
 			}
 		}
 	}
@@ -1449,12 +1455,12 @@ namespace decs
 		{
 			return;
 		}
-			if (entityData.IsValidToChangeActiveState())
-			{
-				const bool bOldEntityActiveState = entityData.IsActive();
-				entityData.SetDisabledOverrideCount(disabledOverrideCount);
-				const bool bNewEntityActiveState = entityData.IsActive();
-			}
+		if (entityData.IsValidToChangeActiveState())
+		{
+			const bool bOldEntityActiveState = entityData.IsActive();
+			entityData.SetDisabledOverrideCount(disabledOverrideCount);
+			const bool bNewEntityActiveState = entityData.IsActive();
+		}
 	}
 
 	void Container::ResetDisabledOverrideCount_NoObserver(EntityData& entityData, const Entity& entity)
