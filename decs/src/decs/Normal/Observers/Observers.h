@@ -616,7 +616,6 @@ namespace decs
 			return true;
 		}
 
-
 	private:
 		ecsMap<TypeID, std::shared_ptr<IObserverRecord>>m_Observers{};;
 		Container* m_Container = nullptr;
