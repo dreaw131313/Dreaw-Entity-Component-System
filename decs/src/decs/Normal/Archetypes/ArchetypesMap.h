@@ -215,8 +215,8 @@ namespace decs
 		void ClearEntityDataAndComponents();
 
 	private:
-		ecsMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
-		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
+		ecsHashMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
+		ecsHashMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
 
 		TChunkedVector<Archetype> m_Archetypes{ 100 };
 		TChunkedVector<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };

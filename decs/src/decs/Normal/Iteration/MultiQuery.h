@@ -364,7 +364,7 @@ namespace decs
 			}
 		}
 	private:
-		ecsMap<Container*, uint64_t> m_ContainerContextsIndexes;
+		ecsHashMap<Container*, uint64_t> m_ContainerContextsIndexes;
 		QueryFilterConfigType m_FilterConfig{};
 
 		ecsVector<ContainerContextType> m_ContainerContexts = {};

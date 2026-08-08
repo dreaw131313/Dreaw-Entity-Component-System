@@ -11,6 +11,7 @@
 #include <typeinfo>
 #include <span>
 #include <atomic>
+#include <memory>
 
 #ifdef DECS_DEBUG
 #include <cassert>
@@ -34,9 +35,9 @@ namespace decs
 	template<typename T>
 	using ecsVector = std::vector<T>;
 	template<typename Key, typename Value>
-	using ecsMap = std::unordered_map<Key, Value>;
+	using ecsHashMap = std::unordered_map<Key, Value>;
 	template<typename T>
-	using ecsSet = std::unordered_set<T>;
+	using ecsHashSet = std::unordered_set<T>;
 
 	using EntityID = uint32_t;
 	using EntityVersion = uint32_t;

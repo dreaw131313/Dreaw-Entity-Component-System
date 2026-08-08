@@ -37,10 +37,10 @@ namespace Normal
 			//i += 1;
 		}
 
-		void ECS_OnConstruct(const decs::Entity& e)
-		{
-			//PrintLine("Position on construct!");
-		}
+		//void ECS_OnConstruct(const decs::Entity& e)
+		//{
+		//	//PrintLine("Position on construct!");
+		//}
 
 	};
 
@@ -50,10 +50,10 @@ namespace Normal
 		int table[50];
 
 	public:
-		void ECS_OnConstruct(const decs::Entity& e)
-		{
-			//PrintLine("TestComponent on construct!");
-		}
+		//void ECS_OnConstruct(const decs::Entity& e)
+		//{
+		//	//PrintLine("TestComponent on construct!");
+		//}
 	};
 
 	struct HeavyDataComponent : public decs::EntityComponent
@@ -455,6 +455,9 @@ namespace Normal
 
 		observersManager.AddObserver<TestComponent, TestComponentObserver>(&testComponentObserver, 0);
 		observersManager.AddEntityObserver(&entityObserver);
+
+		TestComponentObserver* obptr = &testComponentObserver;
+		auto ob = observersManager.GetObserver<TestComponentObserver>();
 
 		auto entity = container.CreateEntity(true);
 		entity.AddComponent_NoObserver<TestComponent>();

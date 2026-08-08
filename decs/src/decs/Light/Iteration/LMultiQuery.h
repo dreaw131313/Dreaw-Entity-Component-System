@@ -407,7 +407,7 @@ namespace decs::light
 
 	private:
 		QueryFilterConfigType m_FilterConfig{};
-		ecsMap<Container*, uint64_t> m_ContainerContextsIndices{};
+		ecsHashMap<Container*, uint64_t> m_ContainerContextsIndices{};
 		ecsVector<ContainerContextType> m_ContainerContexts{};
 
 		bool m_IsDirty = true;

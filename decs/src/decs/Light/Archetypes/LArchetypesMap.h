@@ -327,8 +327,8 @@ namespace decs::light
 		ArchetypeAllocator m_ArchetypeAllocator;
 		TChunkAllocator<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };
 
-		ecsMap<ArchetypeDataKey, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
-		ecsMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
+		ecsHashMap<ArchetypeDataKey, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
+		ecsHashMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
 
 		size_t m_MaxComponentTagFilterCount = 0;
 		// UTILITY

@@ -320,8 +320,8 @@ namespace decs
 		friend class BatchIterator;
 
 	private:
-		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes{};
-		ecsMap<TypeID, ArchetypeEdge> m_Edges{};
+		ecsHashMap<TypeID, uint32_t> m_TypeIDsIndexes{};
+		ecsHashMap<TypeID, ArchetypeEdge> m_Edges{};
 
 		ArchetypeEntityDataStorage m_EntityStorage{};
 		ecsVector<ArchetypeTypeData> m_TypeData{};

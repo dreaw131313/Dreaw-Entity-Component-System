@@ -340,8 +340,8 @@ namespace decs::light
 		friend struct light::EntitySpawner;
 
 	private:
-		ecsMap<TypeID, uint32_t> m_TypeIDsIndexes{};
-		ecsMap<ArchetypeDataKey, ArchetypeEdge> m_Edges{};
+		ecsHashMap<TypeID, uint32_t> m_TypeIDsIndexes{};
+		ecsHashMap<ArchetypeDataKey, ArchetypeEdge> m_Edges{};
 
 		ArchetypeEntityList m_Entities{};
 		ecsVector<ArchetypeTypeData> m_TypeData{};

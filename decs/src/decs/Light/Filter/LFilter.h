@@ -322,7 +322,7 @@ namespace decs::light
 	private:
 		TChunkedVector<FilterContainerType> m_Allocator{ 20 };
 		ecsVector<FilterContainerType*> m_FreeList{};
-		ecsMap<FilterEntryKeyType, FilterContainerType*> m_FiltersMap{};
+		ecsHashMap<FilterEntryKeyType, FilterContainerType*> m_FiltersMap{};
 
 	private:
 		FilterContainerType* CreateContainer(const filter_data_type& filter)
@@ -496,7 +496,7 @@ namespace decs::light
 		}
 
 	private:
-		ecsMap<TypeID, IFilterTypeManager*> m_FilterTypes{};
+		ecsHashMap<TypeID, IFilterTypeManager*> m_FilterTypes{};
 	};
 
 }

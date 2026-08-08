@@ -278,7 +278,7 @@ namespace decs
 		{
 		public:
 			Container* m_Container{};
-			ecsMap<TypeID, std::shared_ptr<IObserverRecord>> m_Observers{};
+			ecsHashMap<TypeID, std::shared_ptr<IObserverRecord>> m_Observers{};
 
 		public:
 			void AddObserver(TypeID id, const std::shared_ptr<const IObserverRecord>& observerRecord)
@@ -481,7 +481,7 @@ namespace decs
 
 		void ClearDeadContainers()
 		{
-			std::vector<ContainerLifetimeDataHandle> statesToRemove{};
+			ecsVector<ContainerLifetimeDataHandle> statesToRemove{};
 			for (auto& [lifetime, state] : m_ContainerStates)
 			{
 				if (!lifetime->IsAlive())
@@ -497,8 +497,8 @@ namespace decs
 		}
 
 	private:
-		ecsMap<TypeID, std::shared_ptr<IObserverRecord>>m_Observers{};
-		ecsMap<ContainerLifetimeDataHandle, ContainerState> m_ContainerStates{};
+		ecsHashMap<TypeID, std::shared_ptr<IObserverRecord>>m_Observers{};
+		ecsHashMap<ContainerLifetimeDataHandle, ContainerState> m_ContainerStates{};
 	};
 
 	class ContainerObserversManager
@@ -616,8 +616,26 @@ namespace decs
 			return true;
 		}
 
+		template<typename ObserverType>
+		inline ObserverType* GetObserver() const noexcept
+		{
+			auto it = m_Observers.find(Type<ObserverType>::ID());
+			if (it == m_Observers.end())
+			{
+				return nullptr;
+			}
+
+			auto observerRecord = std::dynamic_pointer_cast<TObserverRecordBase<ObserverType>>(it->second);
+			if (!observerRecord)
+			{
+				return nullptr;
+			}
+
+			return observerRecord->m_ObserverPtr;
+		}
+
 	private:
-		ecsMap<TypeID, std::shared_ptr<IObserverRecord>>m_Observers{};;
+		ecsHashMap<TypeID, std::shared_ptr<IObserverRecord>> m_Observers{};;
 		Container* m_Container = nullptr;
 	};
 

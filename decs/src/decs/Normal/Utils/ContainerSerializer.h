@@ -211,8 +211,8 @@ namespace decs
 		virtual void EndTagSerialize(const Entity& entity, const TagSerializerBase<SerializerData>* componentSerializer, SerializerData& serializerData) = 0;
 
 	private:
-		ecsMap<TypeID, const ComponentSerializerBase<SerializerData>*> m_ComponentSerializers = {};
-		ecsMap<TypeID, const TagSerializerBase<SerializerData>*> m_TagSerializers = {};
+		ecsHashMap<TypeID, const ComponentSerializerBase<SerializerData>*> m_ComponentSerializers = {};
+		ecsHashMap<TypeID, const TagSerializerBase<SerializerData>*> m_TagSerializers = {};
 
 	private:
 		void GetComponentSerializers(Archetype& archetype, ecsVector<ComponentSerializationData>& serializers)

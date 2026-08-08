@@ -118,7 +118,7 @@ namespace decs::light
 		Container* m_ParentContainer = nullptr;
 		ecsVector<IQuery*> m_Queries{};
 
-		ecsMap<IMultiQuery*, uint64_t> m_MultiQueryIndices{};
+		ecsHashMap<IMultiQuery*, uint64_t> m_MultiQueryIndices{};
 		ecsVector<IMultiQuery*> m_MultiQueries{};
 
 		bool m_bAcceptQueries = true;

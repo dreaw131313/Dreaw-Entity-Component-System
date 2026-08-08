@@ -512,7 +512,7 @@ namespace decs
 
 	public:
 		ecsVector<ArchetypeContextType> m_ArchetypesContexts{};
-		ecsSet<const Archetype*> m_ContainedArchetypes{};
+		ecsHashSet<const Archetype*> m_ContainedArchetypes{};
 		Container* m_Container = nullptr;
 		TRefCountHandle<ContainerLifetimeData> m_LifeTimeData{};
 		uint64_t m_ArchetypesCountDirty = 0;
@@ -554,7 +554,7 @@ namespace decs
 			return m_ArchetypesContexts;
 		}
 
-		const ecsSet<const Archetype*>& GetArchetypes() const noexcept
+		const ecsHashSet<const Archetype*>& GetArchetypes() const noexcept
 		{
 			return m_ContainedArchetypes;
 		}

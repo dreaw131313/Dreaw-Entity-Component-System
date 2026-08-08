@@ -224,7 +224,7 @@ namespace decs
 			}
 		}
 	private:
-		ecsMap<TypeID, ComponentContextRecord> m_Contexts = {};
+		ecsHashMap<TypeID, ComponentContextRecord> m_Contexts = {};
 		ecsVector<IComponentContext*> m_ComponentContextsInOrder = {};
 
 		int64_t m_IterationIndex = std::numeric_limits<int64_t>::max();

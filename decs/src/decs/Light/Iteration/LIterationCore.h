@@ -563,7 +563,7 @@ namespace decs::light
 
 	public:
 		ecsVector<ArchetypeContextType> m_ArchetypesContexts{};
-		ecsMap<const Archetype*, size_t> m_ArchetypeIndices{};
+		ecsHashMap<const Archetype*, size_t> m_ArchetypeIndices{};
 		Container* m_Container = nullptr;
 		bool m_bIsEnabled = true;
 

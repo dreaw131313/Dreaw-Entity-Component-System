@@ -132,6 +132,6 @@ namespace decs::light
 		IComponentContext* GetOrCreateContext(const IComponentContext* referenceContext);
 
 	private:
-		ecsMap<TypeID, IComponentContext*> m_Contexts{};
+		ecsHashMap<TypeID, IComponentContext*> m_Contexts{};
 	};
 }
