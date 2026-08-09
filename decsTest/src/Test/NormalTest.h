@@ -14,6 +14,8 @@ namespace Normal
 		void EntityCreatePerformanceTest();
 
 		void ObserversTest();
+
+		void StatisticsTest();
 	};
 
 }

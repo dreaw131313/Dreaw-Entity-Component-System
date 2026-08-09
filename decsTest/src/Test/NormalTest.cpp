@@ -125,6 +125,7 @@ namespace Normal
 		//QueryIterationTest();
 		EntityCreatePerformanceTest();
 		//ObserversTest();
+		StatisticsTest();
 	}
 
 	void Test::QueryIterationTest()
@@ -475,5 +476,15 @@ namespace Normal
 		//container.InvokeEntitesOnDestroyListeners();
 
 		entity.Destroy();
+	}
+
+
+	void Test::StatisticsTest()
+	{
+		decs::Container container{};
+
+		decs::ContainerStatistics stats{};
+		stats.Collect(container);
+
 	}
 }

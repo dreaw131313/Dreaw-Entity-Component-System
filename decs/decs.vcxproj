@@ -102,6 +102,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\Normal\Statistics.h" />
     <ClInclude Include="src\decs\Core\ArchetypesCore.h" />
     <ClInclude Include="src\decs\Core\ObserverFunction.h" />
     <ClInclude Include="src\decs\Core\Stats.h" />
@@ -157,6 +158,7 @@
     <ClInclude Include="src\decs\Normal\Utils\ContainerSerializerComplex.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\decs\Normal\Statistics.cpp" />
     <ClCompile Include="src\decs\Light\Component\LComponentContext.cpp" />
     <ClCompile Include="src\decs\Light\Archetypes\LArchetypeAllocator.cpp" />
     <ClCompile Include="src\decs\Light\Iteration\LQueryManager.cpp" />

@@ -27,7 +27,7 @@ namespace decs
 	class ArchetypesGroupByOneType
 	{
 	public:
-		ArchetypesGroupByOneType(TypeID mainTypeID):
+		ArchetypesGroupByOneType(TypeID mainTypeID) :
 			m_MainTypeID(mainTypeID)
 		{
 
@@ -213,6 +213,22 @@ namespace decs
 		}
 
 		void ClearEntityDataAndComponents();
+
+		template<typename FuncType>
+		void IterateOverArchetypes_Forward(FuncType&& func) const
+		{
+			for (size_t chunkIdx = 0; chunkIdx < m_Archetypes.ChunkCount(); chunkIdx++)
+			{
+				const size_t chunkSize = m_Archetypes.GetChunkSize(chunkIdx);
+				auto chunk = m_Archetypes.GetChunk(chunkIdx);
+
+				for (size_t i = 0; i < chunkSize; i++)
+				{
+					const Archetype& archetype = chunk[i];
+					func(archetype);
+				}
+			}
+		}
 
 	private:
 		ecsHashMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};

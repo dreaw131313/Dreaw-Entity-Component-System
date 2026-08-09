@@ -383,6 +383,21 @@ namespace decs
 			}
 		}
 
+		inline size_t GetChunkCount() const
+		{
+			return m_Chunks.size();
+		}
+
+		inline size_t GetCapacity() const
+		{
+			return m_Chunks.size() * m_ChunkCapacity;
+		}
+
+		inline size_t GetCreatedComponentCount() const noexcept
+		{
+			return m_ResourceRecords.size();
+		}
+
 	private:
 		ecsVector<ChunkType*> m_Chunks;
 		ecsVector<ChunkType*> m_ChunksWithFreeSpace;

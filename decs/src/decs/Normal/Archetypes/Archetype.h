@@ -364,12 +364,17 @@ namespace decs
 			return static_cast<uint32_t>(m_ComponentContextsInOrder.size());
 		}
 
-		inline TypeID GetTypeID(uint64_t index) const
+		inline size_t GetTagOnlyCount() const noexcept
+		{
+			return m_TypeData.size() - m_ComponentContextsInOrder.size();
+		}
+
+		inline TypeID GetTypeID(size_t index) const
 		{
 			return m_TypeData[index].m_TypeID;
 		}
 
-		inline TypeID GetTypeIDFromOrderData(uint64_t index) const
+		inline TypeID GetTypeIDFromOrderData(size_t index) const
 		{
 			return m_TypeData[m_ComponentContextsInOrder[index].m_ComponentIndex].m_TypeID;
 		}
@@ -377,6 +382,11 @@ namespace decs
 		inline uint64_t EntityCount() const noexcept
 		{
 			return m_EntityStorage.GetSize();
+		}
+
+		inline size_t GetCapacity() const noexcept
+		{
+			return m_EntityStorage.GetCapacity();
 		}
 
 		inline float GetLoadFactor()const
@@ -422,7 +432,7 @@ namespace decs
 			return HasTag(Type<TTag>::ID());
 		}
 
-		inline bool IsTypeTag(uint32_t typeIndex) const
+		inline bool IsTypeTag(size_t typeIndex) const
 		{
 			return m_TypeData[typeIndex].IsTag();
 		}
@@ -510,6 +520,11 @@ namespace decs
 		inline bool HasAnyEdge(TypeID toTypeID) const noexcept
 		{
 			return m_Edges.contains(toTypeID);
+		}
+
+		inline size_t GetEdgeCount() const noexcept
+		{
+			return m_Edges.size();
 		}
 
 	private:

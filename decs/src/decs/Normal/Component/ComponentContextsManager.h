@@ -123,7 +123,7 @@ namespace decs
 			return counter;
 		}
 
-		const ecsVector<IComponentContext*>& GetComponentContextsInOrder() const
+		const std::span<const IComponentContext*const>& GetComponentContextsInOrder() const
 		{
 			return m_ComponentContextsInOrder;
 		}
@@ -223,6 +223,16 @@ namespace decs
 				}
 			}
 		}
+
+		void FillStatistics(std::vector<ComponentStatistics>& componentsStats) const noexcept
+		{
+			componentsStats.resize(m_ComponentContextsInOrder.size());
+			for (size_t i = 0; i < m_ComponentContextsInOrder.size(); i++)
+			{
+				m_ComponentContextsInOrder[i]->FillStatistics(componentsStats[i]);
+			}
+		}
+
 	private:
 		ecsHashMap<TypeID, ComponentContextRecord> m_Contexts = {};
 		ecsVector<IComponentContext*> m_ComponentContextsInOrder = {};

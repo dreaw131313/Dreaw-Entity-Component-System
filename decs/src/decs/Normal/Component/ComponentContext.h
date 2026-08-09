@@ -7,6 +7,8 @@
 #include "decs/Normal/Component/StableComponentContainer.h"
 #include "decs/Normal/Component/PackedComponentContainer.h"
 
+#include "decs/Normal/Statistics.h"
+
 namespace decs
 {
 	struct Entity;
@@ -65,6 +67,8 @@ namespace decs
 		virtual bool HasDestroyObservers() const noexcept = 0;
 		virtual bool HasEnableObservers() const noexcept = 0;
 		virtual bool HasDisableObservers() const noexcept = 0;
+
+		virtual void FillStatistics(ComponentStatistics& statistics) const = 0;
 
 	private:
 		int m_ObserverOrder = 0;
@@ -168,6 +172,16 @@ namespace decs
 		bool HasDisableObservers() const noexcept override
 		{
 			return !m_DisableObservers.Empty();
+		}
+
+		void FillStatistics(ComponentStatistics& stats) const override
+		{
+			stats.m_ComponentTypeID = Type<ComponentType>::ID();;
+			m_StableContainer.FillStatistics(stats);
+			stats.m_CreateListenerCount = m_CreateObservers.Size();
+			stats.m_DestroyListenerCount = m_DestroyObservers.Size();
+			stats.m_EnableListenerCount = m_EnableObservers.Size();
+			stats.m_DisableListenerCount = m_DisableObservers.Size();
 		}
 
 	private:

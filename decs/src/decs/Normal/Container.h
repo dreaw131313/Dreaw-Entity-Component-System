@@ -25,6 +25,8 @@ namespace decs
 
 	class Container final : private NonCopyableNonMoveable
 	{
+		friend class ContainerStatistics;
+
 		template<component_concept ...Types>
 		friend class Query;
 		template<component_concept ...Types>

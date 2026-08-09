@@ -2,6 +2,7 @@
 #include "decs/Core/Core.h"
 #include "decs/Core/Type.h"
 #include "decs/Core/check_cast.h"
+#include "decs/Normal/Statistics.h"
 
 #include "Component.h"
 #include "ComponentAllocator.h"
@@ -84,6 +85,14 @@ namespace decs
 		inline void Clear() override
 		{
 			m_Allocator.Clear();
+		}
+
+		void FillStatistics(ComponentStatistics& stats) const
+		{
+			stats.m_CreatedComponentCount = m_Allocator.GetCreatedComponentCount();
+			stats.m_ChunkCapacity = m_Allocator.GetChunkSize();
+			stats.m_AllocatedChunks = m_Allocator.GetChunkCount();
+			stats.m_AllocatorCapacity = m_Allocator.GetCapacity();
 		}
 
 	private:

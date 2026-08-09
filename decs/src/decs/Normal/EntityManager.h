@@ -32,6 +32,16 @@ namespace decs
 			return m_CreatedEntityCount;
 		}
 
+		inline size_t GetCapacity() const noexcept
+		{
+			return m_EntityDatas.Capacity();
+		}
+
+		inline size_t GetEntityDataChunkSize() const noexcept
+		{
+			return m_EntityDatas.ChunkCapacity();
+		}
+
 		EntityData* CreateEntity(bool isActive);
 
 		bool DestroyEntity(EntityData* entityData);

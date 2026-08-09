@@ -111,6 +111,11 @@ namespace decs
 			return m_Records.empty();
 		}
 
+		inline size_t Size() const noexcept
+		{
+			return m_Records.size();
+		}
+
 	private:
 		ecsVector<ItemRecord> m_Records{};
 		ObserverFunctionID::value_type m_IDGenerator = 0;
