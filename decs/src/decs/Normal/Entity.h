@@ -23,7 +23,6 @@ namespace decs
 		friend class EntityComponent;
 
 		friend struct ConstEntity;
-
 		friend struct std::hash<decs::Entity>;
 
 	public:

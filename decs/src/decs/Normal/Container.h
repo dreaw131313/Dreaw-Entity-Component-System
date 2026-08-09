@@ -242,7 +242,7 @@ namespace decs
 				for (uint32_t i = 0; i < entityCount; i++)
 				{
 					EntityData* entityData = m_EntityManager.CreateEntity(bIsActive);
-					CreateEntity_Impl_Initialization<InvokeObservers>(components, *archetype, componentTypesDataTuple, Entity(*this, *entityData), *entityData, initFunc); \
+					CreateEntity_Impl_Initialization<InvokeObservers>(components, *archetype, componentTypesDataTuple, Entity(*this, *entityData), *entityData, initFunc);
 				}
 			}
 		}
@@ -362,14 +362,12 @@ namespace decs
 
 			std::tuple<TArchetypeTypeData<pure_type_t<ComponentTypes>>...> componentTypesDataTuple = { archetype->GetTypeData<pure_type_t<ComponentTypes>>()... };
 
-			if (Entity entity = CreateEntityRaw(bIsActive))
-			{
-				EntityData* entityData = GetEntityData(entity);
-				CreateEntity_Impl_Initialization<InvokeObservers>(components, *archetype, componentTypesDataTuple, entity, *entityData, initFunc);
-				return entity;
-			}
 
-			return Entity();
+			EntityData* entityData = m_EntityManager.CreateEntity(bIsActive);
+			Entity entity(*this, *entityData);
+
+			CreateEntity_Impl_Initialization<InvokeObservers>(components, *archetype, componentTypesDataTuple, entity, *entityData, initFunc);
+			return entity;
 		}
 
 	public:
@@ -432,8 +430,6 @@ namespace decs
 		void SetEntityActive(EntityData& entityData, const Entity& entity, bool bIsActive);
 
 		bool IsEntityActive(const Entity& entity, const EntityData& entityData) const;
-
-		Entity CreateEntityRaw(bool bIsActive);
 
 		EntityData* GetEntityData(const Entity& entity) const;
 

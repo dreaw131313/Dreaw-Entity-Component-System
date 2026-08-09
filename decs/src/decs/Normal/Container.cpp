@@ -204,12 +204,6 @@ namespace decs
 		return entityData.IsActiveWithVersion(entity.GetVersion());
 	}
 
-
-	Entity Container::CreateEntityRaw(bool bIsActive)
-	{
-		return Entity(*this, *m_EntityManager.CreateEntity(bIsActive));
-	}
-
 	EntityData* Container::GetEntityData(const Entity& entity) const
 	{
 		return m_EntityManager.GetEntityData(entity.GetID());
