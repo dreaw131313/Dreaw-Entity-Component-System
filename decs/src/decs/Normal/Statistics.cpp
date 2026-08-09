@@ -30,7 +30,7 @@ namespace decs
 		}
 	}
 
-	void ContainerStatistics::Collect(Container& container)
+	void ContainerStatistics::Collect(const Container& container)
 	{
 		m_EntityDataChunkSize = container.m_EntityManager.GetEntityDataChunkSize();
 		m_CreatedEntityCount = container.GetEntityCount();
