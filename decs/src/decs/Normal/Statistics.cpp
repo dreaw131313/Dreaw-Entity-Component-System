@@ -13,19 +13,24 @@ namespace decs
 		m_TagCount = archetype.GetTagOnlyCount();
 		m_NeighbourCount = archetype.GetEdgeCount();
 
-		m_ComponentTypeIDs.reserve(m_ComponentCount);
-		m_TagTypeIDs.reserve(m_TagCount);
+		m_ComponentTypeIDs.resize(m_ComponentCount);
+		m_TagTypeIDs.resize(m_TagCount);
+
+		size_t compIdx = 0;
+		size_t tagIdx = 0;
 
 		for (size_t i = 0; i < static_cast<size_t>(archetype.GetComponentAndTagCount()); i++)
 		{
 			TypeID typeID = archetype.GetTypeID(i);
 			if (archetype.IsTypeTag(static_cast<size_t>(i)))
 			{
-				m_TagTypeIDs.push_back(typeID);
+				m_TagTypeIDs[tagIdx] = typeID;
+				tagIdx++;
 			}
 			else
 			{
-				m_ComponentTypeIDs.push_back(typeID);
+				m_ComponentTypeIDs[compIdx] = typeID;
+				compIdx++;
 			}
 		}
 	}
