@@ -20,6 +20,8 @@ namespace decs
 		size_t m_DestroyListenerCount = 0;
 		size_t m_EnableListenerCount = 0;
 		size_t m_DisableListenerCount = 0;
+		size_t m_ComponentSize = 0;
+		size_t m_ComponentAlignment = 0;
 
 	public:
 		ComponentStatistics() = default;

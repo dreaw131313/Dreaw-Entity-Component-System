@@ -93,6 +93,8 @@ namespace decs
 			stats.m_ChunkCapacity = m_Allocator.GetChunkSize();
 			stats.m_AllocatedChunks = m_Allocator.GetChunkCount();
 			stats.m_AllocatorCapacity = m_Allocator.GetCapacity();
+			stats.m_ComponentSize = sizeof(ComponentType);
+			stats.m_ComponentAlignment = alignof(ComponentType);
 		}
 
 	private:
