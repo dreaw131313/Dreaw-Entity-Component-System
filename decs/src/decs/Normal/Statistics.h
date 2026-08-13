@@ -67,6 +67,8 @@ namespace decs
 		~ContainerStatistics() = default;
 
 		void Collect(const Container& container);
+
+		void Reset();
 	};
 
 }

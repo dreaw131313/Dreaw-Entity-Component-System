@@ -60,4 +60,18 @@ namespace decs
 			});
 		}
 	}
+
+	void ContainerStatistics::Reset()
+	{
+		m_ComponentsStats.clear();
+		m_ArchetypesStats.clear();
+		m_EntityDataChunkSize = 0;
+		m_CreatedEntityCount = 0;
+		m_EntityCapacity = 0;
+		m_EmptyEntityCount = 0;
+		m_EntityCreateListenerCount = 0;
+		m_EntityDestroyListenerCount = 0;
+		m_EntityEnableListenerCount = 0;
+		m_EntityDisableListenerCount = 0;
+	}
 }
