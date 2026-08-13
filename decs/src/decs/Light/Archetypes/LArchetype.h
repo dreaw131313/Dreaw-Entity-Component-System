@@ -783,26 +783,35 @@ namespace decs::light
 
 		std::size_t CalculateHash() const noexcept
 		{
-			if (m_ArchetypeConst == nullptr || m_ArchetypeConst->GetComponentTagCount() == 0)
+			if (m_ArchetypeConst == nullptr || m_ArchetypeConst->GetComponentTagFilterCount() == 0)
 			{
 				return 0;
 			}
 
 			auto componentTagTypeRecords = m_ArchetypeConst->GetComponentAndTagRecords();
-			std::size_t finalHash = std::hash<TypeID>{}(componentTagTypeRecords[0].m_TypeID);
-			for (auto& typeRecord : componentTagTypeRecords)
-			{
-				finalHash = hash::Combine(finalHash, std::hash<TypeID>{}(typeRecord.m_TypeID));
-			}
-
 			auto filters = m_ArchetypeConst->GetFilters();
-			for (auto& filterRecord : filters)
+
+			size_t componentTagHash = 0;
+			size_t filtersHash = 0;
+
+			if (!componentTagTypeRecords.empty())
 			{
-				finalHash = hash::Combine(finalHash, std::hash<TypeID>{}(filterRecord.m_FilterTypeID));
-				finalHash = hash::Combine(finalHash, std::hash<TypeID>{}(filterRecord.m_FilterContainer->GetDataHash()));
+				for (auto& typeRecord : componentTagTypeRecords)
+				{
+					componentTagHash = hash::Mix(componentTagHash, std::hash<TypeID>{}(typeRecord.m_TypeID));
+				}
 			}
 
-			return finalHash;
+			if (!filters.empty())
+			{
+				for (auto& filterRecord : filters)
+				{
+					filtersHash = hash::Mix(componentTagHash, std::hash<TypeID>{}(filterRecord.m_FilterTypeID));
+					filtersHash = hash::Mix(componentTagHash, std::hash<TypeID>{}(filterRecord.m_FilterContainer->GetDataHash()));
+				}
+			}
+
+			return hash::Mix(componentTagHash, filtersHash);
 		}
 
 	private:

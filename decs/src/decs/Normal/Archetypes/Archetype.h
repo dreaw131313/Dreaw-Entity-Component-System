@@ -724,7 +724,7 @@ namespace decs
 			const uint32_t typeCount = m_ArchetypeConst->GetComponentAndTagCount();
 			for (uint32_t typeIdx = 1; typeIdx < typeCount; typeIdx++)
 			{
-				finalHash = hash::Combine(finalHash, std::hash<TypeID>{}(m_ArchetypeConst->GetTypeID(typeIdx)));
+				finalHash = hash::Mix(finalHash, std::hash<TypeID>{}(m_ArchetypeConst->GetTypeID(typeIdx)));
 			}
 
 			return finalHash;

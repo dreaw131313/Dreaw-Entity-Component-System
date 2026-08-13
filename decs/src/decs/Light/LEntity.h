@@ -493,9 +493,6 @@ struct std::hash<decs::light::Entity>
 {
 	std::size_t operator()(const decs::light::Entity& entity) const
 	{
-		uint64_t entityDataHash = std::hash<decs::light::EntityData*>{}(entity.m_EntityData);
-		uint64_t entityVersionHash = std::hash<decs::EntityVersion>{}(entity.GetVersion());
-
-		return decs::hash::Combine(entityDataHash, entityVersionHash);
+		return decs::hash::Combine(entity.m_EntityData, entity.GetVersion());
 	}
 };

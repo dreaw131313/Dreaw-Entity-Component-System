@@ -53,17 +53,11 @@ namespace decs
 
 		[[nodiscard]] inline std::size_t CalculateHash() const noexcept
 		{
-			if (m_LifeTimeData)
-			{
-				const uint64_t entityIDHash = std::hash<decs::EntityID>{}(m_EntityID);
-				const uint64_t entityVersionHash = std::hash<decs::EntityVersion>{}(m_Version);
-
-				return decs::hash::Combine(
-					decs::hash::Combine(entityIDHash, entityVersionHash), 
-					std::hash<ContainerLifetimeData*>{}(m_LifeTimeData.Get())
-				);
-			}
-			return 0ull;
+			return decs::hash::Combine(
+				m_LifeTimeData.Get(),
+				m_EntityID,
+				m_Version
+			);
 		}
 
 		[[nodiscard]] inline bool IsValid() const
@@ -187,7 +181,6 @@ namespace decs
 			if (EntityData* entityData = TryGetEntityData())
 			{
 				GetContainer_Internal()->DestroyEntityInternal(*entityData, *this, true);
-				Invalidate_WithoutLifeTimeData();
 				return true;
 			}
 			return false;
@@ -364,7 +357,6 @@ namespace decs
 			if (EntityData* entityData = TryGetEntityData())
 			{
 				GetContainer_Internal()->DestroyEntityInternal(*entityData, *this, false);
-				Invalidate_WithoutLifeTimeData();
 				return true;
 			}
 			return false;
@@ -512,8 +504,8 @@ namespace decs
 
 	private:
 		ContainerLifetimeDataHandle m_LifeTimeData{};
-		mutable EntityID m_EntityID = InvalidEntityID;
-		mutable EntityVersion m_Version = InvalidEntityVersion;
+		EntityID m_EntityID = InvalidEntityID;
+		EntityVersion m_Version = InvalidEntityVersion;
 
 	private:
 		inline void Set_Internal(const Container& container, EntityData& data)
@@ -521,12 +513,6 @@ namespace decs
 			m_LifeTimeData = container.GetLifeTimeData();
 			m_EntityID = data.GetID();
 			m_Version = data.GetVersion();
-		}
-
-		inline void Invalidate_WithoutLifeTimeData() const
-		{
-			m_EntityID = InvalidEntityID;
-			m_Version = InvalidEntityVersion;
 		}
 
 		inline void SetWithoutLifeTimeDataInvalidation_Internal(EntityData& data)
