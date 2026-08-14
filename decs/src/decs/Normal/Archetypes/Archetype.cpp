@@ -174,11 +174,11 @@ namespace decs
 		if (componentContext == nullptr)
 		{
 			// tag data
-			m_TypeData.emplace_back(typeID, nullptr, nullptr, nullptr);
+			m_TypeData.emplace_back(typeID, nullptr, nullptr);
 		}
 		else
 		{
-			m_TypeData.emplace_back(typeID, componentContext->CreatePackedContainer(), componentContext, componentContext->GetStableContainer());
+			m_TypeData.emplace_back(typeID, componentContext->CreatePackedContainer(), componentContext);
 			InsertComponentContextInCorrectPlace(componentContext, typeIndex);
 		}
 	}

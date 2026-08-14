@@ -229,10 +229,12 @@ namespace decs
 		ArchetypeTypeData(
 			TypeID typeID,
 			IPackedComponentContainer* packedContainer,
-			IComponentContext* componentContext,
-			IStableComponentContainer* stableContainer
-		):
-			m_TypeID(typeID), m_PackedContainer(packedContainer), m_ComponentContext(componentContext), m_StableContainer(stableContainer)
+			IComponentContext* componentContext
+		) :
+			m_TypeID(typeID),
+			m_PackedContainer(packedContainer),
+			m_ComponentContext(componentContext),
+			m_StableContainer(componentContext != nullptr ? componentContext->GetStableContainer() : nullptr)
 		{
 
 		}
@@ -262,7 +264,7 @@ namespace decs
 	public:
 		TArchetypeTypeData() = default;
 
-		TArchetypeTypeData(const ArchetypeTypeData& data):
+		TArchetypeTypeData(const ArchetypeTypeData& data) :
 			m_PackedContainer(::decs::check_cast<PackedContainerType*>(data.m_PackedContainer)),
 			m_StableContainer(::decs::check_cast<StableContainerType*>(data.m_StableContainer)),
 			m_ComponentContext(::decs::check_cast<ComponentContextType*>(data.m_ComponentContext))
@@ -289,7 +291,7 @@ namespace decs
 
 		}
 
-		ArchetypeEdge(Archetype* archetype, EArchetypeEdgeType edgeType):
+		ArchetypeEdge(Archetype* archetype, EArchetypeEdgeType edgeType) :
 			m_Archetype(archetype), m_EdgeType(edgeType)
 		{
 
@@ -707,7 +709,7 @@ namespace decs
 	public:
 		ArchetypeHasher() = default;
 
-		ArchetypeHasher(const Archetype* archetype):
+		ArchetypeHasher(const Archetype* archetype) :
 			m_ArchetypeConst(archetype)
 		{
 
