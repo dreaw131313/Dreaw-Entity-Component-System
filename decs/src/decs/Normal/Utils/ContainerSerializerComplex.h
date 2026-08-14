@@ -13,9 +13,7 @@ namespace decs
 		void Serialize(decs::Container& container)
 		{
 			auto& archetypesMap = container.m_ArchetypesMap;
-			auto& archetypesVector = container.m_ArchetypesMap.m_Archetypes;
-
-			uint64_t archetypesChunks = archetypesVector.ChunkCount();
+			auto& archetypesVector = container.m_ArchetypesMap.m_ArchetypeAllocator.GetCreatedArchetypesVector();
 
 			decs::Entity entityBuffer = {};
 			//ecsVector<TypeID> entityTagsIDs{};
@@ -29,51 +27,42 @@ namespace decs
 					EndEntitySerialize(entityBuffer);
 				}
 			}
-
-			for (uint64_t chunkIdx = 0; chunkIdx < archetypesChunks; chunkIdx++)
+			for (size_t archIdx = 0; archIdx < archetypesVector.size(); archIdx++)
 			{
-				uint64_t archetypeCountInChunk = archetypesVector.GetChunkSize(chunkIdx);
-				auto chunk = archetypesVector.GetChunk(chunkIdx);
+				const Archetype* archetype = archetypesVector[archIdx];
 
-				for (uint64_t archetypeIdx = 0; archetypeIdx < archetypeCountInChunk; archetypeIdx++)
+				if (BeginArchetypeSerialize(*archetype))
 				{
-					Archetype& archetype = chunk[archetypeIdx];
-
-					//FetchTagsTypeIDsFromArchetype(archetype, entityTagsIDs);
-
-					if (BeginArchetypeSerialize(archetype))
+					uint64_t entitesCount = archetype->EntityCount();
+					if (entitesCount > 0)
 					{
-						uint64_t entitesCount = archetype.EntityCount();
-						if (entitesCount > 0)
-						{
-							const auto& entityStorage = archetype.GetEntityStorage();
+						const auto& entityStorage = archetype->GetEntityStorage();
 
-							uint64_t componentCount = archetype.GetComponentAndTagCount();
-							for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
+						uint64_t componentCount = archetype->GetComponentAndTagCount();
+						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
+						{
+							entityBuffer.Set_Internal(container, *entityStorage.GetEntity(entityIdx));
+							if (BeginEntitySerialize(entityBuffer))
 							{
-								entityBuffer.Set_Internal(container, *entityStorage.GetEntity(entityIdx));
-								if (BeginEntitySerialize(entityBuffer))
+								for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
 								{
-									for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
+									const auto& archetypeComponentData = archetype->m_TypeData[componentIdx];
+									if (!archetypeComponentData.IsTag())
 									{
-										const auto& archetypeComponentData = archetype.m_TypeData[componentIdx];
-										if (!archetypeComponentData.IsTag())
-										{
-											SerializeComponent(
-												entityBuffer,
-												archetypeComponentData.m_PackedContainer->GetComponentBasePtr(entityIdx),
-												archetypeComponentData.m_PackedContainer->GetComponentSize(),
-												archetypeComponentData.m_TypeID,
-												componentIdx
-											);
-										}
+										SerializeComponent(
+											entityBuffer,
+											archetypeComponentData.m_PackedContainer->GetComponentBasePtr(entityIdx),
+											archetypeComponentData.m_PackedContainer->GetComponentSize(),
+											archetypeComponentData.m_TypeID,
+											componentIdx
+										);
 									}
-									EndEntitySerialize(entityBuffer);
 								}
+								EndEntitySerialize(entityBuffer);
 							}
 						}
-						EndArchetypeSerialize(archetype);
 					}
+					EndArchetypeSerialize(*archetype);
 				}
 			}
 		}

@@ -8,7 +8,9 @@
 namespace decs
 {
 	Container::Container() :
-		m_EntityManager(m_DefaultEntitiesChunkSize)
+		m_EntityManager(m_DefaultEntitiesChunkSize),
+		m_QueryManager(this),
+		m_ArchetypesMap(m_QueryManager, 100, 100)
 	{
 		InitializeLifeTimeData();
 	}
@@ -16,13 +18,15 @@ namespace decs
 	Container::Container(const ContainerConfig& config) :
 		m_EntityManager(config.EntityChunkSize),
 		m_ComponentContextManager(static_cast<uint32_t>(config.DefaultComponentChunkSize)),
-		m_ArchetypesMap(config.ArchetypeChunkSize, 100)
+		m_QueryManager(this),
+		m_ArchetypesMap(m_QueryManager, config.ArchetypeChunkSize, 100)
 	{
 		InitializeLifeTimeData();
 	}
 
 	Container::~Container()
 	{
+		m_QueryManager.OnDestroyContainer();
 		m_ComponentContextManager.ClearStableContainers();
 		m_ArchetypesMap.ClearEntityDataAndComponents();
 		DestroyLifeTimeData();
@@ -787,16 +791,16 @@ namespace decs
 				}
 			}
 
-			m_ArchetypesMap.IterateOverArchetypes([&] (Archetype* archetype)
+			m_ArchetypesMap.IterateOverArchetypes([&] (Archetype& archetype)
 			{
-				if (archetype->EntityCount() == 0)
+				if (archetype.EntityCount() == 0)
 				{
 					return;
 				}
 
-				const auto& entityStorage = archetype->GetEntityStorage();
+				const auto& entityStorage = archetype.GetEntityStorage();
 
-				for (int64_t idx = static_cast<int64_t>(archetype->EntityCount()) - 1; idx >= 0; idx--)
+				for (int64_t idx = static_cast<int64_t>(archetype.EntityCount()) - 1; idx >= 0; idx--)
 				{
 					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
 					if (archetypeEntityData.IsValid())
@@ -1462,4 +1466,28 @@ namespace decs
 		SetEntityDisabledOverrideCount_NoObserver(entityData, entity, 0);
 	}
 
+	void Container::TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config)
+	{
+		m_ArchetypesMap.TryDestroyArchetypes(state, config);
+	}
+
+	void Container::AddQuery(IQuery* query)
+	{
+		m_QueryManager.AddQuery(query);
+	}
+
+	void Container::RemoveQuery(IQuery* query)
+	{
+		m_QueryManager.RemoveQuery(query);
+	}
+
+	void Container::AddMultiQuery(IMultiQuery* query)
+	{
+		m_QueryManager.AddMultiQuery(query);
+	}
+
+	void Container::RemoveMultiQuery(IMultiQuery* query)
+	{
+		m_QueryManager.RemoveMultiQuery(query);
+	}
 }

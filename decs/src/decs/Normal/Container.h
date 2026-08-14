@@ -7,6 +7,7 @@
 #include "Component/PackedComponentContainer.h"
 #include "Component/StableComponentContainer.h"
 #include "Component/Component.h"
+#include "Iteration/QueryManager.h"
 
 #include "EntityManager.h"
 
@@ -892,9 +893,6 @@ namespace decs
 	#pragma endregion
 
 	#pragma region ARCHETYPES:
-	private:
-		ArchetypesMap m_ArchetypesMap{};
-
 	public:
 		inline void ShrinkArchetypesToFit()
 		{
@@ -910,6 +908,12 @@ namespace decs
 		{
 			return m_ArchetypesMap.GetArchetypesCount();
 		}
+
+		void TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config);
+
+	private:
+		QueryManager m_QueryManager;
+		ArchetypesMap m_ArchetypesMap;
 
 	private:
 		template<typename ComponentType>
@@ -976,6 +980,18 @@ namespace decs
 
 			return spawnArchetype;
 		}
+
+	#pragma endregion
+
+	#pragma region QUERIES
+	private:
+		void AddQuery(IQuery* query);
+
+		void RemoveQuery(IQuery* query);
+
+		void AddMultiQuery(IMultiQuery* query);
+
+		void RemoveMultiQuery(IMultiQuery* query);
 
 	#pragma endregion
 
@@ -1373,6 +1389,5 @@ namespace decs
 		void ResetDisabledOverrideCount_NoObserver(EntityData& entityData, const Entity& entity);
 
 	#pragma endregion
-
 	};
 }

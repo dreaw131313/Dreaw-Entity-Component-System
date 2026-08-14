@@ -38,6 +38,11 @@ namespace decs
 	class ArchetypeEntityDataStorage
 	{
 	public:
+		inline bool IsEmpty() const noexcept
+		{
+			return m_EntityData.empty();
+		}
+
 		inline size_t GetSize() const noexcept
 		{
 			return m_EntityData.size();
@@ -298,6 +303,7 @@ namespace decs
 
 	class Archetype final
 	{
+		friend class ArchetypeAllocator;
 		friend class Container;
 		friend class ContainerIterator;
 		friend struct EntityData;
@@ -334,6 +340,9 @@ namespace decs
 		};
 
 		ecsVector<OrderData> m_ComponentContextsInOrder{};
+
+		size_t m_CreatedIndexInAllocator = std::numeric_limits<size_t>::max();
+		uint32_t m_Version = 0;
 
 	public:
 		Archetype();
@@ -382,6 +391,11 @@ namespace decs
 		inline uint64_t EntityCount() const noexcept
 		{
 			return m_EntityStorage.GetSize();
+		}
+
+		inline bool IsEmpty() const noexcept
+		{
+			return m_EntityStorage.IsEmpty();
 		}
 
 		inline size_t GetCapacity() const noexcept
@@ -625,6 +639,11 @@ namespace decs
 
 		void ShrinkToFit();
 
+		/// <summary>
+		/// Used when destroying archetypes, and this archetypes will be reused
+		/// </summary>
+		void ResetOnDestroy();
+
 	#pragma region EDGES
 	private:
 		void AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType);
@@ -649,6 +668,8 @@ namespace decs
 			}
 			return {};
 		}
+
+		void RemoveFromNeighbours();
 
 	#pragma endregion
 

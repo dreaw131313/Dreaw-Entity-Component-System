@@ -1,11 +1,12 @@
 #pragma once
 
 #include "IterationCore.h"
+#include "QueryManager.h"
 
 namespace decs
 {
 	template<component_concept... ComponentsTypes>
-	class Query
+	class Query : public IQuery
 	{
 		static_assert(!decs::contain_tags_v<ComponentsTypes...>, "Query must not use tags in as ComponentTypes!");
 
@@ -20,22 +21,76 @@ namespace decs
 	public:
 		Query() = default;
 
-		Query(Container* container):
+		Query(Container* container) :
 			m_ContainerContext(container, true)
 		{
-
+			AddToContainer();
 		}
 
-		~Query() = default;
+		~Query()
+		{
+			RemoveFromContainer();
+		}
 
 		inline void SetContainer(Container* container)
 		{
 			if (m_ContainerContext.GetContainer() != container)
 			{
-				m_IsDirty = true;
+				RemoveFromContainer();
 				m_ContainerContext.SetContainer(container);
+				AddToContainer();
+
+				m_IsDirty = true;
 			}
 		}
+
+
+		Query(const Query& other) :
+			m_ContainerContext(other.m_ContainerContext),
+			m_FilterConfig(other.m_FilterConfig)
+		{
+			AddToContainer();
+		}
+
+		Query& operator=(const Query& other)
+		{
+			if (this != &other)
+			{
+				RemoveFromContainer();
+
+				m_FilterConfig = other.m_FilterConfig;
+				SetContainer(other.GetContainer());
+				AddToContainer();
+			}
+
+			return *this;
+		}
+
+		Query(Query&& other) noexcept :
+			m_ContainerContext(std::move(other.m_ContainerContext)),
+			m_FilterConfig(std::move(other.m_FilterConfig))
+		{
+			other.SetContainer(nullptr);
+			other.m_FilterConfig.Clear();
+			AddToContainer();
+		}
+
+		Query& operator=(Query&& other) noexcept
+		{
+			if (this != &other)
+			{
+				RemoveFromContainer();
+
+				m_FilterConfig = std::move(other.m_FilterConfig);
+				m_ContainerContext = std::move(other.m_ContainerContext);
+				other.SetContainer(nullptr);
+
+				AddToContainer();
+			}
+
+			return *this;
+		}
+
 
 		[[nodiscard]] inline Container* GetContainer() const
 		{
@@ -295,7 +350,7 @@ namespace decs
 			if (entity.IsValid())
 			{
 				Fetch();
-				return m_ContainerContext.GetArchetypes().contains(entity.GetArchetype());
+				return m_ContainerContext.ContainsArchetype(entity.GetArchetype());
 			}
 			return false;
 		}
@@ -352,6 +407,46 @@ namespace decs
 			m_ContainerContext.Clear();
 		}
 
+
+	#pragma region IQuery implementation
+	private:
+		void TryAddArchetype(const Archetype& archetype) override
+		{
+			m_ContainerContext.TryAddArchetype(archetype, m_FilterConfig);
+		}
+
+		void TryRemoveArchetpye(const Archetype& archetype) override
+		{
+			m_ContainerContext.TryRemoveArchetype(archetype);
+		}
+
+		/// <summary>
+		/// Called when query manager destructor is invoked and query manager has queries.
+		/// </summary>
+		void OnQueryManagerDestroy() override
+		{
+			m_ContainerContext.SetContainer(nullptr);
+		}
+
+		void AddToContainer()
+		{
+			Container* container = m_ContainerContext.GetContainer();
+			if (container != nullptr)
+			{
+				container->AddQuery(this);
+			}
+		}
+
+		void RemoveFromContainer()
+		{
+			Container* container = m_ContainerContext.GetContainer();
+			if (container != nullptr)
+			{
+				container->RemoveQuery(this);
+			}
+		}
+	#pragma endregion
+
 	#pragma region BATCH ITERATOR
 	public:
 		class BatchIterator
@@ -368,7 +463,7 @@ namespace decs
 				uint64_t firstArchetypeIndex,
 				uint64_t firstIterationIndex,
 				uint64_t entitiesCount
-			):
+			) :
 				m_Query(query),
 				m_FirstArchetypeIndex(firstArchetypeIndex),
 				m_FirstIterationIndex(firstIterationIndex),

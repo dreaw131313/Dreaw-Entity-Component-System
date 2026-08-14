@@ -566,6 +566,7 @@ namespace decs::light
 		ecsHashMap<const Archetype*, size_t> m_ArchetypeIndices{};
 		Container* m_Container = nullptr;
 		bool m_bIsEnabled = true;
+		bool m_bIsDirty = true;
 
 	public:
 		IterationContainerContext()
@@ -588,6 +589,16 @@ namespace decs::light
 		inline bool IsEnabled() const noexcept
 		{
 			return m_bIsEnabled;
+		}
+
+		inline void SetDirty()
+		{
+			m_bIsDirty = true;
+		}
+
+		inline bool IsDirty() const noexcept
+		{
+			return m_bIsDirty;
 		}
 
 		inline bool IsValidAndEnabled() const noexcept
@@ -614,6 +625,7 @@ namespace decs::light
 		{
 			m_ArchetypesContexts.clear();
 			m_ArchetypeIndices.clear();
+			SetDirty();
 		}
 
 		void SetContainer(Container* container)
@@ -624,10 +636,12 @@ namespace decs::light
 
 		void Fetch(const QueryFilterConfigType& filter)
 		{
-			if (!IsValid())
+			if (!IsValid() || !IsDirty())
 			{
 				return;
 			}
+
+			m_bIsDirty = false;
 
 			uint64_t minComponentFilterCount = filter.GetMinComponentFilterCount();
 
@@ -683,11 +697,6 @@ namespace decs::light
 			}
 		}
 
-		inline bool ContainArchetype(const Archetype* arch) const
-		{
-			return m_ArchetypeIndices.contains(arch);
-		}
-
 		const ArchetypesGroupByOneType* GetBestArchetypesGroup(const QueryFilterConfigType& filter)
 		{
 			auto& groupsMap = m_Container->m_ArchetypesMap.m_ArchetypesGroupedByOneType;
@@ -724,7 +733,7 @@ namespace decs::light
 
 		void TryAddArchetype(const Archetype& archetype, const QueryFilterConfigType& filter)
 		{
-			if (!ContainArchetype(&archetype) && archetype.GetComponentTagFilterCount())
+			if (!ContainsArchetype(&archetype) && archetype.GetComponentTagFilterCount())
 			{
 				// filter data tuple
 				if (auto& filterDataTuple = filter.GetFilterDataTuple())

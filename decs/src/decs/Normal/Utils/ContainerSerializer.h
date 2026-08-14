@@ -118,9 +118,7 @@ namespace decs
 			ecsVector<TagSerializationData> tagSerializersData;
 
 			auto& archetypesMap = container.m_ArchetypesMap;
-			auto& archetypesVector = container.m_ArchetypesMap.m_Archetypes;
-
-			uint64_t archetypesChunks = archetypesVector.ChunkCount();
+			auto& archetypesVector = container.m_ArchetypesMap.m_ArchetypeAllocator.GetCreatedArchetypesVector();
 
 			decs::Entity entityBuffer = {};
 
@@ -133,58 +131,51 @@ namespace decs
 				}
 			}
 
-			for (uint64_t chunkIdx = 0; chunkIdx < archetypesChunks; chunkIdx++)
+			for (size_t archIdx = 0; archIdx < archetypesVector.size(); archIdx++)
 			{
-				uint64_t elementsCount = archetypesVector.GetChunkSize(chunkIdx);
-
-				auto chunk = archetypesVector.GetChunk(chunkIdx);
-
-				for (uint64_t archetypeIdx = 0; archetypeIdx < elementsCount; archetypeIdx++)
+				Archetype& archetype = *archetypesVector[archIdx];
+				uint64_t entitesCount = archetype.EntityCount();
+				if (entitesCount > 0)
 				{
-					Archetype& archetype = chunk[archetypeIdx];
-					uint64_t entitesCount = archetype.EntityCount();
-					if (entitesCount > 0)
+					GetComponentSerializers(archetype, componentSerializersData);
+					GetTagSerializers(archetype, tagSerializersData);
+
+					uint64_t componentCount = componentSerializersData.size();
+					uint64_t tagCount = tagSerializersData.size();
+
+					const auto& entityStorage = archetype.GetEntityStorage();
+
+					for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 					{
-						GetComponentSerializers(archetype, componentSerializersData);
-						GetTagSerializers(archetype, tagSerializersData);
-
-						uint64_t componentCount = componentSerializersData.size();
-						uint64_t tagCount = tagSerializersData.size();
-
-						const auto& entityStorage = archetype.GetEntityStorage();
-
-						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
+						auto entityData = entityStorage.GetEntity(entityIdx);
+						if (entityData != nullptr)
 						{
-							auto entityData = entityStorage.GetEntity(entityIdx);
-							if (entityData != nullptr)
+							entityBuffer.Set_Internal(entityData);
+							if (BeginEntitySerialize(entityBuffer, serializerData))
 							{
-								entityBuffer.Set_Internal(entityData);
-								if (BeginEntitySerialize(entityBuffer, serializerData))
+								for (uint64_t tagIdx = 0; tagIdx < tagCount; tagIdx++)
 								{
-									for (uint64_t tagIdx = 0; tagIdx < tagCount; tagIdx++)
+									TagSerializationData& tagSerializationData = tagSerializersData[tagIdx];
+									BeginTagSerialize(entityBuffer, tagSerializationData.m_Serializer, serializerData);
 									{
-										TagSerializationData& tagSerializationData = tagSerializersData[tagIdx];
-										BeginTagSerialize(entityBuffer, tagSerializationData.m_Serializer, serializerData);
-										{
-											tagSerializationData.m_Serializer->SerializeTag(serializerData);
-										}
-										EndTagSerialize(entityBuffer, tagSerializationData.m_Serializer, serializerData);
+										tagSerializationData.m_Serializer->SerializeTag(serializerData);
 									}
-
-									for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
-									{
-										ComponentSerializationData& componentSerializerData = componentSerializersData[componentIdx];
-										BeginComponentSerialize(entityBuffer, componentSerializerData.m_Serializer, serializerData);
-										{
-											componentSerializerData.m_Serializer->SerializeComponentFromVoid(
-												componentSerializerData.m_PackedContainer->GetComponentBasePtr(entityIdx),
-												serializerData
-											);
-										}
-										EndComponentSerialize(entityBuffer, componentSerializerData.m_Serializer, serializerData);
-									}
-									EndEntitySerialize(entityBuffer, serializerData);
+									EndTagSerialize(entityBuffer, tagSerializationData.m_Serializer, serializerData);
 								}
+
+								for (uint64_t componentIdx = 0; componentIdx < componentCount; componentIdx++)
+								{
+									ComponentSerializationData& componentSerializerData = componentSerializersData[componentIdx];
+									BeginComponentSerialize(entityBuffer, componentSerializerData.m_Serializer, serializerData);
+									{
+										componentSerializerData.m_Serializer->SerializeComponentFromVoid(
+											componentSerializerData.m_PackedContainer->GetComponentBasePtr(entityIdx),
+											serializerData
+										);
+									}
+									EndComponentSerialize(entityBuffer, componentSerializerData.m_Serializer, serializerData);
+								}
+								EndEntitySerialize(entityBuffer, serializerData);
 							}
 						}
 					}

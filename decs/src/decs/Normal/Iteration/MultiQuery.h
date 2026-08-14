@@ -1,21 +1,9 @@
 #pragma once
 #include "IterationCore.h"
+#include "QueryManager.h"
 
 namespace decs
 {
-	class IMultiQuery
-	{
-	public:
-		virtual ~IMultiQuery()
-		{
-
-		}
-
-		virtual bool AddContainer(Container* container, bool bIsEnabled = true) = 0;
-		virtual bool RemoveContainer(Container* container) = 0;
-		virtual void SetContainerEnabled(Container* container, bool isEnabled) = 0;
-	};
-
 	template<component_concept... ComponentsTypes>
 	class MultiQuery : public IMultiQuery
 	{
@@ -33,6 +21,65 @@ namespace decs
 	public:
 		MultiQuery() = default;
 
+		~MultiQuery()
+		{
+			ClearContainerContexts();
+		}
+
+		MultiQuery(const MultiQuery& other) :
+			m_FilterConfig(other.m_FilterConfig),
+			m_ContainerContextsIndices(other.m_ContainerContextsIndices),
+			m_ContainerContexts(other.m_ContainerContexts)
+		{
+			AddToAllContainers();
+		}
+
+		MultiQuery& operator=(const MultiQuery& other)
+		{
+			if (this != &other)
+			{
+				RemoveFromAllContainers();
+
+				m_FilterConfig = other.m_FilterConfig;
+				m_ContainerContextsIndices = other.m_ContainerContextsIndices;
+				m_ContainerContexts = other.m_ContainerContexts;
+				SetDirty();
+
+				AddToAllContainers();
+			}
+
+			return *this;
+		}
+
+		MultiQuery(MultiQuery&& other) noexcept
+		{
+			other.RemoveFromAllContainers();
+
+			m_FilterConfig = other.m_FilterConfig;
+			m_ContainerContextsIndices = other.m_ContainerContextsIndices;
+			m_ContainerContexts = other.m_ContainerContexts;
+
+			AddToAllContainers();
+		}
+
+		MultiQuery& operator=(MultiQuery&& other) noexcept
+		{
+			if (this != &other)
+			{
+				other.RemoveFromAllContainers();
+
+				RemoveFromAllContainers();
+
+				m_FilterConfig = std::move(other.m_FilterConfig);
+				m_ContainerContextsIndices = std::move(other.m_ContainerContextsIndices);
+				m_ContainerContexts = std::move(other.m_ContainerContexts);
+				SetDirty();
+
+				AddToAllContainers();
+			}
+
+			return *this;
+		}
 		[[nodiscard]] uint64_t GetEntityCount()
 		{
 			Fetch();
@@ -46,7 +93,7 @@ namespace decs
 		template<TComponentOrTagConcept... WithoutTypes>
 		MultiQuery& Without()
 		{
-			m_IsDirty = true;
+			SetDirty();
 			m_FilterConfig.Without<WithoutTypes...>();
 			return *this;
 		}
@@ -54,7 +101,7 @@ namespace decs
 		template<TComponentOrTagConcept... WithAnyTypes>
 		MultiQuery& WithAny()
 		{
-			m_IsDirty = true;
+			SetDirty();
 			m_FilterConfig.WithAny<WithAnyTypes...>();
 			return *this;
 		}
@@ -62,7 +109,7 @@ namespace decs
 		template<TComponentOrTagConcept... WithTypes>
 		MultiQuery& With()
 		{
-			m_IsDirty = true;
+			SetDirty();
 			m_FilterConfig.With<WithTypes...>();
 			return *this;
 		}
@@ -71,7 +118,7 @@ namespace decs
 		{
 			if (m_FilterConfig.Clear())
 			{
-				m_IsDirty = true;
+				SetDirty();
 			}
 		}
 
@@ -285,11 +332,9 @@ namespace decs
 
 		bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{
-			auto& contextIndex = m_ContainerContextsIndexes[container];
-			if (contextIndex >= m_ContainerContexts.size() || m_ContainerContexts[contextIndex].m_Container != container)
+			if (AddContainer_Impl(container, bIsEnabled))
 			{
-				contextIndex = m_ContainerContexts.size();
-				m_ContainerContexts.emplace_back(container, bIsEnabled);
+				AddToContainer(container);
 				return true;
 			}
 			return false;
@@ -297,20 +342,9 @@ namespace decs
 
 		bool RemoveContainer(Container* container) override
 		{
-			auto it = m_ContainerContextsIndexes.find(container);
-			if (it != m_ContainerContextsIndexes.end())
+			if (RemoveContainer_Impl(container))
 			{
-				const uint64_t index = it->second;
-				m_ContainerContextsIndexes.erase(it);
-
-				if (index < (m_ContainerContexts.size() - 1))
-				{
-					auto& lastContext = m_ContainerContexts.back();
-					m_ContainerContextsIndexes[lastContext.m_Container] = index;
-					m_ContainerContexts[index] = lastContext;
-				}
-				m_ContainerContexts.pop_back();
-
+				RemoveFromContainer(container);
 				return true;
 			}
 			return false;
@@ -318,8 +352,8 @@ namespace decs
 
 		void SetContainerEnabled(Container* container, bool bIsEnabled) override
 		{
-			auto it = m_ContainerContextsIndexes.find(container);
-			if (it != m_ContainerContextsIndexes.end())
+			auto it = m_ContainerContextsIndices.find(container);
+			if (it != m_ContainerContextsIndices.end())
 			{
 				ContainerContextType& context = m_ContainerContexts[it->second];
 				context.m_bIsEnabled = bIsEnabled;
@@ -330,8 +364,8 @@ namespace decs
 		{
 			if (entity.IsValid())
 			{
-				auto containerCtxIdxIt = m_ContainerContextsIndexes.find(entity.GetContainer());
-				if (containerCtxIdxIt != m_ContainerContextsIndexes.end())
+				auto containerCtxIdxIt = m_ContainerContextsIndices.find(entity.GetContainer());
+				if (containerCtxIdxIt != m_ContainerContextsIndices.end())
 				{
 					auto& ctx = m_ContainerContexts[containerCtxIdxIt->second];
 					ctx.Fetch(m_FilterConfig);
@@ -347,24 +381,23 @@ namespace decs
 			if (m_IsDirty)
 			{
 				m_IsDirty = false;
-				for (uint64_t i = 0; i < containerContextsSize; i++)
+				for (ContainerContextType& containerContext : m_ContainerContexts)
 				{
-					ContainerContextType& containerContext = m_ContainerContexts[i];
 					containerContext.Clear();
 					containerContext.Fetch(m_FilterConfig);
 				}
 			}
 			else
 			{
-				for (uint64_t i = 0; i < containerContextsSize; i++)
+				for (ContainerContextType& containerContext : m_ContainerContexts)
 				{
-					ContainerContextType& containerContext = m_ContainerContexts[i];
-					m_ContainerContexts[i].Fetch(m_FilterConfig);
+					containerContext.Fetch(m_FilterConfig);
 				}
 			}
 		}
+
 	private:
-		ecsHashMap<Container*, uint64_t> m_ContainerContextsIndexes;
+		ecsHashMap<Container*, uint64_t> m_ContainerContextsIndices{};
 		QueryFilterConfigType m_FilterConfig{};
 
 		ecsVector<ContainerContextType> m_ContainerContexts = {};
@@ -372,6 +405,15 @@ namespace decs
 		bool m_IsDirty = true;
 
 	private:
+		void SetDirty()
+		{
+			m_IsDirty = true;
+			for (ContainerContextType& containerCtx : m_ContainerContexts)
+			{
+				containerCtx.SetDirty();
+			}
+		}
+
 		uint64_t CalculateEntityCount()
 		{
 			uint64_t entitiesCount = 0;
@@ -388,7 +430,6 @@ namespace decs
 			return entitiesCount;
 		}
 
-	private:
 		template<typename Callable>
 		inline static void InvokeEntityIteration(
 			Callable&& func,
@@ -412,6 +453,116 @@ namespace decs
 			}
 		}
 
+		void ClearContainerContexts()
+		{
+			for (auto& containerCtx : m_ContainerContexts)
+			{
+				RemoveFromContainer(containerCtx.GetContainer());
+			}
+			m_ContainerContexts.clear();
+		}
+
+	#pragma region IMultiQuery implementation
+	private:
+		void TryAddArchetype(Container& container, const Archetype& archetype) override
+		{
+			auto it = m_ContainerContextsIndices.find(&container);
+			if (it == m_ContainerContextsIndices.end())
+			{
+				return;
+			}
+
+			auto& containerCtx = m_ContainerContexts[it->second];
+			containerCtx.TryAddArchetype(archetype, m_FilterConfig);
+		}
+
+		void TryRemoveArchetpye(Container& container, const Archetype& archetype) override
+		{
+			auto it = m_ContainerContextsIndices.find(&container);
+			if (it == m_ContainerContextsIndices.end())
+			{
+				return;
+			}
+
+			auto& containerCtx = m_ContainerContexts[it->second];
+			containerCtx.TryRemoveArchetype(archetype);
+		}
+
+		void OnDestroyContainer(Container* container) override
+		{
+			RemoveContainer_Impl(container);
+		}
+
+		void AddToContainer(Container* container)
+		{
+			if (container == nullptr)
+			{
+				return;
+			}
+
+			container->AddMultiQuery(this);
+		}
+
+		void RemoveFromContainer(Container* container)
+		{
+			if (container == nullptr)
+			{
+				return;
+			}
+
+			container->RemoveMultiQuery(this);
+		}
+
+		bool AddContainer_Impl(Container* container, bool bIsEnabled = true)
+		{
+			auto& contextIndex = m_ContainerContextsIndices[container];
+			if (contextIndex >= m_ContainerContexts.size() || m_ContainerContexts[contextIndex].m_Container != container)
+			{
+				contextIndex = m_ContainerContexts.size();
+				m_ContainerContexts.emplace_back(container, bIsEnabled);
+				return true;
+			}
+			return false;
+		}
+
+		bool RemoveContainer_Impl(Container* container)
+		{
+			auto it = m_ContainerContextsIndices.find(container);
+			if (it != m_ContainerContextsIndices.end())
+			{
+				const uint64_t index = it->second;
+				m_ContainerContextsIndices.erase(it);
+
+				if (index < (m_ContainerContexts.size() - 1))
+				{
+					auto& lastContext = m_ContainerContexts.back();
+					m_ContainerContextsIndices[lastContext.m_Container] = index;
+					m_ContainerContexts[index] = std::move(lastContext);
+				}
+				m_ContainerContexts.pop_back();
+
+				return true;
+			}
+			return false;
+		}
+
+		void AddToAllContainers()
+		{
+			for (auto& containerCtx : m_ContainerContexts)
+			{
+				AddToContainer(containerCtx.GetContainer());
+			}
+		}
+
+		void RemoveFromAllContainers()
+		{
+			for (auto& containerCtx : m_ContainerContexts)
+			{
+				RemoveFromContainer(containerCtx.GetContainer());
+			}
+		}
+
+	#pragma endregion
 	public:
 		struct BatchIterator
 		{

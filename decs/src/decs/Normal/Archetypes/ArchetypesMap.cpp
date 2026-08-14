@@ -25,8 +25,13 @@ namespace decs
 		archetypeGroup.Archetypes.push_back(archetype);
 	}
 
-	ArchetypesMap::ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize):
-		m_Archetypes(archetypesVectorChunkSize),
+	ArchetypesMap::ArchetypesMap(
+		QueryManager& queryManager,
+		uint64_t archetypesVectorChunkSize,
+		uint64_t archetypeGroupsVectorChunkSize
+	) :
+		m_QueryManager(queryManager),
+		m_ArchetypeAllocator(static_cast<uint32_t>(archetypesVectorChunkSize)),
 		m_ArchetypesGroupsByOneTypeAllocator(archetypeGroupsVectorChunkSize)
 	{
 
@@ -43,25 +48,19 @@ namespace decs
 			return;
 		}
 
-		uint64_t chunksCount = m_Archetypes.ChunkCount();
-		for (uint64_t chunkIdx = 0; chunkIdx < chunksCount; chunkIdx++)
+		IterateOverArchetypes([] (Archetype& archetype)
 		{
-			uint64_t chunkSize = m_Archetypes.GetChunkSize(chunkIdx);
-			Archetype* chunk = m_Archetypes.GetChunk(chunkIdx);
+			archetype.ShrinkToFit();
+		});
 
-			for (uint64_t idx = 0; idx < chunkSize; idx++)
-			{
-				Archetype& archetype = chunk[idx];
-				archetype.ShrinkToFit();
-			}
-		}
 	}
 
 	void ArchetypesMap::ShrinkArchetypesToFit(ArchetypesShrinkToFitState& state, const ArchetypesShrinkToFitConfig& config)
 	{
 		size_t currentArchetypeIndex = state.m_LastArchetypeIndex;
 
-		if (currentArchetypeIndex >= m_Archetypes.Size())
+		auto createdArchetypes = m_ArchetypeAllocator.GetCreatedArchetypes();
+		if (currentArchetypeIndex >= createdArchetypes.size())
 		{
 			currentArchetypeIndex = 0;
 		}
@@ -74,10 +73,11 @@ namespace decs
 			return checkedArchetypeCount < config.m_MaxArchetypeCountToCheck && shrinkedArchetypeCount < config.m_MaxArchetypesToShrink;
 		};
 
+
 		while (keepShrinking())
 		{
-			Archetype& archetype = m_Archetypes[currentArchetypeIndex];
-			currentArchetypeIndex = (currentArchetypeIndex + 1) % m_Archetypes.Size();
+			Archetype& archetype = *createdArchetypes[currentArchetypeIndex];
+			currentArchetypeIndex = (currentArchetypeIndex + 1) % createdArchetypes.size();
 			checkedArchetypeCount++;
 
 			if (archetype.GetLoadFactor() <= config.m_MinArchetypeLoadFactor)
@@ -92,9 +92,9 @@ namespace decs
 
 	void ArchetypesMap::ClearEntityDataAndComponents()
 	{
-		IterateOverArchetypes([](Archetype* arch)
+		IterateOverArchetypes([] (Archetype& arch)
 		{
-			arch->ClearEntityDataAndComponents();
+			arch.ClearEntityDataAndComponents();
 		});
 	}
 
@@ -166,12 +166,14 @@ namespace decs
 
 		m_HashedArchetypes[ArchetypeHasher(&archetype)] = &archetype;
 
-		if (archetype.GetComponentTagCount() > m_MaxComponentTagFilterCount)
+		if (archetype.GetComponentTagCount() > m_MaxComponentTagCount)
 		{
-			m_MaxComponentTagFilterCount = archetype.GetComponentTagCount();
+			m_MaxComponentTagCount = archetype.GetComponentTagCount();
 		}
 
 		MakeArchetypeEdges_4(archetype);
+
+		m_QueryManager.OnCreateArchetype(&archetype);
 	}
 
 	Archetype* ArchetypesMap::FindMatchingArchetype(const Archetype& toArchetype)
@@ -201,7 +203,7 @@ namespace decs
 
 		if (archetype == nullptr)
 		{
-			archetype = &m_Archetypes.EmplaceBack();
+			archetype = m_ArchetypeAllocator.CreateArchetype();
 
 			// take care that componentContextsManager have the same component contexts that component contextManager which have "fromArchetype" archetype and stableContainersManager have correct stable components containers
 			for (uint64_t i = 0; i < fromArchetype.GetComponentAndTagCount(); i++)
@@ -227,7 +229,7 @@ namespace decs
 		{
 			return archetype;
 		}
-		archetype = &m_Archetypes.EmplaceBack();
+		archetype = m_ArchetypeAllocator.CreateArchetype();
 		archetype->AddTypeData_WithoutCheck(componentTypeID, componentContext);
 		AddArchetypeToCorrectContainers(*archetype);
 		return archetype;
@@ -255,7 +257,7 @@ namespace decs
 			return nullptr;
 		}
 
-		Archetype& newArchetype = m_Archetypes.EmplaceBack();
+		Archetype& newArchetype = *m_ArchetypeAllocator.CreateArchetype();
 		AddTypeDataAfterAddComponent(toArchetype, newArchetype, componentTypeID, componentContext);
 
 		AddArchetypeToCorrectContainers(newArchetype);
@@ -265,7 +267,7 @@ namespace decs
 
 	Archetype* ArchetypesMap::CreateArchetypeAfterAddComponent(const Archetype& toArchetype, TypeID componentTypeID, IComponentContext* componentContext)
 	{
-		Archetype& newArchetype = m_Archetypes.EmplaceBack();
+		Archetype& newArchetype = *m_ArchetypeAllocator.CreateArchetype();
 		AddTypeDataAfterAddComponent(toArchetype, newArchetype, componentTypeID, componentContext);
 
 		AddArchetypeToCorrectContainers(newArchetype);
@@ -302,7 +304,7 @@ namespace decs
 			return nullptr;
 		}
 
-		Archetype& newArchetype = m_Archetypes.EmplaceBack();
+		Archetype& newArchetype = *m_ArchetypeAllocator.CreateArchetype();
 		AddTypeDataAfterRemoveComponent(fromArchetype, newArchetype, removedComponentTypeID);
 		AddArchetypeToCorrectContainers(newArchetype);
 
@@ -326,7 +328,7 @@ namespace decs
 		{
 			return archetype;
 		}
-		archetype = &m_Archetypes.EmplaceBack();
+		archetype = m_ArchetypeAllocator.CreateArchetype();
 		archetype->AddTypeData_WithoutCheck(componentTypeID, nullptr);
 		AddArchetypeToCorrectContainers(*archetype);
 
@@ -397,5 +399,74 @@ namespace decs
 		}
 	}
 
+	void ArchetypesMap::TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config)
+	{
+		const size_t startArchetypeCount = m_ArchetypeAllocator.GetCreatedArchetypes().size();
+		if (state.m_LastCheckdArchetypeIndex >= startArchetypeCount)
+		{
+			state.m_LastCheckdArchetypeIndex = 0;
+		}
+
+		const size_t maxArchetypesToIterate = config.m_MaxArchetypesToCheck < startArchetypeCount ? config.m_MaxArchetypesToCheck : startArchetypeCount;
+		size_t iteratedArchetypes = 0;
+		size_t destroyedArchetypes = 0;
+
+		auto endDestroying = [&] ()->bool
+		{
+			return destroyedArchetypes >= config.m_MaxArchetypesDestroy
+				|| iteratedArchetypes >= maxArchetypesToIterate
+				|| m_ArchetypeAllocator.GetCreatedArchetypes().empty()
+				;
+		};
+
+		auto canDestroyArchetype = [&] (Archetype* archetype)-> bool
+		{
+			return archetype->IsEmpty();
+		};
+
+		while (!endDestroying())
+		{
+			auto createdArchetypes = m_ArchetypeAllocator.GetCreatedArchetypes();
+			size_t index = state.m_LastCheckdArchetypeIndex % createdArchetypes.size();
+
+			iteratedArchetypes++;
+
+			Archetype* currentArchetype = createdArchetypes[index];
+			if (canDestroyArchetype(currentArchetype))
+			{
+				RemoveArchetypeFromMap(currentArchetype);
+				destroyedArchetypes++;
+			}
+			else
+			{
+				state.m_LastCheckdArchetypeIndex++;
+			}
+		}
+	}
+
+	void ArchetypesMap::RemoveArchetypeFromMap(Archetype* archetype)
+	{
+		m_QueryManager.OnDestroyArchetype(archetype);
+		archetype->RemoveFromNeighbours();
+
+		ArchetypeHasher hasher(archetype);
+		m_HashedArchetypes.erase(archetype);
+
+		// remove from archetype groups
+		{
+			for (auto& typeData : archetype->m_TypeData)
+			{
+				auto groupIt = m_ArchetypesGroupedByOneType.find(typeData.m_TypeID);
+				if (groupIt == m_ArchetypesGroupedByOneType.end())
+				{
+					continue;
+				}
+				auto group = groupIt->second;
+				group->RemoveArchetype(archetype);
+			}
+		}
+
+		m_ArchetypeAllocator.Destroy(archetype);
+	}
 
 }

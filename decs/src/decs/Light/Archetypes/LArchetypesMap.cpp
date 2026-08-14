@@ -8,14 +8,14 @@ namespace decs::light
 	ArchetypesMap::ArchetypesMap(
 		FilterManager& filterManager,
 		ComponentContextManager& componentContextManager,
-		QueryManager& queryManger,
+		QueryManager& queryManager,
 		uint64_t archetypesVectorChunkSize,
 		uint64_t archetypeGroupsVectorChunkSize
 	):
 		m_FilterManager(filterManager),
 		m_ComponentContextManager(componentContextManager),
 		m_ArchetypeAllocator(filterManager, static_cast<uint32_t>(archetypesVectorChunkSize)),
-		m_QueryManager(queryManger),
+		m_QueryManager(queryManager),
 		m_ArchetypesGroupsByOneTypeAllocator(static_cast<uint32_t>(archetypeGroupsVectorChunkSize))
 	{
 

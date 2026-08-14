@@ -31,12 +31,12 @@ namespace decs::light
 			ClearContainerContexts();
 		}
 
-		MultiQuery(const MultiQuery& other):
+		MultiQuery(const MultiQuery& other) :
 			m_FilterConfig(other.m_FilterConfig),
 			m_ContainerContextsIndices(other.m_ContainerContextsIndices),
 			m_ContainerContexts(other.m_ContainerContexts)
 		{
-			AddToContainer();
+			AddToAllContainers();
 		}
 
 		MultiQuery& operator=(const MultiQuery& other)
@@ -47,9 +47,9 @@ namespace decs::light
 
 				m_FilterConfig = other.m_FilterConfig;
 				m_ContainerContextsIndices = other.m_ContainerContextsIndices;
-				m_ContainerContexts = other.m_ContainerContexts;
-				m_IsDirty = true;
-				
+				m_ContainerContexts = other.m_ContainerContexts; 
+				SetDirty();
+
 				AddToAllContainers();
 			}
 
@@ -78,7 +78,7 @@ namespace decs::light
 				m_FilterConfig = std::move(other.m_FilterConfig);
 				m_ContainerContextsIndices = std::move(other.m_ContainerContextsIndices);
 				m_ContainerContexts = std::move(other.m_ContainerContexts);
-				m_IsDirty = true;
+				SetDirty();
 
 				AddToAllContainers();
 			}
@@ -104,7 +104,7 @@ namespace decs::light
 		template<light_component_or_tag_or_filter_concept... WithoutTypes>
 		MultiQuery& Without()
 		{
-			m_IsDirty = true;
+			SetDirty();
 			m_FilterConfig.Without<WithoutTypes...>();
 			return *this;
 		}
@@ -112,7 +112,7 @@ namespace decs::light
 		template<light_component_or_tag_or_filter_concept... WithAnyTypes>
 		MultiQuery& WithAny()
 		{
-			m_IsDirty = true;
+			SetDirty();
 			m_FilterConfig.WithAny<WithAnyTypes...>();
 			return *this;
 		}
@@ -120,7 +120,7 @@ namespace decs::light
 		template<light_component_or_tag_or_filter_concept... WithTypes>
 		MultiQuery& With()
 		{
-			m_IsDirty = true;
+			SetDirty();
 			m_FilterConfig.With<WithTypes...>();
 			return *this;
 		}
@@ -135,7 +135,7 @@ namespace decs::light
 		{
 			if (m_FilterConfig.Clear())
 			{
-				m_IsDirty = true;
+				SetDirty();
 			}
 		}
 
@@ -346,7 +346,6 @@ namespace decs::light
 			}
 		}
 
-
 		bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{
 			if (AddContainer_Impl(container, bIsEnabled))
@@ -403,6 +402,13 @@ namespace decs::light
 					containerContext.Fetch(m_FilterConfig);
 				}
 			}
+			else
+			{
+				for (ContainerContextType& containerContext : m_ContainerContexts)
+				{
+					containerContext.Fetch(m_FilterConfig);
+				}
+			}
 		}
 
 	private:
@@ -413,6 +419,15 @@ namespace decs::light
 		bool m_IsDirty = true;
 
 	private:
+		void SetDirty()
+		{
+			m_IsDirty = true;
+			for (ContainerContextType& containerCtx : m_ContainerContexts)
+			{
+				containerCtx.SetDirty();
+			}
+		}
+
 		void ClearContainerContexts()
 		{
 			for (auto& containerCtx : m_ContainerContexts)
@@ -461,7 +476,8 @@ namespace decs::light
 			}
 		}
 
-
+	#pragma region IMultiQuery implementation
+	private:
 		void TryAddArchetype(Container& container, const Archetype& archetype) override
 		{
 			auto it = m_ContainerContextsIndices.find(&container);
@@ -560,6 +576,7 @@ namespace decs::light
 			}
 		}
 
+	#pragma endregion
 	public:
 		struct BatchIterator
 		{
@@ -578,7 +595,7 @@ namespace decs::light
 				uint64_t startArchetypeIndex,
 				uint64_t startEntityIndex,
 				uint64_t entitiesCount
-			):
+			) :
 				m_Query(query),
 				m_StartContainerContextIndex(startContainerElementIndex),
 				m_StartArchetypeIndex(startArchetypeIndex),

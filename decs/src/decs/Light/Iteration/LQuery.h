@@ -286,6 +286,7 @@ namespace decs::light
 		void MakeDirty()
 		{
 			m_IsDirty = true;
+			m_ContainerContext.SetDirty();
 		}
 
 		template<typename Callable>

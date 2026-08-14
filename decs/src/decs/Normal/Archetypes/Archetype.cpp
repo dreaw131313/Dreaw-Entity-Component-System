@@ -459,6 +459,21 @@ namespace decs
 		}
 	}
 
+	void Archetype::ResetOnDestroy()
+	{
+		m_TypeIDsIndexes.clear();
+		m_Edges.clear();
+
+		m_EntityStorage.Clear();
+
+		for (auto& data : m_TypeData)
+		{
+			delete data.m_PackedContainer;
+		}
+
+		m_TypeData.clear();
+	}
+
 	void Archetype::AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType)
 	{
 		auto& edge = m_Edges[componentTypeID];
@@ -467,6 +482,15 @@ namespace decs
 			edge.m_Archetype = archetype;
 			edge.m_EdgeType = edgeType;
 		}
+	}
+
+	void Archetype::RemoveFromNeighbours()
+	{
+		for (auto& [edgeKey, edge] : m_Edges)
+		{
+			edge.m_Archetype->m_Edges.erase(edgeKey);
+		}
+		m_Edges.clear();
 	}
 
 	bool Archetype::MoveEntityComponentsAfterAddComponent(
