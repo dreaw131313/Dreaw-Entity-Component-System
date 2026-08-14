@@ -69,7 +69,7 @@ namespace decs
 
 			for (size_t archIdx = 0; archIdx < archetypesVector.size(); archIdx++)
 			{
-				Archetype& archetype = archetypesVector[archIdx];
+				Archetype& archetype = *archetypesVector[archIdx];
 				const auto& entityStorage = archetype.GetEntityStorage();
 				archetypeFunc(&archetype);
 
