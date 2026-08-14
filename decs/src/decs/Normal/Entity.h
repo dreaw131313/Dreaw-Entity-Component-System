@@ -502,6 +502,16 @@ namespace decs
 
 	#pragma endregion
 
+		inline bool FromSameContainerAs(const Entity& other) const noexcept
+		{
+			return m_LifeTimeData == other.m_LifeTimeData;
+		}
+
+		inline static bool FromSameContainer(const Entity& lhs, const Entity& rhs)
+		{
+			return lhs.m_LifeTimeData == rhs.m_LifeTimeData;
+		}
+
 	private:
 		ContainerLifetimeDataHandle m_LifeTimeData{};
 		EntityID m_EntityID = InvalidEntityID;
