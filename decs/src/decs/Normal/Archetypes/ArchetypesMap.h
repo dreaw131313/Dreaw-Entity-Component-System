@@ -34,6 +34,10 @@ namespace decs
 
 		}
 
+		inline bool IsEmpty() const noexcept
+		{
+			return m_ArchetypesCount == 0;
+		}
 		inline TypeID GetMainTypeID() const noexcept
 		{
 			return m_MainTypeID;
@@ -102,6 +106,40 @@ namespace decs
 			}
 		}
 
+		void RemoveArchetype(Archetype* archetype)
+		{
+			if (IsEmpty())
+			{
+				return;
+			}
+
+			const uint64_t componentTagFilterCount = archetype->GetComponentTagCount();
+
+			if (componentTagFilterCount > m_Groups.size())
+			{
+				return;
+			}
+
+			auto& archetypes = m_Groups[componentTagFilterCount - 1].Archetypes;
+			for (size_t idx = 0; idx < archetypes.size(); idx++)
+			{
+				if (archetypes[idx] == archetype)
+				{
+					if (archetype == m_MainTypeArchetype)
+					{
+						m_MainTypeArchetype = nullptr;
+					}
+
+					if (idx < (archetypes.size() - 1))
+					{
+						archetypes[idx] = archetypes.back();
+					}
+					archetypes.pop_back();
+					m_ArchetypesCount--;
+					break;
+				}
+			}
+		}
 	private:
 		TypeID m_MainTypeID = std::numeric_limits<TypeID>::max();
 		Archetype* m_MainTypeArchetype = nullptr;
@@ -324,5 +362,9 @@ namespace decs
 
 		void AddTypeDataAfterAddComponent(const Archetype& baseArchetype, Archetype& toArchetype, TypeID componentTypeID, IComponentContext* addedComponentContext);
 
+		// DESTROYING ARCHETYPES OVER TIME
+		void TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config);
+
+		void RemoveArchetypeFromMap(Archetype* archetpye);
 	};
 }

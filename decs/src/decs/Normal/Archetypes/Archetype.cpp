@@ -484,6 +484,15 @@ namespace decs
 		}
 	}
 
+	void Archetype::RemoveFromNeighbours()
+	{
+		for (auto& [edgeKey, edge] : m_Edges)
+		{
+			edge.m_Archetype->m_Edges.erase(edgeKey);
+		}
+		m_Edges.clear();
+	}
+
 	bool Archetype::MoveEntityComponentsAfterAddComponent(
 		Archetype& fromArchetype,
 		Archetype& toArchetype,

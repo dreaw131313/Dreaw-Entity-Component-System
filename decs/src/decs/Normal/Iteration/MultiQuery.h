@@ -537,7 +537,7 @@ namespace decs
 				{
 					auto& lastContext = m_ContainerContexts.back();
 					m_ContainerContextsIndices[lastContext.m_Container] = index;
-					m_ContainerContexts[index] = lastContext;
+					m_ContainerContexts[index] = std::move(lastContext);
 				}
 				m_ContainerContexts.pop_back();
 

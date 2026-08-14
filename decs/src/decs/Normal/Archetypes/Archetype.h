@@ -38,6 +38,11 @@ namespace decs
 	class ArchetypeEntityDataStorage
 	{
 	public:
+		inline bool IsEmpty() const noexcept
+		{
+			return m_EntityData.empty();
+		}
+
 		inline size_t GetSize() const noexcept
 		{
 			return m_EntityData.size();
@@ -388,6 +393,11 @@ namespace decs
 			return m_EntityStorage.GetSize();
 		}
 
+		inline bool IsEmpty() const noexcept
+		{
+			return m_EntityStorage.IsEmpty();
+		}
+
 		inline size_t GetCapacity() const noexcept
 		{
 			return m_EntityStorage.GetCapacity();
@@ -658,6 +668,8 @@ namespace decs
 			}
 			return {};
 		}
+
+		void RemoveFromNeighbours();
 
 	#pragma endregion
 

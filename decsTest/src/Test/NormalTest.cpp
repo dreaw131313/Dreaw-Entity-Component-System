@@ -418,7 +418,6 @@ namespace Normal
 		std::cout << "Final avarage single entity creation time " << finalSingleEntityCreationTime * 1000. << " us (" << finalSingleEntityCreationTime << "ms)\n";
 	}
 
-
 	void Test::ObserversTest()
 	{
 
@@ -474,7 +473,6 @@ namespace Normal
 
 		entity.Destroy();
 	}
-
 
 	void Test::StatisticsTest()
 	{

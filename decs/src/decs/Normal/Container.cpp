@@ -26,6 +26,7 @@ namespace decs
 
 	Container::~Container()
 	{
+		m_QueryManager.OnDestroyContainer();
 		m_ComponentContextManager.ClearStableContainers();
 		m_ArchetypesMap.ClearEntityDataAndComponents();
 		DestroyLifeTimeData();
@@ -1463,6 +1464,11 @@ namespace decs
 	void Container::ResetDisabledOverrideCount_NoObserver(EntityData& entityData, const Entity& entity)
 	{
 		SetEntityDisabledOverrideCount_NoObserver(entityData, entity, 0);
+	}
+
+	void Container::TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config)
+	{
+		m_ArchetypesMap.TryDestroyArchetypes(state, config);
 	}
 
 	void Container::AddQuery(IQuery* query)

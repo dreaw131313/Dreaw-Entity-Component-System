@@ -399,5 +399,74 @@ namespace decs
 		}
 	}
 
+	void ArchetypesMap::TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config)
+	{
+		const size_t startArchetypeCount = m_ArchetypeAllocator.GetCreatedArchetypes().size();
+		if (state.m_LastCheckdArchetypeIndex >= startArchetypeCount)
+		{
+			state.m_LastCheckdArchetypeIndex = 0;
+		}
+
+		const size_t maxArchetypesToIterate = config.m_MaxArchetypesToCheck < startArchetypeCount ? config.m_MaxArchetypesToCheck : startArchetypeCount;
+		size_t iteratedArchetypes = 0;
+		size_t destroyedArchetypes = 0;
+
+		auto endDestroying = [&] ()->bool
+		{
+			return destroyedArchetypes >= config.m_MaxArchetypesDestroy
+				|| iteratedArchetypes >= maxArchetypesToIterate
+				|| m_ArchetypeAllocator.GetCreatedArchetypes().empty()
+				;
+		};
+
+		auto canDestroyArchetype = [&] (Archetype* archetype)-> bool
+		{
+			return archetype->IsEmpty();
+		};
+
+		while (!endDestroying())
+		{
+			auto createdArchetypes = m_ArchetypeAllocator.GetCreatedArchetypes();
+			size_t index = state.m_LastCheckdArchetypeIndex % createdArchetypes.size();
+
+			iteratedArchetypes++;
+
+			Archetype* currentArchetype = createdArchetypes[index];
+			if (canDestroyArchetype(currentArchetype))
+			{
+				RemoveArchetypeFromMap(currentArchetype);
+				destroyedArchetypes++;
+			}
+			else
+			{
+				state.m_LastCheckdArchetypeIndex++;
+			}
+		}
+	}
+
+	void ArchetypesMap::RemoveArchetypeFromMap(Archetype* archetype)
+	{
+		m_QueryManager.OnDestroyArchetype(archetype);
+		archetype->RemoveFromNeighbours();
+
+		ArchetypeHasher hasher(archetype);
+		m_HashedArchetypes.erase(archetype);
+
+		// remove from archetype groups
+		{
+			for (auto& typeData : archetype->m_TypeData)
+			{
+				auto groupIt = m_ArchetypesGroupedByOneType.find(typeData.m_TypeID);
+				if (groupIt == m_ArchetypesGroupedByOneType.end())
+				{
+					continue;
+				}
+				auto group = groupIt->second;
+				group->RemoveArchetype(archetype);
+			}
+		}
+
+		m_ArchetypeAllocator.Destroy(archetype);
+	}
 
 }

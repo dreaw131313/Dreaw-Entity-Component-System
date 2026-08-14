@@ -893,10 +893,6 @@ namespace decs
 	#pragma endregion
 
 	#pragma region ARCHETYPES:
-	private:
-		QueryManager m_QueryManager;
-		ArchetypesMap m_ArchetypesMap;
-
 	public:
 		inline void ShrinkArchetypesToFit()
 		{
@@ -912,6 +908,12 @@ namespace decs
 		{
 			return m_ArchetypesMap.GetArchetypesCount();
 		}
+
+		void TryDestroyArchetypes(ArchetypeDestroyState& state, const ArchetypeDestroyConfig& config);
+
+	private:
+		QueryManager m_QueryManager;
+		ArchetypesMap m_ArchetypesMap;
 
 	private:
 		template<typename ComponentType>
