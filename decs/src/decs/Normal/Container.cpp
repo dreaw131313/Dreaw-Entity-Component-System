@@ -9,7 +9,8 @@ namespace decs
 {
 	Container::Container() :
 		m_EntityManager(m_DefaultEntitiesChunkSize),
-		m_QueryManager(this)
+		m_QueryManager(this),
+		m_ArchetypesMap(m_QueryManager, 100, 100)
 	{
 		InitializeLifeTimeData();
 	}
@@ -17,8 +18,8 @@ namespace decs
 	Container::Container(const ContainerConfig& config) :
 		m_EntityManager(config.EntityChunkSize),
 		m_ComponentContextManager(static_cast<uint32_t>(config.DefaultComponentChunkSize)),
-		m_ArchetypesMap(config.ArchetypeChunkSize, 100),
-		m_QueryManager(this)
+		m_QueryManager(this),
+		m_ArchetypesMap(m_QueryManager, config.ArchetypeChunkSize, 100)
 	{
 		InitializeLifeTimeData();
 	}
@@ -789,16 +790,16 @@ namespace decs
 				}
 			}
 
-			m_ArchetypesMap.IterateOverArchetypes([&] (Archetype* archetype)
+			m_ArchetypesMap.IterateOverArchetypes([&] (Archetype& archetype)
 			{
-				if (archetype->EntityCount() == 0)
+				if (archetype.EntityCount() == 0)
 				{
 					return;
 				}
 
-				const auto& entityStorage = archetype->GetEntityStorage();
+				const auto& entityStorage = archetype.GetEntityStorage();
 
-				for (int64_t idx = static_cast<int64_t>(archetype->EntityCount()) - 1; idx >= 0; idx--)
+				for (int64_t idx = static_cast<int64_t>(archetype.EntityCount()) - 1; idx >= 0; idx--)
 				{
 					const auto archetypeEntityData = entityStorage.GetEntityRecord(idx);
 					if (archetypeEntityData.IsValid())

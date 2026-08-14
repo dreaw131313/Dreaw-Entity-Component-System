@@ -14,9 +14,7 @@ namespace decs
 		void Foreach(Container& container, TCallable&& entityFunc) const
 		{
 			auto& archetypesMap = container.m_ArchetypesMap;
-			auto& archetypesVector = container.m_ArchetypesMap.m_Archetypes;
-
-			uint64_t archetypesChunks = archetypesVector.ChunkCount();
+			auto& archetypesVector = container.m_ArchetypesMap.m_ArchetypeAllocator.GetCreatedArchetypesVector();
 
 			decs::Entity entityBuffer = {};
 
@@ -26,27 +24,20 @@ namespace decs
 				entityFunc(entityBuffer);
 			}
 
-			for (uint64_t chunkIdx = 0; chunkIdx < archetypesChunks; chunkIdx++)
+			for (size_t archIdx = 0; archIdx < archetypesVector.size(); archIdx++)
 			{
-				uint64_t elementsCount = archetypesVector.GetChunkSize(chunkIdx);
-
-				auto chunk = archetypesVector.GetChunk(chunkIdx);
-
-				for (uint64_t archetypeIdx = 0; archetypeIdx < elementsCount; archetypeIdx++)
+				Archetype& archetype = *archetypesVector[archIdx];
+				const auto& entityStorage = archetype.GetEntityStorage();
+				uint64_t entitesCount = archetype.EntityCount();
+				if (entitesCount > 0)
 				{
-					Archetype& archetype = chunk[archetypeIdx];
-					const auto& entityStorage = archetype.GetEntityStorage();
-					uint64_t entitesCount = archetype.EntityCount();
-					if (entitesCount > 0)
+					for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 					{
-						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
+						auto entityData = entityStorage.GetEntity(entityIdx);
+						if (entityData != nullptr)
 						{
-							auto entityData = entityStorage.GetEntity(entityIdx);
-							if (entityData != nullptr)
-							{
-								entityBuffer.Set_Internal(container, *entityData);
-								entityFunc(entityBuffer);
-							}
+							entityBuffer.Set_Internal(container, *entityData);
+							entityFunc(entityBuffer);
 						}
 					}
 				}
@@ -65,9 +56,7 @@ namespace decs
 		void ForEach(Container& container, EntityFunc&& entityFunc, ArchetypeFunc&& archetypeFunc)
 		{
 			auto& archetypesMap = container.m_ArchetypesMap;
-			auto& archetypesVector = container.m_ArchetypesMap.m_Archetypes;
-
-			uint64_t archetypesChunks = archetypesVector.ChunkCount();
+			auto& archetypesVector = container.m_ArchetypesMap.m_ArchetypeAllocator.GetCreatedArchetypesVector();
 
 			archetypeFunc(nullptr);
 			decs::Entity entityBuffer = {};
@@ -78,29 +67,22 @@ namespace decs
 				entityFunc(entityBuffer);
 			}
 
-			for (uint64_t chunkIdx = 0; chunkIdx < archetypesChunks; chunkIdx++)
+			for (size_t archIdx = 0; archIdx < archetypesVector.size(); archIdx++)
 			{
-				uint64_t elementsCount = archetypesVector.GetChunkSize(chunkIdx);
+				Archetype& archetype = archetypesVector[archIdx];
+				const auto& entityStorage = archetype.GetEntityStorage();
+				archetypeFunc(&archetype);
 
-				auto chunk = archetypesVector.GetChunk(chunkIdx);
-
-				for (uint64_t archetypeIdx = 0; archetypeIdx < elementsCount; archetypeIdx++)
+				uint64_t entitesCount = archetype.EntityCount();
+				if (entitesCount > 0)
 				{
-					Archetype& archetype = chunk[archetypeIdx];
-					const auto& entityStorage = archetype.GetEntityStorage();
-					archetypeFunc(&archetype);
-
-					uint64_t entitesCount = archetype.EntityCount();
-					if (entitesCount > 0)
+					for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
 					{
-						for (uint64_t entityIdx = 0; entityIdx < entitesCount; entityIdx++)
+						auto entityData = entityStorage.GetEntity(entityIdx);
+						if (entityData != nullptr)
 						{
-							auto entityData = entityStorage.GetEntity(entityIdx);
-							if (entityData != nullptr)
-							{
-								entityBuffer.Set_Internal(container, *entityData);
-								entityFunc(entityBuffer);
-							}
+							entityBuffer.Set_Internal(container, *entityData);
+							entityFunc(entityBuffer);
 						}
 					}
 				}

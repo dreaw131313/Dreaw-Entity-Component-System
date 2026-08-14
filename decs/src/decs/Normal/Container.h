@@ -894,7 +894,8 @@ namespace decs
 
 	#pragma region ARCHETYPES:
 	private:
-		ArchetypesMap m_ArchetypesMap{};
+		QueryManager m_QueryManager;
+		ArchetypesMap m_ArchetypesMap;
 
 	public:
 		inline void ShrinkArchetypesToFit()
@@ -977,6 +978,18 @@ namespace decs
 
 			return spawnArchetype;
 		}
+
+	#pragma endregion
+
+	#pragma region QUERIES
+	private:
+		void AddQuery(IQuery* query);
+
+		void RemoveQuery(IQuery* query);
+
+		void AddMultiQuery(IMultiQuery* query);
+
+		void RemoveMultiQuery(IMultiQuery* query);
 
 	#pragma endregion
 
@@ -1372,20 +1385,6 @@ namespace decs
 		void SetEntityDisabledOverrideCount_NoObserver(EntityData& entityData, const Entity& entity, uint32_t disabledOverrideCount);
 
 		void ResetDisabledOverrideCount_NoObserver(EntityData& entityData, const Entity& entity);
-
-	#pragma endregion
-
-	#pragma region QUERIES
-	private:
-		QueryManager m_QueryManager;
-	private:
-		void AddQuery(IQuery* query);
-
-		void RemoveQuery(IQuery* query);
-
-		void AddMultiQuery(IMultiQuery* query);
-
-		void RemoveMultiQuery(IMultiQuery* query);
 
 	#pragma endregion
 	};

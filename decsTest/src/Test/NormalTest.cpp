@@ -123,9 +123,9 @@ namespace Normal
 		std::cout << "///////////////////////////////////////////" << "\n";
 
 		QueryIterationTest();
-		//EntityCreatePerformanceTest();
-		//ObserversTest();
-		//StatisticsTest();
+		EntityCreatePerformanceTest();
+		ObserversTest();
+		StatisticsTest();
 	}
 
 	void Test::QueryIterationTest()
@@ -135,186 +135,182 @@ namespace Normal
 		using DoubleTag = decs::tag<double>;
 		using BoolTag = decs::tag<bool>;
 
+		const decs::ContainerConfig containerConfig{
+			.EntityChunkSize = 1000,
+			.DefaultComponentChunkSize = 200,
+			.ArchetypeChunkSize = 200,
+		};
+
+		decs::Container container = { containerConfig };
+
+		decs::ComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
+		decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
+
+		auto initFunc = [] (const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
 		{
-			const decs::ContainerConfig containerConfig{
-				.EntityChunkSize = 1000,
-				.DefaultComponentChunkSize = 200,
-				.ArchetypeChunkSize = 200,
-			};
+			PrintLine("Init from helepr create entity func!");
+		};
 
-			decs::Container container = { containerConfig };
+		container.CreateEntities(componetns, tags, 10, true, initFunc);
+	
+		/*{
+		decs::ComponentTypeGroup<TestComponent, Renderer, Position> comps{};
+		decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
+	
+		auto entityInit = [](const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
+		{
+		PrintLine("Only entity created!");
+		};
+	
+		decs::Entity newEntity = container.CreateEntity(comps, tags, true, entityInit);
+		}*/
 
+		uint32_t counter = 0;
+		auto testFunc = [&] (const TestComponent& test)
+		{
+			PrintLine("Test func!");
+		};
+		auto testFuncWithEntity = [&] (const decs::Entity& entity, const TestComponent& test)
+		{
+			PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
+		};
+
+		if (false)
+		{
+			using QueryType = decs::Query< const TestComponent>;
+			QueryType query(&container);
+
+			query.With< Renderer, Position, FloatTag, IntTag, BoolTag>();
+
+			PrintLine("ForEach");
+			query.ForEach(testFunc);
+			PrintLine("ForEach With Entity");
+			query.ForEach(testFuncWithEntity);
+			PrintLine("ForEach Safe");
+			query.ForEach_Safe(testFunc);
+			PrintLine("ForEach With Entity Safe");
+			query.ForEach_Safe(testFuncWithEntity);
+			PrintLine("ForEachBackward");
+			query.ForEachBackward(testFunc);
+			PrintLine("ForEachBackward With Entity");
+			query.ForEachBackward(testFuncWithEntity);
+			PrintLine("ForEachBackward Safe");
+			query.ForEachBackward_Safe(testFunc);
+			PrintLine("ForEachBackward With Entity Safe");
+			query.ForEachBackward_Safe(testFuncWithEntity);
+			PrintLine("ForEach_IngoreEntityActiveState");
+			query.ForEach_IngoreEntityActiveState(testFunc);
+			PrintLine("ForEach_IngoreEntityActiveState With Entity");
+			query.ForEach_IngoreEntityActiveState(testFuncWithEntity);
+
+			if (false)
 			{
-				decs::ComponentTypeGroup<TestComponent, Renderer, Position> componetns{};
-				decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
+				decs::ecsVector<QueryType::BatchIterator> iterators{};
+				query.CreateBatchIterators(iterators, 10, 3);
 
-				auto initFunc = [] (const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
+				PrintLine("BatchIterator::ForEach");
+				for (auto& it : iterators)
 				{
-					PrintLine("Init from helepr create entity func!");
-				};
+					it.ForEach(testFunc);
+				}
 
-				container.CreateEntities(componetns, tags, 10, true, initFunc);
-			}
-
-			/*{
-			decs::ComponentTypeGroup<TestComponent, Renderer, Position> comps{};
-			decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
-
-			auto entityInit = [](const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
-			{
-			PrintLine("Only entity created!");
-			};
-
-			decs::Entity newEntity = container.CreateEntity(comps, tags, true, entityInit);
-			}*/
-
-			uint32_t counter = 0;
-			auto testFunc = [&] (const TestComponent& test)
-			{
-				PrintLine("Test func!");
-			};
-			auto testFuncWithEntity = [&] (const decs::Entity& entity, const TestComponent& test)
-			{
-				PrintLine(std::format("Entity: {0} TestComponent", entity.GetID()));
-			};
-
-			if (true)
-			{
-				using QueryType = decs::Query< const TestComponent>;
-				QueryType query(&container);
-
-				query.With< Renderer, Position, FloatTag, IntTag, BoolTag>();
-
-				PrintLine("ForEach");
-				query.ForEach(testFunc);
-				PrintLine("ForEach With Entity");
-				query.ForEach(testFuncWithEntity);
-				PrintLine("ForEach Safe");
-				query.ForEach_Safe(testFunc);
-				PrintLine("ForEach With Entity Safe");
-				query.ForEach_Safe(testFuncWithEntity);
-				PrintLine("ForEachBackward");
-				query.ForEachBackward(testFunc);
-				PrintLine("ForEachBackward With Entity");
-				query.ForEachBackward(testFuncWithEntity);
-				PrintLine("ForEachBackward Safe");
-				query.ForEachBackward_Safe(testFunc);
-				PrintLine("ForEachBackward With Entity Safe");
-				query.ForEachBackward_Safe(testFuncWithEntity);
-				PrintLine("ForEach_IngoreEntityActiveState");
-				query.ForEach_IngoreEntityActiveState(testFunc);
-				PrintLine("ForEach_IngoreEntityActiveState With Entity");
-				query.ForEach_IngoreEntityActiveState(testFuncWithEntity);
-
-				if (false)
+				PrintLine("BatchIterator::ForEach With Entity");
+				for (auto& it : iterators)
 				{
-					decs::ecsVector<QueryType::BatchIterator> iterators{};
-					query.CreateBatchIterators(iterators, 10, 3);
-
-					PrintLine("BatchIterator::ForEach");
-					for (auto& it : iterators)
-					{
-						it.ForEach(testFunc);
-					}
-
-					PrintLine("BatchIterator::ForEach With Entity");
-					for (auto& it : iterators)
-					{
-						it.ForEach(testFuncWithEntity);
-					}
-					PrintLine("BatchIterator::ForEach_IngoreEntityActiveState");
-					for (auto& it : iterators)
-					{
-						it.ForEach_IngoreEntityActiveState(testFunc);
-					}
-					PrintLine("BatchIterator::ForEach_IngoreEntityActiveState With Entity");
-					for (auto& it : iterators)
-					{
-						it.ForEach_IngoreEntityActiveState(testFuncWithEntity);
-					}
+					it.ForEach(testFuncWithEntity);
+				}
+				PrintLine("BatchIterator::ForEach_IngoreEntityActiveState");
+				for (auto& it : iterators)
+				{
+					it.ForEach_IngoreEntityActiveState(testFunc);
+				}
+				PrintLine("BatchIterator::ForEach_IngoreEntityActiveState With Entity");
+				for (auto& it : iterators)
+				{
+					it.ForEach_IngoreEntityActiveState(testFuncWithEntity);
 				}
 			}
-
-			if (true)
-			{
-				decs::TypeGroup<int, float> t{};
-
-				auto st = t;
-
-				using QueryType = decs::MultiQuery<const TestComponent>;
-				QueryType query{};
-				query.With< Renderer, Position, FloatTag, IntTag, BoolTag>();
-				query.AddContainer(&container);
-
-				PrintLine("MULTI QUERY");
-				PrintLine("ForEach");
-				query.ForEach(testFunc);
-				PrintLine("ForEach With Entity");
-				query.ForEach(testFuncWithEntity);
-				PrintLine("ForEach Safe");
-				query.ForEach_Safe(testFunc);
-				PrintLine("ForEach With Entity Safe");
-				query.ForEach_Safe(testFuncWithEntity);
-				PrintLine("ForEachBackward");
-				query.ForEachBackward(testFunc);
-				PrintLine("ForEachBackward With Entity");
-				query.ForEachBackward(testFuncWithEntity);
-				PrintLine("ForEachBackward Safe");
-				query.ForEachBackward_Safe(testFunc);
-				PrintLine("ForEachBackward With Entity Safe");
-				query.ForEachBackward_Safe(testFuncWithEntity);
-				PrintLine("ForEach_IngoreEntityActiveState");
-				query.ForEach_IngoreEntityActiveState(testFunc);
-				PrintLine("ForEach_IngoreEntityActiveState With Entity");
-				query.ForEach_IngoreEntityActiveState(testFuncWithEntity);
-
-				if (false)
-				{
-					decs::ecsVector<QueryType::BatchIterator> iterators{};
-					query.CreateBatchIteratorsWithMaxNumberPerBatch(iterators, 7);
-
-					PrintLine("BatchIterator::ForEach");
-					for (auto& it : iterators)
-					{
-						it.ForEach(testFunc);
-					}
-					PrintLine("BatchIterator::ForEach With Entity");
-					for (auto& it : iterators)
-					{
-						it.ForEach(testFuncWithEntity);
-					}
-					PrintLine("BatchIterator::ForEach_IngoreEntityActiveState");
-					for (auto& it : iterators)
-					{
-						it.ForEach_IngoreEntityActiveState(testFunc);
-					}
-					PrintLine("BatchIterator::ForEach_IngoreEntityActiveState With Entity");
-					for (auto& it : iterators)
-					{
-						it.ForEach_IngoreEntityActiveState(testFuncWithEntity);
-					}
-				}
-			}
-
-			{
-				using EntityQuery = decs::MultiQuery<>;
-
-				EntityQuery query{};
-				query.AddContainer(&container, true);
-
-				query.ForEach([] ()
-				{
-					PrintLine("Empty query iteration");
-				});
-
-				query.ForEach([] (const decs::Entity& e)
-				{
-					PrintLine("Empty query iteration with entity");
-				});
-			}
-
-			container.InvokeEntitesOnDestroyListeners();
 		}
+
+		if (true)
+		{
+			decs::TypeGroup<int, float> t{};
+
+			auto st = t;
+
+			using QueryType = decs::MultiQuery<const TestComponent>;
+			QueryType query{};
+			query.With< Renderer, Position, FloatTag, IntTag, BoolTag>();
+			query.AddContainer(&container);
+
+			PrintLine("MULTI QUERY");
+			PrintLine("ForEach");
+			query.ForEach(testFunc);
+			PrintLine("ForEach With Entity");
+			query.ForEach(testFuncWithEntity);
+			PrintLine("ForEach Safe");
+			query.ForEach_Safe(testFunc);
+			PrintLine("ForEach With Entity Safe");
+			query.ForEach_Safe(testFuncWithEntity);
+			PrintLine("ForEachBackward");
+			query.ForEachBackward(testFunc);
+			PrintLine("ForEachBackward With Entity");
+			query.ForEachBackward(testFuncWithEntity);
+			PrintLine("ForEachBackward Safe");
+			query.ForEachBackward_Safe(testFunc);
+			PrintLine("ForEachBackward With Entity Safe");
+			query.ForEachBackward_Safe(testFuncWithEntity);
+			PrintLine("ForEach_IngoreEntityActiveState");
+			query.ForEach_IngoreEntityActiveState(testFunc);
+			PrintLine("ForEach_IngoreEntityActiveState With Entity");
+			query.ForEach_IngoreEntityActiveState(testFuncWithEntity);
+
+			if (false)
+			{
+				decs::ecsVector<QueryType::BatchIterator> iterators{};
+				query.CreateBatchIteratorsWithMaxNumberPerBatch(iterators, 7);
+
+				PrintLine("BatchIterator::ForEach");
+				for (auto& it : iterators)
+				{
+					it.ForEach(testFunc);
+				}
+				PrintLine("BatchIterator::ForEach With Entity");
+				for (auto& it : iterators)
+				{
+					it.ForEach(testFuncWithEntity);
+				}
+				PrintLine("BatchIterator::ForEach_IngoreEntityActiveState");
+				for (auto& it : iterators)
+				{
+					it.ForEach_IngoreEntityActiveState(testFunc);
+				}
+				PrintLine("BatchIterator::ForEach_IngoreEntityActiveState With Entity");
+				for (auto& it : iterators)
+				{
+					it.ForEach_IngoreEntityActiveState(testFuncWithEntity);
+				}
+			}
+		}
+
+		{
+			using EntityQuery = decs::MultiQuery<>;
+
+			EntityQuery query{};
+			query.AddContainer(&container, true);
+
+			query.ForEach([] ()
+			{
+				PrintLine("Empty query iteration");
+			});
+
+			query.ForEach([] (const decs::Entity& e)
+			{
+				PrintLine("Empty query iteration with entity");
+			});
+		}
+
+		container.InvokeEntitesOnDestroyListeners();
 	}
 
 	void Test::EntityCreatePerformanceTest()

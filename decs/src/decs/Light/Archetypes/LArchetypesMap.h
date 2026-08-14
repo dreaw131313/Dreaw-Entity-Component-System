@@ -256,7 +256,7 @@ namespace decs::light
 		ArchetypesMap(
 			FilterManager& filterManager,
 			ComponentContextManager& componentContextManager,
-			QueryManager& queryManger,
+			QueryManager& queryManager,
 			uint64_t archetypesVectorChunkSize,
 			uint64_t archetypeGroupsVectorChunkSize
 		);

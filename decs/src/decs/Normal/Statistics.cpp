@@ -53,7 +53,7 @@ namespace decs
 		{
 			size_t archetypeIdx = 0;
 			m_ArchetypesStats.resize(container.m_ArchetypesMap.GetArchetypesCount());
-			container.m_ArchetypesMap.IterateOverArchetypes_Forward([&] (const Archetype& archetype)
+			container.m_ArchetypesMap.IterateOverArchetypes([&] (const Archetype& archetype)
 			{
 				m_ArchetypesStats[archetypeIdx].Collect(archetype);
 				archetypeIdx++;

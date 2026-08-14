@@ -757,32 +757,18 @@ namespace decs
 			}
 		}
 
-		void AddingArchetypesWithCheckingOnlyNewArchetypes(ArchetypesMap& map, uint64_t startArchetypesIndex, const QueryFilterConfigType& filter)
-		{
-			auto& archetypes = map.m_Archetypes;
-			uint64_t archetypesCount = map.m_Archetypes.Size();
-			uint64_t minRequiredComponentsCount = filter.GetMinComponentTagCount();
-
-			for (uint64_t i = startArchetypesIndex; i < archetypesCount; i++)
-			{
-				Archetype& arch = archetypes[i];
-				if (arch.GetComponentAndTagCount() >= minRequiredComponentsCount)
-				{
-					TryAddArchetype(arch, filter);
-				}
-			}
-		}
-
 		void AddAllArchetypesToQuery(ArchetypesMap& map, const QueryFilterConfigType& filter)
 		{
 			size_t minRequiredComponentTagCount = filter.GetMinComponentTagCount();
 
-			for (size_t i = 0; i < map.m_Archetypes.Size(); i++)
+			auto archetypes = map.m_ArchetypeAllocator.GetCreatedArchetypes();
+
+			for (size_t i = 0; i < archetypes.size(); i++)
 			{
-				auto& archetype = map.m_Archetypes[i];
-				if (archetype.GetComponentTagCount() >= minRequiredComponentTagCount)
+				Archetype* archetype = archetypes[i];
+				if (archetype->GetComponentTagCount() >= minRequiredComponentTagCount)
 				{
-					TryAddArchetype(archetype, filter);
+					TryAddArchetype(*archetype, filter);
 				}
 			}
 		}

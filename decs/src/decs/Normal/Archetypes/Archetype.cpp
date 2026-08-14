@@ -459,6 +459,21 @@ namespace decs
 		}
 	}
 
+	void Archetype::ResetOnDestroy()
+	{
+		m_TypeIDsIndexes.clear();
+		m_Edges.clear();
+
+		m_EntityStorage.Clear();
+
+		for (auto& data : m_TypeData)
+		{
+			delete data.m_PackedContainer;
+		}
+
+		m_TypeData.clear();
+	}
+
 	void Archetype::AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType)
 	{
 		auto& edge = m_Edges[componentTypeID];

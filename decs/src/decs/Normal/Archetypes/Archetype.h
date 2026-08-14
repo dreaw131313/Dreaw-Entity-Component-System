@@ -298,6 +298,7 @@ namespace decs
 
 	class Archetype final
 	{
+		friend class ArchetypeAllocator;
 		friend class Container;
 		friend class ContainerIterator;
 		friend struct EntityData;
@@ -334,6 +335,9 @@ namespace decs
 		};
 
 		ecsVector<OrderData> m_ComponentContextsInOrder{};
+
+		size_t m_CreatedIndexInAllocator = std::numeric_limits<size_t>::max();
+		uint32_t m_Version = 0;
 
 	public:
 		Archetype();
@@ -624,6 +628,11 @@ namespace decs
 		void RemoveSwapBackEntityAfterMoveEntityWithoutDestroyingSource(uint64_t entityIndex, TypeID removedComponentTypeID);
 
 		void ShrinkToFit();
+
+		/// <summary>
+		/// Used when destroying archetypes, and this archetypes will be reused
+		/// </summary>
+		void ResetOnDestroy();
 
 	#pragma region EDGES
 	private:

@@ -5,8 +5,9 @@
 #include "decs/Core/Type.h"
 #include "decs/Core/ArchetypesCore.h"
 #include "decs/Normal/Component/ComponentContextsManager.h"
+#include "decs/Normal/Iteration/QueryManager.h"
 
-#include "Archetype.h"
+#include "ArchetypeAllocator.h"
 
 namespace decs
 {
@@ -121,28 +122,26 @@ namespace decs
 		friend class IterationContainerContext;
 
 	public:
-		ArchetypesMap()
-		{
-
-		}
-
-		ArchetypesMap(uint64_t archetypesVectorChunkSize, uint64_t archetypeGroupsVectorChunkSize);
+		ArchetypesMap(
+			QueryManager& queryManager,
+			uint64_t archetypesVectorChunkSize, 
+			uint64_t archetypeGroupsVectorChunkSize
+		);
 
 		~ArchetypesMap();
 
 		inline uint64_t GetArchetypesCount() const noexcept
 		{
-			return m_Archetypes.Size();
+			return m_ArchetypeAllocator.GetCreatedArchetypes().size();
 		}
 
 		[[nodiscard]] inline uint64_t EmptyArchetypesCount() const
 		{
 			uint64_t emptyArchetypesCount = 0;
-			uint64_t archetypesCount = m_Archetypes.Size();
-
-			for (uint64_t i = 0; i < archetypesCount; i++)
+			auto archetypes = m_ArchetypeAllocator.GetCreatedArchetypes();
+			for (auto& archetype: archetypes)
 			{
-				if (m_Archetypes[i].EntityCount() == 0)
+				if (archetype->EntityCount() == 0)
 				{
 					emptyArchetypesCount += 1;
 				}
@@ -199,43 +198,36 @@ namespace decs
 		template<typename Callable>
 		void IterateOverArchetypes(Callable&& func)
 		{
-			int64_t chunkCount = static_cast<int64_t>(m_Archetypes.ChunkCount());
-			for (int64_t chunkIdx = chunkCount - 1; chunkIdx >= 0; chunkIdx--)
+			auto& archetypes = m_ArchetypeAllocator.GetCreatedArchetypesVector();
+			for (size_t i = 0; i < archetypes.size(); i++)
 			{
-				auto chunk = m_Archetypes.GetChunk(chunkIdx);
-				int64_t elementCount = m_Archetypes.GetChunkSize(chunkIdx);
+				const auto archetype = archetypes[i];
+				func(*archetype);
+			}
+		}
 
-				for (int64_t elementIdx = elementCount - 1; elementIdx >= 0; elementIdx--)
-				{
-					func(&chunk[elementIdx]);
-				}
+		template<typename Callable>
+		void IterateOverArchetypes(Callable&& func) const
+		{
+			auto& archetypes = m_ArchetypeAllocator.GetCreatedArchetypesVector();
+			for (size_t i = 0; i < archetypes.size(); i++)
+			{
+				const auto archetype = archetypes[i];
+				func(*archetype);
 			}
 		}
 
 		void ClearEntityDataAndComponents();
 
-		template<typename FuncType>
-		void IterateOverArchetypes_Forward(FuncType&& func) const
-		{
-			for (size_t chunkIdx = 0; chunkIdx < m_Archetypes.ChunkCount(); chunkIdx++)
-			{
-				const size_t chunkSize = m_Archetypes.GetChunkSize(chunkIdx);
-				auto chunk = m_Archetypes.GetChunk(chunkIdx);
-
-				for (size_t i = 0; i < chunkSize; i++)
-				{
-					const Archetype& archetype = chunk[i];
-					func(archetype);
-				}
-			}
-		}
 
 	private:
+		QueryManager& m_QueryManager;
+
 		ecsHashMap<TypeID, ArchetypesGroupByOneType*> m_ArchetypesGroupedByOneType{};
 		ecsHashMap<ArchetypeHasher, Archetype*> m_HashedArchetypes{};
 
-		TChunkedVector<Archetype> m_Archetypes{ 100 };
 		TChunkedVector<ArchetypesGroupByOneType> m_ArchetypesGroupsByOneTypeAllocator{ 100 };
+		ArchetypeAllocator m_ArchetypeAllocator{ 100 };
 
 		uint32_t m_MaxComponentTagCount = 0;
 

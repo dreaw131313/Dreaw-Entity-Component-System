@@ -102,6 +102,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\Normal\Archetypes\ArchetypeAllocator.h" />
     <ClInclude Include="src\decs\Normal\Iteration\QueryManager.h" />
     <ClInclude Include="src\decs\Normal\Statistics.h" />
     <ClInclude Include="src\decs\Core\ArchetypesCore.h" />
@@ -158,6 +159,7 @@
     <ClInclude Include="src\decs\Normal\Utils\ContainerSerializerComplex.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\decs\Normal\Archetypes\ArchetypeAllocator.cpp" />
     <ClCompile Include="src\decs\Normal\Iteration\QueryManager.cpp" />
     <ClCompile Include="src\decs\Normal\Statistics.cpp" />
     <ClCompile Include="src\decs\Light\Component\LComponentContext.cpp" />
