@@ -117,8 +117,8 @@ void Test::Run()
 	std::cout << "///////// LIGHT ECS TEST ////////////" << "\n";
 	std::cout << "/////////////////////////////////////" << "\n";
 
-	//IterationTest();
-	EntityCreatePerformanceTest();
+	IterationTest();
+	//EntityCreatePerformanceTest();
 	//QueryManagerTest();
 	//FilterTest();
 	//RemovingArchetypesTest();
@@ -184,10 +184,11 @@ void Test::IterationTest()
 		PrintLine(std::format("{0} component count", components.size()));
 	};
 
-	if (true)
+	if (false)
 	{
 		using QueryType = decs::light::Query<const TestComponent, decs::filter<TestEntityFilter>>;
-		QueryType query(&container);
+		QueryType query{};
+		query.SetContainer(&container);
 		//query.With< Renderer, Position, FloatTag, IntTag, BoolTag>();
 
 
@@ -227,7 +228,7 @@ void Test::IterationTest()
 		}
 	}
 
-	if (false)
+	if (true)
 	{
 		decs::TypeGroup<int, float> t{};
 
@@ -241,7 +242,6 @@ void Test::IterationTest()
 		PrintLine("MULTI QUERRY");
 		PrintLine("ForEachArchetype");
 		query.ForEachArchetype(forEachArchetypeFunc);
-
 		PrintLine("ForEach");
 		query.ForEach(testFunc);
 		PrintLine("ForEach With Entity");

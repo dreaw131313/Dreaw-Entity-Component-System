@@ -7,6 +7,7 @@
 #include "Component/PackedComponentContainer.h"
 #include "Component/StableComponentContainer.h"
 #include "Component/Component.h"
+#include "Iteration/QueryManager.h"
 
 #include "EntityManager.h"
 
@@ -1374,5 +1375,18 @@ namespace decs
 
 	#pragma endregion
 
+	#pragma region QUERIES
+	private:
+		QueryManager m_QueryManager;
+	private:
+		void AddQuery(IQuery* query);
+
+		void RemoveQuery(IQuery* query);
+
+		void AddMultiQuery(IMultiQuery* query);
+
+		void RemoveMultiQuery(IMultiQuery* query);
+
+	#pragma endregion
 	};
 }

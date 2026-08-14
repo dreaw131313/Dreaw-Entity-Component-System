@@ -8,7 +8,8 @@
 namespace decs
 {
 	Container::Container() :
-		m_EntityManager(m_DefaultEntitiesChunkSize)
+		m_EntityManager(m_DefaultEntitiesChunkSize),
+		m_QueryManager(this)
 	{
 		InitializeLifeTimeData();
 	}
@@ -16,7 +17,8 @@ namespace decs
 	Container::Container(const ContainerConfig& config) :
 		m_EntityManager(config.EntityChunkSize),
 		m_ComponentContextManager(static_cast<uint32_t>(config.DefaultComponentChunkSize)),
-		m_ArchetypesMap(config.ArchetypeChunkSize, 100)
+		m_ArchetypesMap(config.ArchetypeChunkSize, 100),
+		m_QueryManager(this)
 	{
 		InitializeLifeTimeData();
 	}
@@ -1462,4 +1464,23 @@ namespace decs
 		SetEntityDisabledOverrideCount_NoObserver(entityData, entity, 0);
 	}
 
+	void Container::AddQuery(IQuery* query)
+	{
+		m_QueryManager.AddQuery(query);
+	}
+
+	void Container::RemoveQuery(IQuery* query)
+	{
+		m_QueryManager.RemoveQuery(query);
+	}
+
+	void Container::AddMultiQuery(IMultiQuery* query)
+	{
+		m_QueryManager.AddMultiQuery(query);
+	}
+
+	void Container::RemoveMultiQuery(IMultiQuery* query)
+	{
+		m_QueryManager.RemoveMultiQuery(query);
+	}
 }

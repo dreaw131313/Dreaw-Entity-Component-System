@@ -122,10 +122,10 @@ namespace Normal
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
 
-		//QueryIterationTest();
-		EntityCreatePerformanceTest();
+		QueryIterationTest();
+		//EntityCreatePerformanceTest();
 		//ObserversTest();
-		StatisticsTest();
+		//StatisticsTest();
 	}
 
 	void Test::QueryIterationTest()
@@ -246,6 +246,7 @@ namespace Normal
 				query.With< Renderer, Position, FloatTag, IntTag, BoolTag>();
 				query.AddContainer(&container);
 
+				PrintLine("MULTI QUERY");
 				PrintLine("ForEach");
 				query.ForEach(testFunc);
 				PrintLine("ForEach With Entity");

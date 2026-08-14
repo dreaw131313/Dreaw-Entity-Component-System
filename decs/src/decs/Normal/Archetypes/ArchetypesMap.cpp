@@ -166,9 +166,9 @@ namespace decs
 
 		m_HashedArchetypes[ArchetypeHasher(&archetype)] = &archetype;
 
-		if (archetype.GetComponentTagCount() > m_MaxComponentTagFilterCount)
+		if (archetype.GetComponentTagCount() > m_MaxComponentTagCount)
 		{
-			m_MaxComponentTagFilterCount = archetype.GetComponentTagCount();
+			m_MaxComponentTagCount = archetype.GetComponentTagCount();
 		}
 
 		MakeArchetypeEdges_4(archetype);
