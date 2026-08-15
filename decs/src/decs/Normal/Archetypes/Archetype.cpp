@@ -232,7 +232,6 @@ namespace decs
 					typeData.m_StableContainer->Destroy(componentPtr);
 				}
 			}
-
 		}
 		else
 		{
