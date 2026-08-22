@@ -180,6 +180,9 @@
     <ClInclude Include="src\decs\Normal\Archetypes\ArchetypeAllocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\decs\Core\ScopedValue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\decs\decs.cpp">

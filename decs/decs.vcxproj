@@ -102,6 +102,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\decs\Core\ScopedValue.h" />
     <ClInclude Include="src\decs\Normal\Archetypes\ArchetypeAllocator.h" />
     <ClInclude Include="src\decs\Normal\Iteration\QueryManager.h" />
     <ClInclude Include="src\decs\Normal\Statistics.h" />

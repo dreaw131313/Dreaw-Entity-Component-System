@@ -1313,39 +1313,6 @@ namespace decs
 
 	#pragma region FLAGS:
 	private:
-		struct BoolSwitch final
-		{
-		public:
-			BoolSwitch(bool& boolToSwitch) :
-				m_Bool(boolToSwitch),
-				m_FinalValue(!boolToSwitch)
-			{
-			}
-
-			BoolSwitch(bool& boolToSwitch, const bool& startValue) :
-				m_Bool(boolToSwitch),
-				m_FinalValue(!startValue)
-			{
-				m_Bool = startValue;
-			}
-
-			BoolSwitch(const BoolSwitch&) = delete;
-			BoolSwitch(BoolSwitch&&) = delete;
-
-			BoolSwitch& operator=(const BoolSwitch&) = delete;
-			BoolSwitch& operator=(BoolSwitch&&) = delete;
-
-			~BoolSwitch()
-			{
-				m_Bool = m_FinalValue;
-			}
-
-		private:
-			bool& m_Bool;
-			bool m_FinalValue;
-		};
-
-	private:
 		bool m_IsInvokingObserversCallbacks = false;
 		bool m_CanCreateEntities = true;
 		bool m_CanDestroyEntities = true;

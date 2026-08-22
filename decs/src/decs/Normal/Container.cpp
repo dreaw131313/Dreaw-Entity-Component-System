@@ -2,6 +2,7 @@
 #pragma once
 #include "Container.h"
 #include "Entity.h"
+#include "decs/Core/ScopedValue.h"
 
 #include "Utils/ContainerIterator.h"
 
@@ -772,8 +773,8 @@ namespace decs
 	void Container::InvokeEntitesOnCreateListeners()
 	{
 		if (m_IsInvokingObserversCallbacks) return;
-		BoolSwitch invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
-		BoolSwitch isDestroyingEntitesFlag(m_PerformDelayedDestruction, true);
+		ScopedValue<bool> invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
+		ScopedValue<bool> isDestroyingEntitesFlag(m_PerformDelayedDestruction, true);
 
 		Entity entity = {};
 
@@ -831,12 +832,12 @@ namespace decs
 	void Container::InvokeEntitesOnDestroyListeners(bool bMarkEntitiesDead)
 	{
 		if (m_IsInvokingObserversCallbacks) return;
-		BoolSwitch invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
-		BoolSwitch canCreateSwitch(m_CanCreateEntities, false);
-		BoolSwitch canDestroySwitch(m_CanDestroyEntities, false);
-		BoolSwitch canSpawnSwitch(m_CanSpawn, false);
-		BoolSwitch canAddComponentSwitch(m_CanAddComponents, false);
-		BoolSwitch canRemoveComponentSwitch(m_CanRemoveComponents, false);
+		ScopedValue<bool> invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
+		ScopedValue<bool> canCreateSwitch(m_CanCreateEntities, false);
+		ScopedValue<bool> canDestroySwitch(m_CanDestroyEntities, false);
+		ScopedValue<bool> canSpawnSwitch(m_CanSpawn, false);
+		ScopedValue<bool> canAddComponentSwitch(m_CanAddComponents, false);
+		ScopedValue<bool> canRemoveComponentSwitch(m_CanRemoveComponents, false);
 
 		// invoking components creation observers
 		{
