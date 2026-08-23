@@ -41,6 +41,33 @@ namespace decs::light
 				std::get<QueryDataContainerType*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
 			);
 		}
+
+		template<typename Callable, typename... QueryDataContainerType>
+		inline static bool InvokeEntityFind(
+			Callable&& func,
+			uint64_t entityIndexInArchetype,
+			const std::tuple<QueryDataContainerType*...>& containersTuple
+		)
+		{
+			return func(std::get<QueryDataContainerType*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
+		}
+
+
+		template<typename Callable, typename... QueryDataContainerType>
+		inline static bool InvokeEntityFind(
+			Callable&& func,
+			Entity& entityBuffer,
+			EntityData& entityData,
+			uint64_t entityIndexInArchetype,
+			const std::tuple<QueryDataContainerType*...>& containersTuple
+		)
+		{
+			entityBuffer.Set_Internal(entityData);
+			return func(
+				entityBuffer,
+				std::get<QueryDataContainerType*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
+			);
+		}
 	};
 
 	template<light_component_or_filter_concept... ComponentsTypes>
@@ -520,6 +547,52 @@ namespace decs::light
 		}
 	#pragma endregion
 
+	#pragma region FIND
+	public:
+
+		template<typename Callable>
+		bool Find(Callable&& func) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount > 0)
+			{
+				const auto& containersTuple = this->GetContainersTuple();
+
+				for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+				{
+					if (Iteration::InvokeEntityFind(func, idx, containersTuple))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		template<typename Callable>
+		bool Find_WithEntity(Callable&& func, Entity& entityBuffer) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount > 0)
+			{
+				const auto& containersTuple = this->GetContainersTuple();
+				auto& entities = this->GetArchetype()->GetEntities();
+
+				for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+				{
+					if (Iteration::InvokeEntityFind(func, entityBuffer, *entities.Get(static_cast<size_t>(idx)), idx, containersTuple))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+
+	#pragma endregion
 	private:
 		const Archetype* m_Archetype = nullptr;
 		ContainersTuple m_ContainersTuple{};

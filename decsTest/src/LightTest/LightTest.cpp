@@ -238,6 +238,12 @@ void Test::IterationTest()
 		QueryType query{};
 		query.AddContainer(&container);
 
+		query.Find([] (decs::light::Entity e, const TestComponent& test, const TestEntityFilter& filter)->bool
+		{
+			PrintLine("Find");
+			return true;
+		});
+
 
 		PrintLine("MULTI QUERRY");
 		PrintLine("ForEachArchetype");

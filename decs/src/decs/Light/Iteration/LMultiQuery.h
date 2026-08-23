@@ -346,6 +346,53 @@ namespace decs::light
 			}
 		}
 
+		/// <summary>
+		/// Iterates over entities in archetypes from first to last. During iteration with this method creating, destroying and adding or removing component is forbidden on all entities, because it can cause undefined behavior. 
+		/// Destroying entites and adding or removing component to any entity, can cause that iteration index will go out of bound. 
+		/// Creating new entities will not cause index out of bound but if created entity has components which satisfys this query, it is undefined if that entity will be iterated or not in this function. If created entity will be placed in archetype that is not valid for this query it is safe to create it.
+		/// </summary>
+		/// <typeparam name="Callable"></typeparam>
+		/// <param name="func"></param>
+		template<typename Callable>
+			requires iteration::trait::light_query_find_callable<Callable, ComponentsTypes...>
+		inline void Find(Callable&& func) noexcept
+		{
+			Fetch();
+
+			uint64_t contextSize = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
+			{
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				if (!containerContext.IsValidAndEnabled())
+				{
+					continue; // Skip if container context is disabled
+				}
+
+				if constexpr (iteration::trait::is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
+				{
+					Entity entityBuffer = {};
+
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
+					{
+						if (ctx.Find_WithEntity(func, entityBuffer))
+						{
+							return;
+						}
+					}
+				}
+				else
+				{
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
+					{
+						if (ctx.Find(func))
+						{
+							return;
+						}
+					}
+				}
+			}
+		}
+
 		bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{
 			if (AddContainer_Impl(container, bIsEnabled))

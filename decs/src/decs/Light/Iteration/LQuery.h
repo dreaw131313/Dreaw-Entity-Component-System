@@ -252,6 +252,41 @@ namespace decs::light
 			}
 		}
 
+		template<typename Callable>
+			requires iteration::trait::light_query_find_callable<Callable, ComponentsTypes...>
+		inline void Find(Callable&& func) noexcept
+		{
+			if (!IsValid()) return;
+			Fetch();
+
+			Container* container = m_ContainerContext.GetContainer();
+			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
+			const uint64_t contextCount = archetypeContexts.size();
+
+			if constexpr (iteration::trait::is_invocable_with_light_entity_v<Callable, ComponentsTypes...>)
+			{
+				Entity entityBuffer = {};
+				for (const ArchetypeContextType& ctx : archetypeContexts)
+				{
+					if (ctx.Find_WithEntity(func, entityBuffer))
+					{
+						return;
+					}
+				}
+			}
+			else
+			{
+				for (const ArchetypeContextType& ctx : archetypeContexts)
+				{
+					if (ctx.Find(func))
+					{
+						return;
+					}
+				}
+			}
+		}
+
+
 		/// <summary>
 		/// Checks if entity belong to this query.
 		/// </summary>

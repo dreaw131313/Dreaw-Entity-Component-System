@@ -65,13 +65,21 @@ namespace decs::light::iteration::trait
 	inline constexpr bool is_invocable_with_only_filters_v = is_invocable_with_only_filters<Func, AditionalParam, FiltersContainers...>::value;
 
 	template<typename Callable, typename... ComponentTypes>
-	concept	light_query_iterate_container_callable = std::is_invocable_v<Callable, typename query_data_container_t<ComponentTypes>::get_span_result...>;
+	concept	light_query_iterate_container_callable = std::invocable<Callable, typename query_data_container_t<ComponentTypes>::get_span_result...>;
 
 	template<typename Callable, typename... ComponentTypes>
-	concept light_query_callable = std::is_invocable_v<Callable, ligth_component_or_filter_t<ComponentTypes>...>
-		|| std::is_invocable_v<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>...>
-		|| std::is_invocable_v<Callable, ligth_component_or_filter_t<ComponentTypes>&...>
-		|| std::is_invocable_v<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
+	concept light_query_callable = 
+		std::invocable<Callable, ligth_component_or_filter_t<ComponentTypes>&...>
+		|| std::invocable<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
+
+	template<typename Callable, typename... ComponentTypes>
+	concept light_query_find_callable = 
+		(std::invocable<Callable, ligth_component_or_filter_t<ComponentTypes>&...> && std::convertible_to<std::invoke_result_t<Callable, ligth_component_or_filter_t<ComponentTypes>&...>, bool>)
+		|| 
+		(std::invocable<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...> && std::convertible_to<std::invoke_result_t<Callable, const Entity&, ligth_component_or_filter_t<ComponentTypes>&...>, bool>)
+		; 
+
+
 
 	template<typename Callable, typename... ComponentTypes>
 	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>...>

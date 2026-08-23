@@ -37,7 +37,6 @@ namespace decs
 			);
 		}
 
-
 		template<typename Callable, typename... ComponentTypes>
 		inline static bool InvokeEntityFind(
 			Callable&& func,
