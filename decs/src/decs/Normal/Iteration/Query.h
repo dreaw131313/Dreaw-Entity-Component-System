@@ -335,7 +335,7 @@ namespace decs
 		}
 
 		/// <summary>
-		/// Iterate over entities if func returns expresion which evaluates to true, iteration is stoped, and function return
+		/// Iterate over all entities (enabled and disabled), if func returns expresion which evaluates to true, iteration is stoped, and function return
 		/// </summary>
 		/// <typeparam name="Callable"></typeparam>
 		/// <param name="func"></param>
@@ -375,6 +375,11 @@ namespace decs
 			}
 		}
 
+		/// <summary>
+		/// Iterate over enabled entities, if func returns expresion which evaluates to true, iteration is stoped, and function return
+		/// </summary>
+		/// <typeparam name="Callable"></typeparam>
+		/// <param name="func"></param>
 		template<typename Callable>
 			requires query_find_callable<Callable, ComponentsTypes...>
 		void FindEnabled(Callable&& func)
@@ -411,6 +416,11 @@ namespace decs
 			}
 		}
 
+		/// <summary>
+		/// Iterate over disabled entities, if func returns expresion which evaluates to true, iteration is stoped, and function return
+		/// </summary>
+		/// <typeparam name="Callable"></typeparam>
+		/// <param name="func"></param>
 		template<typename Callable>
 			requires query_find_callable<Callable, ComponentsTypes...>
 		void FindDisabled(Callable&& func)
