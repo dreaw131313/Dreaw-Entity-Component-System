@@ -10,8 +10,8 @@ namespace decs
 	class ContainerIterator final
 	{
 	public:
-		template<container_iterator_entity_func TCallable>
-		void Foreach(Container& container, TCallable&& entityFunc) const
+		template<container_iterator_entity_func Callable>
+		void Foreach(Container& container, Callable&& entityFunc) const
 		{
 			auto& archetypesMap = container.m_ArchetypesMap;
 			auto& archetypesVector = container.m_ArchetypesMap.m_ArchetypeAllocator.GetCreatedArchetypesVector();

@@ -417,8 +417,8 @@ namespace decs
 				m_ResourceRecords.clear();
 			}
 
-			template<typename TCallable>
-			void IterateOverResources(TCallable&& callable)
+			template<typename Callable>
+			void IterateOverResources(Callable&& callable)
 			{
 				for (ResourceRecord& resourceRecord : m_ResourceRecords)
 				{

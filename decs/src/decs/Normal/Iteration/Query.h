@@ -334,6 +334,119 @@ namespace decs
 			}
 		}
 
+		/// <summary>
+		/// Iterate over entities if func returns expresion which evaluates to true, iteration is stoped, and function return
+		/// </summary>
+		/// <typeparam name="Callable"></typeparam>
+		/// <param name="func"></param>
+		template<typename Callable>
+			requires query_find_callable<Callable, ComponentsTypes...>
+		void Find(Callable&& func)
+		{
+			if (!IsValid()) return;
+			FetchInternal();
+
+			Container* container = m_ContainerContext.GetContainer();
+			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
+			const uint64_t contextCount = archetypeContexts.size();
+
+			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+			{
+				Entity entityBuffer = {};
+				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
+
+				for (const ArchetypeContextType& ctx : archetypeContexts)
+				{
+					if (ctx.Find_WithEntity(func, entityBuffer))
+					{
+						return;
+					}
+				}
+			}
+			else
+			{
+				for (const ArchetypeContextType& ctx : archetypeContexts)
+				{
+					if (ctx.Find(func))
+					{
+						return;
+					}
+				}
+			}
+		}
+
+		template<typename Callable>
+			requires query_find_callable<Callable, ComponentsTypes...>
+		void FindEnabled(Callable&& func)
+		{
+			if (!IsValid()) return;
+			FetchInternal();
+
+			Container* container = m_ContainerContext.GetContainer();
+			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
+			const uint64_t contextCount = archetypeContexts.size();
+
+			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+			{
+				Entity entityBuffer = {};
+				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
+
+				for (const ArchetypeContextType& ctx : archetypeContexts)
+				{
+					if (ctx.FindEnabled_WithEntity(func, entityBuffer))
+					{
+						return;
+					}
+				}
+			}
+			else
+			{
+				for (const ArchetypeContextType& ctx : archetypeContexts)
+				{
+					if (ctx.FindEnabled(func))
+					{
+						return;
+					}
+				}
+			}
+		}
+
+		template<typename Callable>
+			requires query_find_callable<Callable, ComponentsTypes...>
+		void FindDisabled(Callable&& func)
+		{
+			if (!IsValid()) return;
+			FetchInternal();
+
+			Container* container = m_ContainerContext.GetContainer();
+			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
+			const uint64_t contextCount = archetypeContexts.size();
+
+			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+			{
+				Entity entityBuffer = {};
+				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
+
+				for (const ArchetypeContextType& ctx : archetypeContexts)
+				{
+					if (ctx.FindDisabled_WithEntity(func, entityBuffer))
+					{
+						return;
+					}
+				}
+			}
+			else
+			{
+				for (const ArchetypeContextType& ctx : archetypeContexts)
+				{
+					if (ctx.FindDisabled(func))
+					{
+						return;
+					}
+				}
+			}
+		}
+
 		inline void Fetch()
 		{
 			if (!IsValid()) return;

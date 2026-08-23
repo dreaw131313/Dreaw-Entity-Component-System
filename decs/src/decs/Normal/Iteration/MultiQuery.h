@@ -330,6 +330,135 @@ namespace decs
 			}
 		}
 
+
+		/// <summary>
+		/// Iterate over entities if func returns expresion which evaluates to true, iteration is stoped, and function return
+		/// </summary>
+		/// <typeparam name="Callable"></typeparam>
+		/// <param name="func"></param>
+		template<typename Callable>
+			requires query_find_callable<Callable, ComponentsTypes...>
+		void Find(Callable&& func)
+		{
+			Fetch();
+
+			uint64_t contextSize = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
+			{
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				if (!containerContext.IsValidAndEnabled())
+				{
+					continue; // Skip if container context is disabled
+				}
+
+				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+				{
+					decs::Entity entityBuffer = {};
+					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
+					{
+						if (ctx.Find_WithEntity(func, entityBuffer))
+						{
+							return;
+						}
+					}
+				}
+				else
+				{
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
+					{
+						if (ctx.Find(func))
+						{
+							return;
+						}
+					}
+				}
+			}
+		}
+
+		template<typename Callable>
+			requires query_find_callable<Callable, ComponentsTypes...>
+		void FindEnabled(Callable&& func)
+		{
+			Fetch();
+
+			uint64_t contextSize = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
+			{
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				if (!containerContext.IsValidAndEnabled())
+				{
+					continue; // Skip if container context is disabled
+				}
+
+				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+				{
+					decs::Entity entityBuffer = {};
+					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
+					{
+						if (ctx.FindEnabled_WithEntity(func, entityBuffer))
+						{
+							return;
+						}
+					}
+				}
+				else
+				{
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
+					{
+						if (ctx.FindEnabled(func))
+						{
+							return;
+						}
+					}
+				}
+			}
+		}
+
+		template<typename Callable>
+			requires query_find_callable<Callable, ComponentsTypes...>
+		void FindDisabled(Callable&& func)
+		{
+			Fetch();
+
+			uint64_t contextSize = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
+			{
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				if (!containerContext.IsValidAndEnabled())
+				{
+					continue; // Skip if container context is disabled
+				}
+
+				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+				{
+					decs::Entity entityBuffer = {};
+					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
+					{
+						if (ctx.FindDisabled_WithEntity(func, entityBuffer))
+						{
+							return;
+						}
+					}
+				}
+				else
+				{
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
+					{
+						if (ctx.FindDisabled(func))
+						{
+							return;
+						}
+					}
+				}
+			}
+		}
+
 		bool AddContainer(Container* container, bool bIsEnabled = true) override
 		{
 			if (AddContainer_Impl(container, bIsEnabled))
@@ -399,9 +528,7 @@ namespace decs
 	private:
 		ecsHashMap<Container*, uint64_t> m_ContainerContextsIndices{};
 		QueryFilterConfigType m_FilterConfig{};
-
 		ecsVector<ContainerContextType> m_ContainerContexts = {};
-
 		bool m_IsDirty = true;
 
 	private:

@@ -10,8 +10,8 @@ namespace decs::light
 	class ContainerIterator final
 	{
 	public:
-		template<typename TCallable>
-		void Foreach(Container& container, TCallable&& callable) const
+		template<typename Callable>
+		void Foreach(Container& container, Callable&& callable) const
 		{
 			auto& archetypesMap = container.m_ArchetypesMap;
 

@@ -16,6 +16,8 @@ namespace Normal
 		void ObserversTest();
 
 		void StatisticsTest();
+
+		void FindTest();
 	};
 
 }

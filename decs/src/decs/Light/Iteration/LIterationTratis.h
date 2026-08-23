@@ -64,17 +64,17 @@ namespace decs::light::iteration::trait
 	template<typename Func, typename AditionalParam, typename... FiltersContainers>
 	inline constexpr bool is_invocable_with_only_filters_v = is_invocable_with_only_filters<Func, AditionalParam, FiltersContainers...>::value;
 
-	template<typename TCallable, typename... ComponentTypes>
-	concept	light_query_iterate_container_callable = std::is_invocable_v<TCallable, typename query_data_container_t<ComponentTypes>::get_span_result...>;
+	template<typename Callable, typename... ComponentTypes>
+	concept	light_query_iterate_container_callable = std::is_invocable_v<Callable, typename query_data_container_t<ComponentTypes>::get_span_result...>;
 
-	template<typename TCallable, typename... ComponentTypes>
-	concept light_query_callable = std::is_invocable_v<TCallable, ligth_component_or_filter_t<ComponentTypes>...>
-		|| std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>...>
-		|| std::is_invocable_v<TCallable, ligth_component_or_filter_t<ComponentTypes>&...>
-		|| std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
+	template<typename Callable, typename... ComponentTypes>
+	concept light_query_callable = std::is_invocable_v<Callable, ligth_component_or_filter_t<ComponentTypes>...>
+		|| std::is_invocable_v<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>...>
+		|| std::is_invocable_v<Callable, ligth_component_or_filter_t<ComponentTypes>&...>
+		|| std::is_invocable_v<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
 
-	template<typename TCallable, typename... ComponentTypes>
-	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>...>
-		|| std::is_invocable_v<TCallable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
+	template<typename Callable, typename... ComponentTypes>
+	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>...>
+		|| std::is_invocable_v<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
 
 }

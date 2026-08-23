@@ -36,6 +36,33 @@ namespace decs
 				std::get<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
 			);
 		}
+
+
+		template<typename Callable, typename... ComponentTypes>
+		inline static bool InvokeEntityFind(
+			Callable&& func,
+			uint64_t entityIndexInArchetype,
+			const std::tuple<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
+		)
+		{
+			return func(std::get<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...);
+		}
+
+		template<typename Callable, typename... ComponentTypes>
+		inline static bool InvokeEntityFind(
+			Callable&& func,
+			Entity& entityBuffer,
+			EntityData& entityData,
+			uint64_t entityIndexInArchetype,
+			const std::tuple<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*...>& containersTuple
+		)
+		{
+			entityBuffer.SetWithoutLifeTimeDataInvalidation_Internal(entityData);
+			return func(
+				entityBuffer,
+				std::get<PackedStableComponentContainer<drop_const_t<ComponentTypes>>*>(containersTuple)->GetAsRef(entityIndexInArchetype)...
+			);
+		}
 	};
 
 	template<component_concept... ComponentsTypes>
@@ -493,6 +520,178 @@ namespace decs
 					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData, idx, containersTuple);
 				}
 			}
+		}
+
+	#pragma endregion
+
+	#pragma region FIND
+
+		/// <summary>
+		/// returns true if func returns true, else false
+		/// Iterate over all entites (enabled and disabled)
+		/// </summary>
+
+	public:
+		template<typename Callable>
+		bool Find(Callable&& func) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return false;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
+
+			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+			{
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.IsValid())
+				{
+					if (Iteration::InvokeEntityFind<Callable, ComponentsTypes...>(func, idx, containersTuple))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		template<typename Callable>
+		bool Find_WithEntity(Callable&& func, Entity& entityBuffer) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return false;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
+
+			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+			{
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.IsValid())
+				{
+					if (Iteration::InvokeEntityFind<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		template<typename Callable>
+		bool FindEnabled(Callable&& func) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return false;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
+
+			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+			{
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.IsValidAndEnabled())
+				{
+					if (Iteration::InvokeEntityFind<Callable, ComponentsTypes...>(func, idx, containersTuple))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		template<typename Callable>
+		bool FindEnabled_WithEntity(Callable&& func, Entity& entityBuffer) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return false;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
+
+			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+			{
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.IsValidAndEnabled())
+				{
+					if (Iteration::InvokeEntityFind<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		template<typename Callable>
+		bool FindDisabled(Callable&& func) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return false;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
+
+			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+			{
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.IsValid() && !entityData.IsEnabled())
+				{
+					if (Iteration::InvokeEntityFind<Callable, ComponentsTypes...>(func, idx, containersTuple))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		template<typename Callable>
+		bool FindDisabled_WithEntity(Callable&& func, Entity& entityBuffer) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return false;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
+
+			for (uint64_t idx = 0; idx < ctxEntityCount; idx++)
+			{
+				const ArchetypeEntityRecord entityData = archetypeEntityStorage.GetEntityRecord(static_cast<size_t>(idx));
+				if (entityData.IsValid() && !entityData.IsEnabled())
+				{
+					if (Iteration::InvokeEntityFind<Callable, ComponentsTypes...>(func, entityBuffer, *entityData.m_EntityData, idx, containersTuple))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
 		}
 
 	#pragma endregion

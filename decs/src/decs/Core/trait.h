@@ -284,15 +284,19 @@ namespace decs
 		TypeGroup<filter_type_t<Types>...> m_Group{};
 	};
 
-	template<typename TCallable, typename... TComponentTypes>
-	concept query_callable = std::is_invocable_v<TCallable, TComponentTypes...>
-		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes...>
-		|| std::is_invocable_v<TCallable, TComponentTypes&...>
-		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
+	template<typename Callable, typename... ComponentTypes>
+	concept query_callable = std::invocable<Callable, ComponentTypes&...>
+		|| std::invocable<Callable, const Entity&, ComponentTypes&...>;
 
-	template<typename TCallable, typename... TComponentTypes>
-	constexpr bool is_invocable_with_entity_v = std::is_invocable_v<TCallable, const Entity&, TComponentTypes...>
-		|| std::is_invocable_v<TCallable, const Entity&, TComponentTypes&...>;
+	template<typename Callable, typename... ComponentTypes>
+	concept query_find_callable =
+		(std::invocable<Callable, ComponentTypes&...> && std::convertible_to<std::invoke_result_t<Callable, ComponentTypes&...>, bool>)
+		||
+		(std::invocable<Callable, const Entity&, ComponentTypes&...> && std::convertible_to<std::invoke_result_t<Callable, const Entity&, ComponentTypes&...>, bool>)
+		;
+
+	template<typename Callable, typename... ComponentTypes>
+	constexpr bool is_invocable_with_entity_v = std::is_invocable_v<Callable, const Entity&, ComponentTypes&...>;
 
 	template<typename Func, typename ComponentType>
 	concept light_component_observer_func = std::is_invocable_v<Func, const light::Entity&, ComponentType&>;

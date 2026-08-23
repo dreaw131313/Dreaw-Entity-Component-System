@@ -472,9 +472,9 @@ namespace decs::light
 
 	#pragma region FOREACH CONTAINER
 	public:
-		template<typename TCallable>
-			requires iteration::trait::light_query_iterate_container_callable<TCallable, ComponentsTypes...>
-		void  InvokeForEachComponentContainer(TCallable&& func) const
+		template<typename Callable>
+			requires iteration::trait::light_query_iterate_container_callable<Callable, ComponentsTypes...>
+		void  InvokeForEachComponentContainer(Callable&& func) const
 		{
 			if (GetEntityCount() > 0)
 			{
@@ -687,9 +687,9 @@ namespace decs::light
 			return entityCount;
 		}
 
-		template<typename TCallable>
-			requires iteration::trait::light_query_iterate_container_callable<TCallable, ComponentsTypes...>
-		void ForEachContainer(TCallable&& func) const
+		template<typename Callable>
+			requires iteration::trait::light_query_iterate_container_callable<Callable, ComponentsTypes...>
+		void ForEachContainer(Callable&& func) const
 		{
 			for (const ArchetypeContextType& archetypeContext : m_ArchetypesContexts)
 			{

@@ -122,10 +122,11 @@ namespace Normal
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
 
-		QueryIterationTest();
-		EntityCreatePerformanceTest();
-		ObserversTest();
-		StatisticsTest();
+		//QueryIterationTest();
+		//EntityCreatePerformanceTest();
+		//ObserversTest();
+		//StatisticsTest();
+		FindTest();
 	}
 
 	void Test::QueryIterationTest()
@@ -480,6 +481,52 @@ namespace Normal
 
 		decs::ContainerStatistics stats{};
 		stats.Collect(container);
+
+	}
+
+	void Test::FindTest()
+	{
+		decs::Container container{};
+
+		decs::ComponentTypeGroup<TestComponent, Position> components{};
+
+		auto initFunc = [] (const decs::Entity& e, TestComponent& testComp, Position& position)
+		{
+
+		};
+		container.CreateEntities(components, 10, true, initFunc);
+
+		decs::MultiQuery<TestComponent, Position> findQuery{};
+		findQuery.AddContainer(&container, true);
+
+
+		uint32_t findCounter = 5;
+		uint32_t findEnabledCounter = 4;
+		uint32_t findDisabledCounter = 3;
+
+		findQuery.Find([&] (/*const decs::Entity& e,*/ TestComponent& testComp, Position& position) ->bool
+		{
+			PrintLine(std::format("{0}. Find", findCounter));
+			findCounter--;
+			return findCounter == 0;
+		});
+
+		findQuery.FindEnabled([&] (const decs::Entity& e, TestComponent& testComp, Position& position)
+		{
+			e.SetActive(false);
+			PrintLine(std::format("{0}. FindEnabled", findEnabledCounter));
+			findEnabledCounter--;
+
+			return findEnabledCounter == 0;
+		});
+
+		findQuery.FindDisabled([&] (const decs::Entity& e, TestComponent& testComp, Position& position)
+		{
+			PrintLine(std::format("{0}. FindDisabled", findDisabledCounter));
+			findDisabledCounter--;
+
+			return findDisabledCounter == 0;
+		});
 
 	}
 }

@@ -33,6 +33,11 @@ namespace decs
 		{
 			return m_EntityData != nullptr && m_bEnabled;
 		}
+
+		inline bool IsEnabled() const noexcept
+		{
+			return m_bEnabled;
+		}
 	};
 
 	class ArchetypeEntityDataStorage

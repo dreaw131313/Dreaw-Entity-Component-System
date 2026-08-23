@@ -304,9 +304,9 @@ namespace decs::light
 			}
 		}
 
-		template<typename TCallable>
-			requires iteration::trait::light_query_iterate_container_callable<TCallable, ComponentsTypes...>
-		void ForEachArchetype(TCallable&& func)
+		template<typename Callable>
+			requires iteration::trait::light_query_iterate_container_callable<Callable, ComponentsTypes...>
+		void ForEachArchetype(Callable&& func)
 		{
 			Fetch();
 
