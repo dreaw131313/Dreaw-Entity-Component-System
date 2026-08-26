@@ -69,20 +69,20 @@ namespace decs::light::iteration::trait
 
 	template<typename Callable, typename... ComponentTypes>
 	concept light_query_callable = 
-		std::invocable<Callable, ligth_component_or_filter_t<ComponentTypes>&...>
-		|| std::invocable<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
+		std::invocable<Callable, ligth_component_or_const_filter_t<ComponentTypes>&...>
+		|| std::invocable<Callable, const light::Entity&, ligth_component_or_const_filter_t<ComponentTypes>&...>;
 
 	template<typename Callable, typename... ComponentTypes>
 	concept light_query_find_callable = 
-		(std::invocable<Callable, ligth_component_or_filter_t<ComponentTypes>&...> && std::convertible_to<std::invoke_result_t<Callable, ligth_component_or_filter_t<ComponentTypes>&...>, bool>)
+		(std::invocable<Callable, ligth_component_or_const_filter_t<ComponentTypes>&...> && std::convertible_to<std::invoke_result_t<Callable, ligth_component_or_const_filter_t<ComponentTypes>&...>, bool>)
 		|| 
-		(std::invocable<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...> && std::convertible_to<std::invoke_result_t<Callable, const Entity&, ligth_component_or_filter_t<ComponentTypes>&...>, bool>)
+		(std::invocable<Callable, const light::Entity&, ligth_component_or_const_filter_t<ComponentTypes>&...> && std::convertible_to<std::invoke_result_t<Callable, const Entity&, ligth_component_or_const_filter_t<ComponentTypes>&...>, bool>)
 		; 
 
 
 
 	template<typename Callable, typename... ComponentTypes>
-	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>...>
-		|| std::is_invocable_v<Callable, const light::Entity&, ligth_component_or_filter_t<ComponentTypes>&...>;
+	constexpr bool is_invocable_with_light_entity_v = std::is_invocable_v<Callable, const light::Entity&, ligth_component_or_const_filter_t<ComponentTypes>...>
+		|| std::is_invocable_v<Callable, const light::Entity&, ligth_component_or_const_filter_t<ComponentTypes>&...>;
 
 }

@@ -687,7 +687,7 @@ void Test::ForEachFilterTest()
 	filtersQuery.SetContainer(&container);
 	//filtersQuery.AddContainer(&container);
 
-	filtersQuery.ForEachFilter([] (float f, const TestEntityFilter& testFilter, const QueryType::ComponentOnlyIterator& iterator)
+	filtersQuery.ForEachFilter([] (float f, TestEntityFilter testFilter, const QueryType::ComponentOnlyIterator& iterator)
 	{
 		std::cout << "Filter value = " << f << " Test filter = " << testFilter.Data << "\n";
 		std::cout << "  Entities:" << "\n";

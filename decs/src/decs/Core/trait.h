@@ -214,6 +214,23 @@ namespace decs
 	using ligth_component_or_filter_t = ligth_component_or_filter<T>::Type;
 
 	template<typename T>
+	struct ligth_component_or_const_filter
+	{
+	public:
+		using Type = T;
+	};
+
+	template<typename T>
+	struct ligth_component_or_const_filter<filter<T>>
+	{
+	public:
+		using Type = const T;
+	};
+
+	template<typename T>
+	using ligth_component_or_const_filter_t = ligth_component_or_const_filter<T>::Type;
+
+	template<typename T>
 	struct ligth_component_or_tag_or_filter
 	{
 	public:
