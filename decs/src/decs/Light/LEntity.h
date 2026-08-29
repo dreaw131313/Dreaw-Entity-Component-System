@@ -54,6 +54,16 @@ namespace decs::light
 			return !IsValid();
 		}
 
+		[[nodiscard]] inline bool IsAlive() const noexcept
+		{
+			return IsValid();
+		}
+
+		[[nodiscard]] inline bool IsDead() const noexcept
+		{
+			return !IsValid();
+		}
+
 		[[nodiscard]] inline EntityID GetID() const
 		{
 			if (IsValid())

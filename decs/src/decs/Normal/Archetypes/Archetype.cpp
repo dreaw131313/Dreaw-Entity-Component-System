@@ -547,7 +547,6 @@ namespace decs
 			return false;
 		}
 
-
 		auto archetypeEntityData = fromArchetype.m_EntityStorage.GetEntityRecord(entityIndex);
 
 		DECS_ASSERT(archetypeEntityData.m_EntityData != nullptr, "EntityData must be valid pointer!");

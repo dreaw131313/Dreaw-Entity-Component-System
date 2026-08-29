@@ -72,6 +72,16 @@ namespace decs
 			return !IsValid();
 		}
 
+		[[nodiscard]] inline bool IsAlive() const noexcept
+		{
+			return IsValid();
+		}
+
+		[[nodiscard]] inline bool IsDead() const noexcept
+		{
+			return !IsValid();
+		}
+
 		[[nodiscard]] inline bool IsInDestruction() const
 		{
 			if (EntityData* entityData = TryGetEntityData())
