@@ -774,7 +774,7 @@ namespace decs
 	{
 		if (m_IsInvokingObserversCallbacks) return;
 		ScopedValue<bool> invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
-		ScopedValue<bool> isDestroyingEntitesFlag(m_PerformDelayedDestruction, true);
+		ScopedValue<bool> performDelayedDestructionSwitch(m_PerformDelayedDestruction, true);
 
 		Entity entity = {};
 
@@ -879,24 +879,46 @@ namespace decs
 
 	bool Container::InvokeComponentOnCreateListeners(TypeID componentTypeID)
 	{
+		if (m_IsInvokingObserversCallbacks)
+		{
+			return;
+		}
+
 		auto componentCtx = m_ComponentContextManager.GetComponentContext(componentTypeID);
 		if (componentCtx == nullptr)
 		{
 			return false;
 		}
 
-		return InvokeComponentTypeCreateEnableObservers(*componentCtx);
+		ScopedValue<bool> invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
+		ScopedValue<bool> performDelayedDestructionSwitch(m_PerformDelayedDestruction, true);
+
+		InvokeComponentTypeCreateEnableObservers(*componentCtx);
+		PerformDelayedDestruction();
+
+		return true;
 	}
 
 	bool Container::InvokeComponentOnDestroyListeners(TypeID componentTypeID)
 	{
+		if (m_IsInvokingObserversCallbacks)
+		{
+			return;
+		}
+
 		auto componentCtx = m_ComponentContextManager.GetComponentContext(componentTypeID);
 		if (componentCtx == nullptr)
 		{
 			return false;
 		}
 
-		return InvokeComponentTypeDestroyDisableObservers(*componentCtx);
+		ScopedValue<bool> invokingObserverCallbackSwitch(m_IsInvokingObserversCallbacks, true);
+		ScopedValue<bool> performDelayedDestructionSwitch(m_PerformDelayedDestruction, true);
+
+		InvokeComponentTypeDestroyDisableObservers(*componentCtx);
+		PerformDelayedDestruction();
+
+		return true;
 	}
 
 	void Container::InvokeEntityCreateEnableObservers(const decs::Entity& entity)
@@ -906,7 +928,7 @@ namespace decs
 			return;
 		}
 		auto entityData = entity.TryGetEntityData();
-		if (entityData== nullptr)
+		if (entityData == nullptr)
 		{
 			return;
 		}
