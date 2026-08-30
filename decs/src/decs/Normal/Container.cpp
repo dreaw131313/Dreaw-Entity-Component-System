@@ -881,7 +881,7 @@ namespace decs
 	{
 		if (m_IsInvokingObserversCallbacks)
 		{
-			return;
+			return false;
 		}
 
 		auto componentCtx = m_ComponentContextManager.GetComponentContext(componentTypeID);
@@ -903,7 +903,7 @@ namespace decs
 	{
 		if (m_IsInvokingObserversCallbacks)
 		{
-			return;
+			return false;
 		}
 
 		auto componentCtx = m_ComponentContextManager.GetComponentContext(componentTypeID);
