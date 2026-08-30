@@ -200,9 +200,9 @@ namespace Normal
 			PrintLine("ForEachBackward With Entity Safe");
 			query.ForEachBackward_Safe(testFuncWithEntity);
 			PrintLine("ForEach_IngoreEntityActiveState");
-			query.ForEach_IngoreEntityActiveState(testFunc);
+			query.ForEach_IngoreEntityState(testFunc);
 			PrintLine("ForEach_IngoreEntityActiveState With Entity");
-			query.ForEach_IngoreEntityActiveState(testFuncWithEntity);
+			query.ForEach_IngoreEntityState(testFuncWithEntity);
 			PrintLine("ForEachBackward_IngoreActiveState");
 			query.ForEachBackward_IgnoreActiveState(testFunc);
 			PrintLine("ForEachBackward_IngoreActiveState With Entity");
@@ -227,12 +227,12 @@ namespace Normal
 				PrintLine("BatchIterator::ForEach_IngoreEntityActiveState");
 				for (auto& it : iterators)
 				{
-					it.ForEach_IngoreEntityActiveState(testFunc);
+					it.ForEach_IngoreEntityState(testFunc);
 				}
 				PrintLine("BatchIterator::ForEach_IngoreEntityActiveState With Entity");
 				for (auto& it : iterators)
 				{
-					it.ForEach_IngoreEntityActiveState(testFuncWithEntity);
+					it.ForEach_IngoreEntityState(testFuncWithEntity);
 				}
 			}
 		}
@@ -266,9 +266,9 @@ namespace Normal
 			PrintLine("ForEachBackward With Entity Safe");
 			query.ForEachBackward_Safe(testFuncWithEntity);
 			PrintLine("ForEach_IngoreEntityActiveState");
-			query.ForEach_IngoreEntityActiveState(testFunc);
+			query.ForEach_IngoreEntityState(testFunc);
 			PrintLine("ForEach_IngoreEntityActiveState With Entity");
-			query.ForEach_IngoreEntityActiveState(testFuncWithEntity);
+			query.ForEach_IngoreEntityState(testFuncWithEntity);
 			PrintLine("ForEachBackward_IngoreActiveState");
 			query.ForEachBackward_IgnoreActiveState(testFunc);
 			PrintLine("ForEachBackward_IngoreActiveState With Entity");
@@ -292,12 +292,12 @@ namespace Normal
 				PrintLine("BatchIterator::ForEach_IngoreEntityActiveState");
 				for (auto& it : iterators)
 				{
-					it.ForEach_IngoreEntityActiveState(testFunc);
+					it.ForEach_IngoreEntityState(testFunc);
 				}
 				PrintLine("BatchIterator::ForEach_IngoreEntityActiveState With Entity");
 				for (auto& it : iterators)
 				{
-					it.ForEach_IngoreEntityActiveState(testFuncWithEntity);
+					it.ForEach_IngoreEntityState(testFuncWithEntity);
 				}
 			}
 		}

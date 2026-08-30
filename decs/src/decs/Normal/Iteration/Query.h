@@ -281,14 +281,14 @@ namespace decs
 
 				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
-					ctx.ForEachBackward_IngoreEntityActiveState_WithEntity(func, entityBuffer);
+					ctx.ForEachBackward_IngoreActiveState_WithEntity(func, entityBuffer);
 				}
 			}
 			else
 			{
 				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
-					ctx.ForEachBackward_IngoreEntityActiveState(func);
+					ctx.ForEachBackward_IngoreActiveState(func);
 				}
 			}
 		}
@@ -338,7 +338,7 @@ namespace decs
 		/// <param name="func"></param>
 		template<typename Callable>
 			requires query_callable<Callable, ComponentsTypes...>
-		void ForEach_IngoreEntityActiveState(Callable&& func)
+		void ForEach_IngoreEntityState(Callable&& func)
 		{
 			if (!IsValid()) return;
 			FetchInternal();
@@ -361,7 +361,7 @@ namespace decs
 			{
 				for (const ArchetypeContextType& ctx : archetypeContexts)
 				{
-					ctx.ForEach_IngoreEntityActiveState(func);
+					ctx.ForEach_IngoreEntityState(func);
 				}
 			}
 		}
@@ -700,7 +700,7 @@ namespace decs
 			/// <param name="func"></param>
 			template<typename Callable>
 				requires query_callable<Callable, ComponentsTypes...>
-			inline void ForEach_IngoreEntityActiveState(Callable&& func) const
+			inline void ForEach_IngoreEntityState(Callable&& func) const
 			{
 				if (!IsValid())
 				{

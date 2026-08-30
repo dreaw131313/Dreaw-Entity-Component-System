@@ -407,7 +407,7 @@ namespace decs
 	#pragma region FOR EACH INGORE ENTITY ACTIVE STATE
 	public:
 		template<typename Callable>
-		void ForEach_IngoreEntityActiveState(Callable&& func) const
+		void ForEach_IngoreEntityState(Callable&& func) const
 		{
 			uint64_t ctxEntityCount = this->GetEntityCount();
 			if (ctxEntityCount == 0)
@@ -455,7 +455,7 @@ namespace decs
 	#pragma region FOR EACH BACKWARD INGORE ENTITY ACTIVE STATE
 	public:
 		template<typename Callable>
-		void ForEachBackward_IngoreEntityActiveState(Callable&& func) const
+		void ForEachBackward_IngoreActiveState(Callable&& func) const
 		{
 			uint64_t ctxEntityCount = this->GetEntityCount();
 			if (ctxEntityCount == 0)
@@ -478,7 +478,7 @@ namespace decs
 		}
 
 		template<typename Callable>
-		void ForEachBackward_IngoreEntityActiveState_WithEntity(Callable&& func, Entity& entityBuffer) const
+		void ForEachBackward_IngoreActiveState_WithEntity(Callable&& func, Entity& entityBuffer) const
 		{
 			uint64_t ctxEntityCount = this->GetEntityCount();
 			if (ctxEntityCount == 0)

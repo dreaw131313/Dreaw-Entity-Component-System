@@ -313,14 +313,14 @@ namespace decs
 
 					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
 					{
-						ctx.ForEachBackward_IngoreEntityActiveState_WithEntity(func, entityBuffer);
+						ctx.ForEachBackward_IngoreActiveState_WithEntity(func, entityBuffer);
 					}
 				}
 				else
 				{
 					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
 					{
-						ctx.ForEachBackward_IngoreEntityActiveState(func);
+						ctx.ForEachBackward_IngoreActiveState(func);
 					}
 				}
 			}
@@ -333,7 +333,7 @@ namespace decs
 		/// <param name="func"></param>
 		template<typename Callable>
 			requires query_callable<Callable, ComponentsTypes...>
-		void ForEach_IngoreEntityActiveState(Callable&& func)
+		void ForEach_IngoreEntityState(Callable&& func)
 		{
 			Fetch();
 
@@ -360,7 +360,7 @@ namespace decs
 				{
 					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
-						ctx.ForEach_IngoreEntityActiveState(func);
+						ctx.ForEach_IngoreEntityState(func);
 					}
 				}
 			}
@@ -842,7 +842,7 @@ namespace decs
 
 			template<typename Callable>
 				requires query_callable<Callable, ComponentsTypes...>
-			void ForEach_IngoreEntityActiveState(Callable&& func)
+			void ForEach_IngoreEntityState(Callable&& func)
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
 				decs::Entity entityBuffer = {};
