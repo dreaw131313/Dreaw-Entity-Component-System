@@ -407,7 +407,7 @@ namespace decs
 	#pragma region FOR EACH INGORE ENTITY ACTIVE STATE
 	public:
 		template<typename Callable>
-		void ForEach_IngoreEntityState(Callable&& func) const
+		void ForEach_IngoreActiveState(Callable&& func) const
 		{
 			uint64_t ctxEntityCount = this->GetEntityCount();
 			if (ctxEntityCount == 0)

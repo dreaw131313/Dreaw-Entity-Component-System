@@ -333,7 +333,7 @@ namespace decs
 		/// <param name="func"></param>
 		template<typename Callable>
 			requires query_callable<Callable, ComponentsTypes...>
-		void ForEach_IngoreEntityState(Callable&& func)
+		void ForEach_IngoreActiveState(Callable&& func)
 		{
 			Fetch();
 
@@ -360,7 +360,7 @@ namespace decs
 				{
 					for (const auto& ctx : containerContext.m_ArchetypesContexts)
 					{
-						ctx.ForEach_IngoreEntityState(func);
+						ctx.ForEach_IngoreActiveState(func);
 					}
 				}
 			}
@@ -842,7 +842,7 @@ namespace decs
 
 			template<typename Callable>
 				requires query_callable<Callable, ComponentsTypes...>
-			void ForEach_IngoreEntityState(Callable&& func)
+			void ForEach_IngoreActiveState(Callable&& func)
 			{
 				auto& containerContexts = m_Query->m_ContainerContexts;
 				decs::Entity entityBuffer = {};
