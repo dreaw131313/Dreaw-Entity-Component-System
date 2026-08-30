@@ -290,6 +290,42 @@ namespace decs
 				}
 			}
 		}
+
+		template<typename Callable>
+			requires query_callable<Callable, ComponentsTypes...>
+		void ForEachBackward_IgnoreActiveState(Callable&& func) noexcept
+		{
+			Fetch();
+
+			uint64_t contextSize = m_ContainerContexts.size();
+			for (uint64_t containerContextIndex = 0; containerContextIndex < contextSize; containerContextIndex++)
+			{
+				ContainerContextType& containerContext = m_ContainerContexts[containerContextIndex];
+				if (!containerContext.IsValidAndEnabled())
+				{
+					continue; // Skip if container context is disabled
+				}
+
+				if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+				{
+					decs::Entity entityBuffer = {};
+					entityBuffer.SetLifeTimeData_Internal(containerContext.m_Container->GetLifeTimeData());
+
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
+					{
+						ctx.ForEachBackward_IngoreEntityActiveState_WithEntity(func, entityBuffer);
+					}
+				}
+				else
+				{
+					for (const ArchetypeContextType& ctx : containerContext.m_ArchetypesContexts)
+					{
+						ctx.ForEachBackward_IngoreEntityActiveState(func);
+					}
+				}
+			}
+		}
+
 		/// <summary>
 		/// Same rules apply like in Foreach methods. But here iteration is for every entity even if entity is not active
 		/// </summary>

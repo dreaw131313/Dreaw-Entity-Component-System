@@ -122,11 +122,11 @@ namespace Normal
 		std::cout << "///////// NORMAL ECS TEST ////////////" << "\n";
 		std::cout << "///////////////////////////////////////////" << "\n";
 
-		//QueryIterationTest();
+		QueryIterationTest();
 		//EntityCreatePerformanceTest();
 		//ObserversTest();
 		//StatisticsTest();
-		FindTest();
+		//FindTest();
 	}
 
 	void Test::QueryIterationTest()
@@ -203,6 +203,10 @@ namespace Normal
 			query.ForEach_IngoreEntityActiveState(testFunc);
 			PrintLine("ForEach_IngoreEntityActiveState With Entity");
 			query.ForEach_IngoreEntityActiveState(testFuncWithEntity);
+			PrintLine("ForEachBackward_IngoreActiveState");
+			query.ForEachBackward_IgnoreActiveState(testFunc);
+			PrintLine("ForEachBackward_IngoreActiveState With Entity");
+			query.ForEachBackward_IgnoreActiveState(testFuncWithEntity);
 
 			if (false)
 			{
@@ -265,6 +269,10 @@ namespace Normal
 			query.ForEach_IngoreEntityActiveState(testFunc);
 			PrintLine("ForEach_IngoreEntityActiveState With Entity");
 			query.ForEach_IngoreEntityActiveState(testFuncWithEntity);
+			PrintLine("ForEachBackward_IngoreActiveState");
+			query.ForEachBackward_IgnoreActiveState(testFunc);
+			PrintLine("ForEachBackward_IngoreActiveState With Entity");
+			query.ForEachBackward_IgnoreActiveState(testFuncWithEntity);
 
 			if (false)
 			{

@@ -452,6 +452,56 @@ namespace decs
 
 	#pragma endregion
 
+	#pragma region FOR EACH BACKWARD INGORE ENTITY ACTIVE STATE
+	public:
+		template<typename Callable>
+		void ForEachBackward_IngoreEntityActiveState(Callable&& func) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
+
+			int64_t idx = ctxEntityCount - 1;
+			for (; idx > -1; idx--)
+			{
+				auto entityData = archetypeEntityStorage.GetEntity(static_cast<size_t>(idx));
+				if (entityData != nullptr)
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, idx, containersTuple);
+				}
+			}
+		}
+
+		template<typename Callable>
+		void ForEachBackward_IngoreEntityActiveState_WithEntity(Callable&& func, Entity& entityBuffer) const
+		{
+			uint64_t ctxEntityCount = this->GetEntityCount();
+			if (ctxEntityCount == 0)
+			{
+				return;
+			}
+
+			const auto& containersTuple = this->GetContainersTuple();
+			const auto& archetypeEntityStorage = this->GetArchetype()->GetEntityStorage();
+
+			int64_t idx = ctxEntityCount - 1;
+			for (; idx > -1; idx--)
+			{
+				auto entityData = archetypeEntityStorage.GetEntity(static_cast<size_t>(idx));
+				if (entityData != nullptr)
+				{
+					Iteration::InvokeEntityIteration<Callable, ComponentsTypes...>(func, entityBuffer, *entityData, idx, containersTuple);
+				}
+			}
+		}
+
+	#pragma endregion
+
 	#pragma region FOREACH FROM TO
 
 		template<typename Callable>

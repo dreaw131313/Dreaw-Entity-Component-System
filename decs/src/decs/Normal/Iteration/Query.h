@@ -263,6 +263,38 @@ namespace decs
 			}
 		}
 
+		template<typename Callable>
+			requires query_callable<Callable, ComponentsTypes...>
+		void ForEachBackward_IgnoreActiveState(Callable&& func) noexcept
+		{
+			if (!IsValid()) return;
+			FetchInternal();
+
+			Container* container = m_ContainerContext.GetContainer();
+			auto& archetypeContexts = m_ContainerContext.GetArchetypeContexts();
+			const uint64_t contextCount = archetypeContexts.size();
+
+			if constexpr (is_invocable_with_entity_v<Callable, ComponentsTypes...>)
+			{
+				Entity entityBuffer = {};
+				entityBuffer.SetLifeTimeData_Internal(container->GetLifeTimeData());
+
+				for (const ArchetypeContextType& ctx : archetypeContexts)
+				{
+					ctx.ForEachBackward_IngoreEntityActiveState_WithEntity(func, entityBuffer);
+				}
+			}
+			else
+			{
+				for (const ArchetypeContextType& ctx : archetypeContexts)
+				{
+					ctx.ForEachBackward_IngoreEntityActiveState(func);
+				}
+			}
+		}
+
+
+
 		/// <summary>
 		/// Works exacly like ForEachBackward.
 		/// There may be need to iterate over entities during certian component creattion or enable callbacks. In such cases destruction of component or entity can be deffered if functions like "Container::InvokeEntitesOnCreateListeners" are used. At that moment entities are not removed from archetype, but their records are invalidated. This function checks during iteration whether entity record is valid. It is not default behavior for iteration methods, as they are optimized for maximum performance.
