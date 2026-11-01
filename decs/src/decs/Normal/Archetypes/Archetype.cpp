@@ -185,7 +185,7 @@ namespace decs
 
 	void Archetype::UpdateOrderOfComponentContexts()
 	{
-		static auto sortLambda = [](OrderData& lhs, OrderData& rhs)
+		static auto sortLambda = [] (OrderData& lhs, OrderData& rhs)
 		{
 			if (lhs.m_ComponentContext->GetObserverOrder() < rhs.m_ComponentContext->GetObserverOrder())
 			{
@@ -460,17 +460,16 @@ namespace decs
 
 	void Archetype::ResetOnDestroy()
 	{
-		m_TypeIDsIndexes.clear();
-		m_Edges.clear();
-
-		m_EntityStorage.Clear();
-
 		for (auto& data : m_TypeData)
 		{
 			delete data.m_PackedContainer;
 		}
 
+		m_TypeIDsIndexes.clear();
+		m_Edges.clear();
+		m_EntityStorage.Clear();
 		m_TypeData.clear();
+		m_ComponentContextsInOrder.clear();
 	}
 
 	void Archetype::AddEdge(TypeID componentTypeID, Archetype* archetype, EArchetypeEdgeType edgeType)

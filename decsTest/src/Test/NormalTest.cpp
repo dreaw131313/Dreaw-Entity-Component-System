@@ -153,16 +153,16 @@ namespace Normal
 		};
 
 		container.CreateEntities(componetns, tags, 10, true, initFunc);
-	
+
 		/*{
 		decs::ComponentTypeGroup<TestComponent, Renderer, Position> comps{};
 		decs::TagTypeGroup<FloatTag, IntTag, BoolTag> tags{};
-	
+
 		auto entityInit = [](const decs::Entity& e, TestComponent& component, Renderer& renderer, Position& position)
 		{
 		PrintLine("Only entity created!");
 		};
-	
+
 		decs::Entity newEntity = container.CreateEntity(comps, tags, true, entityInit);
 		}*/
 
@@ -181,7 +181,7 @@ namespace Normal
 			using QueryType = decs::Query< const TestComponent>;
 			QueryType query(&container);
 
-			query.With< Renderer, Position, FloatTag, IntTag, BoolTag>();
+			query.With<Renderer, Position, FloatTag, IntTag, BoolTag>();
 
 			PrintLine("ForEach");
 			query.ForEach(testFunc);

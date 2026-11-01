@@ -9,7 +9,7 @@ namespace decs
 
 	/// <summary>
 	/// Two last bits are taken. Bits from 0 to 29 are available (30 in total);
-	/// Bits 30 and 31 must not be used!
+	/// Bits 14 and 15 must not be used!
 	/// TODO: Add asserts to setting this bits!
 	/// </summary>
 	struct EntityComponentFlags

@@ -435,11 +435,6 @@ namespace decs::light
 
 	void Archetype::ResetOnDestroy(FilterManager& filterManager)
 	{
-		m_TypeIDsIndexes.clear();
-		m_Edges.clear();
-
-		m_Entities.Clear();
-
 		for (auto& data : m_TypeData)
 		{
 			delete data.m_PackedContainer;
@@ -451,6 +446,9 @@ namespace decs::light
 			filterManager.DeleteFilter(filter.m_FilterContainer);
 		}
 
+		m_TypeIDsIndexes.clear();
+		m_Edges.clear();
+		m_Entities.Clear();
 		m_TypeData.clear();
 		m_Filters.clear();
 	}

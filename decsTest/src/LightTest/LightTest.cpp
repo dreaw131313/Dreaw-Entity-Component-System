@@ -118,13 +118,13 @@ void Test::Run()
 	std::cout << "/////////////////////////////////////" << "\n";
 
 	IterationTest();
-	//EntityCreatePerformanceTest();
-	//QueryManagerTest();
-	//FilterTest();
-	//RemovingArchetypesTest();
-	//ObserversTest();
-	//SettingComponents();
-	//ForEachFilterTest();
+	EntityCreatePerformanceTest();
+	QueryManagerTest();
+	FilterTest();
+	RemovingArchetypesTest();
+	ObserversTest();
+	SettingComponents();
+	ForEachFilterTest();
 }
 
 void Test::IterationTest()
